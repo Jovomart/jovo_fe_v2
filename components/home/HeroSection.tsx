@@ -204,8 +204,8 @@ const HeroSection = () => {
   const [muted, setMuted] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [showAllCategoriesModal, setShowAllCategoriesModal] = useState(false);
-  const videoRefs = useRef([]);
-  const intervalRef = useRef(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((idx) => {
     setCurrent(idx);
@@ -303,7 +303,7 @@ const HeroSection = () => {
             {slides.map((s, i) => (
               <video
                 key={s.id}
-                ref={(el) => (videoRefs.current[i] = el)}
+                ref={(el) => { videoRefs.current[i] = el; }}
                 src={s.video}
                 loop
                 muted={muted}
@@ -632,10 +632,10 @@ const HeroSection = () => {
                       alt={cat.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.style.display = "none";
-                        if (e.target.nextSibling) {
-                          e.target.nextSibling.style.display = "flex";
-                        }
+                        const img = e.target as HTMLImageElement;
+                        img.style.display = "none";
+                        const sibling = img.nextSibling as HTMLElement | null;
+                        if (sibling) sibling.style.display = "flex";
                       }}
                     />
                     <div

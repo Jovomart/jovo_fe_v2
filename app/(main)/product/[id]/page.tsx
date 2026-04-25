@@ -891,7 +891,7 @@ const ProductDetails = () => {
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Warranty", value: product.warranty || "1 Year" },
+                    { label: "Warranty", value: (product as any).warranty || "1 Year" },
                     { label: "Authenticity", value: "100% Genuine" },
                     { label: "Payment", value: "SSL Secured" },
                     { label: "Seller", value: "Jovo Verified" },
@@ -996,7 +996,7 @@ const ProductDetails = () => {
                         : "—",
                     },
                     { label: "Condition", value: "Brand New" },
-                    { label: "Warranty", value: product.warranty || "1 Year" },
+                    { label: "Warranty", value: (product as any).warranty || "1 Year" },
                     {
                       label: "SKU",
                       value: `JVO-${product.id}-${product.category?.toUpperCase().slice(0, 3)}`,
