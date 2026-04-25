@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useRef, useEffect, useContext } from "react";
+import { useState, useRef, useEffect, useContext, Suspense } from "react";
 import {
   FiMail,
   FiAlertCircle,
@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import { AuthContext } from "@/context/AuthContext";
 
-const VerifyEmail = () => {
+const VerifyEmailInner = () => {
   const { verifyEmail, resendVerificationCode } = useContext(AuthContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -277,5 +277,11 @@ const VerifyEmail = () => {
     </div>
   );
 };
+
+const VerifyEmail = () => (
+  <Suspense>
+    <VerifyEmailInner />
+  </Suspense>
+);
 
 export default VerifyEmail;

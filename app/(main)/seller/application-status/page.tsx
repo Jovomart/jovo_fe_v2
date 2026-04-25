@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import apiService from "@/services/apiService";
 import Footer from "@/components/layout/Footer";
 import {
@@ -60,7 +60,7 @@ interface ApiResponse {
 
 type StatusType = 'pending' | 'approved' | 'rejected' | 'not_applied' | 'success' | null;
 
-const ApplicationStatus = () => {
+const ApplicationStatusInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const justApplied = searchParams.get('justApplied') === 'true';
@@ -675,5 +675,11 @@ const ApplicationStatus = () => {
     </>
   );
 };
+
+const ApplicationStatus = () => (
+  <Suspense>
+    <ApplicationStatusInner />
+  </Suspense>
+);
 
 export default ApplicationStatus;

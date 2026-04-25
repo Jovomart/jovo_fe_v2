@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useContext } from "react";
+import { useState, useContext, Suspense } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
 import { AuthContext } from "@/context/AuthContext";
@@ -19,7 +19,7 @@ interface Errors {
   general?: string;
 }
 
-const Login = () => {
+const LoginInner = () => {
   const { login } = useContext(AuthContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -355,5 +355,11 @@ const Login = () => {
     </div>
   );
 };
+
+const Login = () => (
+  <Suspense>
+    <LoginInner />
+  </Suspense>
+);
 
 export default Login;

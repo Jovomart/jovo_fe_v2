@@ -1,6 +1,6 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import Footer from "@/components/layout/Footer";
 import {
   FiSearch, FiX, FiPhone, FiStar, FiMapPin,
@@ -270,7 +270,7 @@ const ProviderCard = ({ provider }: { provider: Provider }) => {
   );
 };
 
-const ServicesPage = () => {
+const ServicesPageInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
@@ -451,5 +451,11 @@ const ServicesPage = () => {
     </>
   );
 };
+
+const ServicesPage = () => (
+  <Suspense>
+    <ServicesPageInner />
+  </Suspense>
+);
 
 export default ServicesPage;
