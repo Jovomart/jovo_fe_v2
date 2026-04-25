@@ -42,7 +42,7 @@ jobs:
             echo "repo=${{ secrets.DOCKER_USERNAME }}/jovo_fe_staging" >> $GITHUB_OUTPUT
             echo "tag=latest-staging" >> $GITHUB_OUTPUT
             echo "full=${{ secrets.DOCKER_USERNAME }}/jovo_fe_staging:latest-staging" >> $GITHUB_OUTPUT
-          else
+          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
             echo "repo=${{ secrets.DOCKER_USERNAME }}/jovo_fe_dev" >> $GITHUB_OUTPUT
             echo "tag=latest-dev" >> $GITHUB_OUTPUT
             echo "full=${{ secrets.DOCKER_USERNAME }}/jovo_fe_dev:latest-dev" >> $GITHUB_OUTPUT
@@ -58,14 +58,14 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repository }}
           build-args: |
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
-            VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-            VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-            VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-            VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
-            VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+            NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -118,7 +118,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
             HOOK="${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
             ENV="Staging"
-          else
+          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
             HOOK="${{ secrets.RENDER_DEPLOY_HOOK_DEV }}"
             ENV="Development"
           fi

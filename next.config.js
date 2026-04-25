@@ -7,6 +7,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'assets.mixkit.co' },
     ],
   },
+  // Enable standalone output for optimized Docker builds
+  output: 'standalone',
 }
 
 module.exports = nextConfig
