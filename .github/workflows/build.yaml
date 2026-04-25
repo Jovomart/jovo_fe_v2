@@ -10,9 +10,25 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
+  typecheck:
+    name: Type Check & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: TypeScript check
+        run: npx tsc --noEmit
+      - name: ESLint
+        run: npm run lint
+
   build:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    needs: typecheck
     outputs:
       image_full: ${{ steps.set-tag.outputs.full }}
       image_tag: ${{ steps.set-tag.outputs.tag }}

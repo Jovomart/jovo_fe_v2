@@ -9,6 +9,9 @@ const nextConfig = {
   },
   // Enable standalone output for optimized Docker builds
   output: 'standalone',
+  // Type checking and linting are handled in CI — skip during Docker image build
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
 }
 
 module.exports = nextConfig

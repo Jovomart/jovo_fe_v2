@@ -142,21 +142,21 @@ const ProductDetails = () => {
   const [deliveryOpen, setDeliveryOpen] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [helpfulVoted, setHelpfulVoted] = useState([]);
+  const [helpfulVoted, setHelpfulVoted] = useState<number[]>([]);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState(null);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
   const [pincode, setPincode] = useState("");
   const [pincodeChecked, setPincodeChecked] = useState(false);
 
   // Delivery options state
-  const [deliveryOptions, setDeliveryOptions] = useState([]);
+  const [deliveryOptions, setDeliveryOptions] = useState<any[]>([]);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
-  const [deliveryError, setDeliveryError] = useState(null);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const product = products.find((p) => p.id === Number(id));
 
   // Product weight (default 1kg if not specified)
-  const productWeight = product?.weight || 1;
+  const productWeight = (product as any)?.weight || 1;
   const totalWeight = productWeight * quantity;
 
   // Fetch delivery options on component mount and when quantity/cart total changes
@@ -259,7 +259,7 @@ const ProductDetails = () => {
         }
       } catch (err) {
         console.error("Failed to fetch delivery options:", err);
-        setDeliveryError(err.message);
+        setDeliveryError(err instanceof Error ? err.message : String(err));
       } finally {
         setDeliveryLoading(false);
       }
