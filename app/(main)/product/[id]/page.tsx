@@ -38,10 +38,51 @@ import { MdVerified, MdLocalShipping, MdStorefront } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
 import ApiService from "@/services/apiService";
 
+// ─────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  oldPrice?: number;
+  stock: number;
+  category: string;
+  rating: number;
+  reviews: number;
+  description: string;
+  image: string;
+  brand?: string;
+  weight?: number;
+  warranty?: string;
+}
+
+interface Review {
+  id: number;
+  name: string;
+  rating: number;
+  date: string;
+  comment: string;
+  verified: boolean;
+  helpful: number;
+}
+
+interface DeliveryOption {
+  id: string;
+  delivery_type: string;
+  delivery_cost: number;
+  estimated_days_min: number;
+  estimated_days_max: number;
+  delivery_description: string;
+  carrier_name: string;
+  is_free_delivery: boolean;
+  is_available: boolean;
+}
+
 /* ─────────────────────────────────────────────────────────────
    MOCK REVIEW DATA
 ───────────────────────────────────────────────────────────── */
-const mockReviews = [
+const mockReviews: Review[] = [
   {
     id: 1,
     name: "Temi A.",
@@ -94,12 +135,12 @@ const mockReviews = [
   },
 ];
 
-const ratingBreakdown = { 5: 62, 4: 20, 3: 10, 2: 5, 1: 3 };
+const ratingBreakdown: Record<number, number> = { 5: 62, 4: 20, 3: 10, 2: 5, 1: 3 };
 
 /* ─────────────────────────────────────────────────────────────
    STAR RENDERER
 ───────────────────────────────────────────────────────────── */
-const RenderStars = ({ rating, size = 14, color = "#F59E0B" }) => {
+const RenderStars = ({ rating, size = 14, color = "#F59E0B" }: { rating: number; size?: number; color?: string }) => {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => {
@@ -116,7 +157,7 @@ const RenderStars = ({ rating, size = 14, color = "#F59E0B" }) => {
 /* ─────────────────────────────────────────────────────────────
    CATEGORY → ROUTE MAP
 ───────────────────────────────────────────────────────────── */
-const categoryRoutes = {
+const categoryRoutes: Record<string, string> = {
   phones: "/phone-deals",
   fashion: "/fashion-deals",
   gaming: "/gaming-deals",
@@ -136,24 +177,24 @@ const ProductDetails = () => {
   const router = useRouter()
   const navigate = (p: string) => router.push(p)
 
-  const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [activeTab, setActiveTab] = useState("description");
-  const [deliveryOpen, setDeliveryOpen] = useState(true);
-  const [returnOpen, setReturnOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [helpfulVoted, setHelpfulVoted] = useState([]);
-  const [addedToCart, setAddedToCart] = useState(false);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState(null);
-  const [pincode, setPincode] = useState("");
-  const [pincodeChecked, setPincodeChecked] = useState(false);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("description");
+  const [deliveryOpen, setDeliveryOpen] = useState<boolean>(true);
+  const [returnOpen, setReturnOpen] = useState<boolean>(false);
+  const [shareOpen, setShareOpen] = useState<boolean>(false);
+  const [helpfulVoted, setHelpfulVoted] = useState<number[]>([]);
+  const [addedToCart, setAddedToCart] = useState<boolean>(false);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
+  const [pincode, setPincode] = useState<string>("");
+  const [pincodeChecked, setPincodeChecked] = useState<boolean>(false);
 
   // Delivery options state
-  const [deliveryOptions, setDeliveryOptions] = useState([]);
-  const [deliveryLoading, setDeliveryLoading] = useState(true);
-  const [deliveryError, setDeliveryError] = useState(null);
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
+  const [deliveryLoading, setDeliveryLoading] = useState<boolean>(true);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
-  const product = products.find((p) => p.id === Number(id));
+  const product = products.find((p: Product) => p.id === Number(id)) as Product | undefined;
 
   // Product weight (default 1kg if not specified)
   const productWeight = product?.weight || 1;
@@ -176,7 +217,7 @@ const ProductDetails = () => {
         console.log("API Service Response:", response);
 
         // IMPORTANT: Extract the delivery_options array from the response
-        let availableOptions = [];
+        let availableOptions: DeliveryOption[] = [];
 
         // Check different possible response structures
         if (
@@ -214,7 +255,7 @@ const ProductDetails = () => {
           setSelectedDeliveryId(filteredOptions[0].id);
         } else if (filteredOptions.length === 0) {
           // If no options from API, use fallback
-          const fallbackOptions = [
+          const fallbackOptions: DeliveryOption[] = [
             {
               id: "standard",
               delivery_type: "Standard Delivery",
@@ -257,7 +298,7 @@ const ProductDetails = () => {
             setSelectedDeliveryId("standard");
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to fetch delivery options:", err);
         setDeliveryError(err.message);
       } finally {
@@ -268,7 +309,7 @@ const ProductDetails = () => {
     if (product) {
       fetchDeliveryOptions();
     }
-  }, [product, quantity, totalWeight]);
+  }, [product, quantity, totalWeight, selectedDeliveryId]);
 
   if (!product) {
     return (
@@ -292,12 +333,12 @@ const ProductDetails = () => {
 
   const categoryPath = categoryRoutes[product.category] || "/";
 
-  const suggestedProducts = products
-    .filter((p) => p.id !== product.id && p.category === product.category)
+  const suggestedProducts: Product[] = products
+    .filter((p: Product) => p.id !== product.id && p.category === product.category)
     .slice(0, 6)
     .concat(
       products
-        .filter((p) => p.id !== product.id && p.category !== product.category)
+        .filter((p: Product) => p.id !== product.id && p.category !== product.category)
         .slice(0, 3),
     )
     .slice(0, 6);
@@ -310,7 +351,7 @@ const ProductDetails = () => {
     setTimeout(() => setAddedToCart(false), 2500);
   };
 
-  const handleHelpful = (reviewId) => {
+  const handleHelpful = (reviewId: number) => {
     if (!helpfulVoted.includes(reviewId)) {
       setHelpfulVoted([...helpfulVoted, reviewId]);
     }
@@ -321,19 +362,19 @@ const ProductDetails = () => {
   };
 
   // Helper functions for delivery options
-  const formatDeliveryCost = (option) => {
+  const formatDeliveryCost = (option: DeliveryOption) => {
     if (option.is_free_delivery) return "Free";
     return `₦${Number(option.delivery_cost || 0).toLocaleString()}`;
   };
 
-  const formatEstimatedDays = (option) => {
+  const formatEstimatedDays = (option: DeliveryOption) => {
     const min = option.estimated_days_min || 2;
     const max = option.estimated_days_max || 5;
     if (min === max) return `${min} business day${min > 1 ? "s" : ""}`;
     return `${min} – ${max} business days`;
   };
 
-  const getDeliveryIcon = (option) => {
+  const getDeliveryIcon = (option: DeliveryOption) => {
     const type = (option.delivery_type || "").toLowerCase();
     if (type.includes("express") || type.includes("same day"))
       return <FiClock size={20} />;
@@ -342,7 +383,7 @@ const ProductDetails = () => {
     return <FiTruck size={20} />;
   };
 
-  const isPickupOption = (option) => {
+  const isPickupOption = (option: DeliveryOption) => {
     const type = (option.delivery_type || "").toLowerCase();
     return (
       type.includes("pickup") ||

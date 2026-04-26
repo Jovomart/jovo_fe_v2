@@ -1,6 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+// @ts-ignore - CSS module import
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://jovo.ng'),
@@ -25,14 +27,29 @@ export const metadata: Metadata = {
     site: '@jovong',
     title: "JOVO — Nigeria's #1 Campus Marketplace",
   },
+}
+
+export const viewport: Viewport = {
   themeColor: '#B42225',
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-gray-200 border-t-[#B42225] rounded-full animate-spin" />
+    </div>
+  )
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <Suspense fallback={<LoadingFallback />}>
+            {children}
+          </Suspense>
+        </AuthProvider>
       </body>
     </html>
   )

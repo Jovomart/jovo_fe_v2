@@ -28,8 +28,44 @@ import {
 } from "react-icons/fi";
 import { MdOutlineLocalOffer, MdFlashOn } from "react-icons/md";
 
+// ─────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────
+interface Category {
+  name: string;
+  icon: JSX.Element;
+  image: string;
+  path: string;
+  color: string;
+  description?: string;
+}
+
+interface AdditionalCategory {
+  name: string;
+  icon: JSX.Element;
+  path: string;
+  color: string;
+  description: string;
+}
+
+interface Slide {
+  id: number;
+  video: string;
+  label: string;
+  headline: string;
+  sub: string;
+  cta: string;
+  ctaPath: string;
+  accent: string;
+}
+
+interface Stat {
+  icon: JSX.Element;
+  text: string;
+}
+
 /* ── Categories (Main visible ones) ──────────────────────────────── */
-const categories = [
+const categories: Category[] = [
   {
     name: "Appliances",
     icon: <FiBox size={15} />,
@@ -97,7 +133,7 @@ const categories = [
 ];
 
 /* ── Additional Categories (shown in modal) ───────────────────────── */
-const additionalCategories = [
+const additionalCategories: AdditionalCategory[] = [
   {
     name: "Drinks & Beverages",
     icon: <FiCoffee size={18} />,
@@ -156,7 +192,7 @@ const additionalCategories = [
   },
 ];
 
-const slides = [
+const slides: Slide[] = [
   {
     id: 1,
     video: "https://assets.mixkit.co/videos/242/242-720.mp4",
@@ -190,7 +226,7 @@ const slides = [
 ];
 
 /* ── Stat pills ─────────────────────────────────────────────── */
-const stats = [
+const stats: Stat[] = [
   { icon: <MdFlashOn size={13} />, text: "Flash Sales Live" },
   { icon: <MdOutlineLocalOffer size={13} />, text: "50K+ Products" },
   { icon: <FiShoppingBag size={13} />, text: "Free Campus Pickup" },
@@ -200,14 +236,14 @@ const HeroSection = () => {
   const router = useRouter()
   const navigate = (p: string) => router.push(p)
   const { isSeller } = useContext(AuthContext);
-  const [current, setCurrent] = useState(0);
-  const [muted, setMuted] = useState(true);
-  const [loaded, setLoaded] = useState(false);
-  const [showAllCategoriesModal, setShowAllCategoriesModal] = useState(false);
-  const videoRefs = useRef([]);
-  const intervalRef = useRef(null);
+  const [current, setCurrent] = useState<number>(0);
+  const [muted, setMuted] = useState<boolean>(true);
+  const [loaded, setLoaded] = useState<boolean>(false);
+  const [showAllCategoriesModal, setShowAllCategoriesModal] = useState<boolean>(false);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const goTo = useCallback((idx) => {
+  const goTo = useCallback((idx: number) => {
     setCurrent(idx);
     videoRefs.current.forEach((v, i) => {
       if (!v) return;
@@ -230,7 +266,9 @@ const HeroSection = () => {
   // Auto-advance
   useEffect(() => {
     intervalRef.current = setInterval(next, 6000);
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [next]);
 
   // Mount — play first video
@@ -244,14 +282,23 @@ const HeroSection = () => {
   }, []);
 
   // Handle category click
-  const handleCategoryClick = (cat) => {
-    console.log("Category clicked:", cat.name); // Debug log
+  const handleCategoryClick = (cat: Category) => {
+    console.log("Category clicked:", cat.name);
     if (cat.name === "All Categories") {
-      console.log("Opening modal"); // Debug log
+      console.log("Opening modal");
       setShowAllCategoriesModal(true);
     } else {
-      console.log("Navigating to:", cat.path); // Debug log
+      console.log("Navigating to:", cat.path);
       navigate(cat.path);
+    }
+  };
+
+  // Handle image error with proper typing
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    target.style.display = "none";
+    if (target.nextSibling && target.nextSibling instanceof HTMLElement) {
+      target.nextSibling.style.display = "flex";
     }
   };
 
@@ -303,7 +350,9 @@ const HeroSection = () => {
             {slides.map((s, i) => (
               <video
                 key={s.id}
-                ref={(el) => (videoRefs.current[i] = el)}
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
                 src={s.video}
                 loop
                 muted={muted}
@@ -524,7 +573,7 @@ const HeroSection = () => {
               <video
                 key={s.id}
                 ref={(el) => {
-                  if (!videoRefs.current[i]) videoRefs.current[i] = el;
+                  videoRefs.current[i] = el;
                 }}
                 src={s.video}
                 loop
@@ -631,12 +680,7 @@ const HeroSection = () => {
                       src={cat.image}
                       alt={cat.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        if (e.target.nextSibling) {
-                          e.target.nextSibling.style.display = "flex";
-                        }
-                      }}
+                      onError={handleImageError}
                     />
                     <div
                       className="w-full h-full hidden items-center justify-center text-white font-bold text-xs"

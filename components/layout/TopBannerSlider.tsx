@@ -1,13 +1,11 @@
 'use client'
 import { useRouter } from 'next/navigation'
-// components/layout/TopBanner.jsx
-import bannerVideo from "../../assets/videos/Jovo_topbanner.mp4"; // update path and filename to match yours
 
 const TopBanner = () => {
   return (
     <div className="w-full h-14 md:h-13 lg:h-15 overflow-hidden">
       <video
-        src={bannerVideo}
+        src="/videos/Jovo_topbanner.mp4"  // Move video to public/videos/ folder
         autoPlay
         loop
         muted

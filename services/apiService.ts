@@ -94,6 +94,9 @@ class ApiService {
       '/auth/resend-verification-code', '/auth/google-sign-in', '/auth/refresh',
       '/delivery/public', '/category/get-all-categories', '/category/get-category',
       '/auth/public/get-school', '/auth/schools',
+      // ── service provider public endpoints ──
+      '/service-provider/services/marketplace', // browse all services (no auth)
+      '/service-provider/services/',            // get single service by ID (no auth)
     ]
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep))
 
@@ -280,6 +283,124 @@ class ApiService {
 
   async getSellerDashboard() {
     return this.makeRequest('/seller/dashboard', { method: 'GET' })
+  }
+
+  async applyAsServiceProvider(data: {
+    business_name: string
+    business_bio: string
+    service_category: string[]
+    whatsapp_number: string
+  }) {
+    return this.makeRequest('/service-provider/apply', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async verifyServiceProviderOTP(service_provider_id: string, otp_code: string) {
+    return this.makeRequest('/service-provider/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ service_provider_id, otp_code }),
+    })
+  }
+
+  async resendServiceProviderOTP(service_provider_id: string) {
+    return this.makeRequest(
+      `/service-provider/resend-otp?service_provider_id=${service_provider_id}`,
+      { method: 'POST' }
+    )
+  }
+
+  async getServiceProviderDetails() {
+    return this.makeRequest('/service-provider/details', { method: 'GET' })
+  }
+
+  async updateServiceProviderProfile(data: {
+    business_name?: string
+    business_bio?: string
+    logo_url?: string
+    cover_image_url?: string
+    whatsapp_number?: string
+  }) {
+    return this.makeRequest('/service-provider/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async createService(data: {
+    display_name: string
+    category_id: string
+    description: string
+    price_type: 'fixed' | 'starting_at' | 'negotiable'
+    starting_price: number
+    location: string
+    availability_schedule: Record<string, Array<{ start: string; end: string }>>
+    booking_mode: 'request' | 'instant'
+  }) {
+    return this.makeRequest('/service-provider/services', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getMarketplaceServices(params?: {
+    category_id?: string
+    min_price?: number
+    max_price?: number
+    location?: string
+    available_now?: boolean
+    sort_by?: 'top_rated' | 'most_reviewed' | 'lowest_price'
+    limit?: number
+    offset?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.category_id)  queryParams.append('category_id',  params.category_id)
+    if (params?.min_price)    queryParams.append('min_price',    params.min_price.toString())
+    if (params?.max_price)    queryParams.append('max_price',    params.max_price.toString())
+    if (params?.location)     queryParams.append('location',     params.location)
+    if (params?.available_now)queryParams.append('available_now','true')
+    if (params?.sort_by)      queryParams.append('sort_by',      params.sort_by)
+    if (params?.limit != null) queryParams.append('limit',       params.limit.toString())
+    if (params?.offset != null)queryParams.append('offset',      params.offset.toString())
+    const qs = queryParams.toString()
+    return this.makeRequest(
+      `/service-provider/services/marketplace${qs ? `?${qs}` : ''}`,
+      { method: 'GET' }
+    )
+  }
+
+  async getMyService() {
+    return this.makeRequest('/service-provider/services/my-services', { method: 'GET' })
+  }
+
+  async getServiceById(service_id: string) {
+    return this.makeRequest(`/service-provider/services/${service_id}`, { method: 'GET' })
+  }
+
+  async updateService(
+    service_id: string,
+    data: {
+      display_name?: string
+      description?: string
+      price_type?: 'fixed' | 'starting_at' | 'negotiable'
+      starting_price?: number
+      location?: string
+      availability_schedule?: Record<string, Array<{ start: string; end: string }>>
+      booking_mode?: 'request' | 'instant'
+      is_active?: boolean
+    }
+  ) {
+    return this.makeRequest(`/service-provider/services/${service_id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteService(service_id: string) {
+    return this.makeRequest(`/service-provider/services/${service_id}`, {
+      method: 'DELETE',
+    })
   }
 
   logout() {

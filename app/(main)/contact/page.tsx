@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-// src/pages/Contact.jsx
 import { useState } from "react";
 import Footer from "@/components/layout/Footer";
 import {
@@ -18,13 +17,41 @@ import {
   MdLocationOn, MdAccessTime, MdSend,
 } from "react-icons/md";
 
-const Contact = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState({});
+// Define proper types
+interface FormData {
+  name: string;
+  email: string;
+  message: string;
+}
 
-  const validate = () => {
-    const e = {};
+interface Errors {
+  name?: string;
+  email?: string;
+  message?: string;
+}
+
+interface FaqItem {
+  q: string;
+  a: string;
+}
+
+interface ContactMethod {
+  icon: JSX.Element;
+  title: string;
+  details: string;
+  sub: string;
+  color: string;
+  bg: string;
+  action: string;
+}
+
+const Contact = () => {
+  const [formData, setFormData] = useState<FormData>({ name: "", email: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Errors>({});
+
+  const validate = (): boolean => {
+    const e: Errors = {};
     if (!formData.name.trim()) e.name = "Name is required";
     if (!formData.email.trim()) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Enter a valid email address";
@@ -41,14 +68,14 @@ const Contact = () => {
     setErrors({});
   };
 
-  const contactMethods = [
+  const contactMethods: ContactMethod[] = [
     { icon: <MdEmail size={20} />, title: "Email Us", details: "support@jovomarketplace.com", sub: "We respond within 24 hours", color: "#B42225", bg: "#FEF2F2", action: "mailto:support@jovomarketplace.com" },
     { icon: <FaWhatsapp size={20} />, title: "WhatsApp", details: "+234 801 234 5678", sub: "Chat with our team", color: "#25D366", bg: "#E8F5E9", action: "https://wa.me/2348012345678" },
     { icon: <MdPhone size={20} />, title: "Call Us", details: "+234 801 234 5678", sub: "Mon–Fri, 8am–6pm", color: "#2563EB", bg: "#EFF6FF", action: "tel:+2348012345678" },
     { icon: <FiGlobe size={20} />, title: "Visit Us", details: "ICT Centre, FUTO", sub: "Drop-off & pickup point", color: "#D97706", bg: "#FFFBEB", action: "#" },
   ];
 
-  const faqs = [
+  const faqs: FaqItem[] = [
     { q: "How long does it take to get a response?", a: "Our support team typically responds within 24 hours during business days. For urgent matters, please use our WhatsApp or phone line." },
     { q: "Can I return a product I bought?", a: "Yes! You can return eligible items within 7 days of delivery. Visit our Returns & Refunds page for full details." },
     { q: "How do I become a seller on Jovo?", a: "Simply click 'Become a Seller' on our homepage, fill out the application form, and our team will verify your account within 24–48 hours." },
