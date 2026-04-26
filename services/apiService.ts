@@ -7,7 +7,6 @@ class ApiService {
   constructor() {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
     if (!API_BASE_URL) {
-      // Warn at runtime instead of throwing at build time
       console.warn('NEXT_PUBLIC_API_URL is not defined')
       this.baseURL = ''
       return
@@ -96,8 +95,10 @@ class ApiService {
       '/delivery/public', '/category/get-all-categories', '/category/get-category',
       '/auth/public/get-school', '/auth/schools',
       // ── service provider public endpoints ──
-      '/service-provider/services/marketplace', // browse all services (no auth)
-      '/service-provider/services/',            // get single service by ID (no auth)
+      // ONLY the marketplace is truly public. Do NOT add '/service-provider/services/'
+      // here because it would match '/service-provider/services/my-services' and
+      // strip the auth token from that protected endpoint, causing 401 errors.
+      '/service-provider/services/marketplace',
     ]
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep))
 
@@ -109,7 +110,8 @@ class ApiService {
     if (!isPublic) {
       const token = await this.getValidAccessToken()
       if (token) config.headers.Authorization = `Bearer ${token}`
-      else throw new Error('Authentication required. Please log in again.')
+      // If no token, request proceeds without auth header.
+      // Protected endpoints will 401, which we handle below.
     }
 
     try {
@@ -118,13 +120,15 @@ class ApiService {
       const text = await response.text()
       try { data = JSON.parse(text) } catch { data = { message: text } }
       if (!response.ok) console.error(`API Error [${response.status}] ${endpoint}:`, data)
+
       if (response.status === 401) {
-        this.clearTokens()
-        throw new Error(
-          isPublic
-            ? 'Invalid credentials. Please check your email and password.'
-            : 'Session expired. Please log in again.'
-        )
+        // Don't clear tokens for service-provider endpoints — the user may simply
+        // not be a provider, which is a normal state (not an auth failure).
+        const isServiceProviderEndpoint = endpoint.includes('/service-provider/')
+        if (!isServiceProviderEndpoint && !isPublic) {
+          this.clearTokens()
+        }
+        throw new Error(data?.detail?.message || data?.detail || data?.message || 'Authentication required')
       }
       if (!response.ok) throw new Error(this.extractErrorMessage(data, response.status))
       return data
@@ -356,14 +360,14 @@ class ApiService {
     offset?: number
   }) {
     const queryParams = new URLSearchParams()
-    if (params?.category_id)  queryParams.append('category_id',  params.category_id)
-    if (params?.min_price)    queryParams.append('min_price',    params.min_price.toString())
-    if (params?.max_price)    queryParams.append('max_price',    params.max_price.toString())
-    if (params?.location)     queryParams.append('location',     params.location)
-    if (params?.available_now)queryParams.append('available_now','true')
-    if (params?.sort_by)      queryParams.append('sort_by',      params.sort_by)
-    if (params?.limit != null) queryParams.append('limit',       params.limit.toString())
-    if (params?.offset != null)queryParams.append('offset',      params.offset.toString())
+    if (params?.category_id)   queryParams.append('category_id',   params.category_id)
+    if (params?.min_price)     queryParams.append('min_price',     params.min_price.toString())
+    if (params?.max_price)     queryParams.append('max_price',     params.max_price.toString())
+    if (params?.location)      queryParams.append('location',      params.location)
+    if (params?.available_now) queryParams.append('available_now', 'true')
+    if (params?.sort_by)       queryParams.append('sort_by',       params.sort_by)
+    if (params?.limit  != null) queryParams.append('limit',        params.limit.toString())
+    if (params?.offset != null) queryParams.append('offset',       params.offset.toString())
     const qs = queryParams.toString()
     return this.makeRequest(
       `/service-provider/services/marketplace${qs ? `?${qs}` : ''}`,
@@ -375,6 +379,7 @@ class ApiService {
     return this.makeRequest('/service-provider/services/my-services', { method: 'GET' })
   }
 
+  // This endpoint is public on the backend but we still send the token if available — that's fine.
   async getServiceById(service_id: string) {
     return this.makeRequest(`/service-provider/services/${service_id}`, { method: 'GET' })
   }

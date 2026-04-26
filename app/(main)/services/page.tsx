@@ -7,7 +7,7 @@ import {
   FiSearch, FiX, FiPhone, FiMapPin,
   FiCheckCircle, FiFilter, FiChevronDown, FiUsers,
   FiGrid, FiUserCheck, FiTool, FiArrowRight, FiSettings,
-  FiAlertCircle, FiRefreshCw, FiLoader, FiLock,
+  FiAlertCircle, FiRefreshCw, FiLoader,
 } from 'react-icons/fi'
 import {
   FaWhatsapp, FaStar, FaStarHalfAlt, FaRegStar,
@@ -16,48 +16,26 @@ import {
 } from 'react-icons/fa'
 import apiService from '@/services/apiService'
 
-/* ─── Icon mapping for category icons (UI config only) ────────── */
-// Map category names/IDs to icons and gradients
-const getCategoryIcon = (categoryName: string): React.ReactNode => {
-  const name = categoryName.toLowerCase()
-  if (name.includes('clean')) return <FaBroom size={14} />
-  if (name.includes('salon') || name.includes('barber')) return <FaCut size={14} />
-  if (name.includes('laundry')) return <FaTshirt size={14} />
-  if (name.includes('electrical')) return <FaBolt size={14} />
-  if (name.includes('repair')) return <FaWrench size={14} />
-  if (name.includes('tutor')) return <FaChalkboardTeacher size={14} />
-  if (name.includes('photo')) return <FaCamera size={14} />
-  return <FaLightbulb size={14} />
-}
+/* ─── categories (static — icons/gradients are UI config) ─────── */
+const serviceCategories = [
+  { id: 'cleaning',    name: 'Cleaning',        icon: 'FaBroom',             gradient: 'linear-gradient(135deg,#B42225,#FF6B00)' },
+  { id: 'salon',       name: 'Salon & Barber',   icon: 'FaCut',               gradient: 'linear-gradient(135deg,#7C3AED,#A78BFA)' },
+  { id: 'laundry',     name: 'Laundry',          icon: 'FaTshirt',            gradient: 'linear-gradient(135deg,#0891B2,#06B6D4)' },
+  { id: 'electrical',  name: 'Electrical',       icon: 'FaBolt',              gradient: 'linear-gradient(135deg,#D97706,#F59E0B)' },
+  { id: 'repair',      name: 'Repairs',          icon: 'FaWrench',            gradient: 'linear-gradient(135deg,#059669,#10B981)' },
+  { id: 'tutoring',    name: 'Tutoring',         icon: 'FaChalkboardTeacher', gradient: 'linear-gradient(135deg,#2563EB,#60A5FA)' },
+  { id: 'photography', name: 'Photography',      icon: 'FaCamera',            gradient: 'linear-gradient(135deg,#DB2777,#F472B6)' },
+]
 
-const getCategoryGradient = (categoryName: string): string => {
-  const name = categoryName.toLowerCase()
-  if (name.includes('clean')) return 'linear-gradient(135deg,#B42225,#FF6B00)'
-  if (name.includes('salon') || name.includes('barber')) return 'linear-gradient(135deg,#7C3AED,#A78BFA)'
-  if (name.includes('laundry')) return 'linear-gradient(135deg,#0891B2,#06B6D4)'
-  if (name.includes('electrical')) return 'linear-gradient(135deg,#D97706,#F59E0B)'
-  if (name.includes('repair')) return 'linear-gradient(135deg,#059669,#10B981)'
-  if (name.includes('tutor')) return 'linear-gradient(135deg,#2563EB,#60A5FA)'
-  if (name.includes('photo')) return 'linear-gradient(135deg,#DB2777,#F472B6)'
-  return 'linear-gradient(135deg,#6B7280,#9CA3AF)'
-}
-
-/* ─── Category interface from API ──────────────────────────────── */
-interface ApiCategory {
-  id: string
-  name: string
-  description?: string
-  category_type?: string
-  is_active?: boolean
-  parent_id?: string | null
-  attributes?: any[]
-}
-
-interface DisplayCategory {
-  id: string
-  name: string
-  icon: React.ReactNode
-  gradient: string
+const iconMap: Record<string, React.ReactNode> = {
+  FaBroom:             <FaBroom size={14} />,
+  FaCut:               <FaCut size={14} />,
+  FaTshirt:            <FaTshirt size={14} />,
+  FaBolt:              <FaBolt size={14} />,
+  FaWrench:            <FaWrench size={14} />,
+  FaLightbulb:         <FaLightbulb size={14} />,
+  FaChalkboardTeacher: <FaChalkboardTeacher size={14} />,
+  FaCamera:            <FaCamera size={14} />,
 }
 
 const PAGE_LIMIT = 12
@@ -69,7 +47,6 @@ interface ApiProvider {
   name?: string
   category_id?: string
   category?: string
-  category_name?: string
   description?: string
   price_type?: string
   starting_price?: number
@@ -97,7 +74,6 @@ interface DisplayProvider {
   name: string
   providerName: string
   category: string
-  categoryName: string
   image: string
   location: string
   rating: number
@@ -118,26 +94,22 @@ function formatPrice(type = 'fixed', price = 0): string {
 }
 
 function mapProvider(p: ApiProvider): DisplayProvider {
-  // Get category name from either category, category_name, or category_id
-  const categoryName = p.category_name || p.category || p.category_id || 'repair'
-  
   return {
-    id:           p.id,
-    name:         p.display_name || p.name || 'Unnamed Service',
-    providerName: p.business_name || p.provider_name || p.display_name || p.name || '',
-    category:     p.category_id || p.category || 'repair',
-    categoryName: categoryName,
-    image:        p.logo_url || p.cover_image_url || p.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500',
-    location:     p.location || 'Location not set',
-    rating:       p.rating ?? p.average_rating ?? 0,
-    reviews:      p.review_count ?? p.reviews ?? 0,
-    price:        p.starting_price ?? 0,
-    priceLabel:   formatPrice(p.price_type, p.starting_price),
-    whatsapp:     p.whatsapp_number || p.whatsapp || '',
-    phone:        p.phone || (p.whatsapp_number ? `+${p.whatsapp_number}` : ''),
-    available:    p.is_active ?? p.available ?? true,
-    tags:         p.tags || [],
-    description:  p.description || '',
+    id:          p.id,
+    name:        p.display_name  || p.name          || 'Unnamed Service',
+    providerName:p.business_name || p.provider_name  || p.display_name || p.name || '',
+    category:    p.category_id   || p.category       || 'repair',
+    image:       p.logo_url      || p.cover_image_url || p.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500',
+    location:    p.location      || 'Location not set',
+    rating:      p.rating        ?? p.average_rating ?? 0,
+    reviews:     p.review_count  ?? p.reviews        ?? 0,
+    price:       p.starting_price ?? 0,
+    priceLabel:  formatPrice(p.price_type, p.starting_price),
+    whatsapp:    p.whatsapp_number || p.whatsapp || '',
+    phone:       p.phone || (p.whatsapp_number ? `+${p.whatsapp_number}` : ''),
+    available:   p.is_active ?? p.available ?? true,
+    tags:        p.tags || [],
+    description: p.description || '',
   }
 }
 
@@ -153,15 +125,8 @@ const Stars = ({ rating }: { rating: number }) => (
 )
 
 /* ─── provider card ────────────────────────────────────────────── */
-const ProviderCard = ({ provider, categories }: { provider: DisplayProvider; categories: DisplayCategory[] }) => {
-  // Find category from our fetched categories, or create a fallback
-  const cat = categories.find(c => c.id === provider.category || c.name.toLowerCase() === provider.categoryName.toLowerCase()) || {
-    id: provider.category,
-    name: provider.categoryName,
-    icon: getCategoryIcon(provider.categoryName),
-    gradient: getCategoryGradient(provider.categoryName)
-  }
-  
+const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
+  const cat = serviceCategories.find(c => c.id === provider.category)
   return (
     <div
       className="bg-white rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col"
@@ -178,7 +143,7 @@ const ProviderCard = ({ provider, categories }: { provider: DisplayProvider; cat
         {cat && (
           <div className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-black px-2.5 py-1 rounded-full"
             style={{ background: cat.gradient }}>
-            {cat.icon} {cat.name}
+            {iconMap[cat.icon]} {cat.name}
           </div>
         )}
         <div className={`absolute top-3 right-3 text-[10px] font-black px-2.5 py-1 rounded-full ${provider.available ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}>
@@ -264,67 +229,8 @@ const SkeletonCard = () => (
   </div>
 )
 
-/* ─── Category Skeleton ────────────────────────────────────────── */
-const CategorySkeleton = () => (
-  <div className="px-4 py-2 rounded-xl bg-gray-200 animate-pulse w-24 h-10" />
-)
-
-/* ─── Login Required Modal ──────────────────────────────────────── */
-function LoginRequiredModal({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: () => void; onLogin: () => void }) {
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
-      <div className="relative bg-white rounded-3xl max-w-md w-full p-6 md:p-8 animate-success-pop">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <FiX size={18} />
-        </button>
-
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)' }}>
-            <FiLock size={32} className="text-white" />
-          </div>
-
-          <h3 className="font-black text-gray-900 text-xl mb-2" style={{ fontFamily: "'Georgia',serif" }}>
-            Account Required
-          </h3>
-
-          <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-            You need to log in or create an account to become a service provider on JOVO. It only takes a minute!
-          </p>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={onLogin}
-              className="w-full py-3 rounded-xl text-sm font-black text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 4px 12px rgba(180,34,37,0.3)' }}
-            >
-              Log In / Sign Up
-            </button>
-
-            <button
-              onClick={onClose}
-              className="w-full py-3 rounded-xl text-sm font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
-            >
-              Maybe Later
-            </button>
-          </div>
-
-          <p className="text-[11px] text-gray-400 mt-6">
-            By continuing, you agree to JOVO&apos;s Terms of Service and Privacy Policy.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─── provider CTA banner (with auth check) ──────────────────────── */
-function ProviderCTABanner({ isProvider, onApplyClick }: { isProvider: boolean | null; onApplyClick: () => void }) {
+/* ─── provider CTA banner ──────────────────────────────────────── */
+function ProviderCTABanner({ isProvider }: { isProvider: boolean | null }) {
   if (isProvider === null) return null
 
   if (isProvider) {
@@ -349,11 +255,8 @@ function ProviderCTABanner({ isProvider, onApplyClick }: { isProvider: boolean |
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-8 pt-5">
-      <div 
-        className="relative overflow-hidden rounded-2xl p-5 md:p-6 cursor-pointer transition-all hover:scale-[1.01]"
-        style={{ background: 'linear-gradient(135deg,#0f0f0f,#1a0a00)', border: '1px solid rgba(255,140,0,0.2)' }}
-        onClick={onApplyClick}
-      >
+      <div className="relative overflow-hidden rounded-2xl p-5 md:p-6"
+        style={{ background: 'linear-gradient(135deg,#0f0f0f,#1a0a00)', border: '1px solid rgba(255,140,0,0.2)' }}>
         <div className="absolute right-0 top-0 w-40 h-full opacity-20 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at right,#FF8C00,transparent 70%)' }} />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -368,12 +271,11 @@ function ProviderCTABanner({ isProvider, onApplyClick }: { isProvider: boolean |
               Join providers on JOVO — apply in 2 minutes and go live on the marketplace.
             </p>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onApplyClick() }}
+          <Link href="/services/apply"
             className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-black text-white whitespace-nowrap transition-all hover:opacity-90 shrink-0"
             style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 6px 20px rgba(180,34,37,0.35)' }}>
             Apply as Provider <FiArrowRight size={14} />
-          </button>
+          </Link>
         </div>
       </div>
     </div>
@@ -382,7 +284,6 @@ function ProviderCTABanner({ isProvider, onApplyClick }: { isProvider: boolean |
 
 /* ─── MAIN PAGE ────────────────────────────────────────────────── */
 export default function ServicesPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const [search, setSearch]               = useState('')
@@ -392,68 +293,33 @@ export default function ServicesPage() {
   const [showSort, setShowSort]           = useState(false)
 
   const [providers, setProviders]       = useState<DisplayProvider[]>([])
-  const [categories, setCategories]     = useState<DisplayCategory[]>([])
   const [total, setTotal]               = useState(0)
   const [offset, setOffset]             = useState(0)
   const [loading, setLoading]           = useState(true)
   const [loadingMore, setLoadingMore]   = useState(false)
-  const [loadingCategories, setLoadingCategories] = useState(true)
   const [error, setError]               = useState('')
   const [isProvider, setIsProvider]     = useState<boolean | null>(null)
-  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  /* Fetch categories from backend when component mounts */
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true)
-        // Fetch SERVICE categories from backend
-        const response = await apiService.getPublicCategories('SERVICE')
-        console.log('Categories API response:', response)
-        
-        // Extract categories from response (handle different response shapes)
-        let categoriesData = response?.data || response
-        
-        if (categoriesData?.categories && Array.isArray(categoriesData.categories)) {
-          categoriesData = categoriesData.categories
-        } else if (categoriesData?.items && Array.isArray(categoriesData.items)) {
-          categoriesData = categoriesData.items
-        } else if (!Array.isArray(categoriesData)) {
-          categoriesData = []
-        }
-        
-        // Map API categories to display format
-        const mappedCategories: DisplayCategory[] = categoriesData
-          .filter((cat: ApiCategory) => cat.is_active !== false) // Only show active categories
-          .map((cat: ApiCategory) => ({
-            id: cat.id,
-            name: cat.name,
-            icon: getCategoryIcon(cat.name),
-            gradient: getCategoryGradient(cat.name),
-          }))
-        
-        setCategories(mappedCategories)
-        console.log('Mapped categories:', mappedCategories)
-      } catch (err) {
-        console.error('Failed to fetch categories:', err)
-        // Fallback to empty array - categories will still work but won't show icons nicely
-        setCategories([])
-      } finally {
-        setLoadingCategories(false)
-      }
-    }
-    
-    fetchCategories()
-  }, [])
 
   /* check provider status */
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) { setIsProvider(false); return }
     apiService.getServiceProviderDetails()
-      .then(res => setIsProvider(!!(res?.data?.id || res?.id)))
+      .then(res => {
+        const p = res?.data || res
+        if (!p?.id) { setIsProvider(false); return }
+        // Check active status — same logic as resolveStatus in dashboard
+        const isActive = p.is_active === true
+        const rawStatus = (p.provider_status || p.status || p.account_status || '')
+          .toString().toLowerCase().trim()
+        const statusActive = ['active', 'verified', 'approved', 'complete', 'completed', 'enabled'].includes(rawStatus)
+        const pendingButVerified = ['pending', 'under_review', 'submitted', 'reviewing', 'review', ''].includes(rawStatus)
+          && p.is_phone_verified === true
+        // Only treat as provider if genuinely active — not just applied
+        setIsProvider(isActive || statusActive || pendingButVerified)
+      })
       .catch(() => setIsProvider(false))
   }, [])
 
@@ -463,7 +329,7 @@ export default function ServicesPage() {
     if (cat) setCategory(cat)
   }, [searchParams])
 
-  /* fetch providers */
+  /* fetch */
   const fetchProviders = useCallback(async (resetOffset: boolean, currentOffset: number) => {
     if (!resetOffset) setLoadingMore(true)
     else { setLoading(true); setError('') }
@@ -474,9 +340,10 @@ export default function ServicesPage() {
         limit:   PAGE_LIMIT,
         offset:  currentOffset,
       }
-      if (activeCategory !== 'all') params.category_id  = activeCategory
-      if (showAvailable)            params.available_now = true
-      if (search.trim())            params.location      = search.trim()
+      if (activeCategory !== 'all') params.category_id = activeCategory
+      if (search.trim())            params.location     = search.trim()
+      // available_now NOT sent to API — backend checks schedule vs current time
+      // which is too strict. We filter by is_active client-side instead.
 
       const res   = await apiService.getMarketplaceServices(params)
       const raw   = res?.data ?? res ?? []
@@ -487,11 +354,13 @@ export default function ServicesPage() {
         : Array.isArray(raw.services) ? raw.services
         : []
 
-      const totalCount = raw.total ?? raw.count ?? items.length
-      const mapped     = items.map(mapProvider)
+      const totalCount  = raw.total ?? raw.count ?? items.length
+      const allMapped   = items.map(mapProvider)
+      // client-side available filter
+      const mapped      = showAvailable ? allMapped.filter(p => p.available) : allMapped
 
       setProviders(prev => resetOffset ? mapped : [...prev, ...mapped])
-      setTotal(totalCount)
+      setTotal(showAvailable ? mapped.length : totalCount)
       setOffset(currentOffset + PAGE_LIMIT)
     } catch (err: any) {
       if (resetOffset) setError(err.message || 'Failed to load services.')
@@ -509,37 +378,12 @@ export default function ServicesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, showAvailable, sortBy, search])
 
-  /* handle apply as provider with auth check */
-  const handleApplyAsProvider = useCallback(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) {
-      setShowLoginModal(true)
-      return
-    }
-    // User is logged in, proceed to apply page
-    router.push('/services/apply')
-  }, [router])
-
-  const handleLoginRedirect = useCallback(() => {
-    setShowLoginModal(false)
-    // Store the intended destination
-    localStorage.setItem('redirectAfterLogin', '/services/apply')
-    router.push('/login')
-  }, [router])
-
   const hasMore    = providers.length < total
   const sortLabel  = sortBy === 'top_rated' ? 'Top Rated' : sortBy === 'most_reviewed' ? 'Most Reviewed' : 'Lowest Price'
   const dotBg      = { backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.8) 1px,transparent 1px)', backgroundSize: '28px 28px' }
 
   return (
     <>
-      {/* Login Required Modal */}
-      <LoginRequiredModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-        onLogin={handleLoginRedirect} 
-      />
-
       {/* ── Hero ── */}
       <div className="relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#111 40%,#1a0a00 70%,#2a1500 100%)' }}>
@@ -577,7 +421,7 @@ export default function ServicesPage() {
           <div className="flex flex-wrap gap-2 md:gap-4 mt-6">
             {[
               { num: total > 0 ? `${total}` : '—', label: 'Providers',     icon: <FiUsers size={10} /> },
-              { num: `${categories.length}`,         label: 'Categories',    icon: <FiGrid size={10} /> },
+              { num: `${serviceCategories.length}`,  label: 'Categories',    icon: <FiGrid size={10} /> },
               { num: `${providers.filter(p => p.available).length}`, label: 'Available Now', icon: <FiUserCheck size={10} /> },
             ].map(({ num, label, icon }) => (
               <div key={label} className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl"
@@ -593,11 +437,11 @@ export default function ServicesPage() {
 
       {/* ── Content ── */}
       <div style={{ background: '#F4F5F9' }}>
-        <ProviderCTABanner isProvider={isProvider} onApplyClick={handleApplyAsProvider} />
+        <ProviderCTABanner isProvider={isProvider} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
 
-          {/* category tabs - NOW DYNAMIC FROM BACKEND */}
+          {/* category tabs */}
           <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap mb-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <button onClick={() => setCategory('all')}
@@ -605,24 +449,13 @@ export default function ServicesPage() {
               style={activeCategory === 'all' ? { background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 4px 12px rgba(180,34,37,0.3)' } : {}}>
               <FiGrid size={12} className="inline mr-1" /> All Services
             </button>
-            
-            {loadingCategories ? (
-              // Show skeleton loaders while categories load
-              <>
-                <CategorySkeleton />
-                <CategorySkeleton />
-                <CategorySkeleton />
-                <CategorySkeleton />
-              </>
-            ) : (
-              categories.map(cat => (
-                <button key={cat.id} onClick={() => setCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${activeCategory === cat.id ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-                  style={activeCategory === cat.id ? { background: cat.gradient, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' } : {}}>
-                  {cat.icon} {cat.name}
-                </button>
-              ))
-            )}
+            {serviceCategories.map(cat => (
+              <button key={cat.id} onClick={() => setCategory(cat.id)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${activeCategory === cat.id ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                style={activeCategory === cat.id ? { background: cat.gradient, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' } : {}}>
+                {iconMap[cat.icon]} {cat.name}
+              </button>
+            ))}
           </div>
 
           {/* filter row */}
@@ -704,7 +537,7 @@ export default function ServicesPage() {
           {!loading && !error && providers.length > 0 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                {providers.map(p => <ProviderCard key={p.id} provider={p} categories={categories} />)}
+                {providers.map(p => <ProviderCard key={p.id} provider={p} />)}
               </div>
 
               {hasMore && (

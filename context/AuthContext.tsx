@@ -36,37 +36,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     updated_at: userData.updated_at,
     last_login: userData.last_login,
     profile_image: userData.profile_image || null,
+    photoURL: userData.profile_image || userData.photoURL || null,
     location: userData.location || null,
     seller_id: userData.seller_id || null,
     seller_status: userData.seller_status || null,
     has_applied_as_seller: userData.has_applied_as_seller || false,
   })
 
+  // FIXED: Auth persistence - async/await pattern to prevent race conditions
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const storedUser = localStorage.getItem('user')
-    const accessToken = localStorage.getItem('access_token')
-    const savedSellerMode = localStorage.getItem('sellerMode') === 'true'
-    setSellerMode(savedSellerMode)
-    if (storedUser && accessToken) {
-      if (!ApiService.isTokenExpired(accessToken)) {
-        setUser(JSON.parse(storedUser))
-        setLoading(false)
-      } else {
-        ApiService.refreshAccessToken()
-          .then(() => ApiService.getCurrentUser())
-          .then((freshUser: any) => {
+    
+    const initAuth = async () => {
+      const storedUser = localStorage.getItem('user')
+      const accessToken = localStorage.getItem('access_token')
+      const savedSellerMode = localStorage.getItem('sellerMode') === 'true'
+      setSellerMode(savedSellerMode)
+      
+      if (storedUser && accessToken) {
+        if (!ApiService.isTokenExpired(accessToken)) {
+          setUser(JSON.parse(storedUser))
+          setLoading(false)
+        } else {
+          try {
+            await ApiService.refreshAccessToken()
+            const freshUser = await ApiService.getCurrentUser()
             const mappedUser = mapUserData(freshUser.data || freshUser)
             localStorage.setItem('user', JSON.stringify(mappedUser))
             setUser(mappedUser)
-          })
-          .catch(() => ApiService.clearTokens())
-          .finally(() => setLoading(false))
-        return
+          } catch (error) {
+            console.error('Token refresh failed:', error)
+            ApiService.clearTokens()
+            localStorage.removeItem('user')
+            setUser(null)
+          } finally {
+            setLoading(false)
+          }
+        }
+      } else {
+        setLoading(false)
       }
-    } else {
-      setLoading(false)
     }
+    
+    initAuth()
   }, [])
 
   useEffect(() => {
@@ -119,6 +131,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         school_id: formData.schoolId, schoolId: formData.schoolId,
         role: basicUserData.role || 'user', is_active: basicUserData.is_active || false,
         profile_complete: false, created_at: basicUserData.created_at || new Date().toISOString(),
+        profile_image: null, photoURL: null, location: null,
+        seller_id: null, seller_status: null, has_applied_as_seller: false,
       }
       localStorage.setItem('user', JSON.stringify(mappedUser))
       setUser(mappedUser)
@@ -173,6 +187,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('📦 Google auth response:', response)
     if (response.access_token) { ApiService.storeTokens(response.access_token, response.refresh_token); console.log('✅ Tokens stored from Google auth') }
     let userData = response.data?.user || response.user || response.data || null
+    if (result.user.photoURL && userData) {
+      userData.profile_image = result.user.photoURL
+      userData.photoURL = result.user.photoURL
+    }
     try {
       const freshUser = await ApiService.getCurrentUser()
       if (freshUser && (freshUser.data || freshUser)) { userData = freshUser.data || freshUser; console.log('✅ Fetched fresh user data:', userData) }
