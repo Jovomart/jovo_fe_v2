@@ -177,6 +177,7 @@ const ProductDetails = () => {
   const router = useRouter()
   const navigate = (p: string) => router.push(p)
 
+<<<<<<< HEAD
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("description");
@@ -192,12 +193,29 @@ const ProductDetails = () => {
   // Delivery options state
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [deliveryLoading, setDeliveryLoading] = useState<boolean>(true);
+=======
+  const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [activeTab, setActiveTab] = useState("description");
+  const [deliveryOpen, setDeliveryOpen] = useState(true);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [helpfulVoted, setHelpfulVoted] = useState<number[]>([]);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
+  const [pincode, setPincode] = useState("");
+  const [pincodeChecked, setPincodeChecked] = useState(false);
+
+  // Delivery options state
+  const [deliveryOptions, setDeliveryOptions] = useState<any[]>([]);
+  const [deliveryLoading, setDeliveryLoading] = useState(true);
+>>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const product = products.find((p: Product) => p.id === Number(id)) as Product | undefined;
 
   // Product weight (default 1kg if not specified)
-  const productWeight = product?.weight || 1;
+  const productWeight = (product as any)?.weight || 1;
   const totalWeight = productWeight * quantity;
 
   // Fetch delivery options on component mount and when quantity/cart total changes
@@ -300,7 +318,7 @@ const ProductDetails = () => {
         }
       } catch (err: any) {
         console.error("Failed to fetch delivery options:", err);
-        setDeliveryError(err.message);
+        setDeliveryError(err instanceof Error ? err.message : String(err));
       } finally {
         setDeliveryLoading(false);
       }
@@ -932,7 +950,7 @@ const ProductDetails = () => {
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Warranty", value: product.warranty || "1 Year" },
+                    { label: "Warranty", value: (product as any).warranty || "1 Year" },
                     { label: "Authenticity", value: "100% Genuine" },
                     { label: "Payment", value: "SSL Secured" },
                     { label: "Seller", value: "Jovo Verified" },
@@ -1037,7 +1055,7 @@ const ProductDetails = () => {
                         : "—",
                     },
                     { label: "Condition", value: "Brand New" },
-                    { label: "Warranty", value: product.warranty || "1 Year" },
+                    { label: "Warranty", value: (product as any).warranty || "1 Year" },
                     {
                       label: "SKU",
                       value: `JVO-${product.id}-${product.category?.toUpperCase().slice(0, 3)}`,

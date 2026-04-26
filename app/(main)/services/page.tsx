@@ -1,8 +1,13 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation'
+<<<<<<< HEAD
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Footer from '@/components/layout/Footer'
+=======
+import { useState, useMemo, useEffect, Suspense } from "react";
+import Footer from "@/components/layout/Footer";
+>>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
 import {
   FiSearch, FiX, FiPhone, FiMapPin,
   FiCheckCircle, FiFilter, FiChevronDown, FiUsers,
@@ -248,6 +253,7 @@ const ProviderCard = ({ provider, categories }: { provider: DisplayProvider; cat
   )
 }
 
+<<<<<<< HEAD
 /* ─── skeleton card ────────────────────────────────────────────── */
 const SkeletonCard = () => (
   <div className="bg-white rounded-3xl overflow-hidden animate-pulse" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
@@ -263,6 +269,16 @@ const SkeletonCard = () => (
     </div>
   </div>
 )
+=======
+const ServicesPageInner = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState("");
+  const [activeCategory, setCategory] = useState(searchParams?.get("category") || "all");
+  const [showAvailable, setShowAvailable] = useState(false);
+  const [sortBy, setSortBy] = useState("rating");
+  const [showSort, setShowSort] = useState(false);
+>>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
 
 /* ─── Category Skeleton ────────────────────────────────────────── */
 const CategorySkeleton = () => (
@@ -728,5 +744,18 @@ export default function ServicesPage() {
 
       <Footer />
     </>
+<<<<<<< HEAD
   )
 }
+=======
+  );
+};
+
+const ServicesPage = () => (
+  <Suspense>
+    <ServicesPageInner />
+  </Suspense>
+);
+
+export default ServicesPage;
+>>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6

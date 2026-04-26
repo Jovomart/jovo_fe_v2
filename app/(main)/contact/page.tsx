@@ -17,6 +17,7 @@ import {
   MdLocationOn, MdAccessTime, MdSend,
 } from "react-icons/md";
 
+<<<<<<< HEAD
 // Define proper types
 interface FormData {
   name: string;
@@ -52,6 +53,15 @@ const Contact = () => {
 
   const validate = (): boolean => {
     const e: Errors = {};
+=======
+const Contact = () => {
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+>>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
     if (!formData.name.trim()) e.name = "Name is required";
     if (!formData.email.trim()) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Enter a valid email address";
