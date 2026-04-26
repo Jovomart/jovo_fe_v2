@@ -236,21 +236,12 @@ const HeroSection = () => {
   const router = useRouter()
   const navigate = (p: string) => router.push(p)
   const { isSeller } = useContext(AuthContext);
-<<<<<<< HEAD
   const [current, setCurrent] = useState<number>(0);
   const [muted, setMuted] = useState<boolean>(true);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [showAllCategoriesModal, setShowAllCategoriesModal] = useState<boolean>(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-=======
-  const [current, setCurrent] = useState(0);
-  const [muted, setMuted] = useState(true);
-  const [loaded, setLoaded] = useState(false);
-  const [showAllCategoriesModal, setShowAllCategoriesModal] = useState(false);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
->>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
 
   const goTo = useCallback((idx: number) => {
     setCurrent(idx);
@@ -359,13 +350,9 @@ const HeroSection = () => {
             {slides.map((s, i) => (
               <video
                 key={s.id}
-<<<<<<< HEAD
                 ref={(el) => {
                   videoRefs.current[i] = el;
                 }}
-=======
-                ref={(el) => { videoRefs.current[i] = el; }}
->>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
                 src={s.video}
                 loop
                 muted={muted}
@@ -693,16 +680,7 @@ const HeroSection = () => {
                       src={cat.image}
                       alt={cat.name}
                       className="w-full h-full object-cover"
-<<<<<<< HEAD
                       onError={handleImageError}
-=======
-                      onError={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        img.style.display = "none";
-                        const sibling = img.nextSibling as HTMLElement | null;
-                        if (sibling) sibling.style.display = "flex";
-                      }}
->>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
                     />
                     <div
                       className="w-full h-full hidden items-center justify-center text-white font-bold text-xs"

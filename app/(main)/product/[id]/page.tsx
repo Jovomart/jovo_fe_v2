@@ -177,7 +177,6 @@ const ProductDetails = () => {
   const router = useRouter()
   const navigate = (p: string) => router.push(p)
 
-<<<<<<< HEAD
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("description");
@@ -193,23 +192,6 @@ const ProductDetails = () => {
   // Delivery options state
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [deliveryLoading, setDeliveryLoading] = useState<boolean>(true);
-=======
-  const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [activeTab, setActiveTab] = useState("description");
-  const [deliveryOpen, setDeliveryOpen] = useState(true);
-  const [returnOpen, setReturnOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [helpfulVoted, setHelpfulVoted] = useState<number[]>([]);
-  const [addedToCart, setAddedToCart] = useState(false);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
-  const [pincode, setPincode] = useState("");
-  const [pincodeChecked, setPincodeChecked] = useState(false);
-
-  // Delivery options state
-  const [deliveryOptions, setDeliveryOptions] = useState<any[]>([]);
-  const [deliveryLoading, setDeliveryLoading] = useState(true);
->>>>>>> c7050bc08a9b18774be76bb542ced35d118ad6e6
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const product = products.find((p: Product) => p.id === Number(id)) as Product | undefined;
