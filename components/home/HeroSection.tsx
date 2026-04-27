@@ -658,7 +658,7 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* ── Mobile categories horizontal scroller ── */}
+          {/* ── Mobile categories horizontal scroll ── */}
           <div className="px-4 py-4" style={{ background: "#fff" }}>
             <div
               className="flex gap-3 overflow-x-auto pb-1"
