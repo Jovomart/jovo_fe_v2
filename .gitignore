@@ -40,7 +40,6 @@ yarn-error.log*
 .env.*.local
 
 # Docker
-.dockerignore
 docker-compose.override.yml
 
 # Vercel
@@ -135,7 +134,7 @@ dist
 
 # Gatsby files
 .cache/
-public
+
 
 # Storybook build output
 storybook-static

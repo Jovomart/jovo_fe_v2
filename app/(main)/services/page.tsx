@@ -12,41 +12,53 @@ import {
 import {
   FaWhatsapp, FaStar, FaStarHalfAlt, FaRegStar,
   FaBroom, FaCut, FaTshirt, FaBolt, FaWrench,
-  FaLightbulb, FaChalkboardTeacher, FaCamera,
+  FaLightbulb, FaChalkboardTeacher, FaCamera, FaTools,
 } from 'react-icons/fa'
 import apiService from '@/services/apiService'
 
-/* ─── categories (static — icons/gradients are UI config) ─────── */
-const serviceCategories = [
-  { id: 'cleaning',    name: 'Cleaning',        icon: 'FaBroom',             gradient: 'linear-gradient(135deg,#B42225,#FF6B00)' },
-  { id: 'salon',       name: 'Salon & Barber',   icon: 'FaCut',               gradient: 'linear-gradient(135deg,#7C3AED,#A78BFA)' },
-  { id: 'laundry',     name: 'Laundry',          icon: 'FaTshirt',            gradient: 'linear-gradient(135deg,#0891B2,#06B6D4)' },
-  { id: 'electrical',  name: 'Electrical',       icon: 'FaBolt',              gradient: 'linear-gradient(135deg,#D97706,#F59E0B)' },
-  { id: 'repair',      name: 'Repairs',          icon: 'FaWrench',            gradient: 'linear-gradient(135deg,#059669,#10B981)' },
-  { id: 'tutoring',    name: 'Tutoring',         icon: 'FaChalkboardTeacher', gradient: 'linear-gradient(135deg,#2563EB,#60A5FA)' },
-  { id: 'photography', name: 'Photography',      icon: 'FaCamera',            gradient: 'linear-gradient(135deg,#DB2777,#F472B6)' },
-]
+/* ─── icon mapping for visual display (UI only) ─────── */
+const getIconForCategory = (categoryName: string): React.ReactNode => {
+  const name = categoryName.toLowerCase()
+  if (name.includes('clean')) return <FaBroom size={14} />
+  if (name.includes('salon') || name.includes('barber') || name.includes('hair')) return <FaCut size={14} />
+  if (name.includes('laundry') || name.includes('wash')) return <FaTshirt size={14} />
+  if (name.includes('electrical') || name.includes('electrician') || name.includes('electric')) return <FaBolt size={14} />
+  if (name.includes('repair') || name.includes('fix') || name.includes('handyman')) return <FaWrench size={14} />
+  if (name.includes('tutor') || name.includes('teach') || name.includes('education')) return <FaChalkboardTeacher size={14} />
+  if (name.includes('photo') || name.includes('camera')) return <FaCamera size={14} />
+  return <FaTools size={14} />
+}
 
-const iconMap: Record<string, React.ReactNode> = {
-  FaBroom:             <FaBroom size={14} />,
-  FaCut:               <FaCut size={14} />,
-  FaTshirt:            <FaTshirt size={14} />,
-  FaBolt:              <FaBolt size={14} />,
-  FaWrench:            <FaWrench size={14} />,
-  FaLightbulb:         <FaLightbulb size={14} />,
-  FaChalkboardTeacher: <FaChalkboardTeacher size={14} />,
-  FaCamera:            <FaCamera size={14} />,
+const getGradientForCategory = (categoryName: string): string => {
+  const name = categoryName.toLowerCase()
+  if (name.includes('clean')) return 'linear-gradient(135deg,#B42225,#FF6B00)'
+  if (name.includes('salon') || name.includes('barber')) return 'linear-gradient(135deg,#7C3AED,#A78BFA)'
+  if (name.includes('laundry')) return 'linear-gradient(135deg,#0891B2,#06B6D4)'
+  if (name.includes('electrical') || name.includes('electrician')) return 'linear-gradient(135deg,#D97706,#F59E0B)'
+  if (name.includes('repair')) return 'linear-gradient(135deg,#059669,#10B981)'
+  if (name.includes('tutor')) return 'linear-gradient(135deg,#2563EB,#60A5FA)'
+  if (name.includes('photo')) return 'linear-gradient(135deg,#DB2777,#F472B6)'
+  return 'linear-gradient(135deg,#6B7280,#9CA3AF)'
 }
 
 const PAGE_LIMIT = 12
 
-/* ─── API response → display shape ────────────────────────────── */
+/* ─── API response interfaces ────────────────────────────── */
+interface CategoryFromAPI {
+  id: string
+  name: string
+  slug?: string
+  description?: string
+  category_type?: string
+}
+
 interface ApiProvider {
   id: string
   display_name?: string
   name?: string
   category_id?: string
   category?: string
+  category_name?: string
   description?: string
   price_type?: string
   starting_price?: number
@@ -73,7 +85,8 @@ interface DisplayProvider {
   id: string
   name: string
   providerName: string
-  category: string
+  categoryId: string
+  categoryName: string
   image: string
   location: string
   rating: number
@@ -93,26 +106,6 @@ function formatPrice(type = 'fixed', price = 0): string {
   return price > 0 ? `${prefix}₦${price.toLocaleString()}` : 'Price on request'
 }
 
-function mapProvider(p: ApiProvider): DisplayProvider {
-  return {
-    id:          p.id,
-    name:        p.display_name  || p.name          || 'Unnamed Service',
-    providerName:p.business_name || p.provider_name  || p.display_name || p.name || '',
-    category:    p.category_id   || p.category       || 'repair',
-    image:       p.logo_url      || p.cover_image_url || p.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500',
-    location:    p.location      || 'Location not set',
-    rating:      p.rating        ?? p.average_rating ?? 0,
-    reviews:     p.review_count  ?? p.reviews        ?? 0,
-    price:       p.starting_price ?? 0,
-    priceLabel:  formatPrice(p.price_type, p.starting_price),
-    whatsapp:    p.whatsapp_number || p.whatsapp || '',
-    phone:       p.phone || (p.whatsapp_number ? `+${p.whatsapp_number}` : ''),
-    available:   p.is_active ?? p.available ?? true,
-    tags:        p.tags || [],
-    description: p.description || '',
-  }
-}
-
 /* ─── stars ────────────────────────────────────────────────────── */
 const Stars = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5">
@@ -126,7 +119,9 @@ const Stars = ({ rating }: { rating: number }) => (
 
 /* ─── provider card ────────────────────────────────────────────── */
 const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
-  const cat = serviceCategories.find(c => c.id === provider.category)
+  const icon = getIconForCategory(provider.categoryName)
+  const gradient = getGradientForCategory(provider.categoryName)
+  
   return (
     <div
       className="bg-white rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col"
@@ -140,12 +135,10 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
           onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        {cat && (
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-black px-2.5 py-1 rounded-full"
-            style={{ background: cat.gradient }}>
-            {iconMap[cat.icon]} {cat.name}
-          </div>
-        )}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-black px-2.5 py-1 rounded-full"
+          style={{ background: gradient }}>
+          {icon} {provider.categoryName}
+        </div>
         <div className={`absolute top-3 right-3 text-[10px] font-black px-2.5 py-1 rounded-full ${provider.available ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}>
           {provider.available ? '● Available' : '● Busy'}
         </div>
@@ -190,7 +183,7 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
         <div className="flex gap-2 mt-auto pt-2 border-t border-gray-100">
           {provider.whatsapp ? (
             <a
-              href={`https://wa.me/${provider.whatsapp}?text=Hi, I found you on JOVO and I'd like to book your ${cat?.name || ''} service.`}
+              href={`https://wa.me/${provider.whatsapp}?text=Hi, I found you on JOVO and I'd like to book your ${provider.categoryName} service.`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black text-white transition-all hover:opacity-90"
               style={{ background: '#25D366' }}>
@@ -287,20 +280,64 @@ export default function ServicesPage() {
   const searchParams = useSearchParams()
 
   const [search, setSearch]               = useState('')
-  const [activeCategory, setCategory]     = useState(searchParams?.get('category') || 'all')
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(searchParams?.get('category') || null)
   const [showAvailable, setShowAvailable] = useState(false)
   const [sortBy, setSortBy]               = useState<'top_rated' | 'most_reviewed' | 'lowest_price'>('top_rated')
   const [showSort, setShowSort]           = useState(false)
 
-  const [providers, setProviders]       = useState<DisplayProvider[]>([])
-  const [total, setTotal]               = useState(0)
-  const [offset, setOffset]             = useState(0)
-  const [loading, setLoading]           = useState(true)
-  const [loadingMore, setLoadingMore]   = useState(false)
-  const [error, setError]               = useState('')
-  const [isProvider, setIsProvider]     = useState<boolean | null>(null)
+  const [categories, setCategories]       = useState<CategoryFromAPI[]>([])
+  const [providers, setProviders]         = useState<DisplayProvider[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [loadingMore, setLoadingMore]     = useState(false)
+  const [error, setError]                 = useState('')
+  const [isProvider, setIsProvider]       = useState<boolean | null>(null)
+  const [nextOffset, setNextOffset]       = useState<number | null>(null)
+  const [hasMore, setHasMore]             = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Update the fetchCategories function to properly extract categories from the response:
+
+const fetchCategories = useCallback(async () => {
+  try {
+    const response = await apiService.getPublicCategories('SERVICE')
+    
+    // Log the full response to see what we're getting
+    console.log('Full API Response:', response)
+    
+    let cats: CategoryFromAPI[] = []
+    
+    // Try different response structures
+    if (Array.isArray(response)) {
+      cats = response
+    } else if (response?.data && Array.isArray(response.data)) {
+      cats = response.data
+    } else if (response?.categories && Array.isArray(response.categories)) {
+      cats = response.categories
+    } else if (response?.items && Array.isArray(response.items)) {
+      cats = response.items
+    } else if (response?.results && Array.isArray(response.results)) {
+      cats = response.results
+    } else if (response?.data?.categories && Array.isArray(response.data.categories)) {
+      cats = response.data.categories
+    } else if (typeof response === 'object') {
+      // Try to find any array property in the response
+      for (const key in response) {
+        if (Array.isArray(response[key])) {
+          cats = response[key]
+          console.log(`Found categories in response.${key}`)
+          break
+        }
+      }
+    }
+    
+    console.log('Extracted categories:', cats)
+    setCategories(cats)
+  } catch (err) {
+    console.error('Failed to fetch categories:', err)
+    setCategories([])
+  }
+}, [])
 
   /* check provider status */
   useEffect(() => {
@@ -310,27 +347,31 @@ export default function ServicesPage() {
       .then(res => {
         const p = res?.data || res
         if (!p?.id) { setIsProvider(false); return }
-        // Check active status — same logic as resolveStatus in dashboard
         const isActive = p.is_active === true
         const rawStatus = (p.provider_status || p.status || p.account_status || '')
           .toString().toLowerCase().trim()
         const statusActive = ['active', 'verified', 'approved', 'complete', 'completed', 'enabled'].includes(rawStatus)
         const pendingButVerified = ['pending', 'under_review', 'submitted', 'reviewing', 'review', ''].includes(rawStatus)
           && p.is_phone_verified === true
-        // Only treat as provider if genuinely active — not just applied
         setIsProvider(isActive || statusActive || pendingButVerified)
       })
       .catch(() => setIsProvider(false))
   }, [])
 
+  // Load categories on mount
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
+
   /* sync category from URL */
   useEffect(() => {
-    const cat = searchParams?.get('category')
-    if (cat) setCategory(cat)
+    const catId = searchParams?.get('category')
+    if (catId) setActiveCategoryId(catId)
+    else setActiveCategoryId(null)
   }, [searchParams])
 
-  /* fetch */
-  const fetchProviders = useCallback(async (resetOffset: boolean, currentOffset: number) => {
+  /* fetch providers */
+  const fetchProviders = useCallback(async (resetOffset: boolean, currentOffset: number = 0) => {
     if (!resetOffset) setLoadingMore(true)
     else { setLoading(true); setError('') }
 
@@ -340,35 +381,89 @@ export default function ServicesPage() {
         limit:   PAGE_LIMIT,
         offset:  currentOffset,
       }
-      if (activeCategory !== 'all') params.category_id = activeCategory
-      if (search.trim())            params.location     = search.trim()
-      // available_now NOT sent to API — backend checks schedule vs current time
-      // which is too strict. We filter by is_active client-side instead.
+      
+      // Send category filter to API if selected
+      if (activeCategoryId) {
+        params.category_id = activeCategoryId
+      }
+      
+      if (search.trim()) {
+        params.location = search.trim()
+      }
 
-      const res   = await apiService.getMarketplaceServices(params)
-      const raw   = res?.data ?? res ?? []
-      const items: ApiProvider[] = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw.items)    ? raw.items
-        : Array.isArray(raw.results)  ? raw.results
-        : Array.isArray(raw.services) ? raw.services
-        : []
+      const res = await apiService.getMarketplaceServices(params)
+      const raw = res?.data ?? res ?? []
+      let items: ApiProvider[] = []
+      
+      if (Array.isArray(raw)) {
+        items = raw
+      } else if (Array.isArray(raw.items)) {
+        items = raw.items
+      } else if (Array.isArray(raw.results)) {
+        items = raw.results
+      } else if (Array.isArray(raw.services)) {
+        items = raw.services
+      }
+      
+      const hasMoreData = items.length === PAGE_LIMIT
+      setHasMore(hasMoreData)
+      
+      // Build category map from fetched categories
+      const catMap: Record<string, CategoryFromAPI> = {}
+      categories.forEach(cat => {
+        catMap[cat.id] = cat
+      })
+      
+      // Map providers with category info
+      let mappedProviders: DisplayProvider[] = items.map(provider => {
+        const categoryId = provider.category_id || provider.category || ''
+        const category = catMap[categoryId]
+        
+        return {
+          id: provider.id,
+          name: provider.display_name || provider.name || 'Unnamed Service',
+          providerName: provider.business_name || provider.provider_name || provider.display_name || provider.name || '',
+          categoryId: categoryId,
+          categoryName: category?.name || provider.category_name || 'Service',
+          image: provider.logo_url || provider.cover_image_url || provider.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500',
+          location: provider.location || 'Location not set',
+          rating: provider.rating ?? provider.average_rating ?? 0,
+          reviews: provider.review_count ?? provider.reviews ?? 0,
+          price: provider.starting_price ?? 0,
+          priceLabel: formatPrice(provider.price_type, provider.starting_price),
+          whatsapp: provider.whatsapp_number || provider.whatsapp || '',
+          phone: provider.phone || (provider.whatsapp_number ? `+${provider.whatsapp_number}` : ''),
+          available: provider.is_active ?? provider.available ?? true,
+          tags: provider.tags || [],
+          description: provider.description || '',
+        }
+      })
+      
+      // Apply client-side sorting
+      if (sortBy === 'top_rated') {
+        mappedProviders.sort((a, b) => b.rating - a.rating)
+      } else if (sortBy === 'most_reviewed') {
+        mappedProviders.sort((a, b) => b.reviews - a.reviews)
+      } else if (sortBy === 'lowest_price') {
+        mappedProviders.sort((a, b) => a.price - b.price)
+      }
 
-      const totalCount  = raw.total ?? raw.count ?? items.length
-      const allMapped   = items.map(mapProvider)
-      // client-side available filter
-      const mapped      = showAvailable ? allMapped.filter(p => p.available) : allMapped
-
-      setProviders(prev => resetOffset ? mapped : [...prev, ...mapped])
-      setTotal(showAvailable ? mapped.length : totalCount)
-      setOffset(currentOffset + PAGE_LIMIT)
+      setProviders(prev => resetOffset ? mappedProviders : [...prev, ...mappedProviders])
+      setNextOffset(currentOffset + PAGE_LIMIT)
     } catch (err: any) {
       if (resetOffset) setError(err.message || 'Failed to load services.')
     } finally {
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [activeCategory, showAvailable, sortBy, search])
+  }, [activeCategoryId, sortBy, search, categories])
+
+  /* load more */
+  const loadMore = useCallback(() => {
+    if (nextOffset !== null && !loadingMore) {
+      fetchProviders(false, nextOffset)
+    }
+  }, [fetchProviders, nextOffset, loadingMore])
 
   /* re-fetch when filters change */
   useEffect(() => {
@@ -376,15 +471,17 @@ export default function ServicesPage() {
     debounceRef.current = setTimeout(() => fetchProviders(true, 0), search ? 500 : 0)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCategory, showAvailable, sortBy, search])
+  }, [activeCategoryId, sortBy, search, fetchProviders])
 
-  const hasMore    = providers.length < total
-  const sortLabel  = sortBy === 'top_rated' ? 'Top Rated' : sortBy === 'most_reviewed' ? 'Most Reviewed' : 'Lowest Price'
-  const dotBg      = { backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.8) 1px,transparent 1px)', backgroundSize: '28px 28px' }
+  // Filter providers client-side for available now
+  const displayedProviders = showAvailable ? providers.filter(p => p.available) : providers
+  const totalDisplayed = displayedProviders.length
+  const sortLabel = sortBy === 'top_rated' ? 'Top Rated' : sortBy === 'most_reviewed' ? 'Most Reviewed' : 'Lowest Price'
+  const dotBg = { backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.8) 1px,transparent 1px)', backgroundSize: '28px 28px' }
 
   return (
     <>
-      {/* ── Hero ── */}
+      {/* Hero Section */}
       <div className="relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#111 40%,#1a0a00 70%,#2a1500 100%)' }}>
         <div className="absolute inset-0 opacity-[0.05]" style={dotBg} />
@@ -420,9 +517,9 @@ export default function ServicesPage() {
 
           <div className="flex flex-wrap gap-2 md:gap-4 mt-6">
             {[
-              { num: total > 0 ? `${total}` : '—', label: 'Providers',     icon: <FiUsers size={10} /> },
-              { num: `${serviceCategories.length}`,  label: 'Categories',    icon: <FiGrid size={10} /> },
-              { num: `${providers.filter(p => p.available).length}`, label: 'Available Now', icon: <FiUserCheck size={10} /> },
+              { num: totalDisplayed > 0 ? `${totalDisplayed}` : '—', label: 'Providers',     icon: <FiUsers size={10} /> },
+              { num: `${categories.length}`,  label: 'Categories',    icon: <FiGrid size={10} /> },
+              { num: `${displayedProviders.filter(p => p.available).length}`, label: 'Available Now', icon: <FiUserCheck size={10} /> },
             ].map(({ num, label, icon }) => (
               <div key={label} className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -435,36 +532,40 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div style={{ background: '#F4F5F9' }}>
         <ProviderCTABanner isProvider={isProvider} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
 
-          {/* category tabs */}
+          {/* Category tabs - dynamically from backend */}
           <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap mb-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <button onClick={() => setCategory('all')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${activeCategory === 'all' ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-              style={activeCategory === 'all' ? { background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 4px 12px rgba(180,34,37,0.3)' } : {}}>
+            <button onClick={() => setActiveCategoryId(null)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${!activeCategoryId ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+              style={!activeCategoryId ? { background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 4px 12px rgba(180,34,37,0.3)' } : {}}>
               <FiGrid size={12} className="inline mr-1" /> All Services
             </button>
-            {serviceCategories.map(cat => (
-              <button key={cat.id} onClick={() => setCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${activeCategory === cat.id ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-                style={activeCategory === cat.id ? { background: cat.gradient, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' } : {}}>
-                {iconMap[cat.icon]} {cat.name}
-              </button>
-            ))}
+            {categories.map(cat => {
+              const icon = getIconForCategory(cat.name)
+              const gradient = getGradientForCategory(cat.name)
+              return (
+                <button key={cat.id} onClick={() => setActiveCategoryId(cat.id)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${activeCategoryId === cat.id ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                  style={activeCategoryId === cat.id ? { background: gradient, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' } : {}}>
+                  {icon} {cat.name}
+                </button>
+              )
+            })}
           </div>
 
-          {/* filter row */}
+          {/* Filter row */}
           <div className="flex items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-xs text-gray-500 font-semibold">
                 {loading
                   ? <span className="inline-flex items-center gap-1 text-gray-400"><FiLoader size={11} className="animate-spin" /> Loading...</span>
-                  : <><span className="text-gray-900 font-black">{total}</span> provider{total !== 1 ? 's' : ''} found</>
+                  : <><span className="text-gray-900 font-black">{totalDisplayed}</span> provider{totalDisplayed !== 1 ? 's' : ''} found</>
                 }
               </p>
               <button onClick={() => setShowAvailable(v => !v)}
@@ -498,7 +599,7 @@ export default function ServicesPage() {
             </div>
           </div>
 
-          {/* error */}
+          {/* Error state */}
           {error && !loading && (
             <div className="text-center py-12">
               <FiAlertCircle size={40} className="text-red-400 mx-auto mb-3" />
@@ -512,20 +613,20 @@ export default function ServicesPage() {
             </div>
           )}
 
-          {/* skeletons */}
+          {/* Loading skeletons */}
           {loading && !error && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           )}
 
-          {/* empty */}
-          {!loading && !error && providers.length === 0 && (
+          {/* Empty state */}
+          {!loading && !error && displayedProviders.length === 0 && (
             <div className="text-center py-16 md:py-20">
               <FiSearch size={48} className="text-gray-300 mx-auto mb-4" />
               <p className="font-black text-gray-700 text-lg">No providers found</p>
               <p className="text-gray-400 text-sm mt-1 mb-5">Try adjusting your filters or clearing the search</p>
-              <button onClick={() => { setSearch(''); setCategory('all'); setShowAvailable(false) }}
+              <button onClick={() => { setSearch(''); setActiveCategoryId(null); setShowAvailable(false) }}
                 className="px-6 py-2.5 rounded-xl text-sm font-black text-white"
                 style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)' }}>
                 Clear Filters
@@ -533,23 +634,23 @@ export default function ServicesPage() {
             </div>
           )}
 
-          {/* results */}
-          {!loading && !error && providers.length > 0 && (
+          {/* Results grid */}
+          {!loading && !error && displayedProviders.length > 0 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                {providers.map(p => <ProviderCard key={p.id} provider={p} />)}
+                {displayedProviders.map(p => <ProviderCard key={p.id} provider={p} />)}
               </div>
 
-              {hasMore && (
+              {hasMore && !showAvailable && (
                 <div className="flex justify-center mt-8">
                   <button
-                    onClick={() => fetchProviders(false, offset)}
+                    onClick={loadMore}
                     disabled={loadingMore}
                     className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-black text-white transition-all disabled:opacity-60"
                     style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 6px 20px rgba(180,34,37,0.3)' }}>
                     {loadingMore
                       ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Loading...</>
-                      : `Load More (${total - providers.length} remaining)`
+                      : 'Load More'
                     }
                   </button>
                 </div>
