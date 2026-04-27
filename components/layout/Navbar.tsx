@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   FiMenu, FiSearch, FiShoppingCart, FiUser, FiHeart, FiBox,
   FiLogIn, FiLogOut, FiX, FiChevronRight, FiCpu, FiSmartphone,
@@ -219,9 +220,15 @@ export default function Navbar() {
           <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-700" onClick={() => setMobileOpen(true)}>
             <FiMenu size={22} />
           </button>
-          <img src="/images/Jovo_official_logo.png" alt="Jovo" onClick={() => router.push('/')}
-            className="md:h-12 md:w-55 w-36 h-10 object-cover cursor-pointer shrink-0" />
-
+         <Image 
+  src="/images/Jovo_official_logo.png"
+  alt="Jovo"
+  onClick={() => router.push('/')}
+  width={220}  // Adjust based on your design (md:w-55 ≈ 220px)
+  height={8}  // md:h-12 = 48px
+  className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
+  // For responsive sizing, use style or add responsive classes
+/>
           {/* Desktop search */}
           <div className="hidden md:flex flex-1 max-w-3xl mx-4 relative" ref={desktopSearchRef}>
             <div className={`flex w-full rounded-xl overflow-hidden border transition-all duration-200 ${desktopOpen ? 'border-[#B42225] shadow-[0_0_0_3px_rgba(180,34,37,0.1)]' : 'border-gray-200 hover:border-gray-300'}`}>

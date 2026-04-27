@@ -1,6 +1,7 @@
 // src/components/Footer.jsx
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   FiMail,
   FiPhone,
@@ -51,12 +52,14 @@ export default function Footer() {
           {/* Logo & tagline */}
           <div className="flex flex-col gap-4 max-w-xs">
             {/* ── LOGO SLOT ── replace src with your logo variable if needed */}
-            <img
-              src="/images/Jovo_off_logo2.png"
-              alt="Jovo Marketplace"
-              className="md:h-12 md:w-35 w-40 h-10 object-cover"
-              onError={handleImageError}
-            />
+            <Image 
+             src="/images/Jovo_off_logo2.png"
+             alt="Jovo"
+             width={220}  // Adjust based on your design (md:w-55 ≈ 220px)
+             height={8}  // md:h-12 = 48px
+             className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
+             // For responsive sizing, use style or add responsive classes
+           />
             <span
               className="text-2xl font-black tracking-tight text-white hidden"
               style={{ fontFamily: "'Georgia', serif" }}

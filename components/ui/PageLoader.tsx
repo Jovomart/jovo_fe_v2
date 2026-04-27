@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 
 export default function PageLoader() {
   const pathname = usePathname()
@@ -32,16 +33,17 @@ export default function PageLoader() {
         style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.12), transparent 70%)' }}
       />
       <div className="relative z-10 flex flex-col items-center gap-6">
-        <img
-          src="/images/Jovo_off_logo2.png"
-          alt="JOVO"
-          className="object-cover"
-          style={{
-            width: '200px', height: '80px', objectFit: 'cover',
-            animation: 'jovo-pulse 1s ease-in-out infinite',
-            filter: 'drop-shadow(0 0 20px rgba(255,140,0,0.4))',
-          }}
-        />
+        <Image
+  src="/images/Jovo_off_logo2.png"
+  alt="JOVO"
+  width={200}
+  height={80}
+  className="object-cover"
+  style={{
+    animation: 'jovo-pulse 1s ease-in-out infinite',
+    filter: 'drop-shadow(0 0 20px rgba(255,140,0,0.4))',
+  }}
+/>
         <p className="text-white/30 text-xs font-medium tracking-widest uppercase">Your Campus Marketplace</p>
         <div className="w-40 h-1 bg-white/10 rounded-full overflow-hidden">
           <div
