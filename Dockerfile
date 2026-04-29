@@ -55,6 +55,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Only copy the standalone output — no node_modules, no source
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 # Set correct permissions after copy
 RUN chown -R nextjs:nodejs /app
