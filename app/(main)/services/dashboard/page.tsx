@@ -1139,270 +1139,177 @@ export default function ProviderDashboard() {
   return (
     <div style={{ background: "#F8FAFC", minHeight: "100vh" }}>
 
-        {/* Hero Header - Modern & Vibrant Orange */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #E65C00 0%, #FF8C00 50%, #FFB347 100%)",
-        }}
-      >
-        {/* Animated Background Pattern - Floating Dots */}
-        <div className="absolute inset-0 opacity-30">
-          <svg className="absolute w-full h-full">
-            <defs>
-              <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1.5" fill="white" className="animate-pulse-slow" />
-              </pattern>
-              <pattern id="dots-large" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-                <circle cx="4" cy="4" r="2" fill="white" className="animate-pulse-slower" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dots)" />
-            <rect width="100%" height="100%" fill="url(#dots-large)" />
-          </svg>
-        </div>
+     {/* Hero Header - Optimized & Performant */}
+<div
+  className="relative overflow-hidden"
+  style={{
+    background: "linear-gradient(135deg, #E65C00 0%, #FF8C00 50%, #FFB347 100%)",
+  }}
+>
+  {/* Single static background pattern - no animation */}
+  <div 
+    className="absolute inset-0 opacity-20 pointer-events-none"
+    style={{
+      backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 1px)`,
+      backgroundSize: "40px 40px",
+    }}
+  />
+  
+  {/* Single static gradient orb - no animation */}
+  <div 
+    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-15 pointer-events-none"
+    style={{
+      background: "radial-gradient(circle, #ffffff, transparent 70%)",
+    }}
+  />
+  
+  {/* Top accent line - static */}
+  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-        {/* Floating Gradient Orbs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white/20 rounded-full blur-3xl animate-float-slow" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-300/20 rounded-full blur-3xl animate-float-reverse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-300/20 rounded-full blur-3xl animate-pulse-slow" />
+  <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
+    {/* Back Link */}
+    <Link
+      href="/services"
+      className="inline-flex items-center gap-2 text-white/80 text-sm font-medium hover:text-white transition-colors mb-8"
+    >
+      <FiArrowLeft size={14} /> 
+      Back to Services
+    </Link>
 
-        {/* Animated Mesh Gradient */}
-        <div className="absolute inset-0 opacity-20">
-          <svg className="absolute w-full h-full">
-            <defs>
-              <linearGradient id="mesh" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fff" stopOpacity="0.1">
-                  <animate attributeName="stop-opacity" values="0.1;0.3;0.1" dur="8s" repeatCount="indefinite" />
-                </stop>
-                <stop offset="50%" stopColor="#fff" stopOpacity="0.05">
-                  <animate attributeName="stop-opacity" values="0.05;0.2;0.05" dur="8s" repeatCount="indefinite" />
-                </stop>
-                <stop offset="100%" stopColor="#fff" stopOpacity="0.1">
-                  <animate attributeName="stop-opacity" values="0.1;0.3;0.1" dur="8s" repeatCount="indefinite" />
-                </stop>
-              </linearGradient>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#mesh)" />
-          </svg>
-        </div>
+    {/* Profile Header Card - Simplified */}
+    <div className="relative">
+      {/* Main Card - No animated borders */}
+      <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden">
+        {/* Simple top bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-600" />
+        
+        {/* Simple card pattern - one div instead of SVG */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
+             style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
 
-        {/* Glass Overlay */}
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
-
-        <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
-          {/* Back Link - Refined */}
-          <Link
-            href="/services"
-            className="group inline-flex items-center gap-2 text-white/80 text-sm font-medium hover:text-white transition-all duration-300 mb-8"
-          >
-            <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform duration-300" /> 
-            Back to Services
-          </Link>
-
-          {/* Profile Header Card - Premium Glass Card */}
-          <div className="relative group">
-            {/* Animated Border Gradient */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-400/50 via-amber-400/50 to-orange-500/50 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700" />
+        <div className="relative p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row items-start gap-6">
             
-            {/* Main Card */}
-            <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
-              {/* Elegant Top Bar - Orange */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600" />
-              
-              {/* Card Inner Pattern */}
-              <div className="absolute inset-0 opacity-5 pointer-events-none">
-                <svg className="w-full h-full">
-                  <pattern id="card-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <circle cx="10" cy="10" r="1" fill="#000" />
-                  </pattern>
-                  <rect width="100%" height="100%" fill="url(#card-dots)" />
-                </svg>
-              </div>
-
-              <div className="relative p-7 md:p-9">
-                <div className="flex flex-col lg:flex-row items-start gap-8">
-                  
-                  {/* Avatar Section - Premium with Orange Ring */}
-                  <div className="relative shrink-0">
-                    {/* Animated Ring - Orange */}
-                    <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 animate-spin-slow" style={{ opacity: 0.5 }} />
-                    <div className="relative">
-                      {profile?.logo_url ? (
-                        <img
-                          src={profile.logo_url}
-                          alt="logo"
-                          className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-xl"
-                        />
-                      ) : (
-                        <div
-                          className="w-28 h-28 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-xl"
-                          style={{
-                            background: "linear-gradient(135deg, #E65C00, #FF8C00, #FFB347)",
-                          }}
-                        >
-                          {profile?.business_name?.charAt(0).toUpperCase() || "P"}
-                        </div>
-                      )}
-                    </div>
-                    {/* Status Badge - Minimal */}
-                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                      <StatusBadge
-                        status={
-                          profile?._resolvedStatus ||
-                          profile?.status ||
-                          profile?.provider_status ||
-                          "pending"
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Business Information */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-4 mb-3">
-                      <h1
-                        className="text-slate-800 font-bold text-3xl lg:text-4xl tracking-tight uppercase"
-                        style={{ fontFamily: "'Arial'" }}
-                      >
-                        {profile?.business_name}
-                      </h1>
-                      {(profile?.rating ?? 0) > 0 && (
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5 rounded-full shadow-sm">
-                          <FaStar size={12} className="text-amber-400" />
-                          <span className="text-slate-700 text-sm font-semibold">
-                            {profile?.rating?.toFixed(1)}
-                          </span>
-                          <span className="text-slate-400 text-xs">•</span>
-                          <span className="text-slate-500 text-xs">
-                            {profile?.review_count} reviews
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <p className="text-slate-500 text-base leading-relaxed max-w-xl mb-4">
-                      {profile?.business_bio ||
-                        "Professional service provider on the JOVO marketplace. Dedicated to delivering exceptional quality and reliable service to our clients across the region."}
-                    </p>
-
-                    {/* Contact Information - Modern Chips */}
-                    <div className="flex flex-wrap gap-2">
-                      {profile?.whatsapp_number && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200">
-                          <FaWhatsapp size={12} className="text-emerald-500" />
-                          <span className="text-slate-600 text-sm font-medium">{profile.whatsapp_number}</span>
-                        </div>
-                      )}
-                      {profile?.phone_number && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200">
-                          <FiPhone size={12} className="text-slate-400" />
-                          <span className="text-slate-600 text-sm">{profile.phone_number}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Edit Profile Button - Orange Gradient */}
-                  <button
-                    onClick={() => setEditingProfile(true)}
-                    className="group/btn relative flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-300 shrink-0 overflow-hidden shadow-lg"
+            {/* Avatar Section - No animated ring */}
+            <div className="relative shrink-0">
+              <div className="relative">
+                {profile?.logo_url ? (
+                  <img
+                    src={profile.logo_url}
+                    alt="logo"
+                    className="w-24 h-24 rounded-2xl object-cover border-2 border-white shadow-lg"
+                  />
+                ) : (
+                  <div
+                    className="w-24 h-24 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg"
                     style={{
                       background: "linear-gradient(135deg, #E65C00, #FF8C00, #FFB347)",
-                      backgroundSize: "200% 200%",
                     }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
-                    <FiEdit2 size={14} className="relative z-10" /> 
-                    <span className="relative z-10">Edit Profile</span>
-                  </button>
-                </div>
-
-                {/* Stats Row - Modern Metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-6 border-t border-slate-200">
-                  <div>
-                    <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Total Earnings</p>
-                    <p className="text-slate-800 text-xl font-bold">₦{service?.starting_price?.toLocaleString() || '0'}</p>
-                    <p className="text-slate-400 text-xs mt-0.5">Lifetime revenue</p>
+                    {profile?.business_name?.charAt(0).toUpperCase() || "P"}
                   </div>
-                  <div>
-                    <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Service Status</p>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${service?.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                      <p className="text-slate-700 text-base font-semibold">{service?.is_active ? 'Active' : 'Inactive'}</p>
-                    </div>
-                    <p className="text-slate-400 text-xs mt-0.5">Live on marketplace</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Booking Mode</p>
-                    <p className="text-slate-700 text-base font-semibold capitalize">{service?.booking_mode || 'Not set'}</p>
-                    <p className="text-slate-400 text-xs mt-0.5">Customer experience</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Availability</p>
-                    <p className="text-slate-700 text-base font-semibold">
-                      {service && Object.keys(service.availability_schedule).length > 0 
-                        ? `${Object.keys(service.availability_schedule).length}/7 days` 
-                        : 'Not set'}
-                    </p>
-                    <p className="text-slate-400 text-xs mt-0.5">Weekly schedule</p>
-                  </div>
-                </div>
+                )}
               </div>
+              {/* Status Badge */}
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <StatusBadge
+                  status={
+                    profile?._resolvedStatus ||
+                    profile?.status ||
+                    profile?.provider_status ||
+                    "pending"
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Business Information */}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <h1
+                  className="text-slate-800 font-bold text-2xl md:text-3xl tracking-tight uppercase"
+                >
+                  {profile?.business_name}
+                </h1>
+                {(profile?.rating ?? 0) > 0 && (
+                  <div className="flex items-center gap-2 bg-amber-50 px-2.5 py-1.5 rounded-full">
+                    <FaStar size={11} className="text-amber-400" />
+                    <span className="text-slate-700 text-sm font-semibold">
+                      {profile?.rating?.toFixed(1)}
+                    </span>
+                    <span className="text-slate-400 text-xs">•</span>
+                    <span className="text-slate-500 text-xs">
+                      {profile?.review_count} reviews
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <p className="text-slate-500 text-sm leading-relaxed max-w-xl mb-3">
+                {profile?.business_bio ||
+                  "Professional service provider on the JOVO marketplace."}
+              </p>
+
+              {/* Contact Information */}
+              <div className="flex flex-wrap gap-2">
+                {profile?.whatsapp_number && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200">
+                    <FaWhatsapp size={11} className="text-emerald-500" />
+                    <span className="text-slate-600 text-xs font-medium">{profile.whatsapp_number}</span>
+                  </div>
+                )}
+                {profile?.phone_number && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <FiPhone size={11} className="text-slate-400" />
+                    <span className="text-slate-600 text-xs">{profile.phone_number}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Edit Profile Button */}
+            <button
+              onClick={() => setEditingProfile(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-80 shrink-0 shadow-md"
+              style={{
+                background: "linear-gradient(135deg, #E65C00, #FF8C00)",
+              }}
+            >
+              <FiEdit2 size={13} /> Edit Profile
+            </button>
+          </div>
+
+          {/* Stats Row - Simplified */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-200">
+            <div>
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Total Earnings</p>
+              <p className="text-slate-800 text-lg font-bold">₦{service?.starting_price?.toLocaleString() || '0'}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Service Status</p>
+              <div className="flex items-center gap-1.5">
+                <div className={`w-2 h-2 rounded-full ${service?.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                <p className="text-slate-700 text-sm font-semibold">{service?.is_active ? 'Active' : 'Inactive'}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Booking Mode</p>
+              <p className="text-slate-700 text-sm font-semibold capitalize">{service?.booking_mode || 'Not set'}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Availability</p>
+              <p className="text-slate-700 text-sm font-semibold">
+                {service && Object.keys(service.availability_schedule).length > 0 
+                  ? `${Object.keys(service.availability_schedule).length}/7 days` 
+                  : 'Not set'}
+              </p>
             </div>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.8; }
-        }
-        
-        @keyframes pulse-slower {
-          0%, 100% { opacity: 0.15; }
-          50% { opacity: 0.5; }
-        }
-        
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          25% { transform: translateY(-20px) translateX(15px); }
-          75% { transform: translateY(20px) translateX(-15px); }
-        }
-        
-        @keyframes float-reverse {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          25% { transform: translateY(20px) translateX(-15px); }
-          75% { transform: translateY(-20px) translateX(15px); }
-        }
-        
-        @keyframes spin-slow {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 4s ease-in-out infinite;
-        }
-        
-        .animate-pulse-slower {
-          animation: pulse-slower 6s ease-in-out infinite;
-        }
-        
-        .animate-float-slow {
-          animation: float-slow 12s ease-in-out infinite;
-        }
-        
-        .animate-float-reverse {
-          animation: float-reverse 12s ease-in-out infinite;
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 6s linear infinite;
-        }
-      `}</style>
-          
+    </div>
+  </div>
+</div>      
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
         {/* Stats Row */}
