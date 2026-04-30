@@ -58,6 +58,8 @@ export default function Footer() {
              width={220}  // Adjust based on your design (md:w-55 ≈ 220px)
              height={8}  // md:h-12 = 48px
              className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
+             priority
+             onError={handleImageError}
              // For responsive sizing, use style or add responsive classes
            />
             <span
