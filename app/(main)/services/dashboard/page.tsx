@@ -1197,7 +1197,7 @@ export default function ProviderDashboard() {
             className="group inline-flex items-center gap-2 text-white/80 text-sm font-medium hover:text-white transition-all duration-300 mb-8"
           >
             <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform duration-300" /> 
-            Back to Marketplace
+            Back to Services
           </Link>
 
           {/* Profile Header Card - Premium Glass Card */}

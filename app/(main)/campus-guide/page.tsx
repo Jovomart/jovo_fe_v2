@@ -932,7 +932,7 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-end md:items-center justify-center p-0 md:p-4"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
     >
       <div
