@@ -1146,7 +1146,7 @@ export default function ProviderDashboard() {
     background: "linear-gradient(135deg, #E65C00 0%, #FF8C00 50%, #FFB347 100%)",
   }}
 >
-  {/* Single static background pattern - no animation */}
+  {/* Static background pattern */}
   <div 
     className="absolute inset-0 opacity-20 pointer-events-none"
     style={{
@@ -1155,15 +1155,12 @@ export default function ProviderDashboard() {
     }}
   />
   
-  {/* Single static gradient orb - no animation */}
-  <div 
-    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-15 pointer-events-none"
-    style={{
-      background: "radial-gradient(circle, #ffffff, transparent 70%)",
-    }}
-  />
+  {/* Floating Gradient Orbs - Static, no animation */}
+  <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+  <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-300/15 rounded-full blur-3xl pointer-events-none" />
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-300/15 rounded-full blur-3xl pointer-events-none" />
   
-  {/* Top accent line - static */}
+  {/* Top accent line */}
   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
   <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
@@ -1176,21 +1173,21 @@ export default function ProviderDashboard() {
       Back to Services
     </Link>
 
-    {/* Profile Header Card - Simplified */}
+    {/* Profile Header Card */}
     <div className="relative">
-      {/* Main Card - No animated borders */}
+      {/* Main Card */}
       <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden">
-        {/* Simple top bar */}
+        {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-600" />
         
-        {/* Simple card pattern - one div instead of SVG */}
+        {/* Card pattern */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
              style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
 
         <div className="relative p-6 md:p-8">
           <div className="flex flex-col lg:flex-row items-start gap-6">
             
-            {/* Avatar Section - No animated ring */}
+            {/* Avatar Section */}
             <div className="relative shrink-0">
               <div className="relative">
                 {profile?.logo_url ? (
@@ -1228,6 +1225,7 @@ export default function ProviderDashboard() {
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1
                   className="text-slate-800 font-bold text-2xl md:text-3xl tracking-tight uppercase"
+                  style={{ fontFamily: "Arial, sans-serif" }}
                 >
                   {profile?.business_name}
                 </h1>
@@ -1247,7 +1245,7 @@ export default function ProviderDashboard() {
               
               <p className="text-slate-500 text-sm leading-relaxed max-w-xl mb-3">
                 {profile?.business_bio ||
-                  "Professional service provider on the JOVO marketplace."}
+                  "Professional service provider on the JOVO marketplace. Dedicated to delivering exceptional quality and reliable service to our clients across the region."}
               </p>
 
               {/* Contact Information */}
@@ -1279,30 +1277,34 @@ export default function ProviderDashboard() {
             </button>
           </div>
 
-          {/* Stats Row - Simplified */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-200">
+          {/* Stats Row - With Descriptions */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-6 pt-5 border-t border-slate-200">
             <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Total Earnings</p>
-              <p className="text-slate-800 text-lg font-bold">₦{service?.starting_price?.toLocaleString() || '0'}</p>
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Total Earnings</p>
+              <p className="text-slate-800 text-xl font-bold">₦{service?.starting_price?.toLocaleString() || '0'}</p>
+              <p className="text-slate-400 text-xs mt-0.5">Lifetime revenue</p>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Service Status</p>
-              <div className="flex items-center gap-1.5">
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Service Status</p>
+              <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${service?.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                <p className="text-slate-700 text-sm font-semibold">{service?.is_active ? 'Active' : 'Inactive'}</p>
+                <p className="text-slate-700 text-base font-semibold">{service?.is_active ? 'Active' : 'Inactive'}</p>
               </div>
+              <p className="text-slate-400 text-xs mt-0.5">Live on marketplace</p>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Booking Mode</p>
-              <p className="text-slate-700 text-sm font-semibold capitalize">{service?.booking_mode || 'Not set'}</p>
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Booking Mode</p>
+              <p className="text-slate-700 text-base font-semibold capitalize">{service?.booking_mode || 'Not set'}</p>
+              <p className="text-slate-400 text-xs mt-0.5">Customer experience</p>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Availability</p>
-              <p className="text-slate-700 text-sm font-semibold">
+              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Availability</p>
+              <p className="text-slate-700 text-base font-semibold">
                 {service && Object.keys(service.availability_schedule).length > 0 
                   ? `${Object.keys(service.availability_schedule).length}/7 days` 
                   : 'Not set'}
               </p>
+              <p className="text-slate-400 text-xs mt-0.5">Weekly schedule</p>
             </div>
           </div>
         </div>
