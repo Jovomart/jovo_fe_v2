@@ -223,7 +223,7 @@ const SkeletonCard = () => (
 )
 
 /* ─── provider CTA banner ──────────────────────────────────────── */
-function ProviderCTABanner({ isProvider }: { isProvider: boolean | null }) {
+function ProviderCTABanner({ isProvider, onApplyClick }: { isProvider: boolean | null; onApplyClick: () => void }) {
   if (isProvider === null) return null
 
   if (isProvider) {
@@ -264,11 +264,76 @@ function ProviderCTABanner({ isProvider }: { isProvider: boolean | null }) {
               Join providers on JOVO — apply in 2 minutes and go live on the marketplace.
             </p>
           </div>
-          <Link href="/services/apply"
+          <button
+            onClick={onApplyClick}
             className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-black text-white whitespace-nowrap transition-all hover:opacity-90 shrink-0"
             style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 6px 20px rgba(180,34,37,0.35)' }}>
             Apply as Provider <FiArrowRight size={14} />
-          </Link>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Login Required Popup Modal ───────────────────────────────── */
+const LoginRequiredPopup = ({ isOpen, onClose, onRedirect }: { isOpen: boolean; onClose: () => void; onRedirect: () => void }) => {
+  const [countdown, setCountdown] = useState(5)
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCountdown(5)
+      return
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          onRedirect()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [isOpen, onRedirect])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-300"
+        style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-50 flex items-center justify-center">
+            <FiAlertCircle size={32} className="text-orange-500" />
+          </div>
+          <h3 className="text-xl font-black text-gray-900 mb-2">Login Required</h3>
+          <p className="text-gray-500 text-sm mb-4">
+            You need to be logged in to apply as a service provider.
+          </p>
+          <div className="bg-gray-50 rounded-xl p-3 mb-5">
+            <p className="text-xs text-gray-600">
+              Redirecting to login page in <span className="font-black text-orange-500 text-base">{countdown}</span> second{countdown !== 1 ? 's' : ''}...
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onRedirect}
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-black text-white transition hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)' }}
+            >
+              Login Now
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -277,6 +342,7 @@ function ProviderCTABanner({ isProvider }: { isProvider: boolean | null }) {
 
 /* ─── MAIN PAGE ────────────────────────────────────────────────── */
 export default function ServicesPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
 
   const [search, setSearch]               = useState('')
@@ -293,6 +359,9 @@ export default function ServicesPage() {
   const [isProvider, setIsProvider]       = useState<boolean | null>(null)
   const [nextOffset, setNextOffset]       = useState<number | null>(null)
   const [hasMore, setHasMore]             = useState(false)
+  
+  // New state for login popup
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -479,6 +548,24 @@ const fetchCategories = useCallback(async () => {
   const sortLabel = sortBy === 'top_rated' ? 'Top Rated' : sortBy === 'most_reviewed' ? 'Most Reviewed' : 'Lowest Price'
   const dotBg = { backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.8) 1px,transparent 1px)', backgroundSize: '28px 28px' }
 
+  // Handle Apply as Provider button click
+  const handleApplyClick = () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      // Show popup if not logged in
+      setShowLoginPopup(true)
+    } else {
+      // Redirect to apply page if logged in
+      router.push('/services/apply')
+    }
+  }
+
+  // Handle redirect to login
+  const handleRedirectToLogin = () => {
+    setShowLoginPopup(false)
+    router.push('/login')
+  }
+
   return (
     <>
       {/* Hero Section */}
@@ -534,7 +621,7 @@ const fetchCategories = useCallback(async () => {
 
       {/* Content */}
       <div style={{ background: '#F4F5F9' }}>
-        <ProviderCTABanner isProvider={isProvider} />
+        <ProviderCTABanner isProvider={isProvider} onApplyClick={handleApplyClick} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
 
@@ -659,6 +746,13 @@ const fetchCategories = useCallback(async () => {
           )}
         </div>
       </div>
+
+      {/* Login Required Popup */}
+      <LoginRequiredPopup 
+        isOpen={showLoginPopup}
+        onClose={() => setShowLoginPopup(false)}
+        onRedirect={handleRedirectToLogin}
+      />
 
       <Footer />
     </>

@@ -89,7 +89,9 @@ const SearchDropdown = ({ query, onSelect }: any) => {
       )}
       {!hasResults && q.length > 0 && (
         <div className="px-4 py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"><FiSearch size={20} className="text-gray-400" /></div>
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+            <FiSearch size={20} className="text-gray-400" />
+          </div>
           <p className="text-sm font-semibold text-gray-700">No results for &quot;{query.trim()}&quot;</p>
           <p className="text-xs text-gray-400 mt-1">Try a different keyword or browse categories below</p>
         </div>
@@ -118,12 +120,16 @@ const SearchDropdown = ({ query, onSelect }: any) => {
               ))}
               <button onMouseDown={() => onSelect(null, null, '/services')}
                 className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-100 text-orange-600"><FaConciergeBell size={15} /></div>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-100 text-orange-600">
+                  <FaConciergeBell size={15} />
+                </div>
                 <span className="text-[10px] text-gray-600 font-medium leading-tight">Services</span>
               </button>
               <button onMouseDown={() => onSelect(null, null, '/logistics')}
                 className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-green-100 text-green-600"><MdOutlineDeliveryDining size={17} /></div>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-green-100 text-green-600">
+                  <MdOutlineDeliveryDining size={17} />
+                </div>
                 <span className="text-[10px] text-gray-600 font-medium leading-tight">Logistics</span>
               </button>
             </div>
@@ -148,7 +154,9 @@ export default function Navbar() {
   const desktopSearchRef = useRef<HTMLDivElement>(null)
   const mobileSearchRef = useRef<HTMLDivElement>(null)
 
-  const { user, logout, isSeller, sellerMode, enterSellerMode } = useContext(AuthContext)
+  // NOTE: We only use enterSellerMode here — exitSellerMode is NOT used in this navbar.
+  // "Switch to Buyer" only exists inside the seller dashboard's own navbar and sidebar.
+  const { user, logout, isSeller, sellerMode, enterSellerMode } = useContext(AuthContext) as any
   const router = useRouter()
 
   const displayName = user?.full_name || user?.username || user?.name || 'Account'
@@ -220,15 +228,15 @@ export default function Navbar() {
           <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-700" onClick={() => setMobileOpen(true)}>
             <FiMenu size={22} />
           </button>
-         <Image 
-  src="/images/Jovo_official_logo.png"
-  alt="Jovo"
-  onClick={() => router.push('/')}
-  width={220}  // Adjust based on your design (md:w-55 ≈ 220px)
-  height={8}  // md:h-12 = 48px
-  className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
-  // For responsive sizing, use style or add responsive classes
-/>
+          <Image
+            src="/images/Jovo_official_logo.png"
+            alt="Jovo"
+            onClick={() => router.push('/')}
+            width={220}
+            height={48}
+            className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
+          />
+
           {/* Desktop search */}
           <div className="hidden md:flex flex-1 max-w-3xl mx-4 relative" ref={desktopSearchRef}>
             <div className={`flex w-full rounded-xl overflow-hidden border transition-all duration-200 ${desktopOpen ? 'border-[#B42225] shadow-[0_0_0_3px_rgba(180,34,37,0.1)]' : 'border-gray-200 hover:border-gray-300'}`}>
@@ -266,6 +274,7 @@ export default function Navbar() {
                 <span className="hidden md:inline text-sm font-medium max-w-[90px] truncate">{displayName}</span>
               </button>
 
+              {/* Account dropdown */}
               <div className={`absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 transition-all duration-200 origin-top-right z-[200] ${accountOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'}`}>
                 {user ? (
                   <>
@@ -288,13 +297,26 @@ export default function Navbar() {
                       </div>
                     </div>
                     <div className="py-1.5">
-                      <button onClick={() => goTo('/seller/application-status')}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
-                        <FiClock size={15} className="text-gray-400 group-hover:text-blue-600" />
-                        <span className="flex-1 text-left">Seller Status</span>
-                        <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-blue-600" />
-                      </button>
-                      {isSeller && !sellerMode && (
+                      {/*
+                        ── SELLER STATUS: Only for users who have applied but are NOT yet approved.
+                        ── Never show this for verified sellers (isSeller=true).
+                      */}
+                      {!isSeller && (
+                        <button onClick={() => goTo('/seller/application-status')}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                          <FiClock size={15} className="text-gray-400 group-hover:text-blue-600" />
+                          <span className="flex-1 text-left">Seller Status</span>
+                          <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-blue-600" />
+                        </button>
+                      )}
+
+                      {/*
+                        ── SWITCH TO SELLER: Show ONLY when user IS a verified seller (isSeller=true).
+                        ── This is the ONLY seller-mode control in this navbar.
+                        ── "Switch to Buyer" is NEVER shown here — it only lives inside the seller dashboard.
+                        ── We show it regardless of sellerMode because clicking it always takes them to the dashboard.
+                      */}
+                      {isSeller && (
                         <button onClick={handleEnterSellerMode}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors group">
                           <FaStore size={15} className="text-gray-400 group-hover:text-green-600" />
@@ -302,6 +324,7 @@ export default function Navbar() {
                           <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-green-600" />
                         </button>
                       )}
+
                       {[
                         { icon: <FiUser size={15} />, label: 'My Profile', to: '/profile' },
                         { icon: <FiBox size={15} />, label: 'My Orders', to: '/orders' },
@@ -490,12 +513,25 @@ export default function Navbar() {
               <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">More</p>
               {[
                 { label: 'Flash Sales', to: '/flash-sales' },
-                ...(isSeller && !sellerMode ? [{ label: 'Switch to Seller', action: handleEnterSellerMode }] : []),
-                ...(isSeller ? [] : [{ label: 'Become a Seller', to: '/become-seller' }]),
+                /*
+                  ── MOBILE NAV SELLER LOGIC:
+                  ── isSeller=true → always show "Switch to Seller" (takes to dashboard).
+                  ──   "Switch to Buyer" is NEVER in this nav — it's only inside the dashboard itself.
+                  ── isSeller=false → show "Become a Seller" to encourage sign-up.
+                  ── Never show "Seller Status" here (it's in the account dropdown only).
+                */
+                ...(isSeller
+                  ? [{ label: 'Switch to Seller', action: handleEnterSellerMode }]
+                  : [{ label: 'Become a Seller', to: '/become-seller' }]
+                ),
                 { label: 'Help Center', to: '/help' },
               ].map(({ label, to, action }: any) => (
                 <button key={label} onClick={() => action ? action() : goTo(to)}
-                  className="w-full text-left px-3 py-2.5 text-sm text-gray-600 hover:text-[#B42225] hover:bg-gray-50 rounded-xl transition">
+                  className={`w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 rounded-xl transition
+                    ${label === 'Switch to Seller' ? 'text-green-600 font-semibold' : 'text-gray-600 hover:text-[#B42225]'}`}>
+                  {label === 'Switch to Seller' && (
+                    <FaStore size={13} className="inline mr-1.5 -mt-0.5" />
+                  )}
                   {label}
                 </button>
               ))}
