@@ -230,10 +230,11 @@ const inputStyle = {
 const labelCls =
   "text-white/50 text-[10px] font-black mb-1.5 block uppercase tracking-widest";
 
-function formatPrice(type: string, price: number) {
+// ── FIXED: price is now null-safe ──
+function formatPrice(type: string, price: number | null | undefined) {
   if (type === "negotiable") return "Negotiable";
   const prefix = type === "starting_at" ? "From " : "";
-  return `${prefix}₦${price.toLocaleString()}`;
+  return `${prefix}₦${(price ?? 0).toLocaleString()}`;
 }
 
 /* ─── sub-components ────────────────────────────────────────────── */
@@ -793,14 +794,22 @@ export default function ProviderDashboard() {
       let profRes: any = null;
       try {
         profRes = await apiService.getServiceProviderDetails();
-      } catch {
-        router.replace("/services/apply");
-        return;
+      } catch (err: any) {
+        // Only redirect if the server explicitly says this user has no provider
+        // account (404). Any other error (network down, timeout, 5xx) should
+        // show the retry screen instead of kicking them to the apply page.
+        const status = err?.response?.status ?? err?.status ?? err?.statusCode;
+        const isNotFound = status === 404 || err?.message?.toLowerCase().includes("not found");
+        if (isNotFound) {
+          router.replace("/services/apply");
+          return;
+        }
+        throw err; // bubble up to the outer catch → shows retry error screen
       }
 
       if (!profRes) {
-        router.replace("/services/apply");
-        return;
+        // Empty response is ambiguous — show error rather than redirecting.
+        throw new Error("Could not load your provider profile. Please try again.");
       }
 
       const p = profRes?.data || profRes;
@@ -1090,7 +1099,7 @@ export default function ProviderDashboard() {
   const hasApprovedCategories =
     allowedCategoryIds.length > 0 &&
     categories.some((cat) => allowedCategoryIds.includes(cat.id));
-  
+
   // Calculate active service count - 1 if service exists AND is_active === true, otherwise 0
   const activeServiceCount = hasService && service?.is_active === true ? 1 : 0;
   const activeServiceText = activeServiceCount === 1 ? "Active" : "Inactive";
@@ -1138,180 +1147,435 @@ export default function ProviderDashboard() {
 
   return (
     <div style={{ background: "#F8FAFC", minHeight: "100vh" }}>
+      {/* Hero Header - Rich Dark Orange with Curved Bottom Shape */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(145deg, #1a0a00 0%, #2a1500 35%, #3d2000 70%, #2a1500 100%)",
+        }}
+      >
+        {/* Animated Background Pattern - Slow pulse */}
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,140,0,0.8) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+            animation: "patternPulse 8s ease-in-out infinite",
+          }}
+        />
 
-     {/* Hero Header - Optimized & Performant */}
-<div
-  className="relative overflow-hidden"
-  style={{
-    background: "linear-gradient(135deg, #E65C00 0%, #FF8C00 50%, #FFB347 100%)",
-  }}
->
-  {/* Static background pattern */}
-  <div 
-    className="absolute inset-0 opacity-20 pointer-events-none"
-    style={{
-      backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 1px)`,
-      backgroundSize: "40px 40px",
-    }}
-  />
-  
-  {/* Floating Gradient Orbs - Static, no animation */}
-  <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-  <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-300/15 rounded-full blur-3xl pointer-events-none" />
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-300/15 rounded-full blur-3xl pointer-events-none" />
-  
-  {/* Top accent line */}
-  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+        {/* Floating Gradient Orbs */}
+        <div
+          className="absolute top-20 left-10 w-96 h-96 bg-orange-500/25 rounded-full blur-3xl pointer-events-none"
+          style={{ animation: "floatSlow 15s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute bottom-20 right-10 w-[30rem] h-[30rem] bg-amber-600/30 rounded-full blur-3xl pointer-events-none"
+          style={{ animation: "floatReverse 18s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-600/25 rounded-full blur-3xl pointer-events-none"
+          style={{ animation: "pulseGlow 6s ease-in-out infinite" }}
+        />
 
-  <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
-    {/* Back Link */}
-    <Link
-      href="/services"
-      className="inline-flex items-center gap-2 text-white/80 text-sm font-medium hover:text-white transition-colors mb-8"
-    >
-      <FiArrowLeft size={14} /> 
-      Back to Services
-    </Link>
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
 
-    {/* Profile Header Card */}
-    <div className="relative">
-      {/* Main Card */}
-      <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden">
-        {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-600" />
-        
-        {/* Card pattern */}
-        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
-             style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
+        {/* Content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
+          {/* Back Link */}
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-2 text-orange-300/80 text-sm font-medium hover:text-orange-200 transition-colors mb-8"
+          >
+            <FiArrowLeft size={14} />
+            Back to Services
+          </Link>
 
-        <div className="relative p-6 md:p-8">
-          <div className="flex flex-col lg:flex-row items-start gap-6">
-            
-            {/* Avatar Section */}
-            <div className="relative shrink-0">
-              <div className="relative">
-                {profile?.logo_url ? (
-                  <img
-                    src={profile.logo_url}
-                    alt="logo"
-                    className="w-24 h-24 rounded-2xl object-cover border-2 border-white shadow-lg"
-                  />
-                ) : (
-                  <div
-                    className="w-24 h-24 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg"
-                    style={{
-                      background: "linear-gradient(135deg, #E65C00, #FF8C00, #FFB347)",
-                    }}
-                  >
-                    {profile?.business_name?.charAt(0).toUpperCase() || "P"}
-                  </div>
-                )}
-              </div>
-              {/* Status Badge */}
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <StatusBadge
-                  status={
-                    profile?._resolvedStatus ||
-                    profile?.status ||
-                    profile?.provider_status ||
-                    "pending"
-                  }
-                />
-              </div>
-            </div>
+          {/* ─── IMPROVED PROFILE CARD ─── */}
+          <div className="relative group">
+            {/* Outer glow — CSS transition only, no JS */}
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-orange-500/20 via-amber-400/20 to-orange-600/20 rounded-[28px] blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
 
-            {/* Business Information */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <h1
-                  className="text-slate-800 font-bold text-2xl md:text-3xl tracking-tight uppercase"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  {profile?.business_name}
-                </h1>
-                {(profile?.rating ?? 0) > 0 && (
-                  <div className="flex items-center gap-2 bg-amber-50 px-2.5 py-1.5 rounded-full">
-                    <FaStar size={11} className="text-amber-400" />
-                    <span className="text-slate-700 text-sm font-semibold">
-                      {profile?.rating?.toFixed(1)}
-                    </span>
-                    <span className="text-slate-400 text-xs">•</span>
-                    <span className="text-slate-500 text-xs">
-                      {profile?.review_count} reviews
-                    </span>
-                  </div>
-                )}
-              </div>
-              
-              <p className="text-slate-500 text-sm leading-relaxed max-w-xl mb-3">
-                {profile?.business_bio ||
-                  "Professional service provider on the JOVO marketplace. Dedicated to delivering exceptional quality and reliable service to our clients across the region."}
-              </p>
-
-              {/* Contact Information */}
-              <div className="flex flex-wrap gap-2">
-                {profile?.whatsapp_number && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200">
-                    <FaWhatsapp size={11} className="text-emerald-500" />
-                    <span className="text-slate-600 text-xs font-medium">{profile.whatsapp_number}</span>
-                  </div>
-                )}
-                {profile?.phone_number && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
-                    <FiPhone size={11} className="text-slate-400" />
-                    <span className="text-slate-600 text-xs">{profile.phone_number}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Edit Profile Button */}
-            <button
-              onClick={() => setEditingProfile(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-80 shrink-0 shadow-md"
+            {/* Card shell */}
+            <div
+              className="relative rounded-3xl overflow-hidden shadow-2xl"
               style={{
-                background: "linear-gradient(135deg, #E65C00, #FF8C00)",
+                background:
+                  "linear-gradient(160deg, #fffdf9 0%, #fff8ee 55%, #fffbf4 100%)",
+                border: "1px solid rgba(230,145,0,0.18)",
               }}
             >
-              <FiEdit2 size={13} /> Edit Profile
-            </button>
-          </div>
+              {/* ── Top accent bar ── */}
+              <div
+                className="absolute top-0 left-0 right-0 h-[3px]"
+                style={{
+                  background:
+                    "linear-gradient(90deg, #E65C00 0%, #FF8C00 50%, #FFB347 100%)",
+                }}
+              />
 
-          {/* Stats Row - With Descriptions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-6 pt-5 border-t border-slate-200">
-            <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Total Earnings</p>
-              <p className="text-slate-800 text-xl font-bold">₦{service?.starting_price?.toLocaleString() || '0'}</p>
-              <p className="text-slate-400 text-xs mt-0.5">Lifetime revenue</p>
-            </div>
-            <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Service Status</p>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${service?.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                <p className="text-slate-700 text-base font-semibold">{service?.is_active ? 'Active' : 'Inactive'}</p>
+              {/* ── Decorative mesh panel (right side) ── */}
+              <div
+                className="absolute top-0 right-0 h-full w-64 pointer-events-none"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 1px 1px, rgba(230,120,0,0.08) 1px, transparent 1px)`,
+                  backgroundSize: "18px 18px",
+                  maskImage:
+                    "linear-gradient(to left, rgba(0,0,0,0.5) 0%, transparent 100%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to left, rgba(0,0,0,0.5) 0%, transparent 100%)",
+                }}
+              />
+
+              {/* ── Diagonal shine ── */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, transparent 50%)",
+                }}
+              />
+
+              <div className="relative p-6 md:p-8">
+                <div className="flex flex-col lg:flex-row items-start gap-6">
+                  {/* ── Avatar Section ── */}
+                  <div className="relative shrink-0">
+                    {/* Outer amber ring */}
+                    <div
+                      className="absolute -inset-[3px] rounded-[20px]"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #FF8C00, #FFB347, #E65C00)",
+                        opacity: 0.5,
+                      }}
+                    />
+                    {/* Inner white gap ring */}
+                    <div className="absolute -inset-[1px] rounded-[18px] bg-white/80" />
+                    {/* Avatar */}
+                    <div className="relative">
+                      {profile?.logo_url ? (
+                        <img
+                          src={profile.logo_url}
+                          alt="logo"
+                          className="w-24 h-24 rounded-[16px] object-cover shadow-md"
+                        />
+                      ) : (
+                        <div
+                          className="w-24 h-24 rounded-[16px] flex items-center justify-center text-white text-3xl font-bold shadow-md"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #E65C00, #FF8C00, #FFB347)",
+                          }}
+                        >
+                          {profile?.business_name?.charAt(0).toUpperCase() ||
+                            "P"}
+                        </div>
+                      )}
+                    </div>
+                    {/* Status Badge */}
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+                      <StatusBadge
+                        status={
+                          profile?._resolvedStatus ||
+                          profile?.status ||
+                          profile?.provider_status ||
+                          "pending"
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* ── Business Information ── */}
+                  <div className="flex-1 min-w-0 pt-1">
+                    {/* Name row */}
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h1
+                        className="text-slate-800 font-black text-2xl md:text-3xl tracking-tight uppercase"
+                        style={{
+                          fontFamily: "'Arial Black', Arial, sans-serif",
+                          background:
+                            "linear-gradient(135deg, #1a0800 0%, #7a3500 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}
+                      >
+                        {profile?.business_name}
+                      </h1>
+
+                      {(profile?.rating ?? 0) > 0 && (
+                        <div
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #fff4e0, #ffe9c4)",
+                            border: "1px solid rgba(230,145,0,0.25)",
+                          }}
+                        >
+                          <FaStar size={11} className="text-amber-500" />
+                          <span className="text-amber-900 text-sm font-bold">
+                            {profile?.rating?.toFixed(1)}
+                          </span>
+                          <span className="text-amber-400 text-xs">·</span>
+                          <span className="text-amber-700 text-xs font-medium">
+                            {profile?.review_count} reviews
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Thin orange rule */}
+                    <div
+                      className="mb-3 h-px w-16"
+                      style={{
+                        background: "linear-gradient(90deg, #FF8C00, transparent)",
+                      }}
+                    />
+
+                    <p className="text-slate-500 text-sm leading-relaxed max-w-xl mb-4">
+                      {profile?.business_bio ||
+                        "Professional service provider on the JOVO marketplace. Dedicated to delivering exceptional quality and reliable service to our clients across the region."}
+                    </p>
+
+                    {/* Contact chips */}
+                    <div className="flex flex-wrap gap-2">
+                      {profile?.whatsapp_number && (
+                        <div
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #edfbf3, #d4f7e4)",
+                            border: "1px solid rgba(16,185,129,0.2)",
+                          }}
+                        >
+                          <FaWhatsapp size={12} className="text-emerald-500" />
+                          <span className="text-emerald-800 text-xs font-semibold">
+                            {profile.whatsapp_number}
+                          </span>
+                        </div>
+                      )}
+                      {profile?.phone_number && (
+                        <div
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                          style={{
+                            background: "rgba(248,250,252,0.9)",
+                            border: "1px solid rgba(0,0,0,0.07)",
+                          }}
+                        >
+                          <FiPhone size={12} className="text-slate-400" />
+                          <span className="text-slate-600 text-xs font-medium">
+                            {profile.phone_number}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ── Edit Button ── */}
+                  <button
+                    onClick={() => setEditingProfile(true)}
+                    className="relative group/btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 shrink-0 overflow-hidden"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #bf4a00, #E65C00, #FF8C00)",
+                      boxShadow:
+                        "0 4px 14px rgba(230,92,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                    <FiEdit2 size={13} className="relative z-10" />
+                    <span className="relative z-10">Edit Profile</span>
+                  </button>
+                </div>
+
+                {/* ── Stats Row ── */}
+                <div
+                  className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-7 pt-6"
+                  style={{ borderTop: "1px solid rgba(230,145,0,0.12)" }}
+                >
+                  {/* Total Earnings */}
+                  <div
+                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #fff4e0 0%, #ffe8c0 100%)",
+                      border: "1px solid rgba(230,145,0,0.2)",
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <p className="text-amber-700 text-[10px] font-bold uppercase tracking-wider">
+                        Total Earnings
+                      </p>
+                    </div>
+                    <p className="text-amber-900 text-xl font-black">
+                      ₦{(service?.starting_price ?? 0).toLocaleString()}
+                    </p>
+                    <p className="text-amber-600 text-[11px] mt-0.5 font-medium">
+                      Lifetime revenue
+                    </p>
+                  </div>
+
+                  {/* Service Status */}
+                  <div
+                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
+                    style={{
+                      background: service?.is_active
+                        ? "linear-gradient(135deg, #edfbf3 0%, #d1f5e4 100%)"
+                        : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                      border: service?.is_active
+                        ? "1px solid rgba(16,185,129,0.2)"
+                        : "1px solid rgba(0,0,0,0.07)",
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div
+                        className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500" : "bg-slate-400"}`}
+                      />
+                      <p
+                        className={`text-[10px] font-bold uppercase tracking-wider ${service?.is_active ? "text-emerald-700" : "text-slate-500"}`}
+                      >
+                        Service Status
+                      </p>
+                    </div>
+                    <p
+                      className={`text-xl font-black ${service?.is_active ? "text-emerald-900" : "text-slate-700"}`}
+                    >
+                      {service?.is_active ? "Active" : "Inactive"}
+                    </p>
+                    <p
+                      className={`text-[11px] mt-0.5 font-medium ${service?.is_active ? "text-emerald-600" : "text-slate-400"}`}
+                    >
+                      Live on marketplace
+                    </p>
+                  </div>
+
+                  {/* Booking Mode */}
+                  <div
+                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                      border: "1px solid rgba(59,130,246,0.15)",
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <p className="text-blue-700 text-[10px] font-bold uppercase tracking-wider">
+                        Booking Mode
+                      </p>
+                    </div>
+                    <p className="text-blue-900 text-xl font-black capitalize">
+                      {service?.booking_mode || "Not set"}
+                    </p>
+                    <p className="text-blue-600 text-[11px] mt-0.5 font-medium">
+                      Customer experience
+                    </p>
+                  </div>
+
+                  {/* Availability */}
+                  <div
+                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%)",
+                      border: "1px solid rgba(168,85,247,0.15)",
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                      <p className="text-purple-700 text-[10px] font-bold uppercase tracking-wider">
+                        Availability
+                      </p>
+                    </div>
+                    <p className="text-purple-900 text-xl font-black">
+                      {service && service.availability_schedule && Object.keys(service.availability_schedule).length > 0
+                        ? `${Object.keys(service.availability_schedule).length}/7 days`
+                        : "Not set"}
+                    </p>
+                    <p className="text-purple-600 text-[11px] mt-0.5 font-medium">
+                      Weekly schedule
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-slate-400 text-xs mt-0.5">Live on marketplace</p>
-            </div>
-            <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Booking Mode</p>
-              <p className="text-slate-700 text-base font-semibold capitalize">{service?.booking_mode || 'Not set'}</p>
-              <p className="text-slate-400 text-xs mt-0.5">Customer experience</p>
-            </div>
-            <div>
-              <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Availability</p>
-              <p className="text-slate-700 text-base font-semibold">
-                {service && Object.keys(service.availability_schedule).length > 0 
-                  ? `${Object.keys(service.availability_schedule).length}/7 days` 
-                  : 'Not set'}
-              </p>
-              <p className="text-slate-400 text-xs mt-0.5">Weekly schedule</p>
             </div>
           </div>
         </div>
+
+        {/* Curved Bottom Shape */}
+        <div
+          className="relative w-full overflow-hidden"
+          style={{ height: "48px", marginTop: "-1px" }}
+        >
+          <svg
+            className="absolute bottom-0 w-full h-full"
+            preserveAspectRatio="none"
+            viewBox="0 0 1440 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V64Z"
+              fill="#F8FAFC"
+            />
+            <path
+              d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V68H1380C1320 68 1200 68 1080 68C960 68 840 68 720 68C600 68 480 68 360 68C240 68 120 68 60 68H0V64Z"
+              fill="rgba(0,0,0,0.03)"
+            />
+          </svg>
+        </div>
       </div>
-    </div>
-  </div>
-</div>      
+
+      <style jsx>{`
+        @keyframes patternPulse {
+          0%,
+          100% {
+            opacity: 0.08;
+          }
+          50% {
+            opacity: 0.15;
+          }
+        }
+        @keyframes floatSlow {
+          0%,
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -20px) scale(1.05);
+          }
+          66% {
+            transform: translate(-20px, 15px) scale(0.98);
+          }
+        }
+        @keyframes floatReverse {
+          0%,
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(-25px, 20px) scale(1.03);
+          }
+          66% {
+            transform: translate(20px, -15px) scale(0.97);
+          }
+        }
+        @keyframes pulseGlow {
+          0%,
+          100% {
+            opacity: 0.15;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.3;
+            transform: scale(1.08);
+          }
+        }
+      `}</style>
+
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
         {/* Stats Row */}
@@ -1321,7 +1585,7 @@ export default function ProviderDashboard() {
             label="Total Earnings"
             prefix="₦"
             value={
-              service?.starting_price
+              service?.starting_price != null
                 ? service.starting_price.toLocaleString()
                 : "0"
             }
@@ -1341,7 +1605,9 @@ export default function ProviderDashboard() {
             icon={<FiCalendar size={18} />}
             label="Available Days"
             value={
-              service ? Object.keys(service.availability_schedule).length : 0
+              service && service.availability_schedule
+                ? Object.keys(service.availability_schedule).length
+                : 0
             }
             suffix="/7"
             color="#10B981"
@@ -1608,6 +1874,7 @@ export default function ProviderDashboard() {
               )}
             </div>
           )}
+
           {/* Service Card Display */}
           {hasService && service && !editingService && (
             <div
@@ -1625,7 +1892,7 @@ export default function ProviderDashboard() {
               )}
 
               <div className="p-4 sm:p-6">
-                {/* Header Section - Stack on mobile, row on tablet+ */}
+                {/* Header Section */}
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-5">
                   <div
                     className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0"
@@ -1640,7 +1907,6 @@ export default function ProviderDashboard() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    {/* Title & Status - Stack on very small, row on mobile landscape */}
                     <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3 flex-wrap mb-1">
                       <h3
                         className="font-black text-slate-900 text-lg sm:text-xl"
@@ -1663,7 +1929,7 @@ export default function ProviderDashboard() {
                     </p>
                   </div>
 
-                  {/* Action Buttons - Wrap on mobile, row on desktop */}
+                  {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2 shrink-0 mt-3 sm:mt-0">
                     <button
                       onClick={toggleActive}
@@ -1716,7 +1982,7 @@ export default function ProviderDashboard() {
                   {service.description}
                 </p>
 
-                {/* Info Grid - 2 columns on mobile, 4 columns on tablet+ */}
+                {/* Info Grid */}
                 <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 py-4 border-t border-b border-slate-100 mb-5">
                   <div>
                     <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
@@ -1751,7 +2017,7 @@ export default function ProviderDashboard() {
                   </div>
                 </div>
 
-                {/* Delete Confirmation - Responsive */}
+                {/* Delete Confirmation */}
                 {confirmDelete && (
                   <div className="mt-4 p-3 sm:p-4 rounded-2xl bg-red-50 border border-red-200">
                     <p className="text-sm font-black text-slate-800 mb-1">
