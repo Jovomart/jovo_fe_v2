@@ -1147,434 +1147,361 @@ export default function ProviderDashboard() {
 
   return (
     <div style={{ background: "#F8FAFC", minHeight: "100vh" }}>
-      {/* Hero Header - Rich Dark Orange with Curved Bottom Shape */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(145deg, #1a0a00 0%, #2a1500 35%, #3d2000 70%, #2a1500 100%)",
-        }}
-      >
-        {/* Animated Background Pattern - Slow pulse */}
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,140,0,0.8) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-            animation: "patternPulse 8s ease-in-out infinite",
-          }}
-        />
+    {/* Hero Header - Porsche Luxury Dark Gradient with Orange Accents */}
+<div
+  className="relative overflow-hidden"
+  style={{
+    background: "radial-gradient(ellipse at 30% 40%, #1a0c08 0%, #0a0503 60%, #050201 100%)",
+  }}
+>
+  {/* Animated Background Pattern - Fine micro-texture */}
+  <div
+    className="absolute inset-0 opacity-15 pointer-events-none"
+    style={{
+      backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,92,0,0.4) 1px, transparent 1px)`,
+      backgroundSize: "32px 32px",
+      animation: "patternPulse 10s ease-in-out infinite",
+    }}
+  />
 
-        {/* Floating Gradient Orbs */}
-        <div
-          className="absolute top-20 left-10 w-96 h-96 bg-orange-500/25 rounded-full blur-3xl pointer-events-none"
-          style={{ animation: "floatSlow 15s ease-in-out infinite" }}
-        />
-        <div
-          className="absolute bottom-20 right-10 w-[30rem] h-[30rem] bg-amber-600/30 rounded-full blur-3xl pointer-events-none"
-          style={{ animation: "floatReverse 18s ease-in-out infinite" }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-600/25 rounded-full blur-3xl pointer-events-none"
-          style={{ animation: "pulseGlow 6s ease-in-out infinite" }}
-        />
+  {/* Floating Gradient Orbs - Orange glow */}
+  <div
+    className="absolute top-20 left-10 w-96 h-96 bg-orange-600/15 rounded-full blur-3xl pointer-events-none"
+    style={{ animation: "floatSlow 20s ease-in-out infinite" }}
+  />
+  <div
+    className="absolute bottom-20 right-10 w-[30rem] h-[30rem] bg-orange-700/20 rounded-full blur-3xl pointer-events-none"
+    style={{ animation: "floatReverse 22s ease-in-out infinite" }}
+  />
+  <div
+    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"
+    style={{ animation: "pulseGlow 8s ease-in-out infinite" }}
+  />
 
-        {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
+  {/* Subtle top radiance line */}
+  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
 
-        {/* Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
-          {/* Back Link */}
-          <Link
-            href="/services"
-            className="inline-flex items-center gap-2 text-orange-300/80 text-sm font-medium hover:text-orange-200 transition-colors mb-8"
-          >
-            <FiArrowLeft size={14} />
-            Back to Services
-          </Link>
+  {/* Content */}
+  <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
+    {/* Back Link - Orange accent */}
+    <Link
+      href="/services"
+      className="inline-flex items-center gap-2 text-orange-400/70 text-sm font-light tracking-wide hover:text-orange-300 transition-all duration-300 mb-10 group"
+    >
+      <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+      Back to Services
+    </Link>
 
-          {/* ─── IMPROVED PROFILE CARD ─── */}
-          <div className="relative group">
-            {/* Outer glow — CSS transition only, no JS */}
-            <div className="absolute -inset-1.5 bg-gradient-to-r from-orange-500/20 via-amber-400/20 to-orange-600/20 rounded-[28px] blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Card shell */}
-            <div
-              className="relative rounded-3xl overflow-hidden shadow-2xl"
-              style={{
-                background:
-                  "linear-gradient(160deg, #fffdf9 0%, #fff8ee 55%, #fffbf4 100%)",
-                border: "1px solid rgba(230,145,0,0.18)",
-              }}
-            >
-              {/* ── Top accent bar ── */}
-              <div
-                className="absolute top-0 left-0 right-0 h-[3px]"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #E65C00 0%, #FF8C00 50%, #FFB347 100%)",
-                }}
+    {/* ─── LUXURY PROFILE SECTION WITH ORANGE ACCENTS ─── */}
+    <div className="space-y-10">
+      {/* Top Section: Avatar + Info + Edit Button */}
+      <div className="flex flex-col lg:flex-row items-start gap-8">
+        {/* Avatar Section - Orange ring */}
+        <div className="relative shrink-0">
+          {/* Outer ring - orange gradient */}
+          <div
+            className="absolute -inset-[4px] rounded-[24px]"
+            style={{
+              background: "linear-gradient(135deg, #FF8C00 0%, #FFB347 30%, #E65C00 70%, #FF8C00 100%)",
+              opacity: 0.7,
+            }}
+          />
+          <div
+            className="absolute -inset-[1.5px] rounded-[22px]"
+            style={{
+              background: "#1a0c08",
+            }}
+          />
+          {/* Avatar */}
+          <div className="relative">
+            {profile?.logo_url ? (
+              <img
+                src={profile.logo_url}
+                alt="logo"
+                className="w-28 h-28 md:w-32 md:h-32 rounded-[20px] object-cover shadow-2xl"
               />
-
-              {/* ── Decorative mesh panel (right side) ── */}
+            ) : (
               <div
-                className="absolute top-0 right-0 h-full w-64 pointer-events-none"
+                className="w-28 h-28 md:w-32 md:h-32 rounded-[20px] flex items-center justify-center text-4xl font-bold shadow-2xl"
                 style={{
-                  backgroundImage: `radial-gradient(circle at 1px 1px, rgba(230,120,0,0.08) 1px, transparent 1px)`,
-                  backgroundSize: "18px 18px",
-                  maskImage:
-                    "linear-gradient(to left, rgba(0,0,0,0.5) 0%, transparent 100%)",
-                  WebkitMaskImage:
-                    "linear-gradient(to left, rgba(0,0,0,0.5) 0%, transparent 100%)",
+                  background: "linear-gradient(135deg, #FF8C00, #FFB347, #E65C00)",
+                  color: "#1a0c08",
                 }}
-              />
-
-              {/* ── Diagonal shine ── */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, transparent 50%)",
-                }}
-              />
-
-              <div className="relative p-6 md:p-8">
-                <div className="flex flex-col lg:flex-row items-start gap-6">
-                  {/* ── Avatar Section ── */}
-                  <div className="relative shrink-0">
-                    {/* Outer amber ring */}
-                    <div
-                      className="absolute -inset-[3px] rounded-[20px]"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #FF8C00, #FFB347, #E65C00)",
-                        opacity: 0.5,
-                      }}
-                    />
-                    {/* Inner white gap ring */}
-                    <div className="absolute -inset-[1px] rounded-[18px] bg-white/80" />
-                    {/* Avatar */}
-                    <div className="relative">
-                      {profile?.logo_url ? (
-                        <img
-                          src={profile.logo_url}
-                          alt="logo"
-                          className="w-24 h-24 rounded-[16px] object-cover shadow-md"
-                        />
-                      ) : (
-                        <div
-                          className="w-24 h-24 rounded-[16px] flex items-center justify-center text-white text-3xl font-bold shadow-md"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #E65C00, #FF8C00, #FFB347)",
-                          }}
-                        >
-                          {profile?.business_name?.charAt(0).toUpperCase() ||
-                            "P"}
-                        </div>
-                      )}
-                    </div>
-                    {/* Status Badge */}
-                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
-                      <StatusBadge
-                        status={
-                          profile?._resolvedStatus ||
-                          profile?.status ||
-                          profile?.provider_status ||
-                          "pending"
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* ── Business Information ── */}
-                  <div className="flex-1 min-w-0 pt-1">
-                    {/* Name row */}
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h1
-                        className="text-slate-800 font-black text-2xl md:text-3xl tracking-tight uppercase"
-                        style={{
-                          fontFamily: "'Arial Black', Arial, sans-serif",
-                          background:
-                            "linear-gradient(135deg, #1a0800 0%, #7a3500 100%)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                          backgroundClip: "text",
-                        }}
-                      >
-                        {profile?.business_name}
-                      </h1>
-
-                      {(profile?.rating ?? 0) > 0 && (
-                        <div
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-full"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #fff4e0, #ffe9c4)",
-                            border: "1px solid rgba(230,145,0,0.25)",
-                          }}
-                        >
-                          <FaStar size={11} className="text-amber-500" />
-                          <span className="text-amber-900 text-sm font-bold">
-                            {profile?.rating?.toFixed(1)}
-                          </span>
-                          <span className="text-amber-400 text-xs">·</span>
-                          <span className="text-amber-700 text-xs font-medium">
-                            {profile?.review_count} reviews
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Thin orange rule */}
-                    <div
-                      className="mb-3 h-px w-16"
-                      style={{
-                        background: "linear-gradient(90deg, #FF8C00, transparent)",
-                      }}
-                    />
-
-                    <p className="text-slate-500 text-sm leading-relaxed max-w-xl mb-4">
-                      {profile?.business_bio ||
-                        "Professional service provider on the JOVO marketplace. Dedicated to delivering exceptional quality and reliable service to our clients across the region."}
-                    </p>
-
-                    {/* Contact chips */}
-                    <div className="flex flex-wrap gap-2">
-                      {profile?.whatsapp_number && (
-                        <div
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #edfbf3, #d4f7e4)",
-                            border: "1px solid rgba(16,185,129,0.2)",
-                          }}
-                        >
-                          <FaWhatsapp size={12} className="text-emerald-500" />
-                          <span className="text-emerald-800 text-xs font-semibold">
-                            {profile.whatsapp_number}
-                          </span>
-                        </div>
-                      )}
-                      {profile?.phone_number && (
-                        <div
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                          style={{
-                            background: "rgba(248,250,252,0.9)",
-                            border: "1px solid rgba(0,0,0,0.07)",
-                          }}
-                        >
-                          <FiPhone size={12} className="text-slate-400" />
-                          <span className="text-slate-600 text-xs font-medium">
-                            {profile.phone_number}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ── Edit Button ── */}
-                  <button
-                    onClick={() => setEditingProfile(true)}
-                    className="relative group/btn flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 shrink-0 overflow-hidden"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #bf4a00, #E65C00, #FF8C00)",
-                      boxShadow:
-                        "0 4px 14px rgba(230,92,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-                    <FiEdit2 size={13} className="relative z-10" />
-                    <span className="relative z-10">Edit Profile</span>
-                  </button>
-                </div>
-
-                {/* ── Stats Row ── */}
-                <div
-                  className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-7 pt-6"
-                  style={{ borderTop: "1px solid rgba(230,145,0,0.12)" }}
-                >
-                  {/* Total Earnings */}
-                  <div
-                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #fff4e0 0%, #ffe8c0 100%)",
-                      border: "1px solid rgba(230,145,0,0.2)",
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      <p className="text-amber-700 text-[10px] font-bold uppercase tracking-wider">
-                        Total Earnings
-                      </p>
-                    </div>
-                    <p className="text-amber-900 text-xl font-black">
-                      ₦{(service?.starting_price ?? 0).toLocaleString()}
-                    </p>
-                    <p className="text-amber-600 text-[11px] mt-0.5 font-medium">
-                      Lifetime revenue
-                    </p>
-                  </div>
-
-                  {/* Service Status */}
-                  <div
-                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
-                    style={{
-                      background: service?.is_active
-                        ? "linear-gradient(135deg, #edfbf3 0%, #d1f5e4 100%)"
-                        : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                      border: service?.is_active
-                        ? "1px solid rgba(16,185,129,0.2)"
-                        : "1px solid rgba(0,0,0,0.07)",
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div
-                        className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500" : "bg-slate-400"}`}
-                      />
-                      <p
-                        className={`text-[10px] font-bold uppercase tracking-wider ${service?.is_active ? "text-emerald-700" : "text-slate-500"}`}
-                      >
-                        Service Status
-                      </p>
-                    </div>
-                    <p
-                      className={`text-xl font-black ${service?.is_active ? "text-emerald-900" : "text-slate-700"}`}
-                    >
-                      {service?.is_active ? "Active" : "Inactive"}
-                    </p>
-                    <p
-                      className={`text-[11px] mt-0.5 font-medium ${service?.is_active ? "text-emerald-600" : "text-slate-400"}`}
-                    >
-                      Live on marketplace
-                    </p>
-                  </div>
-
-                  {/* Booking Mode */}
-                  <div
-                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                      border: "1px solid rgba(59,130,246,0.15)",
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                      <p className="text-blue-700 text-[10px] font-bold uppercase tracking-wider">
-                        Booking Mode
-                      </p>
-                    </div>
-                    <p className="text-blue-900 text-xl font-black capitalize">
-                      {service?.booking_mode || "Not set"}
-                    </p>
-                    <p className="text-blue-600 text-[11px] mt-0.5 font-medium">
-                      Customer experience
-                    </p>
-                  </div>
-
-                  {/* Availability */}
-                  <div
-                    className="rounded-2xl p-4 transition-transform duration-150 hover:-translate-y-0.5"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%)",
-                      border: "1px solid rgba(168,85,247,0.15)",
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                      <p className="text-purple-700 text-[10px] font-bold uppercase tracking-wider">
-                        Availability
-                      </p>
-                    </div>
-                    <p className="text-purple-900 text-xl font-black">
-                      {service && service.availability_schedule && Object.keys(service.availability_schedule).length > 0
-                        ? `${Object.keys(service.availability_schedule).length}/7 days`
-                        : "Not set"}
-                    </p>
-                    <p className="text-purple-600 text-[11px] mt-0.5 font-medium">
-                      Weekly schedule
-                    </p>
-                  </div>
-                </div>
+              >
+                {profile?.business_name?.charAt(0).toUpperCase() || "P"}
+              </div>
+            )}
+          </div>
+          {/* Status Badge */}
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+            <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-orange-500/40 shadow-lg">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
+                <span className="text-[10px] font-medium tracking-wider text-orange-200 uppercase">
+                  Verified Partner
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Curved Bottom Shape */}
-        <div
-          className="relative w-full overflow-hidden"
-          style={{ height: "48px", marginTop: "-1px" }}
+        {/* Business Information */}
+        <div className="flex-1 min-w-0 pt-1">
+          <div className="flex flex-wrap items-center gap-4 mb-3">
+            <h1
+              className="font-black text-3xl md:text-5xl tracking-tighter uppercase"
+              style={{
+                fontFamily: "'Inter', system-ui, sans-serif",
+                background: "linear-gradient(135deg, #FFFFFF 0%, #FFD5A4 40%, #FF8C00 70%, #FFFFFF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {profile?.business_name}
+            </h1>
+
+            {(profile?.rating ?? 0) > 0 && (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{
+                  background: "rgba(255,92,0,0.08)",
+                  border: "1px solid rgba(255,92,0,0.25)",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                <FaStar size={10} className="text-orange-400" />
+                <span className="text-orange-300 text-sm font-semibold tracking-wide">
+                  {profile?.rating?.toFixed(1)}
+                </span>
+                <span className="text-orange-500/50 text-xs">·</span>
+                <span className="text-orange-400/80 text-xs font-light tracking-wide">
+                  {profile?.review_count} reviews
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Thin orange rule */}
+          <div
+            className="mb-4 h-px w-24"
+            style={{
+              background: "linear-gradient(90deg, #FF8C00 0%, #E65C00 50%, transparent 100%)",
+            }}
+          />
+
+          <p className="text-orange-100/60 text-sm md:text-base leading-relaxed max-w-xl mb-5 font-light tracking-wide">
+            {profile?.business_bio ||
+              "Artisan of exceptional experiences. Precision-crafted service delivered with understated elegance and unwavering attention to detail."}
+          </p>
+
+          {/* Contact chips */}
+          <div className="flex flex-wrap gap-3">
+            {profile?.whatsapp_number && (
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{
+                  background: "rgba(16,185,129,0.08)",
+                  border: "1px solid rgba(16,185,129,0.2)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <FaWhatsapp size={12} className="text-emerald-400/80" />
+                <span className="text-orange-200/80 text-xs font-medium tracking-wide">
+                  {profile.whatsapp_number}
+                </span>
+              </div>
+            )}
+            {profile?.phone_number && (
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <FiPhone size={12} className="text-orange-400/60" />
+                <span className="text-orange-200/70 text-xs font-medium tracking-wide">
+                  {profile.phone_number}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Edit Button - Orange accent */}
+        <button
+          onClick={() => setEditingProfile(true)}
+          className="relative group/btn flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shrink-0 overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(255,92,0,0.15) 0%, rgba(255,92,0,0.05) 100%)",
+            border: "1px solid rgba(255,92,0,0.4)",
+            backdropFilter: "blur(8px)",
+            color: "#FF8C00",
+          }}
         >
-          <svg
-            className="absolute bottom-0 w-full h-full"
-            preserveAspectRatio="none"
-            viewBox="0 0 1440 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V64Z"
-              fill="#F8FAFC"
-            />
-            <path
-              d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V68H1380C1320 68 1200 68 1080 68C960 68 840 68 720 68C600 68 480 68 360 68C240 68 120 68 60 68H0V64Z"
-              fill="rgba(0,0,0,0.03)"
-            />
-          </svg>
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
+          <FiEdit2 size={13} className="relative z-10" />
+          <span className="relative z-10 tracking-wide">Edit Profile</span>
+        </button>
+      </div>
+
+      {/* Stats Row - FULL FUNCTIONALITY RESTORED */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8"
+        style={{ borderTop: "1px solid rgba(255,92,0,0.15)" }}
+      >
+        {/* Total Earnings */}
+        <div
+          className="group rounded-2xl p-4 transition-all duration-500 hover:-translate-y-1"
+          style={{
+            background: "linear-gradient(135deg, rgba(255,92,0,0.04) 0%, rgba(255,92,0,0.01) 100%)",
+            border: "1px solid rgba(255,92,0,0.15)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1 h-1 rounded-full bg-orange-500/80" />
+            <p className="text-orange-500/60 text-[9px] font-semibold uppercase tracking-[0.2em]">
+              Total Earnings
+            </p>
+          </div>
+          <p className="text-orange-100 text-2xl md:text-3xl font-light tracking-tight">
+            ₦{(service?.starting_price ?? 0).toLocaleString()}
+          </p>
+          <p className="text-orange-500/40 text-[10px] mt-1 font-light tracking-wide">
+            Lifetime revenue
+          </p>
+        </div>
+
+        {/* Service Status */}
+        <div
+          className="group rounded-2xl p-4 transition-all duration-500 hover:-translate-y-1"
+          style={{
+            background: "linear-gradient(135deg, rgba(255,92,0,0.04) 0%, rgba(255,92,0,0.01) 100%)",
+            border: service?.is_active
+              ? "1px solid rgba(16,185,129,0.25)"
+              : "1px solid rgba(255,92,0,0.15)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-1 h-1 rounded-full ${service?.is_active ? "bg-emerald-500/80" : "bg-slate-500/80"}`} />
+            <p className="text-orange-500/60 text-[9px] font-semibold uppercase tracking-[0.2em]">
+              Service Status
+            </p>
+          </div>
+          <p className="text-orange-100 text-2xl md:text-3xl font-light tracking-tight">
+            {service?.is_active ? "Active" : "Inactive"}
+          </p>
+          <p className="text-orange-500/40 text-[10px] mt-1 font-light">
+            {service?.is_active ? "Live on marketplace" : "Currently offline"}
+          </p>
+        </div>
+
+        {/* Booking Mode - FULL FUNCTIONALITY */}
+        <div
+          className="group rounded-2xl p-4 transition-all duration-500 hover:-translate-y-1"
+          style={{
+            background: "linear-gradient(135deg, rgba(255,92,0,0.04) 0%, rgba(255,92,0,0.01) 100%)",
+            border: "1px solid rgba(255,92,0,0.15)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1 h-1 rounded-full bg-sky-400/80" />
+            <p className="text-orange-500/60 text-[9px] font-semibold uppercase tracking-[0.2em]">
+              Booking Mode
+            </p>
+          </div>
+          <p className="text-orange-100 text-2xl md:text-3xl font-light tracking-tight capitalize">
+            {service?.booking_mode || "Not set"}
+          </p>
+          <p className="text-orange-500/40 text-[10px] mt-1 font-light">
+            Customer experience
+          </p>
+        </div>
+
+        {/* Availability - FULL FUNCTIONALITY with schedule data */}
+        <div
+          className="group rounded-2xl p-4 transition-all duration-500 hover:-translate-y-1"
+          style={{
+            background: "linear-gradient(135deg, rgba(255,92,0,0.04) 0%, rgba(255,92,0,0.01) 100%)",
+            border: "1px solid rgba(255,92,0,0.15)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1 h-1 rounded-full bg-purple-400/80" />
+            <p className="text-orange-500/60 text-[9px] font-semibold uppercase tracking-[0.2em]">
+              Availability
+            </p>
+          </div>
+          <p className="text-orange-100 text-2xl md:text-3xl font-light tracking-tight">
+            {service && service.availability_schedule && Object.keys(service.availability_schedule).length > 0
+              ? `${Object.keys(service.availability_schedule).length}/7 days`
+              : "Not set"}
+          </p>
+          <p className="text-orange-500/40 text-[10px] mt-1 font-light">
+            Weekly schedule
+          </p>
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes patternPulse {
-          0%,
-          100% {
-            opacity: 0.08;
-          }
-          50% {
-            opacity: 0.15;
-          }
-        }
-        @keyframes floatSlow {
-          0%,
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(30px, -20px) scale(1.05);
-          }
-          66% {
-            transform: translate(-20px, 15px) scale(0.98);
-          }
-        }
-        @keyframes floatReverse {
-          0%,
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(-25px, 20px) scale(1.03);
-          }
-          66% {
-            transform: translate(20px, -15px) scale(0.97);
-          }
-        }
-        @keyframes pulseGlow {
-          0%,
-          100% {
-            opacity: 0.15;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.3;
-            transform: scale(1.08);
-          }
-        }
-      `}</style>
+      {/* Signature element */}
+      <div className="flex justify-end pt-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-px bg-gradient-to-r from-transparent to-orange-500/40" />
+          <span className="text-orange-500/30 text-[9px] tracking-[0.3em] font-light uppercase">
+            Bespoke Service
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Curved Bottom Shape */}
+  <div
+    className="relative w-full overflow-hidden"
+    style={{ height: "56px", marginTop: "-1px" }}
+  >
+    <svg
+      className="absolute bottom-0 w-full h-full"
+      preserveAspectRatio="none"
+      viewBox="0 0 1440 80"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V64Z"
+        fill="#FAFAFA"
+      />
+      <path
+        d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V68H1380C1320 68 1200 68 1080 68C960 68 840 68 720 68C600 68 480 68 360 68C240 68 120 68 60 68H0V64Z"
+        fill="rgba(0,0,0,0.02)"
+      />
+    </svg>
+  </div>
+</div>
+
+<style jsx>{`
+  @keyframes patternPulse {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.2; }
+  }
+  @keyframes floatSlow {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(25px, -18px) scale(1.03); }
+    66% { transform: translate(-18px, 12px) scale(0.98); }
+  }
+  @keyframes floatReverse {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(-22px, 18px) scale(1.02); }
+    66% { transform: translate(18px, -12px) scale(0.97); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.08; transform: scale(1); }
+    50% { opacity: 0.2; transform: scale(1.1); }
+  }
+`}</style>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">

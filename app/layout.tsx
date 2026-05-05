@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 // @ts-ignore - CSS module import
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
+import { CartProvider } from '@/context/CartContext'  // ← ADD THIS
 import { Suspense } from 'react'
 
 export const metadata: Metadata = {
@@ -46,9 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AuthProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            {children}
-          </Suspense>
+          <CartProvider>  {/* ← ADD THIS */}
+            <Suspense fallback={<LoadingFallback />}>
+              {children}
+            </Suspense>
+          </CartProvider>  {/* ← ADD THIS */}
         </AuthProvider>
       </body>
     </html>

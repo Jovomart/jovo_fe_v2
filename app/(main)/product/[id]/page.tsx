@@ -1,28 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-// src/pages/ProductDetails.jsx
 import { products } from "@/data/products";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   FiHeart,
   FiShoppingCart,
-  FiTruck,
   FiRefreshCw,
   FiShield,
-  FiMapPin,
-  FiChevronDown,
-  FiChevronUp,
   FiShare2,
   FiArrowLeft,
   FiCheck,
   FiPackage,
-  FiClock,
   FiStar,
   FiChevronRight,
-  FiAlertCircle,
   FiThumbsUp,
-  FiLoader,
 } from "react-icons/fi";
 import {
   FaHeart,
@@ -34,9 +26,9 @@ import {
   FaTwitter,
   FaCopy,
 } from "react-icons/fa";
-import { MdVerified, MdLocalShipping, MdStorefront } from "react-icons/md";
+import { MdVerified } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
-import ApiService from "@/services/apiService";
+import { useCart } from "@/context/CartContext";
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -65,18 +57,6 @@ interface Review {
   comment: string;
   verified: boolean;
   helpful: number;
-}
-
-interface DeliveryOption {
-  id: string;
-  delivery_type: string;
-  delivery_cost: number;
-  estimated_days_min: number;
-  estimated_days_max: number;
-  delivery_description: string;
-  carrier_name: string;
-  is_free_delivery: boolean;
-  is_available: boolean;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -175,141 +155,17 @@ const categoryRoutes: Record<string, string> = {
 const ProductDetails = () => {
   const { id } = useParams();
   const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const { addToCart } = useCart()
 
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("description");
-  const [deliveryOpen, setDeliveryOpen] = useState<boolean>(true);
   const [returnOpen, setReturnOpen] = useState<boolean>(false);
   const [shareOpen, setShareOpen] = useState<boolean>(false);
   const [helpfulVoted, setHelpfulVoted] = useState<number[]>([]);
   const [addedToCart, setAddedToCart] = useState<boolean>(false);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
-  const [pincode, setPincode] = useState<string>("");
-  const [pincodeChecked, setPincodeChecked] = useState<boolean>(false);
-
-  // Delivery options state
-  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
-  const [deliveryLoading, setDeliveryLoading] = useState<boolean>(true);
-  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const product = products.find((p: Product) => p.id === Number(id)) as Product | undefined;
-
-  // Product weight (default 1kg if not specified)
-  const productWeight = (product as any)?.weight || 1;
-  const totalWeight = productWeight * quantity;
-
-  // Fetch delivery options on component mount and when quantity/cart total changes
-  useEffect(() => {
-    const fetchDeliveryOptions = async () => {
-      setDeliveryLoading(true);
-      setDeliveryError(null);
-
-      try {
-        const cartTotal = product ? product.price * quantity : 0;
-
-        // Get delivery options from API
-        const response = await ApiService.getAvailableDeliveryOptions(
-          cartTotal,
-          totalWeight,
-        );
-        console.log("API Service Response:", response);
-
-        // IMPORTANT: Extract the delivery_options array from the response
-        let availableOptions: DeliveryOption[] = [];
-
-        // Check different possible response structures
-        if (
-          response?.data?.delivery_options &&
-          Array.isArray(response.data.delivery_options)
-        ) {
-          // Structure: { status: 'success', data: { delivery_options: [...] } }
-          availableOptions = response.data.delivery_options;
-        } else if (
-          response?.delivery_options &&
-          Array.isArray(response.delivery_options)
-        ) {
-          // Structure: { delivery_options: [...] }
-          availableOptions = response.delivery_options;
-        } else if (response?.data && Array.isArray(response.data)) {
-          // Structure: { data: [...] }
-          availableOptions = response.data;
-        } else if (Array.isArray(response)) {
-          // Structure: [...]
-          availableOptions = response;
-        }
-
-        console.log("Extracted delivery options:", availableOptions);
-
-        // Filter only available options
-        const filteredOptions = availableOptions.filter(
-          (opt) => opt.is_available === true,
-        );
-
-        console.log("Final delivery options:", filteredOptions);
-        setDeliveryOptions(filteredOptions);
-
-        // Auto-select first available option
-        if (filteredOptions.length > 0 && !selectedDeliveryId) {
-          setSelectedDeliveryId(filteredOptions[0].id);
-        } else if (filteredOptions.length === 0) {
-          // If no options from API, use fallback
-          const fallbackOptions: DeliveryOption[] = [
-            {
-              id: "standard",
-              delivery_type: "Standard Delivery",
-              delivery_cost: 1500,
-              estimated_days_min: 2,
-              estimated_days_max: 4,
-              delivery_description:
-                "Delivered to your doorstep via our logistics partners.",
-              carrier_name: "Jovo Logistics",
-              is_free_delivery: false,
-              is_available: true,
-            },
-            {
-              id: "express",
-              delivery_type: "Express Delivery",
-              delivery_cost: 3500,
-              estimated_days_min: 0,
-              estimated_days_max: 1,
-              delivery_description: "Priority handling. Available within FUTO.",
-              carrier_name: "Jovo Express",
-              is_free_delivery: false,
-              is_available: true,
-            },
-            {
-              id: "pickup",
-              delivery_type: "Pickup Station",
-              delivery_cost: 0,
-              estimated_days_min: 1,
-              estimated_days_max: 1,
-              delivery_description:
-                "Collect at ICT Centre, FUTO. Mon–Sat, 9am–6pm.",
-              carrier_name: "Jovo Pickup",
-              is_free_delivery: true,
-              is_available: true,
-            },
-          ];
-          console.log("Using fallback options");
-          setDeliveryOptions(fallbackOptions);
-          if (!selectedDeliveryId) {
-            setSelectedDeliveryId("standard");
-          }
-        }
-      } catch (err: any) {
-        console.error("Failed to fetch delivery options:", err);
-        setDeliveryError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setDeliveryLoading(false);
-      }
-    };
-
-    if (product) {
-      fetchDeliveryOptions();
-    }
-  }, [product, quantity, totalWeight, selectedDeliveryId]);
 
   if (!product) {
     return (
@@ -347,49 +203,20 @@ const ProductDetails = () => {
   const totalReviews = product.reviews || mockReviews.length;
 
   const handleAddToCart = () => {
+    addToCart(product, quantity);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
+  };
+
+  const handleBuyNow = () => {
+    addToCart(product, quantity);
+    router.push('/cart');
   };
 
   const handleHelpful = (reviewId: number) => {
     if (!helpfulVoted.includes(reviewId)) {
       setHelpfulVoted([...helpfulVoted, reviewId]);
     }
-  };
-
-  const handleCheckPincode = () => {
-    if (pincode.trim().length >= 3) setPincodeChecked(true);
-  };
-
-  // Helper functions for delivery options
-  const formatDeliveryCost = (option: DeliveryOption) => {
-    if (option.is_free_delivery) return "Free";
-    return `₦${Number(option.delivery_cost || 0).toLocaleString()}`;
-  };
-
-  const formatEstimatedDays = (option: DeliveryOption) => {
-    const min = option.estimated_days_min || 2;
-    const max = option.estimated_days_max || 5;
-    if (min === max) return `${min} business day${min > 1 ? "s" : ""}`;
-    return `${min} – ${max} business days`;
-  };
-
-  const getDeliveryIcon = (option: DeliveryOption) => {
-    const type = (option.delivery_type || "").toLowerCase();
-    if (type.includes("express") || type.includes("same day"))
-      return <FiClock size={20} />;
-    if (type.includes("pickup") || type.includes("store"))
-      return <MdStorefront size={20} />;
-    return <FiTruck size={20} />;
-  };
-
-  const isPickupOption = (option: DeliveryOption) => {
-    const type = (option.delivery_type || "").toLowerCase();
-    return (
-      type.includes("pickup") ||
-      type.includes("store") ||
-      type.includes("collection")
-    );
   };
 
   return (
@@ -423,7 +250,6 @@ const ProductDetails = () => {
             <div className="grid lg:grid-cols-2 gap-0">
               {/* ── LEFT: Image Panel ── */}
               <div className="relative bg-gray-50 lg:rounded-tl-3xl lg:rounded-bl-3xl min-h-95 md:min-h-130 flex items-center justify-center p-6 md:p-10 overflow-hidden">
-                {/* Background pattern */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                   <div
                     className="absolute inset-0"
@@ -435,7 +261,6 @@ const ProductDetails = () => {
                   />
                 </div>
 
-                {/* Discount badge */}
                 {discount > 0 && (
                   <div
                     className="absolute top-5 left-5 z-20 flex flex-col items-center justify-center w-14 h-14 rounded-full text-white font-black text-xs"
@@ -447,7 +272,6 @@ const ProductDetails = () => {
                   </div>
                 )}
 
-                {/* Wishlist + Share buttons */}
                 <div className="absolute top-5 right-5 z-40 flex flex-col gap-2">
                   <button
                     onClick={() => setIsWishlisted(!isWishlisted)}
@@ -481,36 +305,10 @@ const ProductDetails = () => {
                             Share via
                           </p>
                           {[
-                            {
-                              icon: (
-                                <FaWhatsapp
-                                  className="text-green-500"
-                                  size={16}
-                                />
-                              ),
-                              label: "WhatsApp",
-                            },
-                            {
-                              icon: (
-                                <FaFacebook
-                                  className="text-blue-600"
-                                  size={16}
-                                />
-                              ),
-                              label: "Facebook",
-                            },
-                            {
-                              icon: (
-                                <FaTwitter className="text-sky-500" size={16} />
-                              ),
-                              label: "Twitter",
-                            },
-                            {
-                              icon: (
-                                <FaCopy className="text-gray-500" size={16} />
-                              ),
-                              label: "Copy Link",
-                            },
+                            { icon: <FaWhatsapp className="text-green-500" size={16} />, label: "WhatsApp" },
+                            { icon: <FaFacebook className="text-blue-600" size={16} />, label: "Facebook" },
+                            { icon: <FaTwitter className="text-sky-500" size={16} />, label: "Twitter" },
+                            { icon: <FaCopy className="text-gray-500" size={16} />, label: "Copy Link" },
                           ].map(({ icon, label }) => (
                             <button
                               key={label}
@@ -526,7 +324,6 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* Main image - NOW COVERS FULL AREA */}
                 <img
                   src={product.image}
                   alt={product.name}
@@ -633,7 +430,10 @@ const ProductDetails = () => {
                       )}
                     </button>
 
-                    <button className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border-2 border-gray-200 text-gray-700 hover:border-[#B42225] hover:text-[#B42225] transition-all duration-200">
+                    <button
+                      onClick={handleBuyNow}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border-2 border-gray-200 text-gray-700 hover:border-[#B42225] hover:text-[#B42225] transition-all duration-200"
+                    >
                       Buy Now
                     </button>
                   </div>
@@ -641,21 +441,9 @@ const ProductDetails = () => {
 
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
-                    {
-                      icon: <FiShield size={16} className="text-green-500" />,
-                      label: "Secure Payment",
-                      sub: "100% Protected",
-                    },
-                    {
-                      icon: <FiRefreshCw size={16} className="text-blue-500" />,
-                      label: "Easy Returns",
-                      sub: "7-day policy",
-                    },
-                    {
-                      icon: <MdVerified size={16} className="text-[#B42225]" />,
-                      label: "Verified Seller",
-                      sub: "Jovo Assured",
-                    },
+                    { icon: <FiShield size={16} className="text-green-500" />, label: "Secure Payment", sub: "100% Protected" },
+                    { icon: <FiRefreshCw size={16} className="text-blue-500" />, label: "Easy Returns", sub: "7-day policy" },
+                    { icon: <MdVerified size={16} className="text-[#B42225]" />, label: "Verified Seller", sub: "Jovo Assured" },
                   ].map(({ icon, label, sub }) => (
                     <div
                       key={label}
@@ -674,191 +462,16 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/* DELIVERY & SHIPPING SECTION */}
+        {/* RETURN & POLICY CARDS - Desktop always visible, mobile collapsible */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Delivery Options */}
+          <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
+            {/* Return Policy - Desktop always open, mobile collapsible */}
             <div
-              className="md:col-span-2 bg-white rounded-3xl p-6"
+              className="bg-white rounded-3xl p-5"
               style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
             >
-              <button
-                className="w-full flex items-center justify-between"
-                onClick={() => setDeliveryOpen(!deliveryOpen)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#B42225]/10 flex items-center justify-center">
-                    <MdLocalShipping size={20} className="text-[#B42225]" />
-                  </div>
-                  <h3 className="text-base font-black text-gray-900">
-                    Delivery Options
-                  </h3>
-                </div>
-                {deliveryOpen ? (
-                  <FiChevronUp size={18} className="text-gray-400" />
-                ) : (
-                  <FiChevronDown size={18} className="text-gray-400" />
-                )}
-              </button>
-
-              {deliveryOpen && (
-                <div className="mt-5 space-y-3">
-                  {/* Check delivery area */}
-                  <div className="flex gap-2">
-                    <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-xl px-3 overflow-hidden">
-                      <FiMapPin size={15} className="text-gray-400 shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Enter area in FUTO e.g. Eziobodo, Ihiagwa"
-                        className="flex-1 py-2.5 text-sm outline-none bg-transparent placeholder-gray-400"
-                        value={pincode}
-                        onChange={(e) => {
-                          setPincode(e.target.value);
-                          setPincodeChecked(false);
-                        }}
-                      />
-                    </div>
-                    <button
-                      onClick={handleCheckPincode}
-                      className="px-4 py-2.5 bg-[#B42225] text-white text-sm font-bold rounded-xl hover:bg-[#9e1e20] transition shrink-0"
-                    >
-                      Check
-                    </button>
-                  </div>
-
-                  {pincodeChecked && (
-                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-xl text-sm">
-                      <FiCheck size={14} />
-                      <span className="font-medium">
-                        Delivery available to <strong>{pincode}</strong>!
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Loading state */}
-                  {deliveryLoading && (
-                    <div className="flex items-center justify-center py-8">
-                      <FiLoader
-                        size={24}
-                        className="animate-spin text-[#B42225]"
-                      />
-                      <span className="ml-2 text-sm text-gray-500">
-                        Loading delivery options...
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Error state */}
-                  {deliveryError && !deliveryLoading && (
-                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-xl text-sm">
-                      <FiAlertCircle size={16} />
-                      <span>
-                        Using default delivery options. ({deliveryError})
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Delivery options list */}
-                  {!deliveryLoading && deliveryOptions.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <FiTruck
-                        size={32}
-                        className="mx-auto mb-2 text-gray-300"
-                      />
-                      <p className="text-sm">
-                        No delivery options available for this location.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Render delivery options */}
-                  {!deliveryLoading &&
-                    deliveryOptions.map((opt) => (
-                      <div
-                        key={opt.id}
-                        onClick={() => setSelectedDeliveryId(opt.id)}
-                        className={`flex gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                          selectedDeliveryId === opt.id
-                            ? "border-[#B42225] bg-[#B42225]/3"
-                            : "border-gray-100 hover:border-gray-200"
-                        }`}
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                            selectedDeliveryId === opt.id
-                              ? "bg-[#B42225] text-white"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {getDeliveryIcon(opt)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-bold text-gray-800">
-                              {opt.delivery_type}
-                            </p>
-                            <span
-                              className={`text-sm font-black shrink-0 ${opt.is_free_delivery ? "text-green-600" : "text-gray-800"}`}
-                            >
-                              {formatDeliveryCost(opt)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#B42225] font-semibold mt-0.5">
-                            ⏱ {formatEstimatedDays(opt)}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {opt.delivery_description ||
-                              "Delivery to your doorstep"}
-                          </p>
-
-                          {opt.carrier_name && (
-                            <p className="text-xs text-gray-400 mt-1">
-                              📦 {opt.carrier_name}
-                            </p>
-                          )}
-
-                          {/* Pickup station details */}
-                          {isPickupOption(opt) &&
-                            selectedDeliveryId === opt.id && (
-                              <div className="mt-3 bg-gray-50 rounded-xl p-3 space-y-1.5">
-                                <p className="text-xs font-black text-gray-800 flex items-center gap-1.5">
-                                  <MdStorefront
-                                    size={13}
-                                    className="text-[#B42225]"
-                                  />
-                                  Pickup Location: ICT Centre, FUTO
-                                </p>
-                                <p className="text-xs text-gray-500 flex items-start gap-1.5">
-                                  <FiClock
-                                    size={11}
-                                    className="mt-0.5 shrink-0 text-gray-400"
-                                  />
-                                  Mon – Sat: 9:00 AM – 6:00 PM
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  Contact: support@jovomart.com
-                                </p>
-                              </div>
-                            )}
-                        </div>
-                        {selectedDeliveryId === opt.id && (
-                          <div className="shrink-0 w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center self-start mt-0.5">
-                            <FiCheck size={11} className="text-white" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Return & Policy Cards */}
-            <div className="flex flex-col gap-4">
-              {/* Return Policy */}
-              <div
-                className="bg-white rounded-3xl p-5"
-                style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-              >
+              {/* Mobile version - collapsible */}
+              <div className="md:hidden">
                 <button
                   className="w-full flex items-center justify-between"
                   onClick={() => setReturnOpen(!returnOpen)}
@@ -872,42 +485,25 @@ const ProductDetails = () => {
                     </h3>
                   </div>
                   {returnOpen ? (
-                    <FiChevronUp size={16} className="text-gray-400" />
+                    <FiChevronRight size={16} className="text-gray-400 rotate-90" />
                   ) : (
-                    <FiChevronDown size={16} className="text-gray-400" />
+                    <FiChevronRight size={16} className="text-gray-400" />
                   )}
                 </button>
                 {returnOpen && (
                   <div className="mt-4 space-y-3">
                     {[
-                      {
-                        icon: "✓",
-                        text: "7-day easy returns on eligible items",
-                      },
-                      {
-                        icon: "✓",
-                        text: "Item must be unused and in original packaging",
-                      },
-                      {
-                        icon: "✓",
-                        text: "Refund processed within 3–5 business days",
-                      },
-                      {
-                        icon: "✓",
-                        text: "Free return pickup for defective products",
-                      },
-                      {
-                        icon: "✗",
-                        text: "Perishables & opened beauty items non-returnable",
-                      },
+                      { icon: "✓", text: "7-day easy returns on eligible items" },
+                      { icon: "✓", text: "Item must be unused and in original packaging" },
+                      { icon: "✓", text: "Refund processed within 3–5 business days" },
+                      { icon: "✓", text: "Free return pickup for defective products" },
+                      { icon: "✗", text: "Perishables & opened beauty items non-returnable" },
                     ].map(({ icon, text }) => (
                       <div
                         key={text}
                         className={`flex items-start gap-2 text-xs ${icon === "✗" ? "text-red-500" : "text-gray-600"}`}
                       >
-                        <span
-                          className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}
-                        >
+                        <span className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}>
                           {icon}
                         </span>
                         {text}
@@ -917,50 +513,66 @@ const ProductDetails = () => {
                 )}
               </div>
 
-              {/* Warranty */}
-              <div
-                className="bg-white rounded-3xl p-5"
-                style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-2xl bg-green-50 flex items-center justify-center">
-                    <FiShield size={18} className="text-green-500" />
+              {/* Desktop version - always visible */}
+              <div className="hidden md:block">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <FiRefreshCw size={18} className="text-blue-500" />
                   </div>
                   <h3 className="text-sm font-black text-gray-900">
-                    Warranty & Security
+                    Return Policy
                   </h3>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {[
-                    { label: "Warranty", value: (product as any).warranty || "1 Year" },
-                    { label: "Authenticity", value: "100% Genuine" },
-                    { label: "Payment", value: "SSL Secured" },
-                    { label: "Seller", value: "Jovo Verified" },
-                  ].map(({ label, value }) => (
+                    { icon: "✓", text: "7-day easy returns on eligible items" },
+                    { icon: "✓", text: "Item must be unused and in original packaging" },
+                    { icon: "✓", text: "Refund processed within 3–5 business days" },
+                    { icon: "✓", text: "Free return pickup for defective products" },
+                    { icon: "✗", text: "Perishables & opened beauty items non-returnable" },
+                  ].map(({ icon, text }) => (
                     <div
-                      key={label}
-                      className="flex items-center justify-between text-xs"
+                      key={text}
+                      className={`flex items-start gap-2 text-xs ${icon === "✗" ? "text-red-500" : "text-gray-600"}`}
                     >
-                      <span className="text-gray-400">{label}</span>
-                      <span className="font-bold text-gray-700">{value}</span>
+                      <span className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}>
+                        {icon}
+                      </span>
+                      {text}
                     </div>
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* Need Help */}
-              <div className="bg-linear-to-br from-[#B42225] to-[#7c1315] rounded-3xl p-5 text-white">
-                <FiAlertCircle size={20} className="mb-2 opacity-80" />
-                <h3 className="text-sm font-black mb-1">Need Help?</h3>
-                <p className="text-xs opacity-70 mb-3">
-                  Our support team is available Mon–Sat, 9am–6pm.
-                </p>
-                <a
-                  href="tel:+2348000000000"
-                  className="block text-center bg-white/20 hover:bg-white/30 transition text-xs font-bold py-2.5 rounded-xl"
-                >
-                  📞 Contact Support
-                </a>
+            {/* Warranty - Always visible (same on mobile and desktop) */}
+            <div
+              className="bg-white rounded-3xl p-5"
+              style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-green-50 flex items-center justify-center">
+                  <FiShield size={18} className="text-green-500" />
+                </div>
+                <h3 className="text-sm font-black text-gray-900">
+                  Warranty & Security
+                </h3>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: "Warranty", value: (product as any).warranty || "1 Year" },
+                  { label: "Authenticity", value: "100% Genuine" },
+                  { label: "Payment", value: "SSL Secured" },
+                  { label: "Seller", value: "Jovo Verified" },
+                ].map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="text-gray-400">{label}</span>
+                    <span className="font-bold text-gray-700">{value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -972,7 +584,6 @@ const ProductDetails = () => {
             className="bg-white rounded-3xl overflow-hidden"
             style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
           >
-            {/* Tab Headers */}
             <div className="flex border-b border-gray-100 overflow-x-auto">
               {[
                 { key: "description", label: "Description" },
@@ -994,7 +605,6 @@ const ProductDetails = () => {
             </div>
 
             <div className="p-6 md:p-8">
-              {/* Description Tab */}
               {activeTab === "description" && (
                 <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed">
                   <p>
@@ -1024,77 +634,43 @@ const ProductDetails = () => {
                 </div>
               )}
 
-              {/* Specifications Tab */}
               {activeTab === "specs" && (
                 <div className="grid sm:grid-cols-2 gap-3">
                   {[
                     { label: "Brand", value: product.brand || "—" },
-                    {
-                      label: "Category",
-                      value: product.category
-                        ? product.category.charAt(0).toUpperCase() +
-                          product.category.slice(1)
-                        : "—",
-                    },
+                    { label: "Category", value: product.category.charAt(0).toUpperCase() + product.category.slice(1) },
                     { label: "Condition", value: "Brand New" },
                     { label: "Warranty", value: (product as any).warranty || "1 Year" },
-                    {
-                      label: "SKU",
-                      value: `JVO-${product.id}-${product.category?.toUpperCase().slice(0, 3)}`,
-                    },
+                    { label: "SKU", value: `JVO-${product.id}-${product.category?.toUpperCase().slice(0, 3)}` },
                     { label: "In Stock", value: "Yes — Available" },
                     { label: "Seller", value: "Jovo Official Store" },
                     { label: "Ship From", value: "ICT Centre, FUTO" },
                   ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
-                    >
-                      <span className="text-xs text-gray-400 w-24 shrink-0">
-                        {label}
-                      </span>
-                      <span className="text-xs font-bold text-gray-800">
-                        {value}
-                      </span>
+                    <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                      <span className="text-xs text-gray-400 w-24 shrink-0">{label}</span>
+                      <span className="text-xs font-bold text-gray-800">{value}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Reviews Tab */}
               {activeTab === "reviews" && (
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-6 p-6 bg-gray-50 rounded-2xl">
                     <div className="flex flex-col items-center justify-center gap-1 shrink-0">
-                      <span className="text-5xl font-black text-gray-900">
-                        {avgRating}
-                      </span>
+                      <span className="text-5xl font-black text-gray-900">{avgRating}</span>
                       <RenderStars rating={avgRating} size={18} />
-                      <span className="text-xs text-gray-400 mt-1">
-                        {totalReviews} reviews
-                      </span>
+                      <span className="text-xs text-gray-400 mt-1">{totalReviews} reviews</span>
                     </div>
                     <div className="flex-1 space-y-2">
                       {[5, 4, 3, 2, 1].map((star) => (
                         <div key={star} className="flex items-center gap-3">
-                          <span className="text-xs text-gray-500 w-3">
-                            {star}
-                          </span>
-                          <FaStar
-                            size={11}
-                            className="text-yellow-400 shrink-0"
-                          />
+                          <span className="text-xs text-gray-500 w-3">{star}</span>
+                          <FaStar size={11} className="text-yellow-400 shrink-0" />
                           <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-yellow-400 transition-all duration-700"
-                              style={{
-                                width: `${ratingBreakdown[star] || 0}%`,
-                              }}
-                            />
+                            <div className="h-full rounded-full bg-yellow-400 transition-all duration-700" style={{ width: `${ratingBreakdown[star] || 0}%` }} />
                           </div>
-                          <span className="text-xs text-gray-400 w-8 text-right">
-                            {ratingBreakdown[star]}%
-                          </span>
+                          <span className="text-xs text-gray-400 w-8 text-right">{ratingBreakdown[star]}%</span>
                         </div>
                       ))}
                     </div>
@@ -1102,22 +678,15 @@ const ProductDetails = () => {
 
                   <div className="space-y-4">
                     {mockReviews.map((review) => (
-                      <div
-                        key={review.id}
-                        className="p-5 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors"
-                      >
+                      <div key={review.id} className="p-5 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#B42225] to-[#FF8C00] flex items-center justify-center shrink-0">
-                              <span className="text-white text-sm font-black">
-                                {review.name[0]}
-                              </span>
+                              <span className="text-white text-sm font-black">{review.name[0]}</span>
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-bold text-gray-800">
-                                  {review.name}
-                                </p>
+                                <p className="text-sm font-bold text-gray-800">{review.name}</p>
                                 {review.verified && (
                                   <span className="flex items-center gap-1 text-[10px] text-green-600 font-semibold">
                                     <MdVerified size={11} /> Verified
@@ -1126,16 +695,12 @@ const ProductDetails = () => {
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <RenderStars rating={review.rating} size={11} />
-                                <span className="text-[11px] text-gray-400">
-                                  {review.date}
-                                </span>
+                                <span className="text-[11px] text-gray-400">{review.date}</span>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                          {review.comment}
-                        </p>
+                        <p className="mt-3 text-sm text-gray-600 leading-relaxed">{review.comment}</p>
                         <div className="mt-3 flex items-center gap-2">
                           <button
                             onClick={() => handleHelpful(review.id)}
@@ -1146,11 +711,7 @@ const ProductDetails = () => {
                             }`}
                           >
                             <FiThumbsUp size={11} />
-                            Helpful (
-                            {helpfulVoted.includes(review.id)
-                              ? review.helpful + 1
-                              : review.helpful}
-                            )
+                            Helpful ({helpfulVoted.includes(review.id) ? review.helpful + 1 : review.helpful})
                           </button>
                         </div>
                       </div>
@@ -1165,37 +726,21 @@ const ProductDetails = () => {
         {/* SUGGESTED PRODUCTS */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 pb-12">
           <div className="flex items-center gap-3 mb-5">
-            <div
-              className="w-1 h-7 rounded-full"
-              style={{ background: "linear-gradient(180deg,#FF8C00,#B42225)" }}
-            />
-            <h2 className="text-xl font-black text-gray-900">
-              You May Also Like
-            </h2>
+            <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(180deg,#FF8C00,#B42225)" }} />
+            <h2 className="text-xl font-black text-gray-900">You May Also Like</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {suggestedProducts.map((item) => {
-              const itemDiscount = item.oldPrice
-                ? Math.round(
-                    ((item.oldPrice - item.price) / item.oldPrice) * 100,
-                  )
-                : 0;
+              const itemDiscount = item.oldPrice ? Math.round(((item.oldPrice - item.price) / item.oldPrice) * 100) : 0;
               return (
                 <div
                   key={item.id}
-                  onClick={() => navigate(`/product/${item.id}`)}
+                  onClick={() => router.push(`/product/${item.id}`)}
                   className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
                   style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
                 >
-                  <div
-                    className="relative overflow-hidden"
-                    style={{ aspectRatio: "1/1" }}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
-                    />
+                  <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" />
                     {itemDiscount > 0 && (
                       <div className="absolute top-2 left-2 bg-[#B42225] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
                         -{itemDiscount}%
@@ -1203,12 +748,8 @@ const ProductDetails = () => {
                     )}
                   </div>
                   <div className="p-2.5">
-                    <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">
-                      {item.name}
-                    </p>
-                    <p className="text-sm font-black text-[#B42225] mt-1">
-                      ₦{item.price.toLocaleString()}
-                    </p>
+                    <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{item.name}</p>
+                    <p className="text-sm font-black text-[#B42225] mt-1">₦{item.price.toLocaleString()}</p>
                   </div>
                 </div>
               );

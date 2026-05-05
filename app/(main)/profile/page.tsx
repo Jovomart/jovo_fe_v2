@@ -238,7 +238,7 @@ const Profile = () => {
   const formattedPhone = user.phone || "—";
 
   const quickLinks = [
-    { icon: <FiShoppingBag size={18} />, label: "My Orders", sub: "Track and manage orders", href: "/orders", color: "bg-blue-50 text-blue-600" },
+    { icon: <FiShoppingBag size={18} />, label: "My Orders", sub: "Track and manage orders", href: "/order", color: "bg-blue-50 text-blue-600" },
     { icon: <FiHeart size={18} />, label: "Wishlist", sub: "Saved items", href: "/wishlist", color: "bg-pink-50 text-pink-600" },
     { icon: <FiStar size={18} />, label: "Reviews", sub: "Your product reviews", href: "/reviews", color: "bg-yellow-50 text-yellow-600" },
     { icon: <FiSettings size={18} />, label: "Settings", sub: "Account preferences", href: "/settings", color: "bg-purple-50 text-purple-600" },
