@@ -20,8 +20,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // Hide navbar on seller dashboard, service dashboard, AND news section
   const shouldHideNavbar = isSellerDashboard || isServiceDashboard || isNewsSection
   
-  // Hide bottom nav ONLY on seller dashboard and service dashboard (NOT on news)
-  const shouldHideBottomNav = isSellerDashboard || isServiceDashboard
+  // Hide bottom nav ONLY on seller dashboard
+  const shouldHideBottomNav = isSellerDashboard
 
   return (
     <>

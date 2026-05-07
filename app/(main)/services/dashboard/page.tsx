@@ -34,6 +34,7 @@ import {
   FiActivity,
   FiUsers,
   FiMessageSquare,
+  FiZap,
 } from "react-icons/fi";
 import {
   FaWhatsapp,
@@ -723,27 +724,58 @@ export default function ProviderDashboard() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* ── TOP NAVBAR ── */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl" style={{ borderBottom: "1px solid #F1F5F9", boxShadow: "0 1px 20px rgba(0,0,0,0.04)" }}>
-          <div className="flex items-center justify-between px-5 py-3">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition text-slate-500">
-                <FiMenu size={19} />
+        <header className="sticky top-0 z-30" style={{ background: "rgba(255,255,255,0.98)", borderBottom: "1px solid #F1F5F9", boxShadow: "0 2px 24px rgba(0,0,0,0.06)", backdropFilter: "blur(20px)" }}>
+          {/* Animated orange accent line — mobile only */}
+          <div className="lg:hidden h-[2px] w-full" style={{ background: "linear-gradient(90deg,#B42225 0%,#FF6B00 35%,#FFB347 55%,#FF6B00 75%,#B42225 100%)" }} />
+
+          <div className="flex items-center justify-between px-4 lg:px-5 py-3">
+            <div className="flex items-center gap-3">
+              {/* Hamburger — styled for mobile */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-all active:scale-95"
+                style={{ background: "linear-gradient(135deg,rgba(180,34,37,0.08),rgba(255,140,0,0.08))", border: "1px solid rgba(255,140,0,0.22)" }}
+              >
+                <FiMenu size={17} className="text-orange-600" />
               </button>
+
+              {/* Desktop greeting */}
               <div className="hidden sm:block">
                 <p className="text-slate-400 text-xs font-medium">{greeting}</p>
                 <p className="text-slate-900 text-[13px] font-black">{profile?.business_name || "Provider"}</p>
               </div>
+
+              {/* Mobile greeting — xs only */}
+              <div className="sm:hidden">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-bold text-orange-500">{greeting}</span>
+                  <span
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
+                    style={
+                      service?.is_active
+                        ? { background: "rgba(16,185,129,0.12)", color: "#059669" }
+                        : { background: "rgba(148,163,184,0.12)", color: "#64748B" }
+                    }
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "animate-pulse bg-emerald-500" : "bg-slate-400"}`} />
+                    {service?.is_active ? "LIVE" : "OFFLINE"}
+                  </span>
+                </div>
+                <p className="text-slate-900 text-sm font-black leading-none truncate max-w-[148px]">
+                  {profile?.business_name || "Provider"}
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Rating badge */}
+              {/* Rating — desktop */}
               {(profile?.rating ?? 0) > 0 && (
                 <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
                   <FaStar size={11} className="text-amber-500" />
                   <span className="text-amber-700 font-black text-sm">{profile?.rating?.toFixed(1)}</span>
                 </div>
               )}
-              {/* Service status chip */}
+              {/* Status chip — desktop */}
               <div className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold ${service?.is_active ? "bg-emerald-50 border border-emerald-100 text-emerald-700" : "bg-slate-100 border border-slate-200 text-slate-500"}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500" : "bg-slate-400"}`} />
                 {service?.is_active ? "Live" : "Offline"}
@@ -751,7 +783,7 @@ export default function ProviderDashboard() {
 
               <button className="relative p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 transition text-slate-500">
                 <FiBell size={17} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border border-white" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white animate-pulse" />
               </button>
 
               {showCreateButton && (
@@ -762,103 +794,296 @@ export default function ProviderDashboard() {
               )}
             </div>
           </div>
+
+          {/* Mobile quick-stats sub-bar */}
+          <div className="sm:hidden flex items-center px-4 pb-2.5 overflow-x-auto gap-0" style={{ scrollbarWidth: "none" }}>
+            {[
+              { icon: <FiDollarSign size={13} />, label: "Service Rate", value: service?.starting_price ? `₦${service.starting_price.toLocaleString()}` : "Not set", color: "#EA580C" },
+              { icon: <FiCalendar size={13} />, label: "Days Open", value: service?.availability_schedule ? `${Object.keys(service.availability_schedule).length}/7 days` : "0/7 days", color: "#10B981" },
+              { icon: <FiZap size={13} />, label: "Booking", value: service?.booking_mode ? service.booking_mode.charAt(0).toUpperCase() + service.booking_mode.slice(1) : "—", color: "#6366F1" },
+            ].map(({ icon, label, value, color }, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 px-3 py-0.5 shrink-0"
+                style={i > 0 ? { borderLeft: "1px solid #F1F5F9" } : {}}
+              >
+                <span className="shrink-0" style={{ color }}>{icon}</span>
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-300">{label}</p>
+                  <p className="text-[11px] font-black" style={{ color }}>{value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </header>
 
         {/* ── PAGE CONTENT ── */}
         <main className="flex-1 overflow-y-auto">
 
-          {/* ── HERO BANNER ── */}
-          <div className="relative overflow-hidden" style={{ background: "radial-gradient(ellipse at 30% 40%,#1a0c08 0%,#0a0503 60%,#050201 100%)" }}>
-            <div className="absolute inset-0 opacity-15 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 1px 1px,rgba(255,92,0,0.4) 1px,transparent 1px)", backgroundSize: "32px 32px" }} />
-            <div className="absolute top-20 left-10 w-96 h-96 bg-orange-600/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-20 right-10 w-[30rem] h-[30rem] bg-orange-700/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+          {/* ════════════════════════════════════════════════════
+              ── HERO BANNER (REDESIGNED) ──
+          ════════════════════════════════════════════════════ */}
+          <div
+            className="relative overflow-hidden"
+            style={{ background: "linear-gradient(145deg, #6B0D10 0%, #8C1F10 22%, #A83318 42%, #C44D1A 62%, #D96318 80%, #E8751A 100%)" }}
+          >
+            {/* ── Background atmosphere ── */}
+            {/* Top-right warm burst */}
+            <div className="absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle, rgba(255,200,100,0.28) 0%, transparent 65%)" }} />
+            {/* Bottom-left depth shadow */}
+            <div className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle, rgba(60,5,0,0.75) 0%, transparent 65%)" }} />
+            {/* Center ambient glow */}
+            <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-56 rounded-full blur-3xl pointer-events-none opacity-30" style={{ background: "radial-gradient(ellipse, rgba(255,140,40,0.45) 0%, transparent 70%)" }} />
+            {/* Diagonal light slash overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(118deg, transparent 25%, rgba(255,255,255,0.045) 42%, transparent 55%)" }} />
+            {/* Dot grid texture */}
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.11) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+            {/* Top shimmer line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] pointer-events-none" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.45) 35%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.45) 65%, transparent 95%)" }} />
+            {/* Corner rings */}
+            <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.06)" }} />
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.05)" }} />
+            {/* Faded watermark */}
+            <div className="absolute bottom-14 right-4 md:right-10 pointer-events-none select-none leading-none" style={{ fontSize: "clamp(48px,8vw,96px)", fontWeight: 900, color: "rgba(255,255,255,0.04)", letterSpacing: "-0.04em", whiteSpace: "nowrap" }}>
+              PROVIDER
+            </div>
 
-            <div className="relative z-10 px-6 md:px-8 py-10 md:py-14">
-              {/* Profile Section */}
-              <div className="flex flex-col lg:flex-row items-start gap-6">
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                  <div className="absolute -inset-[4px] rounded-[24px]" style={{ background: "linear-gradient(135deg,#FF8C00 0%,#FFB347 30%,#E65C00 70%,#FF8C00 100%)", opacity: 0.7 }} />
-                  <div className="absolute -inset-[1.5px] rounded-[22px]" style={{ background: "#1a0c08" }} />
-                  <div className="relative">
-                    {profile?.logo_url ? (
-                      <img src={profile.logo_url} alt="logo" className="w-24 h-24 md:w-28 md:h-28 rounded-[20px] object-cover" />
-                    ) : (
-                      <div className="w-24 h-24 md:w-28 md:h-28 rounded-[20px] flex items-center justify-center text-3xl font-bold" style={{ background: "linear-gradient(135deg,#FF8C00,#FFB347,#E65C00)", color: "#1a0c08" }}>
-                        {initials}
+            {/* ── CARD CONTAINER ── */}
+            <div className="relative z-10 px-3 sm:px-5 md:px-8 pt-6 sm:pt-8 md:pt-10 pb-0">
+
+              {/* ════ PREMIUM PROFILE CARD ════ */}
+              <div
+                className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
+                style={{
+                  background: "#FFFFFF",
+                  boxShadow: "0 28px 90px rgba(0,0,0,0.30), 0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(255,255,255,0.95)",
+                }}
+              >
+
+                {/* ── DIAGONAL SLASH DECORATIONS (top-right corner) ── */}
+                <div className="absolute top-0 right-0 w-52 sm:w-64 h-full pointer-events-none overflow-hidden">
+                  {/* Slash 1 — widest, most faded */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: "-40px", right: "-28px",
+                      width: "22px", height: "220px",
+                      background: "linear-gradient(180deg, rgba(220,80,12,0.22) 0%, rgba(249,115,22,0.06) 100%)",
+                      transform: "rotate(22deg)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  {/* Slash 2 */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: "-40px", right: "4px",
+                      width: "12px", height: "200px",
+                      background: "linear-gradient(180deg, rgba(220,80,12,0.30) 0%, rgba(249,115,22,0.08) 100%)",
+                      transform: "rotate(22deg)",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  {/* Slash 3 — medium */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: "-40px", right: "28px",
+                      width: "8px", height: "185px",
+                      background: "linear-gradient(180deg, rgba(234,88,12,0.35) 0%, rgba(249,115,22,0.10) 100%)",
+                      transform: "rotate(22deg)",
+                      borderRadius: "5px",
+                    }}
+                  />
+                  {/* Slash 4 — thin bright */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: "-40px", right: "48px",
+                      width: "5px", height: "170px",
+                      background: "linear-gradient(180deg, rgba(234,88,12,0.28) 0%, rgba(251,146,60,0.05) 100%)",
+                      transform: "rotate(22deg)",
+                      borderRadius: "4px",
+                    }}
+                  />
+                  {/* Slash 5 — hairline accent */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: "-40px", right: "62px",
+                      width: "3px", height: "150px",
+                      background: "linear-gradient(180deg, rgba(234,88,12,0.18) 0%, transparent 100%)",
+                      transform: "rotate(22deg)",
+                      borderRadius: "4px",
+                    }}
+                  />
+                  {/* Subtle orange glow bloom behind slashes */}
+                  <div
+                    className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(circle, rgba(234,88,12,0.10) 0%, transparent 70%)" }}
+                  />
+                </div>
+
+                {/* ── TOP ACCENT BAR — thicker, richer, multi-stop ── */}
+                <div
+                  className="h-[7px] w-full relative"
+                  style={{ background: "linear-gradient(90deg, #6B0D10 0%, #9A2E10 20%, #C44D1A 42%, #EA580C 62%, #F97316 82%, #FB923C 100%)" }}
+                >
+                  {/* Bright shimmer on bar */}
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.25) 48%, transparent 76%)" }} />
+                </div>
+
+                {/* ── CARD BODY ── */}
+                <div className="p-4 sm:p-5 md:p-6 relative z-10">
+
+                  {/* Top row: avatar + info + edit button */}
+                  <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
+
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div
+                        className="p-[3px] rounded-2xl"
+                        style={{
+                          background: "linear-gradient(135deg, #C44D1A 0%, #EA580C 45%, #FB923C 100%)",
+                          boxShadow: "0 10px 30px rgba(196,77,26,0.40)",
+                        }}
+                      >
+                        {profile?.logo_url ? (
+                          <img
+                            src={profile.logo_url}
+                            alt="logo"
+                            className="w-16 h-16 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-xl object-cover block"
+                          />
+                        ) : (
+                          <div
+                            className="w-16 h-16 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-xl flex items-center justify-center text-xl md:text-2xl font-black text-white"
+                            style={{ background: "linear-gradient(135deg, #A83318, #C44D1A)" }}
+                          >
+                            {initials}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
-                    <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-orange-500/40">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
-                        <span className="text-[10px] font-medium tracking-wider text-orange-200 uppercase">Verified</span>
+                      {/* Status dot */}
+                      <div
+                        className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full border-2 border-white flex items-center justify-center"
+                        style={{ background: service?.is_active ? "#10B981" : "#94A3B8" }}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       </div>
                     </div>
+
+                    {/* Name, status, bio, contacts */}
+                    <div className="flex-1 min-w-0">
+
+                      {/* Name row */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                        <h1 className="text-slate-900 font-black text-lg sm:text-xl md:text-2xl leading-tight tracking-tight">
+                          {profile?.business_name}
+                        </h1>
+                        <MdVerified size={17} style={{ color: "#EA580C" }} className="shrink-0" />
+                      </div>
+
+                      {/* Badges row */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2.5 sm:mb-3">
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-[5px] rounded-full uppercase tracking-wider"
+                          style={service?.is_active
+                            ? { background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0" }
+                            : { background: "#F8FAFC", color: "#94A3B8", border: "1px solid #E2E8F0" }}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`} />
+                          {service?.is_active ? "Live on Marketplace" : "Currently Offline"}
+                        </span>
+                        {(profile?.rating ?? 0) > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-[5px] rounded-full" style={{ background: "#FFFBEB", color: "#B45309", border: "1px solid #FDE68A" }}>
+                            <FaStar size={8} className="text-amber-500" />
+                            {profile?.rating?.toFixed(1)} · {profile?.review_count} reviews
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bio */}
+                      <p className="text-slate-500 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-2.5 sm:mb-3 max-w-md capitalize">
+                        {profile?.business_bio || "Precision-crafted service delivered with professionalism and care."}
+                      </p>
+
+                      {/* Contact chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {profile?.whatsapp_number && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-medium" style={{ background: "#F0FDF4", color: "#15803D", border: "1px solid #BBF7D0" }}>
+                            <FaWhatsapp size={10} />
+                            {profile.whatsapp_number}
+                          </span>
+                        )}
+                        {profile?.phone_number && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-medium" style={{ background: "#F8FAFC", color: "#475569", border: "1px solid #E2E8F0" }}>
+                            <FiPhone size={10} />
+                            {profile.phone_number}
+                          </span>
+                        )}
+                        {service?.location && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-medium" style={{ background: "#FFF7ED", color: "#C2410C", border: "1px solid #FED7AA" }}>
+                            <FiMapPin size={10} />
+                            {service.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Edit button — top right */}
+                    <button
+                      onClick={() => setEditingProfile(true)}
+                      className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                      style={{
+                        background: "linear-gradient(135deg, #A83318, #C44D1A, #EA580C)",
+                        boxShadow: "0 4px 18px rgba(168,51,24,0.40)",
+                      }}
+                    >
+                      <FiEdit2 size={13} />
+                      <span className="hidden xs:inline sm:hidden md:inline">Edit</span>
+                    </button>
+                  </div>
+
+                  {/* ── STAT STRIP ── */}
+                  <div
+                    className="grid grid-cols-2 md:grid-cols-4 mt-4 sm:mt-5 pt-4"
+                    style={{ borderTop: "1px solid #F1F5F9" }}
+                  >
+                    {[
+                      { icon: <FiDollarSign size={12} />, label: "Service Rate", value: `₦${(service?.starting_price ?? 0).toLocaleString()}`, color: "#EA580C", borderCls: "border-r border-b md:border-b-0" },
+                      { icon: <FiActivity size={12} />, label: "Status", value: service?.is_active ? "Active" : "Inactive", color: service?.is_active ? "#059669" : "#94A3B8", borderCls: "border-b md:border-b-0 md:border-r" },
+                      { icon: <FiZap size={12} />, label: "Booking", value: service?.booking_mode ? service.booking_mode.charAt(0).toUpperCase() + service.booking_mode.slice(1) : "Not set", color: "#6366F1", borderCls: "border-r" },
+                      { icon: <FiCalendar size={12} />, label: "Availability", value: service?.availability_schedule && Object.keys(service.availability_schedule).length > 0 ? `${Object.keys(service.availability_schedule).length}/7 days` : "Not set", color: "#0891B2", borderCls: "" },
+                    ].map(({ icon, label, value, color, borderCls }, i) => (
+                      <div
+                        key={i}
+                        className={`px-3 md:px-4 py-3 md:py-1 border-slate-100 ${borderCls}`}
+                      >
+                        <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                          <span style={{ color }}>{icon}</span>{label}
+                        </p>
+                        <p className="font-black text-sm md:text-base leading-tight" style={{ color }}>{value}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0 pt-1">
-                  <h1 className="font-black text-2xl md:text-4xl tracking-tighter uppercase mb-2" style={{ background: "linear-gradient(135deg,#FFFFFF 0%,#FFD5A4 40%,#FF8C00 70%,#FFFFFF 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "-0.02em" }}>
-                    {profile?.business_name}
-                  </h1>
-                  <div className="mb-3 h-px w-20" style={{ background: "linear-gradient(90deg,#FF8C00 0%,#E65C00 50%,transparent 100%)" }} />
-                  <p className="text-orange-100/60 text-sm leading-relaxed max-w-xl mb-4 font-light">
-                    {profile?.business_bio || "Artisan of exceptional experiences. Precision-crafted service delivered with understated elegance."}
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {profile?.whatsapp_number && (
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>
-                        <FaWhatsapp size={12} className="text-emerald-400/80" />
-                        <span className="text-orange-200/80 text-xs font-medium">{profile.whatsapp_number}</span>
-                      </div>
-                    )}
-                    {profile?.phone_number && (
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                        <FiPhone size={12} className="text-orange-400/60" />
-                        <span className="text-orange-200/70 text-xs font-medium">{profile.phone_number}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Edit button */}
-                <button onClick={() => setEditingProfile(true)} className="relative group/btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shrink-0" style={{ background: "linear-gradient(135deg,rgba(255,92,0,0.15) 0%,rgba(255,92,0,0.05) 100%)", border: "1px solid rgba(255,92,0,0.4)", backdropFilter: "blur(8px)", color: "#FF8C00" }}>
-                  <FiEdit2 size={13} />
-                  <span className="tracking-wide">Edit Profile</span>
-                </button>
-              </div>
-
-              {/* Stats row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8" style={{ borderTop: "1px solid rgba(255,92,0,0.15)" }}>
-                {[
-                  { dot: "bg-orange-500/80", label: "Starting Price", value: `₦${(service?.starting_price ?? 0).toLocaleString()}`, sub: "Service rate" },
-                  { dot: service?.is_active ? "bg-emerald-500/80" : "bg-slate-500/80", label: "Service Status", value: service?.is_active ? "Active" : "Inactive", sub: service?.is_active ? "Live on marketplace" : "Currently offline", border: service?.is_active ? "rgba(16,185,129,0.25)" : "rgba(255,92,0,0.15)" },
-                  { dot: "bg-sky-400/80", label: "Booking Mode", value: service?.booking_mode ? service.booking_mode.charAt(0).toUpperCase() + service.booking_mode.slice(1) : "Not set", sub: "Customer experience" },
-                  { dot: "bg-purple-400/80", label: "Availability", value: service?.availability_schedule && Object.keys(service.availability_schedule).length > 0 ? `${Object.keys(service.availability_schedule).length}/7 days` : "Not set", sub: "Weekly schedule" },
-                ].map(({ dot, label, value, sub, border }, i) => (
-                  <div key={i} className="rounded-2xl p-4 transition-all duration-500 hover:-translate-y-1" style={{ background: "linear-gradient(135deg,rgba(255,92,0,0.04) 0%,rgba(255,92,0,0.01) 100%)", border: `1px solid ${border || "rgba(255,92,0,0.15)"}` }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={`w-1 h-1 rounded-full ${dot}`} />
-                      <p className="text-orange-500/60 text-[9px] font-semibold uppercase tracking-[0.2em]">{label}</p>
-                    </div>
-                    <p className="text-orange-100 text-xl md:text-2xl font-light tracking-tight">{value}</p>
-                    <p className="text-orange-500/40 text-[10px] mt-1 font-light">{sub}</p>
-                  </div>
-                ))}
+                {/* ── BOTTOM ACCENT BAR — subtle mirror of top ── */}
+                <div
+                  className="h-[3px] w-full"
+                  style={{ background: "linear-gradient(90deg, transparent 0%, rgba(234,88,12,0.15) 30%, rgba(249,115,22,0.25) 55%, rgba(234,88,12,0.12) 80%, transparent 100%)" }}
+                />
               </div>
             </div>
 
-            {/* Curve */}
+            {/* ── CURVE TRANSITION ── */}
             <div className="relative w-full overflow-hidden" style={{ height: "56px", marginTop: "-1px" }}>
               <svg className="absolute bottom-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V64Z" fill="#F8FAFC" />
               </svg>
             </div>
           </div>
+          {/* ════════════════════ END HERO BANNER ════════════════════ */}
 
           {/* ── MAIN BODY ── */}
           <div className="px-5 md:px-8 py-8 space-y-6">
