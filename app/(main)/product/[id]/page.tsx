@@ -1,6 +1,6 @@
-'use client'
-import Link from 'next/link'
-import { useRouter, useParams } from 'next/navigation'
+"use client";
+import Link from "next/link";
+import { useRouter, useParams } from "next/navigation";
 import { products } from "@/data/products";
 import { useState } from "react";
 import {
@@ -115,12 +115,26 @@ const mockReviews: Review[] = [
   },
 ];
 
-const ratingBreakdown: Record<number, number> = { 5: 62, 4: 20, 3: 10, 2: 5, 1: 3 };
+const ratingBreakdown: Record<number, number> = {
+  5: 62,
+  4: 20,
+  3: 10,
+  2: 5,
+  1: 3,
+};
 
 /* ─────────────────────────────────────────────────────────────
    STAR RENDERER
 ───────────────────────────────────────────────────────────── */
-const RenderStars = ({ rating, size = 14, color = "#F59E0B" }: { rating: number; size?: number; color?: string }) => {
+const RenderStars = ({
+  rating,
+  size = 14,
+  color = "#F59E0B",
+}: {
+  rating: number;
+  size?: number;
+  color?: string;
+}) => {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => {
@@ -154,8 +168,8 @@ const categoryRoutes: Record<string, string> = {
 ───────────────────────────────────────────────────────────── */
 const ProductDetails = () => {
   const { id } = useParams();
-  const router = useRouter()
-  const { addToCart } = useCart()
+  const router = useRouter();
+  const { addToCart } = useCart();
 
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
@@ -165,7 +179,9 @@ const ProductDetails = () => {
   const [helpfulVoted, setHelpfulVoted] = useState<number[]>([]);
   const [addedToCart, setAddedToCart] = useState<boolean>(false);
 
-  const product = products.find((p: Product) => p.id === Number(id)) as Product | undefined;
+  const product = products.find((p: Product) => p.id === Number(id)) as
+    | Product
+    | undefined;
 
   if (!product) {
     return (
@@ -174,7 +190,8 @@ const ProductDetails = () => {
           <FiPackage size={36} className="text-gray-400" />
         </div>
         <h2 className="text-xl font-bold text-gray-700">Product not found</h2>
-        <Link href="/"
+        <Link
+          href="/"
           className="px-6 py-2.5 bg-[#B42225] text-white rounded-xl text-sm font-semibold"
         >
           Back to Home
@@ -190,11 +207,16 @@ const ProductDetails = () => {
   const categoryPath = categoryRoutes[product.category] || "/";
 
   const suggestedProducts: Product[] = products
-    .filter((p: Product) => p.id !== product.id && p.category === product.category)
+    .filter(
+      (p: Product) => p.id !== product.id && p.category === product.category,
+    )
     .slice(0, 6)
     .concat(
       products
-        .filter((p: Product) => p.id !== product.id && p.category !== product.category)
+        .filter(
+          (p: Product) =>
+            p.id !== product.id && p.category !== product.category,
+        )
         .slice(0, 3),
     )
     .slice(0, 6);
@@ -210,7 +232,7 @@ const ProductDetails = () => {
 
   const handleBuyNow = () => {
     addToCart(product, quantity);
-    router.push('/cart');
+    router.push("/cart");
   };
 
   const handleHelpful = (reviewId: number) => {
@@ -229,7 +251,8 @@ const ProductDetails = () => {
               Home
             </Link>
             <FiChevronRight size={12} />
-            <Link href={categoryPath}
+            <Link
+              href={categoryPath}
               className="hover:text-[#B42225] transition-colors capitalize"
             >
               {product.category}
@@ -249,7 +272,7 @@ const ProductDetails = () => {
           >
             <div className="grid lg:grid-cols-2 gap-0">
               {/* ── LEFT: Image Panel ── */}
-              <div className="relative bg-gray-50 lg:rounded-tl-3xl lg:rounded-bl-3xl min-h-95 md:min-h-130 flex items-center justify-center p-6 md:p-10 overflow-hidden">
+              <div className="relative bg-gray-50 lg:rounded-tl-3xl lg:rounded-bl-3xl aspect-square md:aspect-auto md:min-h-[500px] flex items-center justify-center p-6 md:p-10 overflow-hidden">
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                   <div
                     className="absolute inset-0"
@@ -261,6 +284,7 @@ const ProductDetails = () => {
                   />
                 </div>
 
+                {/* Discount badge */}
                 {discount > 0 && (
                   <div
                     className="absolute top-5 left-5 z-20 flex flex-col items-center justify-center w-14 h-14 rounded-full text-white font-black text-xs"
@@ -271,7 +295,7 @@ const ProductDetails = () => {
                     -{discount}%
                   </div>
                 )}
-
+                
                 <div className="absolute top-5 right-5 z-40 flex flex-col gap-2">
                   <button
                     onClick={() => setIsWishlisted(!isWishlisted)}
@@ -305,10 +329,36 @@ const ProductDetails = () => {
                             Share via
                           </p>
                           {[
-                            { icon: <FaWhatsapp className="text-green-500" size={16} />, label: "WhatsApp" },
-                            { icon: <FaFacebook className="text-blue-600" size={16} />, label: "Facebook" },
-                            { icon: <FaTwitter className="text-sky-500" size={16} />, label: "Twitter" },
-                            { icon: <FaCopy className="text-gray-500" size={16} />, label: "Copy Link" },
+                            {
+                              icon: (
+                                <FaWhatsapp
+                                  className="text-green-500"
+                                  size={16}
+                                />
+                              ),
+                              label: "WhatsApp",
+                            },
+                            {
+                              icon: (
+                                <FaFacebook
+                                  className="text-blue-600"
+                                  size={16}
+                                />
+                              ),
+                              label: "Facebook",
+                            },
+                            {
+                              icon: (
+                                <FaTwitter className="text-sky-500" size={16} />
+                              ),
+                              label: "Twitter",
+                            },
+                            {
+                              icon: (
+                                <FaCopy className="text-gray-500" size={16} />
+                              ),
+                              label: "Copy Link",
+                            },
                           ].map(({ icon, label }) => (
                             <button
                               key={label}
@@ -441,9 +491,21 @@ const ProductDetails = () => {
 
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
-                    { icon: <FiShield size={16} className="text-green-500" />, label: "Secure Payment", sub: "100% Protected" },
-                    { icon: <FiRefreshCw size={16} className="text-blue-500" />, label: "Easy Returns", sub: "7-day policy" },
-                    { icon: <MdVerified size={16} className="text-[#B42225]" />, label: "Verified Seller", sub: "Jovo Assured" },
+                    {
+                      icon: <FiShield size={16} className="text-green-500" />,
+                      label: "Secure Payment",
+                      sub: "100% Protected",
+                    },
+                    {
+                      icon: <FiRefreshCw size={16} className="text-blue-500" />,
+                      label: "Easy Returns",
+                      sub: "7-day policy",
+                    },
+                    {
+                      icon: <MdVerified size={16} className="text-[#B42225]" />,
+                      label: "Verified Seller",
+                      sub: "Jovo Assured",
+                    },
                   ].map(({ icon, label, sub }) => (
                     <div
                       key={label}
@@ -485,7 +547,10 @@ const ProductDetails = () => {
                     </h3>
                   </div>
                   {returnOpen ? (
-                    <FiChevronRight size={16} className="text-gray-400 rotate-90" />
+                    <FiChevronRight
+                      size={16}
+                      className="text-gray-400 rotate-90"
+                    />
                   ) : (
                     <FiChevronRight size={16} className="text-gray-400" />
                   )}
@@ -493,17 +558,34 @@ const ProductDetails = () => {
                 {returnOpen && (
                   <div className="mt-4 space-y-3">
                     {[
-                      { icon: "✓", text: "7-day easy returns on eligible items" },
-                      { icon: "✓", text: "Item must be unused and in original packaging" },
-                      { icon: "✓", text: "Refund processed within 3–5 business days" },
-                      { icon: "✓", text: "Free return pickup for defective products" },
-                      { icon: "✗", text: "Perishables & opened beauty items non-returnable" },
+                      {
+                        icon: "✓",
+                        text: "7-day easy returns on eligible items",
+                      },
+                      {
+                        icon: "✓",
+                        text: "Item must be unused and in original packaging",
+                      },
+                      {
+                        icon: "✓",
+                        text: "Refund processed within 3–5 business days",
+                      },
+                      {
+                        icon: "✓",
+                        text: "Free return pickup for defective products",
+                      },
+                      {
+                        icon: "✗",
+                        text: "Perishables & opened beauty items non-returnable",
+                      },
                     ].map(({ icon, text }) => (
                       <div
                         key={text}
                         className={`flex items-start gap-2 text-xs ${icon === "✗" ? "text-red-500" : "text-gray-600"}`}
                       >
-                        <span className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}>
+                        <span
+                          className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}
+                        >
                           {icon}
                         </span>
                         {text}
@@ -526,16 +608,30 @@ const ProductDetails = () => {
                 <div className="space-y-3">
                   {[
                     { icon: "✓", text: "7-day easy returns on eligible items" },
-                    { icon: "✓", text: "Item must be unused and in original packaging" },
-                    { icon: "✓", text: "Refund processed within 3–5 business days" },
-                    { icon: "✓", text: "Free return pickup for defective products" },
-                    { icon: "✗", text: "Perishables & opened beauty items non-returnable" },
+                    {
+                      icon: "✓",
+                      text: "Item must be unused and in original packaging",
+                    },
+                    {
+                      icon: "✓",
+                      text: "Refund processed within 3–5 business days",
+                    },
+                    {
+                      icon: "✓",
+                      text: "Free return pickup for defective products",
+                    },
+                    {
+                      icon: "✗",
+                      text: "Perishables & opened beauty items non-returnable",
+                    },
                   ].map(({ icon, text }) => (
                     <div
                       key={text}
                       className={`flex items-start gap-2 text-xs ${icon === "✗" ? "text-red-500" : "text-gray-600"}`}
                     >
-                      <span className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}>
+                      <span
+                        className={`font-bold shrink-0 ${icon === "✗" ? "text-red-400" : "text-green-500"}`}
+                      >
                         {icon}
                       </span>
                       {text}
@@ -560,7 +656,10 @@ const ProductDetails = () => {
               </div>
               <div className="space-y-2">
                 {[
-                  { label: "Warranty", value: (product as any).warranty || "1 Year" },
+                  {
+                    label: "Warranty",
+                    value: (product as any).warranty || "1 Year",
+                  },
                   { label: "Authenticity", value: "100% Genuine" },
                   { label: "Payment", value: "SSL Secured" },
                   { label: "Seller", value: "Jovo Verified" },
@@ -638,17 +737,35 @@ const ProductDetails = () => {
                 <div className="grid sm:grid-cols-2 gap-3">
                   {[
                     { label: "Brand", value: product.brand || "—" },
-                    { label: "Category", value: product.category.charAt(0).toUpperCase() + product.category.slice(1) },
+                    {
+                      label: "Category",
+                      value:
+                        product.category.charAt(0).toUpperCase() +
+                        product.category.slice(1),
+                    },
                     { label: "Condition", value: "Brand New" },
-                    { label: "Warranty", value: (product as any).warranty || "1 Year" },
-                    { label: "SKU", value: `JVO-${product.id}-${product.category?.toUpperCase().slice(0, 3)}` },
+                    {
+                      label: "Warranty",
+                      value: (product as any).warranty || "1 Year",
+                    },
+                    {
+                      label: "SKU",
+                      value: `JVO-${product.id}-${product.category?.toUpperCase().slice(0, 3)}`,
+                    },
                     { label: "In Stock", value: "Yes — Available" },
                     { label: "Seller", value: "Jovo Official Store" },
                     { label: "Ship From", value: "ICT Centre, FUTO" },
                   ].map(({ label, value }) => (
-                    <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                      <span className="text-xs text-gray-400 w-24 shrink-0">{label}</span>
-                      <span className="text-xs font-bold text-gray-800">{value}</span>
+                    <div
+                      key={label}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
+                    >
+                      <span className="text-xs text-gray-400 w-24 shrink-0">
+                        {label}
+                      </span>
+                      <span className="text-xs font-bold text-gray-800">
+                        {value}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -658,19 +775,35 @@ const ProductDetails = () => {
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-6 p-6 bg-gray-50 rounded-2xl">
                     <div className="flex flex-col items-center justify-center gap-1 shrink-0">
-                      <span className="text-5xl font-black text-gray-900">{avgRating}</span>
+                      <span className="text-5xl font-black text-gray-900">
+                        {avgRating}
+                      </span>
                       <RenderStars rating={avgRating} size={18} />
-                      <span className="text-xs text-gray-400 mt-1">{totalReviews} reviews</span>
+                      <span className="text-xs text-gray-400 mt-1">
+                        {totalReviews} reviews
+                      </span>
                     </div>
                     <div className="flex-1 space-y-2">
                       {[5, 4, 3, 2, 1].map((star) => (
                         <div key={star} className="flex items-center gap-3">
-                          <span className="text-xs text-gray-500 w-3">{star}</span>
-                          <FaStar size={11} className="text-yellow-400 shrink-0" />
+                          <span className="text-xs text-gray-500 w-3">
+                            {star}
+                          </span>
+                          <FaStar
+                            size={11}
+                            className="text-yellow-400 shrink-0"
+                          />
                           <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                            <div className="h-full rounded-full bg-yellow-400 transition-all duration-700" style={{ width: `${ratingBreakdown[star] || 0}%` }} />
+                            <div
+                              className="h-full rounded-full bg-yellow-400 transition-all duration-700"
+                              style={{
+                                width: `${ratingBreakdown[star] || 0}%`,
+                              }}
+                            />
                           </div>
-                          <span className="text-xs text-gray-400 w-8 text-right">{ratingBreakdown[star]}%</span>
+                          <span className="text-xs text-gray-400 w-8 text-right">
+                            {ratingBreakdown[star]}%
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -678,15 +811,22 @@ const ProductDetails = () => {
 
                   <div className="space-y-4">
                     {mockReviews.map((review) => (
-                      <div key={review.id} className="p-5 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
+                      <div
+                        key={review.id}
+                        className="p-5 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors"
+                      >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#B42225] to-[#FF8C00] flex items-center justify-center shrink-0">
-                              <span className="text-white text-sm font-black">{review.name[0]}</span>
+                              <span className="text-white text-sm font-black">
+                                {review.name[0]}
+                              </span>
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-bold text-gray-800">{review.name}</p>
+                                <p className="text-sm font-bold text-gray-800">
+                                  {review.name}
+                                </p>
                                 {review.verified && (
                                   <span className="flex items-center gap-1 text-[10px] text-green-600 font-semibold">
                                     <MdVerified size={11} /> Verified
@@ -695,12 +835,16 @@ const ProductDetails = () => {
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <RenderStars rating={review.rating} size={11} />
-                                <span className="text-[11px] text-gray-400">{review.date}</span>
+                                <span className="text-[11px] text-gray-400">
+                                  {review.date}
+                                </span>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <p className="mt-3 text-sm text-gray-600 leading-relaxed">{review.comment}</p>
+                        <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+                          {review.comment}
+                        </p>
                         <div className="mt-3 flex items-center gap-2">
                           <button
                             onClick={() => handleHelpful(review.id)}
@@ -711,7 +855,11 @@ const ProductDetails = () => {
                             }`}
                           >
                             <FiThumbsUp size={11} />
-                            Helpful ({helpfulVoted.includes(review.id) ? review.helpful + 1 : review.helpful})
+                            Helpful (
+                            {helpfulVoted.includes(review.id)
+                              ? review.helpful + 1
+                              : review.helpful}
+                            )
                           </button>
                         </div>
                       </div>
@@ -726,12 +874,21 @@ const ProductDetails = () => {
         {/* SUGGESTED PRODUCTS */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 pb-12">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(180deg,#FF8C00,#B42225)" }} />
-            <h2 className="text-xl font-black text-gray-900">You May Also Like</h2>
+            <div
+              className="w-1 h-7 rounded-full"
+              style={{ background: "linear-gradient(180deg,#FF8C00,#B42225)" }}
+            />
+            <h2 className="text-xl font-black text-gray-900">
+              You May Also Like
+            </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {suggestedProducts.map((item) => {
-              const itemDiscount = item.oldPrice ? Math.round(((item.oldPrice - item.price) / item.oldPrice) * 100) : 0;
+              const itemDiscount = item.oldPrice
+                ? Math.round(
+                    ((item.oldPrice - item.price) / item.oldPrice) * 100,
+                  )
+                : 0;
               return (
                 <div
                   key={item.id}
@@ -739,8 +896,15 @@ const ProductDetails = () => {
                   className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
                   style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
                 >
-                  <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" />
+                  <div
+                    className="relative overflow-hidden"
+                    style={{ aspectRatio: "1/1" }}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+                    />
                     {itemDiscount > 0 && (
                       <div className="absolute top-2 left-2 bg-[#B42225] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
                         -{itemDiscount}%
@@ -748,8 +912,12 @@ const ProductDetails = () => {
                     )}
                   </div>
                   <div className="p-2.5">
-                    <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{item.name}</p>
-                    <p className="text-sm font-black text-[#B42225] mt-1">₦{item.price.toLocaleString()}</p>
+                    <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">
+                      {item.name}
+                    </p>
+                    <p className="text-sm font-black text-[#B42225] mt-1">
+                      ₦{item.price.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               );

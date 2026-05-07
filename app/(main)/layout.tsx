@@ -8,19 +8,30 @@ import ScrollToTop from '@/components/ui/ScrollToTop'
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  // Hide the main site Navbar and BottomNav on all seller pages.
-  // The seller dashboard has its own internal navbar and sidebar.
-  const isSellerPage = pathname?.startsWith('/seller')
+  // Check if on seller dashboard
+  const isSellerDashboard = pathname?.startsWith('/seller/dashboard')
+  
+  // Check if on service provider dashboard
+  const isServiceDashboard = pathname?.startsWith('/services/dashboard')
+  
+  // Check if on news section
+  const isNewsSection = pathname?.startsWith('/news')
+
+  // Hide navbar on seller dashboard, service dashboard, AND news section
+  const shouldHideNavbar = isSellerDashboard || isServiceDashboard || isNewsSection
+  
+  // Hide bottom nav ONLY on seller dashboard and service dashboard (NOT on news)
+  const shouldHideBottomNav = isSellerDashboard || isServiceDashboard
 
   return (
     <>
       <ScrollToTop />
       <PageLoader />
-      {!isSellerPage && <Navbar />}
+      {!shouldHideNavbar && <Navbar />}
       <main className="min-h-screen bg-white">
         {children}
       </main>
-      {!isSellerPage && <BottomNav />}
+      {!shouldHideBottomNav && <BottomNav />}
     </>
   )
 }

@@ -176,7 +176,7 @@ function CartItemCard({
 function EmptyCart() {
   return (
     <div
-      className="flex flex-col items-center justify-center py-24 text-center col-span-full"
+      className="flex flex-col items-center justify-center py-4 text-center col-span-full"
       style={{ animation: 'fadeUp 0.6s ease both' }}
     >
       <div

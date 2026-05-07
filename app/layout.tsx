@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next'
 // @ts-ignore - CSS module import
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
-import { CartProvider } from '@/context/CartContext'  // ← ADD THIS
+import { CartProvider } from '@/context/CartContext'
 import { Suspense } from 'react'
+import ScrollToTop from '@/components/ui/ScrollToTop'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://jovo.ng'),
@@ -46,12 +47,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <ScrollToTop />  
         <AuthProvider>
-          <CartProvider>  {/* ← ADD THIS */}
+          <CartProvider>
             <Suspense fallback={<LoadingFallback />}>
               {children}
             </Suspense>
-          </CartProvider>  {/* ← ADD THIS */}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

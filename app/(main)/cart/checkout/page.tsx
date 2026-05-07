@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect, useContext, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import confetti from 'canvas-confetti'
@@ -15,7 +15,6 @@ import { useCart, DeliveryInfo } from '@/context/CartContext'
 import { AuthContext } from '@/context/AuthContext'
 import ApiService from '@/services/apiService'
 import Footer from '@/components/layout/Footer'
-import ModalPortal from '@/components/layout/ModalPortal'
 
 const fmt = (n: number) => `₦${n.toLocaleString()}`
 
@@ -35,150 +34,170 @@ interface DeliveryOption {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SUCCESS MODAL WITH CONFETTI - USING PORTAL
+// SUCCESS MODAL WITH CONFETTI
 // ─────────────────────────────────────────────────────────────
-function PaymentSuccessModal({ orderId, total, onContinue }: { orderId: string; total: number; onContinue: () => void }) {
-  // Trigger confetti when modal opens
+function PaymentSuccessModal({
+  orderId,
+  total,
+  onContinue,
+}: {
+  orderId: string
+  total: number
+  onContinue: () => void
+}) {
   useEffect(() => {
-    console.log('🎉 PaymentSuccessModal mounted, triggering confetti!')
-    
-    // Fire multiple confetti bursts
-    const duration = 2000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+    // Small delay to ensure DOM is painted before confetti fires
+    const timeout = setTimeout(() => {
+      const duration = 2500
+      const animationEnd = Date.now() + duration
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000001 }
 
-    function randomInRange(min: number, max: number) {
-      return Math.random() * (max - min) + min;
-    }
-
-    const interval: any = setInterval(function() {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
+      function randomInRange(min: number, max: number) {
+        return Math.random() * (max - min) + min
       }
 
-      const particleCount = 50 * (timeLeft / duration);
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-      });
-    }, 250);
+      const interval: ReturnType<typeof setInterval> = setInterval(() => {
+        const timeLeft = animationEnd - Date.now()
+        if (timeLeft <= 0) return clearInterval(interval)
 
-    return () => clearInterval(interval);
-  }, []);
+        const particleCount = 50 * (timeLeft / duration)
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })
+      }, 250)
 
-  const modalContent = (
-    <div 
-      style={{ 
+      return () => clearInterval(interval)
+    }, 100)
+
+    return () => clearTimeout(timeout)
+  }, [])
+
+  return (
+    <div
+      style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        backdropFilter: 'blur(8px)',
+        inset: 0,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 9999999,
         padding: '1rem',
+        background: 'rgba(0,0,0,0.82)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 999999,
       }}
       onClick={onContinue}
     >
-      <div 
-        style={{ 
+      <div
+        style={{
+          position: 'relative',
           maxWidth: '28rem',
           width: '100%',
-          backgroundColor: 'white',
+          background: '#fff',
           borderRadius: '1.5rem',
           overflow: 'hidden',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          animation: 'slideUp 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.4)',
+          animation: 'successSlideUp 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both',
+          zIndex: 1000000,
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Success header */}
-        <div 
-          style={{ 
-            background: 'linear-gradient(135deg, #22C55E, #16A34A)',
-            padding: '2rem 1.5rem 1.5rem 1.5rem',
+        {/* Green header */}
+        <div
+          style={{
+            paddingTop: '2rem',
+            paddingBottom: '1.5rem',
             textAlign: 'center',
-            position: 'relative',
+            background: 'linear-gradient(135deg, #22C55E, #16A34A)',
           }}
         >
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <div 
-              style={{
-                width: '5rem',
-                height: '5rem',
-                borderRadius: '9999px',
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1rem auto',
-                animation: 'scaleIn 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) 0.2s both',
-              }}
-            >
-              <FiCheckCircle size={48} color="white" />
-            </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', marginBottom: '0.25rem' }}>Payment Successful! 🎉</h2>
-            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Your order has been confirmed</p>
+          <div
+            style={{
+              width: '5rem',
+              height: '5rem',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1rem',
+              animation: 'successScaleIn 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) 0.2s both',
+            }}
+          >
+            <FiCheckCircle size={48} color="#fff" />
           </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', margin: '0 0 0.25rem' }}>
+            Payment Successful! 
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', margin: 0 }}>
+            Your order has been confirmed
+          </p>
         </div>
 
         {/* Order info */}
         <div style={{ padding: '1.5rem' }}>
-          <div style={{ backgroundColor: '#F9FAFB', borderRadius: '1rem', padding: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+          <div
+            style={{
+              background: '#F9FAFB',
+              borderRadius: '1rem',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
               <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Order ID</span>
-              <span style={{ fontSize: '0.875rem', fontWeight: 900, color: '#1F2937', fontFamily: 'monospace' }}>{orderId}</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 900, color: '#111827', fontFamily: 'monospace' }}>
+                {orderId}
+              </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid #E5E7EB' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                paddingTop: '0.75rem',
+                borderTop: '1px solid #E5E7EB',
+              }}
+            >
               <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Total Amount</span>
               <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#B42225' }}>{fmt(total)}</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button
-              onClick={onContinue}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                padding: '0.875rem 1.5rem',
-                borderRadius: '1rem',
-                fontWeight: 900,
-                color: 'white',
-                fontSize: '0.875rem',
-                background: 'linear-gradient(135deg,#B42225,#FF8C00)',
-                boxShadow: '0 8px 24px rgba(180,34,37,0.35)',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <FiShoppingBag size={16} /> Continue Shopping
-            </button>
-          </div>
+          <button
+            onClick={onContinue}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '0.875rem',
+              borderRadius: '1rem',
+              fontWeight: 900,
+              color: '#fff',
+              fontSize: '0.875rem',
+              border: 'none',
+              cursor: 'pointer',
+              background: 'linear-gradient(135deg,#B42225,#FF8C00)',
+              boxShadow: '0 8px 24px rgba(180,34,37,0.35)',
+              transition: 'transform 0.15s',
+            }}
+            onMouseEnter={e => ((e.target as HTMLButtonElement).style.transform = 'scale(1.02)')}
+            onMouseLeave={e => ((e.target as HTMLButtonElement).style.transform = 'scale(1)')}
+          >
+            <FiShoppingBag size={16} /> Continue Shopping
+          </button>
         </div>
 
-        {/* Decorative bottom bar */}
-        <div style={{ height: '0.25rem', width: '100%', background: 'linear-gradient(90deg, #22C55E, #16A34A, #22C55E)' }} />
+        {/* Bottom accent bar */}
+        <div
+          style={{
+            height: '4px',
+            width: '100%',
+            background: 'linear-gradient(90deg, #22C55E, #16A34A, #22C55E)',
+          }}
+        />
       </div>
     </div>
-  );
-
-  return <ModalPortal>{modalContent}</ModalPortal>;
+  )
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -189,8 +208,8 @@ function StepBar({ current }: { current: number }) {
   return (
     <div className="flex items-center justify-center gap-0 mb-8">
       {steps.map((label, i) => {
-        const idx   = i + 1
-        const done  = idx < current
+        const idx    = i + 1
+        const done   = idx < current
         const active = idx === current
         return (
           <div key={label} className="flex items-center">
@@ -198,9 +217,11 @@ function StepBar({ current }: { current: number }) {
               <div
                 className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black transition-all duration-300"
                 style={
-                  done   ? { background: 'linear-gradient(135deg,#22C55E,#16A34A)', color: '#fff' } :
-                  active ? { background: 'linear-gradient(135deg,#B42225,#FF8C00)', color: '#fff', boxShadow: '0 4px 16px rgba(180,34,37,0.4)' } :
-                           { background: '#F3F4F6', color: '#9CA3AF' }
+                  done
+                    ? { background: 'linear-gradient(135deg,#22C55E,#16A34A)', color: '#fff' }
+                    : active
+                    ? { background: 'linear-gradient(135deg,#B42225,#FF8C00)', color: '#fff', boxShadow: '0 4px 16px rgba(180,34,37,0.4)' }
+                    : { background: '#F3F4F6', color: '#9CA3AF' }
                 }
               >
                 {done ? <FiCheck size={16} /> : idx}
@@ -304,10 +325,22 @@ function StepDelivery({
     return Object.keys(e).length === 0
   }
 
-  const field = (label: string, key: keyof DeliveryInfo, placeholder: string, icon: React.ReactNode, type = 'text') => (
+  const field = (
+    label: string,
+    key: keyof DeliveryInfo,
+    placeholder: string,
+    icon: React.ReactNode,
+    type = 'text',
+  ) => (
     <div>
       <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-1.5">{label}</label>
-      <div className={`flex items-center gap-2.5 rounded-2xl border px-4 py-3 transition-all duration-200 ${errors[key] ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#B42225]/15'}`}>
+      <div
+        className={`flex items-center gap-2.5 rounded-2xl border px-4 py-3 transition-all duration-200 ${
+          errors[key]
+            ? 'border-red-400 bg-red-50'
+            : 'border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#B42225]/15'
+        }`}
+      >
         <span className={errors[key] ? 'text-red-400' : 'text-gray-400'}>{icon}</span>
         <input
           type={type}
@@ -324,7 +357,10 @@ function StepDelivery({
   return (
     <div style={{ animation: 'slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both' }}>
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-6" style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.06)' }}>
-        <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+        <h2
+          className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <div className="w-8 h-8 rounded-xl bg-[#B42225]/10 flex items-center justify-center">
             <FiMapPin size={16} className="text-[#B42225]" />
           </div>
@@ -342,7 +378,9 @@ function StepDelivery({
         </div>
 
         <div className="mt-4">
-          <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-1.5">Delivery Notes (optional)</label>
+          <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-1.5">
+            Delivery Notes (optional)
+          </label>
           <textarea
             value={info.notes || ''}
             onChange={e => setInfo({ ...info, notes: e.target.value })}
@@ -354,7 +392,10 @@ function StepDelivery({
       </div>
 
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-6" style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.06)' }}>
-        <h2 className="text-xl font-black text-gray-900 mb-5 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+        <h2
+          className="text-xl font-black text-gray-900 mb-5 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
             <FiTruck size={16} className="text-blue-500" />
           </div>
@@ -382,60 +423,62 @@ function StepDelivery({
           </div>
         )}
 
-        {!deliveryLoading && deliveryOptions.length > 0 && deliveryOptions.map((opt) => {
-          const isSelected = selectedDeliveryId === opt.id
-          return (
-            <div
-              key={opt.id}
-              onClick={() => setSelectedDeliveryId(opt.id)}
-              className={`flex gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 mb-3 ${
-                isSelected ? 'border-[#B42225] bg-[#B42225]/3' : 'border-gray-100 hover:border-gray-200'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                isSelected ? 'bg-[#B42225] text-white' : 'bg-gray-100 text-gray-500'
-              }`}>
-                {getDeliveryIcon(opt)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 flex-wrap">
-                  <p className="text-sm font-bold text-gray-800">{opt.delivery_type}</p>
-                  <span className={`text-sm font-black shrink-0 ${opt.is_free_delivery ? 'text-green-600' : 'text-gray-800'}`}>
-                    {opt.is_free_delivery ? 'Free' : fmt(opt.delivery_cost)}
-                  </span>
+        {!deliveryLoading &&
+          deliveryOptions.length > 0 &&
+          deliveryOptions.map(opt => {
+            const isSelected = selectedDeliveryId === opt.id
+            return (
+              <div
+                key={opt.id}
+                onClick={() => setSelectedDeliveryId(opt.id)}
+                className={`flex gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 mb-3 ${
+                  isSelected ? 'border-[#B42225] bg-[#B42225]/3' : 'border-gray-100 hover:border-gray-200'
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                    isSelected ? 'bg-[#B42225] text-white' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {getDeliveryIcon(opt)}
                 </div>
-                <p className="text-xs text-[#B42225] font-semibold mt-0.5">
-                  ⏱ {formatEstimatedDays(opt)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {opt.delivery_description || 'Delivery to your doorstep'}
-                </p>
-                {opt.carrier_name && (
-                  <p className="text-xs text-gray-400 mt-1">📦 {opt.carrier_name}</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <p className="text-sm font-bold text-gray-800">{opt.delivery_type}</p>
+                    <span className={`text-sm font-black shrink-0 ${opt.is_free_delivery ? 'text-green-600' : 'text-gray-800'}`}>
+                      {opt.is_free_delivery ? 'Free' : fmt(opt.delivery_cost)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#B42225] font-semibold mt-0.5">⏱ {formatEstimatedDays(opt)}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {opt.delivery_description || 'Delivery to your doorstep'}
+                  </p>
+                  {opt.carrier_name && <p className="text-xs text-gray-400 mt-1">📦 {opt.carrier_name}</p>}
 
-                {isPickupOption(opt) && isSelected && (
-                  <div className="mt-3 bg-gray-50 rounded-xl p-3 space-y-1.5">
-                    <p className="text-xs font-black text-gray-800 flex items-center gap-1.5">
-                      <MdStorefront size={13} className="text-[#B42225]" />
-                      Pickup Location: ICT Centre, FUTO
-                    </p>
-                    <p className="text-xs text-gray-500 flex items-start gap-1.5">
-                      <FiClock size={11} className="mt-0.5 shrink-0 text-gray-400" />
-                      Mon – Sat: 9:00 AM – 6:00 PM
-                    </p>
+                  {isPickupOption(opt) && isSelected && (
+                    <div className="mt-3 bg-gray-50 rounded-xl p-3 space-y-1.5">
+                      <p className="text-xs font-black text-gray-800 flex items-center gap-1.5">
+                        <MdStorefront size={13} className="text-[#B42225]" />
+                        Pickup Location: ICT Centre, FUTO
+                      </p>
+                      <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                        <FiClock size={11} className="mt-0.5 shrink-0 text-gray-400" />
+                        Mon – Sat: 9:00 AM – 6:00 PM
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {isSelected && (
+                  <div className="shrink-0 w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center self-start mt-0.5">
+                    <FiCheck size={11} className="text-white" />
                   </div>
                 )}
               </div>
-              {isSelected && (
-                <div className="shrink-0 w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center self-start mt-0.5">
-                  <FiCheck size={11} className="text-white" />
-                </div>
-              )}
-            </div>
-          )
-        })}
-        {(errors as any).delivery && <p className="text-xs text-red-500 mt-1 ml-1">{(errors as any).delivery}</p>}
+            )
+          })}
+        {(errors as any).delivery && (
+          <p className="text-xs text-red-500 mt-1 ml-1">{(errors as any).delivery}</p>
+        )}
       </div>
 
       <button
@@ -480,7 +523,10 @@ function StepReview({
   return (
     <div style={{ animation: 'slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both' }}>
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-5" style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.06)' }}>
-        <h2 className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+        <h2
+          className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <FiPackage size={18} className="text-[#B42225]" /> Order Items
         </h2>
         <div className="divide-y divide-gray-100">
@@ -500,12 +546,17 @@ function StepReview({
       </div>
 
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-5" style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.06)' }}>
-        <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+        <h2
+          className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <FiFileText size={18} className="text-[#B42225]" /> Order Summary
         </h2>
 
         <div className="bg-gray-50 rounded-2xl p-4 mb-5 text-sm">
-          <p className="font-bold text-gray-700 mb-1 flex items-center gap-1.5"><FiMapPin size={13} className="text-[#B42225]" /> Delivering to:</p>
+          <p className="font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+            <FiMapPin size={13} className="text-[#B42225]" /> Delivering to:
+          </p>
           <p className="text-gray-600">{info.fullName} · {info.phone}</p>
           <p className="text-gray-500">{info.address}, {info.city}, {info.state}</p>
         </div>
@@ -516,16 +567,32 @@ function StepReview({
           </div>
           <div>
             <p className="font-bold text-gray-700">{selectedDelivery.delivery_type}</p>
-            <p className="text-gray-500 text-xs">{formatEstimatedDays(selectedDelivery)} · <span className={selectedDelivery.is_free_delivery ? 'text-green-600 font-bold' : 'text-gray-600'}>
-              {selectedDelivery.is_free_delivery ? 'Free' : fmt(selectedDelivery.delivery_cost)}
-            </span></p>
+            <p className="text-gray-500 text-xs">
+              {formatEstimatedDays(selectedDelivery)} ·{' '}
+              <span className={selectedDelivery.is_free_delivery ? 'text-green-600 font-bold' : 'text-gray-600'}>
+                {selectedDelivery.is_free_delivery ? 'Free' : fmt(selectedDelivery.delivery_cost)}
+              </span>
+            </p>
           </div>
         </div>
 
         <div className="space-y-2.5">
-          <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span className="font-bold">{fmt(subtotal)}</span></div>
-          {promoDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-green-600">Promo ({promoCode})</span><span className="font-bold text-green-600">-{fmt(promoDiscount)}</span></div>}
-          <div className="flex justify-between text-sm"><span className="text-gray-500">Delivery</span><span className="font-bold">{selectedDelivery.is_free_delivery ? 'Free' : fmt(selectedDelivery.delivery_cost)}</span></div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Subtotal</span>
+            <span className="font-bold">{fmt(subtotal)}</span>
+          </div>
+          {promoDiscount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-green-600">Promo ({promoCode})</span>
+              <span className="font-bold text-green-600">-{fmt(promoDiscount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Delivery</span>
+            <span className="font-bold">
+              {selectedDelivery.is_free_delivery ? 'Free' : fmt(selectedDelivery.delivery_cost)}
+            </span>
+          </div>
           <div className="border-t border-dashed border-gray-200 pt-3 flex justify-between">
             <span className="font-black text-gray-900">Total</span>
             <span className="text-xl font-black text-[#B42225]">{fmt(total)}</span>
@@ -534,13 +601,17 @@ function StepReview({
       </div>
 
       <div className="flex gap-3">
-        <button onClick={onBack}
-          className="flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm text-gray-600 border-2 border-gray-200 hover:border-gray-300 transition-all">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm text-gray-600 border-2 border-gray-200 hover:border-gray-300 transition-all"
+        >
           <FiArrowLeft size={15} /> Back
         </button>
-        <button onClick={onPay}
+        <button
+          onClick={onPay}
           className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl"
-          style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 8px 30px rgba(180,34,37,0.35)' }}>
+          style={{ background: 'linear-gradient(135deg,#B42225,#FF8C00)', boxShadow: '0 8px 30px rgba(180,34,37,0.35)' }}
+        >
           <FiCreditCard size={16} /> Pay {fmt(total)} with Paystack
         </button>
       </div>
@@ -554,27 +625,33 @@ function StepReview({
 export default function Checkout() {
   const { items, subtotal, clearCart, saveOrder, itemCount } = useCart()
   const { user, isLoading: authLoading } = useContext(AuthContext) as any
-  const router   = useRouter()
+  const router = useRouter()
 
-  const [step, setStep] = useState(1)
-  const [paying, setPaying] = useState(false)
+  const [step, setStep]                     = useState(1)
+  const [paying, setPaying]                 = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [showSuccess, setShowSuccess]       = useState(false)
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null)
-  const [successTotal, setSuccessTotal] = useState<number>(0)
+  const [successTotal, setSuccessTotal]     = useState<number>(0)
+
+  // ─── FIX: This ref prevents the "itemCount === 0 → redirect to /cart"
+  // effect from firing after a successful payment clears the cart.
+  // Using a ref (not state) so it is synchronously available inside the
+  // Paystack callback closure without needing a re-render cycle.
+  const paymentCompletedRef = useRef(false)
 
   const [info, setInfo] = useState<DeliveryInfo>({
     fullName: '', phone: '', email: '', address: '',
     city: '', state: '', country: 'Nigeria', notes: '',
   })
 
-  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([])
+  const [deliveryOptions, setDeliveryOptions]       = useState<DeliveryOption[]>([])
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null)
-  const [deliveryLoading, setDeliveryLoading] = useState<boolean>(true)
-  const [deliveryError, setDeliveryError] = useState<string | null>(null)
+  const [deliveryLoading, setDeliveryLoading]       = useState<boolean>(true)
+  const [deliveryError, setDeliveryError]           = useState<string | null>(null)
 
   const [promo, setPromo] = useState<{ code: string; pct: number; label: string } | null>(null)
-  
+
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem('jovo_promo')
@@ -592,8 +669,11 @@ export default function Checkout() {
     }
   }, [authLoading])
 
+  // ─── FIX: Guard redirect with paymentCompletedRef ───────────────────
   useEffect(() => {
     if (isCheckingAuth) return
+    // Never redirect if payment was just completed — the modal is showing.
+    if (paymentCompletedRef.current) return
     if (!user) {
       sessionStorage.setItem('redirectAfterLogin', '/cart/checkout')
       router.replace('/login')
@@ -604,35 +684,25 @@ export default function Checkout() {
       return
     }
   }, [user, itemCount, router, isCheckingAuth])
-
-  // DEBUG: Watch success modal state
-  useEffect(() => {
-    console.log('🔍 DEBUG - showSuccess changed to:', showSuccess)
-    console.log('🔍 DEBUG - successOrderId:', successOrderId)
-    console.log('🔍 DEBUG - successTotal:', successTotal)
-  }, [showSuccess, successOrderId, successTotal])
+  // ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const fetchDeliveryOptions = async () => {
       if (!user || items.length === 0) return
-      
+
       setDeliveryLoading(true)
       setDeliveryError(null)
-      
+
       try {
         const totalWeight = items.reduce((total, item) => {
           const itemWeight = (item as any).weight || 1
-          return total + (itemWeight * item.quantity)
+          return total + itemWeight * item.quantity
         }, 0)
-        
-        console.log('📦 Fetching delivery options with:', { subtotal, totalWeight })
-        
+
         const response = await ApiService.getAvailableDeliveryOptions(subtotal, totalWeight)
-        
-        console.log('📦 API Response:', response)
-        
+
         let availableOptions: DeliveryOption[] = []
-        
+
         if (response?.data?.delivery_options && Array.isArray(response.data.delivery_options)) {
           availableOptions = response.data.delivery_options
         } else if (response?.delivery_options && Array.isArray(response.delivery_options)) {
@@ -642,9 +712,7 @@ export default function Checkout() {
         } else if (Array.isArray(response)) {
           availableOptions = response
         }
-        
-        console.log('📦 Extracted options:', availableOptions)
-        
+
         if (availableOptions.length === 0) {
           setDeliveryError('No delivery options available. Please check your cart total and weight.')
         } else {
@@ -661,14 +729,14 @@ export default function Checkout() {
         setDeliveryLoading(false)
       }
     }
-    
+
     fetchDeliveryOptions()
   }, [items, subtotal, user])
 
   useEffect(() => {
-    const script = document.createElement('script')
-    script.src   = 'https://js.paystack.co/v1/inline.js'
-    script.async = true
+    const script    = document.createElement('script')
+    script.src      = 'https://js.paystack.co/v1/inline.js'
+    script.async    = true
     document.body.appendChild(script)
     return () => { try { document.body.removeChild(script) } catch {} }
   }, [])
@@ -677,95 +745,88 @@ export default function Checkout() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-500">Checking authentication...</p>
         </div>
       </div>
     )
   }
 
-  if (!user || itemCount === 0) return null
+  if (!user || (itemCount === 0 && !paymentCompletedRef.current)) return null
 
-  const selectedDelivery = deliveryOptions.find(d => d.id === selectedDeliveryId) || null
-  const promoDiscount = promo ? subtotal * promo.pct : 0
-  const deliveryCost = selectedDelivery?.is_free_delivery ? 0 : (selectedDelivery?.delivery_cost || 0)
-  const total = subtotal - promoDiscount + deliveryCost
+  const selectedDelivery   = deliveryOptions.find(d => d.id === selectedDeliveryId) || null
+  const promoDiscount      = promo ? subtotal * promo.pct : 0
+  const deliveryCost       = selectedDelivery?.is_free_delivery ? 0 : (selectedDelivery?.delivery_cost || 0)
+  const total              = subtotal - promoDiscount + deliveryCost
 
   const handlePay = () => {
     if (!selectedDelivery) {
       alert('Please select a delivery method')
       return
     }
-    
-    console.log('💳 Starting payment process...')
+
     setPaying(true)
-    
+
     try {
       const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_f5ed3e79b7c217ef827ad52a481bec40e2485ddb'
-      
+
       const handler = (window as any).PaystackPop.setup({
-        key: paystackKey,
-        email: user.email || info.email,
-        amount: Math.round(total * 100),
+        key:      paystackKey,
+        email:    user.email || info.email,
+        amount:   Math.round(total * 100),
         currency: 'NGN',
-        ref: `JOVO_${Date.now()}_${Math.random().toString(36).slice(2,7).toUpperCase()}`,
+        ref:      `JOVO_${Date.now()}_${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
         metadata: {
           custom_fields: [
             { display_name: 'Customer', variable_name: 'customer', value: info.fullName },
             { display_name: 'Phone',    variable_name: 'phone',    value: info.phone },
           ],
         },
+
         onClose: () => {
-          console.log('❌ Payment window closed by user')
           setPaying(false)
         },
+
         callback: (response: { reference: string }) => {
-          console.log('✅ Payment successful!', response)
-          
           try {
-            // Create order object
+            // ─── FIX: Set the guard BEFORE clearCart() so the redirect
+            // effect cannot fire while React processes the state updates.
+            paymentCompletedRef.current = true
+
             const orderData = {
-              reference: response.reference,
-              items: [...items],
-              subtotal: subtotal,
+              reference:    response.reference,
+              items:        [...items],
+              subtotal:     subtotal,
               deliveryCost: deliveryCost,
-              total: total,
+              total:        total,
               deliveryInfo: { ...info, deliveryMethod: selectedDelivery.id },
-              status: 'confirmed' as const,
+              status:       'confirmed' as const,
               paymentMethod: 'Paystack',
             }
-            
-            console.log('📝 Saving order:', orderData)
-            
-            // Save order
+
             const order = saveOrder(orderData)
-            
-            console.log('✅ Order saved successfully:', order)
-            
-            // Clear cart and promo
+
             sessionStorage.removeItem('jovo_promo')
-            clearCart()
-            
-            // Close paying overlay
+            clearCart() // itemCount → 0, but guard is already set ✓
+
             setPaying(false)
-            
-            // Show success modal with confetti
-            console.log('🎉 Setting success modal state...')
+
+            // Show the success modal — React will batch these with the
+            // clearCart() state update, so all render in one pass.
             setSuccessOrderId(order.id)
             setSuccessTotal(total)
             setShowSuccess(true)
-            
-            console.log('✅ Modal state set - should now display')
-            
+
           } catch (err) {
             console.error('❌ Error saving order:', err)
+            paymentCompletedRef.current = false
             alert('Payment successful but order could not be saved. Please contact support.')
             setPaying(false)
             router.push('/')
           }
         },
       })
-      
+
       handler.openIframe()
     } catch (error) {
       console.error('❌ Payment error:', error)
@@ -775,36 +836,42 @@ export default function Checkout() {
   }
 
   const handleContinueShopping = () => {
-    console.log('🏠 Continuing shopping, redirecting to home...')
     setShowSuccess(false)
+    paymentCompletedRef.current = false
     router.push('/')
   }
 
   return (
     <>
       <style>{`
-        @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes fadeUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes slideUp { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
-        @keyframes scaleIn { from{opacity:0;transform:scale(0)} to{opacity:1;transform:scale(1)} }
+        @keyframes slideIn      { from{opacity:0;transform:translateX(20px)}        to{opacity:1;transform:translateX(0)} }
+        @keyframes fadeUp       { from{opacity:0;transform:translateY(12px)}        to{opacity:1;transform:translateY(0)} }
+        @keyframes successSlideUp { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes successScaleIn { from{opacity:0;transform:scale(0)}              to{opacity:1;transform:scale(1)} }
       `}</style>
 
-      {/* Success Modal with Confetti - Using Portal */}
+      {/* ─── SUCCESS MODAL ─────────────────────────────────────────────── */}
       {showSuccess && successOrderId && (
-        <PaymentSuccessModal 
-          orderId={successOrderId} 
-          total={successTotal} 
+        <PaymentSuccessModal
+          orderId={successOrderId}
+          total={successTotal}
           onContinue={handleContinueShopping}
         />
       )}
 
       <div className="min-h-screen" style={{ background: '#F7F8FC' }}>
+        {/* Header */}
         <div
           className="relative overflow-hidden py-8 md:py-11"
           style={{ background: 'linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)' }}
         >
-          <div className="absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)', backgroundSize: '28px 28px' }} />
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)',
+              backgroundSize: '28px 28px',
+            }}
+          />
           <div className="max-w-3xl mx-auto px-4 md:px-8 relative z-10">
             <Link href="/cart" className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors">
               <FiArrowLeft size={14} /> Back to Cart
@@ -818,6 +885,7 @@ export default function Checkout() {
           </div>
         </div>
 
+        {/* Steps */}
         <div className="max-w-3xl mx-auto px-4 md:px-8 py-8">
           <StepBar current={step} />
 
@@ -847,6 +915,7 @@ export default function Checkout() {
             />
           )}
 
+          {/* Payment loading overlay */}
           {paying && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
               <div className="bg-white rounded-3xl p-8 text-center max-w-xs mx-4">
@@ -860,6 +929,7 @@ export default function Checkout() {
           )}
         </div>
       </div>
+
       <Footer />
     </>
   )
