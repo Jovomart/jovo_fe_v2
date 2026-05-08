@@ -1,61 +1,72 @@
-import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from "next";
 // @ts-ignore - CSS module import
-import './globals.css'
-import { AuthProvider } from '@/context/AuthContext'
-import { CartProvider } from '@/context/CartContext'
-import { Suspense } from 'react'
-import ScrollToTop from '@/components/ui/ScrollToTop'
+import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
+import { Suspense } from "react";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://jovo.ng'),
+  metadataBase: new URL("https://jovo.ng"),
   title: {
     default: "JOVO — Nigeria's #1 Campus Marketplace",
-    template: '%s | JOVO',
+    template: "%s | JOVO",
   },
   description:
     "JOVO is Nigeria's premier campus e-commerce marketplace. Shop phones, electronics, fashion, groceries, services and more. Fast campus delivery, verified sellers, exclusive flash sales.",
-  keywords: ['jovo', 'campus marketplace', 'nigeria ecommerce', 'student market'],
-  authors: [{ name: 'JOVO Technologies' }],
+  keywords: [
+    "jovo",
+    "campus marketplace",
+    "nigeria ecommerce",
+    "student market",
+  ],
+  authors: [{ name: "JOVO Technologies" }],
   openGraph: {
-    type: 'website',
-    url: 'https://jovo.ng/',
+    type: "website",
+    url: "https://jovo.ng/",
     title: "JOVO — Nigeria's #1 Campus Marketplace",
-    description: 'Shop phones, electronics, fashion & more. Fast campus delivery. Flash sales daily.',
-    siteName: 'JOVO',
-    locale: 'en_NG',
+    description:
+      "Shop phones, electronics, fashion & more. Fast campus delivery. Flash sales daily.",
+    siteName: "JOVO",
+    locale: "en_NG",
   },
   twitter: {
-    card: 'summary_large_image',
-    site: '@jovong',
+    card: "summary_large_image",
+    site: "@jovong",
     title: "JOVO — Nigeria's #1 Campus Marketplace",
   },
-}
+};
 
 export const viewport: Viewport = {
-  themeColor: '#B42225',
-}
+  themeColor: "#B42225",
+};
 
 function LoadingFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-gray-200 border-t-[#B42225] rounded-full animate-spin" />
     </div>
-  )
+  );
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
-        <ScrollToTop />  
+        <ScrollToTop />
         <AuthProvider>
           <CartProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              {children}
-            </Suspense>
+            <WishlistProvider>
+              <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

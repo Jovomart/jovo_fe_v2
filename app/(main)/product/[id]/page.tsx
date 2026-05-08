@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { products } from "@/data/products";
 import { useState } from "react";
+import { useWishlist } from "@/context/WishlistContext";
 import {
   FiHeart,
   FiShoppingCart,
@@ -152,6 +153,7 @@ const RenderStars = ({
    CATEGORY → ROUTE MAP
 ───────────────────────────────────────────────────────────── */
 const categoryRoutes: Record<string, string> = {
+  // existing
   phones: "/phone-deals",
   fashion: "/fashion-deals",
   gaming: "/gaming-deals",
@@ -161,6 +163,16 @@ const categoryRoutes: Record<string, string> = {
   computing: "/computing-deals",
   beauty: "/beauty-deals",
   drinks: "/drink-deals",
+  // added
+  "flash-sales": "/flash-sales",
+  "top-sellers": "/top-sellers",
+  sponsored: "/sponsored",
+  limited: "/limited",
+  "tv-audio": "/tv-audio",
+  groceries: "/groceries",
+  perishable: "/perishable",
+  "personal-care": "/personal-care",
+  "cleaning-hygiene": "/cleaning-hygiene",
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -172,7 +184,7 @@ const ProductDetails = () => {
   const { addToCart } = useCart();
 
   const [quantity, setQuantity] = useState<number>(1);
-  const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const [activeTab, setActiveTab] = useState<string>("description");
   const [returnOpen, setReturnOpen] = useState<boolean>(false);
   const [shareOpen, setShareOpen] = useState<boolean>(false);
@@ -182,6 +194,8 @@ const ProductDetails = () => {
   const product = products.find((p: Product) => p.id === Number(id)) as
     | Product
     | undefined;
+
+  const wishlisted = isWishlisted(product?.id ?? -1);
 
   if (!product) {
     return (
@@ -295,13 +309,17 @@ const ProductDetails = () => {
                     -{discount}%
                   </div>
                 )}
-                
+
                 <div className="absolute top-5 right-5 z-40 flex flex-col gap-2">
                   <button
-                    onClick={() => setIsWishlisted(!isWishlisted)}
+                    onClick={() =>
+                      wishlisted
+                        ? removeFromWishlist(product.id)
+                        : addToWishlist(product)
+                    }
                     className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-110 transition-transform"
                   >
-                    {isWishlisted ? (
+                    {wishlisted ? (
                       <FaHeart className="text-red-500" size={16} />
                     ) : (
                       <FiHeart className="text-gray-400" size={16} />
