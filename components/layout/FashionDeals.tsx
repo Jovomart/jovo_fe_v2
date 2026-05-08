@@ -1,5 +1,5 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiUser } from "react-icons/fi";
@@ -7,10 +7,10 @@ import { FiArrowRight, FiUser } from "react-icons/fi";
 const FashionDeals = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
 
-  //  Limit to 4 products only
+  // Limit to 4 products only (UNCHANGED)
   const fashion = products.filter((p) => p.category === "fashion").slice(0, 4);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ const FashionDeals = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto Scroll
+  // Auto Scroll (UNCHANGED)
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
@@ -42,7 +42,7 @@ const FashionDeals = () => {
   }, []);
 
   return (
-    <div className="w-full mt-5 bg-[#F5F6F7]">
+    <div className="w-full mt-5 bg-[#F5F6F7] overflow-hidden">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
@@ -94,16 +94,19 @@ const FashionDeals = () => {
         </button>
       </div>
 
-      {/* PRODUCTS */}
+      {/* PRODUCTS - FIXED: Better alignment and spacing on desktop */}
       <div
         ref={scrollRef}
-        className="flex gap-6 overflow-x-auto px-4 md:px-8 snap-x snap-mandatory scroll-smooth no-scrollbar"
+        className="flex gap-6 md:gap-5 lg:gap-10 overflow-x-auto no-scrollbar px-4 md:px-6 lg:px-10 snap-x snap-mandatory scroll-smooth pb-4"
+        style={{
+          msOverflowStyle: "auto",
+        }}
       >
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-44 md:min-w-64 h-80 bg-gray-100 rounded-xl animate-pulse"
+                className="min-w-[160px] sm:min-w-[200px] md:min-w-[220px] lg:min-w-[260px] h-80 bg-gray-100 rounded-xl animate-pulse flex-shrink-0"
               />
             ))
           : fashion.map((product) => {
@@ -115,9 +118,9 @@ const FashionDeals = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-44 md:min-w-70 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                  className="min-w-[160px] sm:min-w-[200px] md:min-w-[220px] lg:min-w-[260px] snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer flex-shrink-0"
                 >
-                  <div className="relative h-44 md:h-56 overflow-hidden rounded-t-xl">
+                  <div className="relative h-40 sm:h-48 md:h-52 lg:h-56 overflow-hidden rounded-t-xl">
                     <img
                       src={product.image}
                       alt={product.name}
@@ -128,13 +131,15 @@ const FashionDeals = () => {
                     </div>
                   </div>
 
-                  <div className="p-4">
-                    <p className="font-semibold truncate">{product.name}</p>
-                    <div className="mt-2">
-                      <span className="font-bold text-lg">
+                  <div className="p-3 md:p-4">
+                    <p className="font-semibold text-sm md:text-base truncate">
+                      {product.name}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="font-bold text-base md:text-lg lg:text-xl">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-gray-400 line-through text-xs md:text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>
@@ -143,6 +148,17 @@ const FashionDeals = () => {
               );
             })}
       </div>
+
+      {/* Hide scrollbar for cleaner look */}
+      <style jsx>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

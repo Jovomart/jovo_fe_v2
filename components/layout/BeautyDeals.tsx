@@ -73,7 +73,7 @@ const BeautyAndCosmeticsDeals = () => {
       </div>
 
       {/* GRID PRODUCTS */}
-      <div className="px-4 md:px-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
+      <div className="px-4 md:px-6 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-72 bg-white rounded-xl animate-pulse" />

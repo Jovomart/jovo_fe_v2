@@ -28,7 +28,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <ScrollToTop />
       <PageLoader />
       {!shouldHideNavbar && <Navbar />}
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen">
         {children}
       </main>
       {!shouldHideBottomNav && <BottomNav />}

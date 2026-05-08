@@ -634,11 +634,14 @@ export default function Checkout() {
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null)
   const [successTotal, setSuccessTotal]     = useState<number>(0)
 
-  // ─── FIX: This ref prevents the "itemCount === 0 → redirect to /cart"
-  // effect from firing after a successful payment clears the cart.
-  // Using a ref (not state) so it is synchronously available inside the
-  // Paystack callback closure without needing a re-render cycle.
   const paymentCompletedRef = useRef(false)
+
+  // ─── FIX: goToStep scrolls to top on every step change ───────────────
+  const goToStep = (n: number) => {
+    setStep(n)
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+  }
+  // ─────────────────────────────────────────────────────────────────────
 
   const [info, setInfo] = useState<DeliveryInfo>({
     fullName: '', phone: '', email: '', address: '',
@@ -669,10 +672,8 @@ export default function Checkout() {
     }
   }, [authLoading])
 
-  // ─── FIX: Guard redirect with paymentCompletedRef ───────────────────
   useEffect(() => {
     if (isCheckingAuth) return
-    // Never redirect if payment was just completed — the modal is showing.
     if (paymentCompletedRef.current) return
     if (!user) {
       sessionStorage.setItem('redirectAfterLogin', '/cart/checkout')
@@ -684,7 +685,6 @@ export default function Checkout() {
       return
     }
   }, [user, itemCount, router, isCheckingAuth])
-  // ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const fetchDeliveryOptions = async () => {
@@ -789,8 +789,6 @@ export default function Checkout() {
 
         callback: (response: { reference: string }) => {
           try {
-            // ─── FIX: Set the guard BEFORE clearCart() so the redirect
-            // effect cannot fire while React processes the state updates.
             paymentCompletedRef.current = true
 
             const orderData = {
@@ -807,12 +805,10 @@ export default function Checkout() {
             const order = saveOrder(orderData)
 
             sessionStorage.removeItem('jovo_promo')
-            clearCart() // itemCount → 0, but guard is already set ✓
+            clearCart()
 
             setPaying(false)
 
-            // Show the success modal — React will batch these with the
-            // clearCart() state update, so all render in one pass.
             setSuccessOrderId(order.id)
             setSuccessTotal(total)
             setShowSuccess(true)
@@ -898,7 +894,7 @@ export default function Checkout() {
               deliveryOptions={deliveryOptions}
               deliveryLoading={deliveryLoading}
               deliveryError={deliveryError}
-              onNext={() => setStep(2)}
+              onNext={() => goToStep(2)}
             />
           )}
 
@@ -910,7 +906,7 @@ export default function Checkout() {
               promoDiscount={promoDiscount}
               promoCode={promo?.code || ''}
               total={total}
-              onBack={() => setStep(1)}
+              onBack={() => goToStep(1)}
               onPay={handlePay}
             />
           )}

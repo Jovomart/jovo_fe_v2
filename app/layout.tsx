@@ -5,7 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { Suspense } from "react";
-import ScrollToTop from "@/components/ui/ScrollToTop";
+
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jovo.ng"),
@@ -58,7 +58,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ScrollToTop />
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
