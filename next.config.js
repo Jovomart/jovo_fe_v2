@@ -5,11 +5,10 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'plus.unsplash.com' },
       { protocol: 'https', hostname: 'assets.mixkit.co' },
+      { protocol: 'https', hostname: 'placehold.co' },
     ],
   },
-  // Enable standalone output for optimized Docker builds
   output: 'standalone',
-  // Type checking and linting are handled in CI — skip during Docker image build
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
 }

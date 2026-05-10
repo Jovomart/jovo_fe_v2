@@ -8,25 +8,18 @@ import ScrollToTop from '@/components/ui/ScrollToTop'
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  // Check if on seller dashboard
   const isSellerDashboard = pathname?.startsWith('/seller/dashboard')
-  
-  // Check if on service provider dashboard
   const isServiceDashboard = pathname?.startsWith('/services/dashboard')
-  
-  // Check if on news section
   const isNewsSection = pathname?.startsWith('/news')
+  const isHomePage = pathname === '/'
 
-  // Hide navbar on seller dashboard, service dashboard, AND news section
-  const shouldHideNavbar = isSellerDashboard || isServiceDashboard || isNewsSection
-  
-  // Hide bottom nav ONLY on seller dashboard
-  const shouldHideBottomNav = isSellerDashboard
+  const shouldHideNavbar = isSellerDashboard || isServiceDashboard || isNewsSection || isHomePage
+  const shouldHideBottomNav = isSellerDashboard || isHomePage
 
   return (
     <>
       <ScrollToTop />
-      <PageLoader />
+      {!shouldHideNavbar && <PageLoader />}
       {!shouldHideNavbar && <Navbar />}
       <main className="min-h-screen">
         {children}
