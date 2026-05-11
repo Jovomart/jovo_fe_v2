@@ -539,7 +539,7 @@ const fetchCategories = useCallback(async () => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => fetchProviders(true, 0), search ? 500 : 0)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [activeCategoryId, sortBy, search, fetchProviders])
 
   // Filter providers client-side for available now

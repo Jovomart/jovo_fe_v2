@@ -69,7 +69,7 @@ export default function AppSection() {
                 {/* Header bar */}
                 <div className="flex items-center justify-between px-0.5 pb-[10px]">
                   {/* Replace with actual JOVO logo */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <Image src="/images/Jovo_official_logo.png" alt="JOVO" width={120} height={40} className="h-5 w-20 object-cover" />
                   <FontAwesomeIcon icon={faBell} className="text-[11px] text-gray-400" />
                 </div>
