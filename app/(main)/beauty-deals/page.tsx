@@ -15,7 +15,7 @@ import {
 } from "react-icons/fi";
 import { FaHeart, FaStar, FaLeaf, FaRegGem } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
-import Image from "next/image";
+
 
 // ─── Beauty Badge ─────────────────────────────────────────────────────────
 const BeautyBadge = () => (

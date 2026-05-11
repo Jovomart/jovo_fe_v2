@@ -19,7 +19,7 @@ import {
   MdOutlineLocalLaundryService,
 } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
-import Image from "next/image";
+
 
 // ─── Appliance Badge ──────────────────────────────────────────────────────
 const ApplianceBadge = () => (
