@@ -1,6 +1,6 @@
-'use client'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+"use client";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect, useContext, Suspense } from "react";
 import {
   FiMail,
@@ -9,12 +9,13 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { AuthContext } from "@/context/AuthContext";
+import Image from "next/image";
 
 const VerifyEmailInner = () => {
   const { verifyEmail, resendVerificationCode } = useContext(AuthContext);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get('email') || "";
+  const email = searchParams.get("email") || "";
 
   const [code, setCode] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState<string>("");
@@ -46,7 +47,10 @@ const VerifyEmailInner = () => {
     if (val && i < 5) inputRefs.current[i + 1]?.focus();
   };
 
-  const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    i: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace" && !code[i] && i > 0)
       inputRefs.current[i - 1]?.focus();
   };
@@ -86,7 +90,9 @@ const VerifyEmailInner = () => {
       setSuccess("Email verified! Redirecting to login...");
       setTimeout(
         () =>
-          router.push(`/login?message=${encodeURIComponent("Email verified! Please sign in.")}`),
+          router.push(
+            `/login?message=${encodeURIComponent("Email verified! Please sign in.")}`,
+          ),
         2000,
       );
     } catch (err: any) {
@@ -130,10 +136,12 @@ const VerifyEmailInner = () => {
           className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10"
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}
         >
-          <img
+          <Image
             src="/images/Jovo_off_icon.png"
             alt="Jovo"
             className="md:h-25 h-15 md:w-75 w-75 object-cover cursor-pointer"
+            width={300}
+            height={100}
           />
 
           {/* Icon */}
@@ -259,14 +267,15 @@ const VerifyEmailInner = () => {
             >
               <FiRefreshCw
                 size={11}
-                className={`sm:w-3.25 sm:h-3.25 ${resending ? 'animate-spin' : ''}`}
+                className={`sm:w-3.25 sm:h-3.25 ${resending ? "animate-spin" : ""}`}
               />
               {resending ? "Sending..." : "Resend code"}
             </button>
           </div>
 
           <div className="text-center mt-4">
-            <Link href="/login"
+            <Link
+              href="/login"
               className="text-[11px] sm:text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
               ← Back to Sign In

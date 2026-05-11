@@ -1,13 +1,14 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useRouter } from "next/navigation";
 // src/components/home/AccommodationDeals.jsx
 import { useState, useEffect } from "react";
 import { accommodations } from "@/data/accommodation";
+import Image from "next/image";
 
 const AccommodationDeals = () => {
   const [loading, setLoading] = useState(true);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
@@ -33,7 +34,10 @@ const AccommodationDeals = () => {
       <div className="px-0 md:px-8 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-8">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-72 md:h-96 bg-gray-700 rounded-2xl animate-pulse" />
+              <div
+                key={i}
+                className="h-72 md:h-96 bg-gray-700 rounded-2xl animate-pulse"
+              />
             ))
           : accommodations.slice(0, 4).map((place) => (
               <div
@@ -42,10 +46,12 @@ const AccommodationDeals = () => {
                 onClick={() => navigate(`/accommodation/${place.id}`)}
               >
                 {/* IMAGE */}
-                <img
+                <Image
                   src={place.image}
                   alt={place.name}
                   className="w-full h-72 md:h-96 object-cover group-hover:scale-110 transition duration-700"
+                  width={300}
+                  height={384}
                 />
 
                 {/* OVERLAY */}
@@ -57,14 +63,23 @@ const AccommodationDeals = () => {
                     <span className="bg-white text-black text-xs px-2 py-1 rounded-full font-bold">
                       ⭐ {place.rating}
                     </span>
-                    <span className="text-xs text-gray-300">({place.reviews} reviews)</span>
+                    <span className="text-xs text-gray-300">
+                      ({place.reviews} reviews)
+                    </span>
                   </div>
                   <h3 className="text-sm md:text-xl font-bold">{place.name}</h3>
-                  <p className="text-xs md:text-sm text-gray-300 mt-1">📍 {place.location}</p>
+                  <p className="text-xs md:text-sm text-gray-300 mt-1">
+                    📍 {place.location}
+                  </p>
                   <div className="mt-3 md:mt-4 flex justify-between items-center">
                     <div>
-                      <span className="text-lg md:text-2xl font-bold">₦{place.price.toLocaleString()}</span>
-                      <span className="text-xs md:text-sm text-gray-300"> /year</span>
+                      <span className="text-lg md:text-2xl font-bold">
+                        ₦{place.price.toLocaleString()}
+                      </span>
+                      <span className="text-xs md:text-sm text-gray-300">
+                        {" "}
+                        /year
+                      </span>
                     </div>
                     <button className="bg-yellow-400 text-black text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full font-semibold hover:bg-yellow-300 transition">
                       Book

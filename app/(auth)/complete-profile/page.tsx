@@ -7,6 +7,7 @@ import {
   FiMapPin, FiAlertCircle, FiBookOpen,
   FiSearch, FiX, FiCheck as FiCheckIcon, FiPhone,
 } from 'react-icons/fi'
+import Image from 'next/image'
 
 const GENDER_OPTIONS = ['MALE', 'FEMALE']
 
@@ -176,7 +177,7 @@ function CompleteProfileContent() {
     <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ background: '#F4F5F9' }}>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img src="/images/Jovo_off_icon.png" alt="Jovo" className="h-16 object-cover" />
+          <Image src="/images/Jovo_off_icon.png" alt="Jovo" className="h-16 object-cover" width={64} height={64} />
         </div>
 
         <div className="bg-white rounded-3xl p-8 shadow-lg">

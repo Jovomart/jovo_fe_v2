@@ -8,6 +8,7 @@ import { FiHeart, FiShoppingBag, FiArrowLeft, FiZap, FiCpu, FiMonitor, FiHardDri
 import { FaHeart, FaStar, FaLaptop, FaKeyboard } from "react-icons/fa";
 import { MdOutlineMemory, MdOutlineSpeed, MdOutlineDeveloperBoard } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
+import Image from 'next/image'
 
 // ─── Computing Badge ──────────────────────────────────────────────────────
 const ComputingBadge = () => (
@@ -78,10 +79,13 @@ const ProductCard = ({ product, idx, wishlisted, onWishlist }) => {
         style={{ aspectRatio: "1/1" }}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
+        <Image
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-108"
+          width={200}
+          height={200}
+        />
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -150,10 +154,12 @@ const SuggestedCard = ({ product }) => {
       style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
     >
       <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-        <img
+        <Image
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          width={200}
+          height={200}
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>

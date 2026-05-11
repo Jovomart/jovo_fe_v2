@@ -1,12 +1,13 @@
-'use client'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 // src/pages/FlashSalesPage.jsx
 import { products } from "@/data/products";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { FiHeart, FiShoppingBag, FiArrowLeft, FiZap } from "react-icons/fi";
 import { FaHeart, FaFire } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
+import Image from "next/image";
 
 /* ── Countdown hook ──────────────────────────────────────────────────────── */
 const useCountdown = (duration) => {
@@ -16,7 +17,7 @@ const useCountdown = (duration) => {
     return () => clearInterval(id);
   }, []);
   return {
-    hours:   String(Math.floor(t / 3600)).padStart(2, "0"),
+    hours: String(Math.floor(t / 3600)).padStart(2, "0"),
     minutes: String(Math.floor((t % 3600) / 60)).padStart(2, "0"),
     seconds: String(t % 60).padStart(2, "0"),
   };
@@ -28,10 +29,12 @@ const TimeCell = ({ value, label }) => (
     <div
       className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center overflow-hidden"
       style={{
-        background: "linear-gradient(145deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%)",
+        background:
+          "linear-gradient(145deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%)",
         border: "1px solid rgba(255,255,255,0.25)",
         backdropFilter: "blur(12px)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
+        boxShadow:
+          "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
       }}
     >
       {/* Shine streak */}
@@ -48,13 +51,15 @@ const TimeCell = ({ value, label }) => (
 
 /* ── Separator ───────────────────────────────────────────────────────────── */
 const Sep = () => (
-  <span className="text-2xl md:text-3xl font-black text-white/40 mb-5 select-none">:</span>
+  <span className="text-2xl md:text-3xl font-black text-white/40 mb-5 select-none">
+    :
+  </span>
 );
 
 /* ── Product card ────────────────────────────────────────────────────────── */
 const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;
@@ -73,10 +78,12 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
         style={{ aspectRatio: "1/1" }}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
+        <Image
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+          width={200}
+          height={200}
         />
 
         {/* Dark gradient overlay on hover */}
@@ -88,14 +95,16 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
             className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black text-white"
             style={{ background: "linear-gradient(135deg, #B42225, #ff4444)" }}
           >
-            <FiZap size={10} />
-            -{discount}%
+            <FiZap size={10} />-{discount}%
           </div>
         )}
 
         {/* Wishlist */}
         <button
-          onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlist(product.id);
+          }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
         >
           {wishlisted ? (
@@ -132,7 +141,9 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
         {/* Stock bar */}
         <div className="mt-2.5">
           <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-            <span className="text-[#B42225] font-semibold">🔥 Selling fast</span>
+            <span className="text-[#B42225] font-semibold">
+              🔥 Selling fast
+            </span>
             <span>72% sold</span>
           </div>
           <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
@@ -152,45 +163,51 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 const FlashSalesPage = () => {
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
   const [wishlist, setWishlist] = useState([]);
   const { hours, minutes, seconds } = useCountdown(24 * 60 * 60);
 
   const flashProducts = useMemo(
     () => products.filter((p) => p.category === "flash-sales"),
-    []
+    [],
   );
   const suggestedProducts = useMemo(() => products.slice(0, 8), []);
 
   const toggleWishlist = (id) =>
     setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
 
   return (
     <div className="min-h-screen" style={{ background: "#F3F4F8" }}>
-
       {/* ══════════════════ HERO HEADER ══════════════════ */}
       <div
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #0f0f0f 0%, #1a0505 40%, #2d0a0a 70%, #B42225 100%)",
+          background:
+            "linear-gradient(135deg, #0f0f0f 0%, #1a0505 40%, #2d0a0a 70%, #B42225 100%)",
           minHeight: "340px",
         }}
       >
         {/* Animated background orbs */}
         <div
           className="absolute -top-20 -left-20 w-96 h-96 rounded-full opacity-20 animate-pulse"
-          style={{ background: "radial-gradient(circle, #FF8C00, transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle, #FF8C00, transparent 70%)",
+          }}
         />
         <div
           className="absolute -bottom-10 right-0 w-80 h-80 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #B42225, transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle, #B42225, transparent 70%)",
+          }}
         />
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full opacity-5"
-          style={{ background: "radial-gradient(circle, #FF8C00, transparent 60%)" }}
+          style={{
+            background: "radial-gradient(circle, #FF8C00, transparent 60%)",
+          }}
         />
 
         {/* Diagonal slash decoration */}
@@ -209,22 +226,23 @@ const FlashSalesPage = () => {
 
         {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-14">
-
           {/* Back link */}
-          <Link href="/"
+          <Link
+            href="/"
             className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm transition-colors mb-8"
           >
             <FiArrowLeft size={14} /> Back to Home
           </Link>
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-
             {/* Left — Title */}
             <div>
               {/* Live badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1.5 mb-4">
                 <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                <span className="text-white/80 text-xs font-semibold tracking-widest uppercase">Live Now</span>
+                <span className="text-white/80 text-xs font-semibold tracking-widest uppercase">
+                  Live Now
+                </span>
               </div>
 
               <div className="flex items-center gap-3">
@@ -232,7 +250,10 @@ const FlashSalesPage = () => {
                 <div>
                   <h1
                     className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(180,34,37,0.5)" }}
+                    style={{
+                      fontFamily: "'Georgia', serif",
+                      textShadow: "0 4px 30px rgba(180,34,37,0.5)",
+                    }}
                   >
                     FLASH
                   </h1>
@@ -261,7 +282,7 @@ const FlashSalesPage = () => {
                 Ends in
               </p>
               <div className="flex items-center gap-3">
-                <TimeCell value={hours}   label="Hours" />
+                <TimeCell value={hours} label="Hours" />
                 <Sep />
                 <TimeCell value={minutes} label="Mins" />
                 <Sep />
@@ -286,13 +307,14 @@ const FlashSalesPage = () => {
 
       {/* ══════════════════ FLASH PRODUCTS ══════════════════ */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-6">
-
         {/* Section header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
               className="w-1 h-7 rounded-full"
-              style={{ background: "linear-gradient(180deg, #FF8C00, #B42225)" }}
+              style={{
+                background: "linear-gradient(180deg, #FF8C00, #B42225)",
+              }}
             />
             <h2 className="text-xl md:text-2xl font-black text-gray-900">
               Today's Deals
@@ -301,7 +323,6 @@ const FlashSalesPage = () => {
               ({flashProducts.length} items)
             </span>
           </div>
-
         </div>
 
         {/* Grid */}
@@ -331,7 +352,8 @@ const FlashSalesPage = () => {
         <div
           className="relative overflow-hidden rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-4"
           style={{
-            background: "linear-gradient(120deg, #0f0f0f 0%, #B42225 60%, #FF8C00 100%)",
+            background:
+              "linear-gradient(120deg, #0f0f0f 0%, #B42225 60%, #FF8C00 100%)",
           }}
         >
           <div
@@ -343,7 +365,9 @@ const FlashSalesPage = () => {
             }}
           />
           <div className="relative z-10">
-            <p className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-1">Limited time</p>
+            <p className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-1">
+              Limited time
+            </p>
             <h3 className="text-white text-xl md:text-2xl font-black">
               Become a Seller on Jovo
             </h3>
@@ -351,7 +375,8 @@ const FlashSalesPage = () => {
               Reach millions of buyers. Zero listing fees this month.
             </p>
           </div>
-          <Link href="/become-seller"
+          <Link
+            href="/become-seller"
             className="relative z-10 shrink-0 bg-white text-gray-900 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-[#FF8C00] hover:text-white transition-colors duration-200 shadow-lg"
           >
             Start Selling →

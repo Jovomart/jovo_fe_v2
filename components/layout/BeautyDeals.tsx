@@ -1,9 +1,10 @@
-'use client'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiHeart } from "react-icons/fi";
+import Image from "next/image";
 
 const BeautyAndCosmeticsDeals = () => {
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,8 @@ const BeautyAndCosmeticsDeals = () => {
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #1a0010 0%, #4a0728 40%, #831843 70%, #db2777 100%)",
+          background:
+            "linear-gradient(135deg, #1a0010 0%, #4a0728 40%, #831843 70%, #db2777 100%)",
         }}
       >
         {/* Background dot texture */}
@@ -65,7 +67,8 @@ const BeautyAndCosmeticsDeals = () => {
           </div>
         </div>
 
-        <Link href="/beauty-deals"
+        <Link
+          href="/beauty-deals"
           className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
@@ -84,16 +87,19 @@ const BeautyAndCosmeticsDeals = () => {
               );
 
               return (
-                <Link href={`/product/${product.id}`}
+                <Link
+                  href={`/product/${product.id}`}
                   key={product.id}
                   className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden"
                 >
                   {/* IMAGE */}
                   <div className="relative h-36 md:h-48 overflow-hidden">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      width={300}
+                      height={192}
                     />
 
                     <div className="absolute top-2 left-2 bg-pink-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow">
