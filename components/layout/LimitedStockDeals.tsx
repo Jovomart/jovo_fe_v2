@@ -1,5 +1,6 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiClock } from "react-icons/fi";
@@ -7,8 +8,8 @@ import { FaExclamationTriangle } from "react-icons/fa";
 
 const LimitedStockDeals = () => {
   const [loading, setLoading] = useState(true);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
 
   const limited = products.filter((p) => p.category === "limited").slice(0, 4);
 
@@ -88,9 +89,11 @@ const LimitedStockDeals = () => {
                   className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden"
                 >
                   <div className="relative h-36 md:h-48 overflow-hidden">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={200}
+                      height={192}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                     <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow">

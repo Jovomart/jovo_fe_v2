@@ -1,5 +1,6 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiStar, FiTrendingUp } from "react-icons/fi";
@@ -7,8 +8,8 @@ import { FiArrowRight, FiStar, FiTrendingUp } from "react-icons/fi";
 const SponsoredProducts = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
 
   // Take max 4 sponsored products for homepage
   const sponsored = products
@@ -120,9 +121,11 @@ const SponsoredProducts = () => {
                   className="min-w-44 md:min-w-60 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
                 >
                   <div className="relative h-40 md:h-52 overflow-hidden rounded-t-xl">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={240}
+                      height={208}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
 

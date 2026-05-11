@@ -30,20 +30,21 @@ const DrinkBadge = () => (
 );
 
 // ─── Stars ────────────────────────────────────────────────────────────────
-const Stars = ({ count = 4 }) => (
-  <div className="flex items-center gap-0.5 mt-2">
-    {[1, 2, 3, 4, 5].map((s) => (
-      <FaStar
-        key={s}
-        size={10}
-        style={{ color: s <= count ? "#f97316" : "#e5e7eb" }}
-      />
-    ))}
-    <span className="text-[10px] text-gray-400 ml-1">
-      ({Math.floor(Math.random() * 600) + 100})
-    </span>
-  </div>
-);
+const Stars = ({ count = 4 }) => {
+  const randomCount = useMemo(() => Math.floor(Math.random() * 600) + 100, []);
+  return (
+    <div className="flex items-center gap-0.5 mt-2">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FaStar
+          key={s}
+          size={10}
+          style={{ color: s <= count ? "#f97316" : "#e5e7eb" }}
+        />
+      ))}
+      <span className="text-[10px] text-gray-400 ml-1">({randomCount})</span>
+    </div>
+  );
+};
 
 // ─── Product Card ─────────────────────────────────────────────────────────
 const ProductCard = ({ product, wishlisted, onWishlist }) => {

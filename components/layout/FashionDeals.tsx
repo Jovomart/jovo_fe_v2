@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiUser } from "react-icons/fi";
@@ -121,9 +122,11 @@ const FashionDeals = () => {
                   className="min-w-[160px] sm:min-w-[200px] md:min-w-[220px] lg:min-w-[260px] snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer flex-shrink-0"
                 >
                   <div className="relative h-40 sm:h-48 md:h-52 lg:h-56 overflow-hidden rounded-t-xl">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={260}
+                      height={224}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                     <div className="absolute top-2 left-2 bg-purple-700 text-white text-xs px-2 py-1 rounded-full font-bold shadow">

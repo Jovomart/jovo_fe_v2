@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 // src/pages/AppliancesDealsPage.jsx
 import { useState, useMemo } from "react";
 import { products } from "@/data/products";
@@ -79,9 +80,11 @@ const ProductCard = ({ product, wishlisted, onWishlist, rating }) => {
         style={{ aspectRatio: "1/1" }}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
+        <Image
           src={product.image}
           alt={product.name}
+          width={300}
+          height={300}
           className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-108"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

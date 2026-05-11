@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 // src/pages/BeautyCosmeticsDealPage.jsx
 import { useState, useMemo } from "react";
 import { products } from "@/data/products";
@@ -30,20 +31,21 @@ const BeautyBadge = () => (
 );
 
 // ─── Star Rating ──────────────────────────────────────────────────────────
-const Stars = ({ count = 4 }) => (
-  <div className="flex items-center gap-0.5 mt-2">
-    {[1, 2, 3, 4, 5].map((s) => (
-      <FaStar
-        key={s}
-        size={10}
-        style={{ color: s <= count ? "#ec4899" : "#e5e7eb" }}
-      />
-    ))}
-    <span className="text-[10px] text-gray-400 ml-1">
-      ({Math.floor(Math.random() * 900) + 100})
-    </span>
-  </div>
-);
+const Stars = ({ count = 4 }) => {
+  const randomCount = useMemo(() => Math.floor(Math.random() * 900) + 100, []);
+  return (
+    <div className="flex items-center gap-0.5 mt-2">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FaStar
+          key={s}
+          size={10}
+          style={{ color: s <= count ? "#ec4899" : "#e5e7eb" }}
+        />
+      ))}
+      <span className="text-[10px] text-gray-400 ml-1">({randomCount})</span>
+    </div>
+  );
+};
 
 // ─── Product Card ─────────────────────────────────────────────────────────
 const ProductCard = ({ product, wishlisted, onWishlist }) => {
@@ -72,9 +74,11 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         style={{ aspectRatio: "1/1" }}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
+        <Image
           src={product.image}
           alt={product.name}
+          width={300}
+          height={300}
           className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-108"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

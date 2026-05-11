@@ -1,10 +1,16 @@
-'use client'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 // src/pages/FashionDealsPage.jsx
 import { useState, useMemo } from "react";
 import { products } from "@/data/products";
-import { FiHeart, FiShoppingBag, FiArrowLeft, FiZap, FiTag } from "react-icons/fi";
+import {
+  FiHeart,
+  FiShoppingBag,
+  FiArrowLeft,
+  FiZap,
+  FiTag,
+} from "react-icons/fi";
 import { FaHeart, FaStar, FaFire } from "react-icons/fa";
 import { MdOutlineStyle, MdOutlineLocalOffer } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
@@ -23,21 +29,26 @@ const FashionBadge = () => (
 );
 
 // ─── Stars ────────────────────────────────────────────────────────────────
-const Stars = ({ count = 4 }) => (
-  <div className="flex items-center gap-0.5 mt-2">
-    {[1,2,3,4,5].map((s) => (
-      <FaStar key={s} size={10} style={{ color: s <= count ? "#7e22ce" : "#e5e7eb" }} />
-    ))}
-    <span className="text-[10px] text-gray-400 ml-1">
-      ({Math.floor(Math.random() * 900) + 100})
-    </span>
-  </div>
-);
+const Stars = ({ count = 4 }) => {
+  const randomCount = useMemo(() => Math.floor(Math.random() * 900) + 100, []);
+  return (
+    <div className="flex items-center gap-0.5 mt-2">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FaStar
+          key={s}
+          size={10}
+          style={{ color: s <= count ? "#7e22ce" : "#e5e7eb" }}
+        />
+      ))}
+      <span className="text-[10px] text-gray-400 ml-1">({randomCount})</span>
+    </div>
+  );
+};
 
 // ─── Product Card ─────────────────────────────────────────────────────────
 const ProductCard = ({ product, wishlisted, onWishlist }) => {
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;
@@ -50,7 +61,9 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
       {/* Purple top accent */}
       <div
         className="absolute top-0 left-0 right-0 h-0.5 z-10"
-        style={{ background: "linear-gradient(90deg,transparent,#7e22ce,transparent)" }}
+        style={{
+          background: "linear-gradient(90deg,transparent,#7e22ce,transparent)",
+        }}
       />
 
       {/* Image */}
@@ -71,7 +84,10 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         {discount && (
           <div
             className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
-            style={{ background: "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)" }}
+            style={{
+              background:
+                "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)",
+            }}
           >
             <FiZap size={9} /> -{discount}%
           </div>
@@ -79,19 +95,27 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
         {/* Wishlist */}
         <button
-          onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlist(product.id);
+          }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
         >
-          {wishlisted
-            ? <FaHeart className="text-red-500" size={13} />
-            : <FiHeart className="text-gray-400" size={13} />}
+          {wishlisted ? (
+            <FaHeart className="text-red-500" size={13} />
+          ) : (
+            <FiHeart className="text-gray-400" size={13} />
+          )}
         </button>
 
         {/* Slide-up CTA */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lg text-white"
-            style={{ background: "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)" }}
+            style={{
+              background:
+                "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)",
+            }}
           >
             <FiShoppingBag size={13} /> Add to Cart
           </button>
@@ -121,8 +145,8 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
 // ─── Suggested Card ───────────────────────────────────────────────────────
 const SuggestedCard = ({ product }) => {
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
   return (
     <div
       onClick={() => navigate(`/product/${product.id}`)}
@@ -138,7 +162,9 @@ const SuggestedCard = ({ product }) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       <div className="p-3">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
+        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">
+          {product.name}
+        </h3>
         <p className="text-purple-700 font-black mt-1.5 text-sm md:text-base">
           ₦{product.price.toLocaleString()}
         </p>
@@ -151,20 +177,28 @@ const SuggestedCard = ({ product }) => {
 const FashionDealsPage = () => {
   const [wishlist, setWishlist] = useState([]);
 
-  const fashionProducts = useMemo(() => products.filter((p) => p.category === "fashion"), []);
-  const suggestedProducts = useMemo(() => products.filter((p) => p.category !== "fashion").slice(0, 8), []);
+  const fashionProducts = useMemo(
+    () => products.filter((p) => p.category === "fashion"),
+    [],
+  );
+  const suggestedProducts = useMemo(
+    () => products.filter((p) => p.category !== "fashion").slice(0, 8),
+    [],
+  );
 
   const toggleWishlist = (id) =>
-    setWishlist((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
 
   return (
     <div className="min-h-screen" style={{ background: "#F5F6F7" }}>
-
       {/* ══════════ HERO ══════════ */}
       <div
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)",
+          background:
+            "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)",
           minHeight: "320px",
         }}
       >
@@ -172,26 +206,45 @@ const FashionDealsPage = () => {
         <div
           className="absolute inset-0 opacity-[0.07] pointer-events-none"
           style={{
-            backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
+            backgroundImage:
+              "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
             backgroundSize: "16px 16px",
           }}
         />
 
         {/* Glow orbs */}
-        <div className="absolute -top-20 -left-10 w-96 h-96 rounded-full opacity-20 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#d946ef,transparent 70%)" }} />
-        <div className="absolute -bottom-10 right-10 w-80 h-80 rounded-full opacity-15 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#a855f7,transparent 70%)" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 rounded-full opacity-[0.05] pointer-events-none"
-          style={{ background: "radial-gradient(circle,#d946ef,transparent 60%)" }} />
+        <div
+          className="absolute -top-20 -left-10 w-96 h-96 rounded-full opacity-20 pointer-events-none"
+          style={{
+            background: "radial-gradient(circle,#d946ef,transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute -bottom-10 right-10 w-80 h-80 rounded-full opacity-15 pointer-events-none"
+          style={{
+            background: "radial-gradient(circle,#a855f7,transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 rounded-full opacity-[0.05] pointer-events-none"
+          style={{
+            background: "radial-gradient(circle,#d946ef,transparent 60%)",
+          }}
+        />
 
         {/* Diagonal texture */}
-        <div className="absolute inset-0 opacity-[0.035] pointer-events-none" style={{
-          backgroundImage: `repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(255,255,255,1) 18px, rgba(255,255,255,1) 19px)`,
-        }} />
+        <div
+          className="absolute inset-0 opacity-[0.035] pointer-events-none"
+          style={{
+            backgroundImage: `repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(255,255,255,1) 18px, rgba(255,255,255,1) 19px)`,
+          }}
+        />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-16">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white text-sm transition-colors mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-white/40 hover:text-white text-sm transition-colors mb-8"
+          >
             <FiArrowLeft size={14} /> Back to Home
           </Link>
 
@@ -200,7 +253,9 @@ const FashionDealsPage = () => {
             <div>
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-3 py-1.5 mb-4">
                 <MdOutlineLocalOffer size={12} className="text-purple-200" />
-                <span className="text-white/70 text-xs font-semibold tracking-widest uppercase">Season's Best</span>
+                <span className="text-white/70 text-xs font-semibold tracking-widest uppercase">
+                  Season's Best
+                </span>
               </div>
 
               <div className="flex items-center gap-4">
@@ -212,12 +267,18 @@ const FashionDealsPage = () => {
                     backdropFilter: "blur(8px)",
                   }}
                 >
-                  <MdOutlineStyle className="text-purple-200 text-2xl md:text-3xl" size={30} />
+                  <MdOutlineStyle
+                    className="text-purple-200 text-2xl md:text-3xl"
+                    size={30}
+                  />
                 </div>
                 <div>
                   <h1
                     className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(126,34,206,0.4)" }}
+                    style={{
+                      fontFamily: "'Georgia', serif",
+                      textShadow: "0 4px 30px rgba(126,34,206,0.4)",
+                    }}
                   >
                     FASHION
                   </h1>
@@ -225,7 +286,8 @@ const FashionDealsPage = () => {
                     className="text-4xl md:text-6xl font-black leading-none tracking-tight"
                     style={{
                       fontFamily: "'Georgia', serif",
-                      background: "linear-gradient(90deg,#d946ef,#f0abfc,#d946ef)",
+                      background:
+                        "linear-gradient(90deg,#d946ef,#f0abfc,#d946ef)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -236,16 +298,29 @@ const FashionDealsPage = () => {
               </div>
 
               <p className="mt-3 text-white/45 text-sm md:text-base max-w-sm">
-                Hottest styles, deepest discounts. Dress well for less — every season, every style.
+                Hottest styles, deepest discounts. Dress well for less — every
+                season, every style.
               </p>
             </div>
 
             {/* Stats */}
             <div className="flex flex-wrap gap-3">
               {[
-                { icon: <FaFire size={13} />,             label: "Trending",  val: "This Season" },
-                { icon: <FiTag size={14} />,              label: "Discount",  val: "Up to 70%" },
-                { icon: <MdOutlineStyle size={15} />,     label: "Styles",    val: "500+ Picks" },
+                {
+                  icon: <FaFire size={13} />,
+                  label: "Trending",
+                  val: "This Season",
+                },
+                {
+                  icon: <FiTag size={14} />,
+                  label: "Discount",
+                  val: "Up to 70%",
+                },
+                {
+                  icon: <MdOutlineStyle size={15} />,
+                  label: "Styles",
+                  val: "500+ Picks",
+                },
               ].map(({ icon, label, val }) => (
                 <div
                   key={label}
@@ -258,7 +333,9 @@ const FashionDealsPage = () => {
                 >
                   <span className="text-purple-200">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-black text-sm leading-none">
+                      {val}
+                    </p>
                     <p className="text-white/40 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -268,18 +345,31 @@ const FashionDealsPage = () => {
         </div>
 
         {/* Wave */}
-        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
-          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#F5F6F7" />
+        <svg
+          className="absolute bottom-0 left-0 w-full"
+          viewBox="0 0 1440 40"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z"
+            fill="#F5F6F7"
+          />
         </svg>
       </div>
 
       {/* ══════════ PRODUCTS ══════════ */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-7 rounded-full"
-            style={{ background: "linear-gradient(180deg,#a855f7,#4B004F)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">Fashion Deals</h2>
-          <span className="hidden md:inline text-sm text-gray-400 font-medium">({fashionProducts.length} items)</span>
+          <div
+            className="w-1 h-7 rounded-full"
+            style={{ background: "linear-gradient(180deg,#a855f7,#4B004F)" }}
+          />
+          <h2 className="text-xl md:text-2xl font-black text-gray-900">
+            Fashion Deals
+          </h2>
+          <span className="hidden md:inline text-sm text-gray-400 font-medium">
+            ({fashionProducts.length} items)
+          </span>
         </div>
 
         {fashionProducts.length > 0 ? (
@@ -305,22 +395,44 @@ const FashionDealsPage = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <div
           className="relative overflow-hidden rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ background: "linear-gradient(120deg,#3b0764 0%,#4B004F 55%,#7e22ce 100%)" }}
+          style={{
+            background:
+              "linear-gradient(120deg,#3b0764 0%,#4B004F 55%,#7e22ce 100%)",
+          }}
         >
-          <div className="absolute inset-0 opacity-[0.05]" style={{
-            backgroundImage: `radial-gradient(circle at 30% 50%, rgba(255,255,255,0.8) 1px, transparent 1px)`,
-            backgroundSize: "24px 24px",
-          }} />
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: "linear-gradient(90deg,transparent,#d946ef,transparent)" }} />
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage: `radial-gradient(circle at 30% 50%, rgba(255,255,255,0.8) 1px, transparent 1px)`,
+              backgroundSize: "24px 24px",
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-px"
+            style={{
+              background:
+                "linear-gradient(90deg,transparent,#d946ef,transparent)",
+            }}
+          />
           <div className="relative z-10">
-            <p className="text-purple-200/70 text-xs font-semibold tracking-widest uppercase mb-1">Grow your brand</p>
-            <h3 className="text-white text-xl md:text-2xl font-black">Sell Fashion on Jovo</h3>
-            <p className="text-white/45 text-sm mt-1">List your clothing brand and reach style-conscious shoppers nationwide.</p>
+            <p className="text-purple-200/70 text-xs font-semibold tracking-widest uppercase mb-1">
+              Grow your brand
+            </p>
+            <h3 className="text-white text-xl md:text-2xl font-black">
+              Sell Fashion on Jovo
+            </h3>
+            <p className="text-white/45 text-sm mt-1">
+              List your clothing brand and reach style-conscious shoppers
+              nationwide.
+            </p>
           </div>
-          <Link href="/become-seller"
+          <Link
+            href="/become-seller"
             className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm shadow-lg hover:scale-105 transition-all duration-200 text-white"
-            style={{ background: "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)" }}
+            style={{
+              background:
+                "linear-gradient(135deg,#3b0764 0%,#4B004F 50%,#7e22ce 100%)",
+            }}
           >
             Start Selling →
           </Link>
@@ -330,9 +442,13 @@ const FashionDealsPage = () => {
       {/* ══════════ SUGGESTED ══════════ */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-7 rounded-full"
-            style={{ background: "linear-gradient(180deg,#a855f7,#4B004F)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">You May Also Like</h2>
+          <div
+            className="w-1 h-7 rounded-full"
+            style={{ background: "linear-gradient(180deg,#a855f7,#4B004F)" }}
+          />
+          <h2 className="text-xl md:text-2xl font-black text-gray-900">
+            You May Also Like
+          </h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {suggestedProducts.map((product) => (

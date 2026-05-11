@@ -1,6 +1,6 @@
-'use client'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+"use client";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, Suspense } from "react";
 import apiService from "@/services/apiService";
 import Footer from "@/components/layout/Footer";
@@ -58,12 +58,18 @@ interface ApiResponse {
   reason?: string;
 }
 
-type StatusType = 'pending' | 'approved' | 'rejected' | 'not_applied' | 'success' | null;
+type StatusType =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "not_applied"
+  | "success"
+  | null;
 
 const ApplicationStatusInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const justApplied = searchParams.get('justApplied') === 'true';
+  const justApplied = searchParams.get("justApplied") === "true";
 
   const [status, setStatus] = useState<StatusType>(null);
   const [data, setData] = useState<ApplicationData | null>(null);
@@ -74,7 +80,10 @@ const ApplicationStatusInner = () => {
   const [countdown, setCountdown] = useState(4);
 
   /* ── Extract rejection reason from any nesting level ── */
-  const extractRejectionReason = (res: ApiResponse, d: ApplicationData): string => {
+  const extractRejectionReason = (
+    res: ApiResponse,
+    d: ApplicationData,
+  ): string => {
     return (
       d?.rejection_reason ||
       d?.reason ||
@@ -195,7 +204,7 @@ const ApplicationStatusInner = () => {
   );
 
   useEffect(() => {
-    fetchStatus();
+    fetchStatus(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [fetchStatus]);
 
   // Countdown + auto-redirect when approved
@@ -227,8 +236,8 @@ const ApplicationStatusInner = () => {
       title: "Application Being Reviewed",
       desc: "Our team is reviewing your seller application. This usually takes 24–48 hours. You'll receive an email once a decision is made.",
       steps: [
-        { done: true,  label: "Application Submitted" },
-        { done: false, label: "Under Review by Team",  active: true },
+        { done: true, label: "Application Submitted" },
+        { done: false, label: "Under Review by Team", active: true },
         { done: false, label: "Decision Made" },
         { done: false, label: "Account Activated" },
       ],
@@ -259,8 +268,8 @@ const ApplicationStatusInner = () => {
       title: "Application Not Approved",
       desc: "Unfortunately your application was not approved this time. Review the reason below and reapply once you've addressed the issues.",
       steps: [
-        { done: true,  label: "Application Submitted" },
-        { done: true,  label: "Reviewed by Team" },
+        { done: true, label: "Application Submitted" },
+        { done: true, label: "Reviewed by Team" },
         { done: false, label: "Application Rejected", error: true },
         { done: false, label: "Seller Account Active" },
       ],
@@ -302,7 +311,8 @@ const ApplicationStatusInner = () => {
           style={{ background: c.gradient }}
         >
           <div className="max-w-2xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
-            <Link href="/"
+            <Link
+              href="/"
               className="flex items-center gap-2 text-white/60 hover:text-white text-xs font-semibold transition-colors"
             >
               <FiHome size={14} /> Home
@@ -482,45 +492,69 @@ const ApplicationStatusInner = () => {
                 <div className="flex flex-wrap justify-center gap-3 mt-7">
                   {status === "approved" && (
                     <>
-                      <button onClick={() => router.push("/seller/dashboard")}
+                      <button
+                        onClick={() => router.push("/seller/dashboard")}
                         className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
-                        style={{ background: "linear-gradient(135deg,#059669,#10B981)", boxShadow: "0 8px 24px rgba(16,185,129,0.3)" }}>
-                        <FaStore size={14} /> Go to Dashboard <FiArrowRight size={13} />
+                        style={{
+                          background: "linear-gradient(135deg,#059669,#10B981)",
+                          boxShadow: "0 8px 24px rgba(16,185,129,0.3)",
+                        }}
+                      >
+                        <FaStore size={14} /> Go to Dashboard{" "}
+                        <FiArrowRight size={13} />
                       </button>
                       {!dismissRedirect && (
-                        <button onClick={() => setDismissRedirect(true)}
-                          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all">
+                        <button
+                          onClick={() => setDismissRedirect(true)}
+                          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
+                        >
                           Stay Here
                         </button>
                       )}
                     </>
                   )}
-                  
+
                   {status === "rejected" && (
-                    <button onClick={() => router.push("/seller-application")}
+                    <button
+                      onClick={() => router.push("/seller-application")}
                       className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
-                      style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 8px 24px rgba(180,34,37,0.3)" }}>
-                      <FaRocket size={14} /> Reapply Now <FiArrowRight size={13} />
+                      style={{
+                        background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                        boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
+                      }}
+                    >
+                      <FaRocket size={14} /> Reapply Now{" "}
+                      <FiArrowRight size={13} />
                     </button>
                   )}
-                  
+
                   {(status === "not_applied" || status === "success") && (
                     <>
-                      <button onClick={() => router.push("/seller-application")}
+                      <button
+                        onClick={() => router.push("/seller-application")}
                         className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
-                        style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 8px 24px rgba(180,34,37,0.3)" }}>
-                        <FaRocket size={14} /> Start Application <FiArrowRight size={13} />
+                        style={{
+                          background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                          boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
+                        }}
+                      >
+                        <FaRocket size={14} /> Start Application{" "}
+                        <FiArrowRight size={13} />
                       </button>
-                      <Link href="/"
-                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all">
+                      <Link
+                        href="/"
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
+                      >
                         Back to Home
                       </Link>
                     </>
                   )}
-                  
+
                   {status === "pending" && (
-                    <Link href="/"
-                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all">
+                    <Link
+                      href="/"
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
+                    >
                       Back to Home
                     </Link>
                   )}
@@ -617,27 +651,28 @@ const ApplicationStatusInner = () => {
                         </p>
                       </div>
                     )}
-                    {data.business_category && data.business_category.length > 0 && (
-                      <div className="sm:col-span-2">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">
-                          Categories
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {data.business_category.map((cat) => (
-                            <span
-                              key={cat}
-                              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white"
-                              style={{
-                                background:
-                                  "linear-gradient(135deg,#B42225,#FF6B00)",
-                              }}
-                            >
-                              {cat}
-                            </span>
-                          ))}
+                    {data.business_category &&
+                      data.business_category.length > 0 && (
+                        <div className="sm:col-span-2">
+                          <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">
+                            Categories
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {data.business_category.map((cat) => (
+                              <span
+                                key={cat}
+                                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg,#B42225,#FF6B00)",
+                                }}
+                              >
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               )}

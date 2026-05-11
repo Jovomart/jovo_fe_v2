@@ -119,7 +119,7 @@ export function CartProvider({ children }: CartProviderProps) {
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
-        setItems(parsedCart);
+        setItems(parsedCart); // eslint-disable-line react-hooks/set-state-in-effect
       } catch (error) {
         console.error("Failed to parse cart from localStorage:", error);
       }

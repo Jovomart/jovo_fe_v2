@@ -1,5 +1,6 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiHome, FiTool } from "react-icons/fi";
@@ -7,8 +8,8 @@ import { FiArrowRight, FiHome, FiTool } from "react-icons/fi";
 const AppliancesDeals = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
 
   // Limit to ONLY 4 appliances for homepage
   const appliances = products
@@ -120,9 +121,11 @@ const AppliancesDeals = () => {
                   className="min-w-44 md:min-w-64 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer"
                 >
                   <div className="relative h-44 md:h-56 overflow-hidden rounded-t-xl">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={256}
+                      height={224}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                     <div className="absolute top-2 left-2 bg-[#FF8C00] text-white text-xs px-2 py-1 rounded-full font-bold shadow">

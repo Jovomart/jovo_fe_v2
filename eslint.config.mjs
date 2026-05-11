@@ -1,6 +1,6 @@
 import nextConfig from "eslint-config-next";
 
-export default [
+const eslintConfig = [
   ...nextConfig,
   {
     files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
@@ -14,3 +14,5 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;

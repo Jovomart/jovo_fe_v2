@@ -1,5 +1,6 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products } from "@/data/products";
 import { FiArrowRight, FiCpu } from "react-icons/fi";
@@ -7,8 +8,8 @@ import { FiArrowRight, FiCpu } from "react-icons/fi";
 const ElectronicDeals = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
+  const router = useRouter();
+  const navigate = (p: string) => router.push(p);
 
   // Limit to 4 electronics products
   const electronics = products
@@ -49,7 +50,8 @@ const ElectronicDeals = () => {
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #020d0d 0%, #042f2e 35%, #0d4f4a 65%, #0d9488 100%)",
+          background:
+            "linear-gradient(135deg, #020d0d 0%, #042f2e 35%, #0d4f4a 65%, #0d9488 100%)",
         }}
       >
         {/* Background dot texture */}
@@ -63,19 +65,25 @@ const ElectronicDeals = () => {
         />
 
         {/* Circuit-trace lines — PCB feel */}
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{
-          backgroundImage: `
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: `
             linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)
           `,
-          backgroundSize: "60px 60px",
-        }} />
+            backgroundSize: "60px 60px",
+          }}
+        />
 
         {/* Node dots at intersections */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
-          backgroundImage: `radial-gradient(circle, rgba(45,212,191,0.8) 1.5px, transparent 1.5px)`,
-          backgroundSize: "60px 60px",
-        }} />
+        <div
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, rgba(45,212,191,0.8) 1.5px, transparent 1.5px)`,
+            backgroundSize: "60px 60px",
+          }}
+        />
 
         {/* Glow orb */}
         <div
@@ -134,9 +142,11 @@ const ElectronicDeals = () => {
                   className="min-w-44 md:min-w-64 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer"
                 >
                   <div className="relative h-44 md:h-56 overflow-hidden rounded-t-xl">
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={256}
+                      height={224}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                     <div className="absolute top-2 left-2 bg-[#0d9488] text-white text-xs px-2 py-1 rounded-full font-bold shadow">

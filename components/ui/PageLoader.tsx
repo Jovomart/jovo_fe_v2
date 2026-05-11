@@ -9,7 +9,7 @@ export default function PageLoader() {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    setShow(true);
+    setShow(true); // eslint-disable-line react-hooks/set-state-in-effect
     setFading(false);
     const fadeTimer = setTimeout(() => setFading(true), 900);
     const hideTimer = setTimeout(() => {

@@ -1,5 +1,11 @@
 "use client";
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 interface Product {
   id: number;
@@ -23,7 +29,9 @@ interface WishlistContextType {
   clearWishlist: () => void;
 }
 
-const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const WishlistContext = createContext<WishlistContextType | undefined>(
+  undefined,
+);
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
   const [wishlist, setWishlist] = useState<Product[]>([]);
@@ -32,7 +40,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("jovo_wishlist");
-      if (stored) setWishlist(JSON.parse(stored));
+      if (stored) setWishlist(JSON.parse(stored)); // eslint-disable-line react-hooks/set-state-in-effect
     } catch {}
   }, []);
 
@@ -43,7 +51,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
 
   const addToWishlist = (product: Product) => {
     setWishlist((prev) =>
-      prev.find((p) => p.id === product.id) ? prev : [...prev, product]
+      prev.find((p) => p.id === product.id) ? prev : [...prev, product],
     );
   };
 
@@ -57,7 +65,13 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <WishlistContext.Provider
-      value={{ wishlist, addToWishlist, removeFromWishlist, isWishlisted, clearWishlist }}
+      value={{
+        wishlist,
+        addToWishlist,
+        removeFromWishlist,
+        isWishlisted,
+        clearWishlist,
+      }}
     >
       {children}
     </WishlistContext.Provider>

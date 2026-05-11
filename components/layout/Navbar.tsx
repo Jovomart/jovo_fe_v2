@@ -314,7 +314,7 @@ function CartButton({ onClick }: { onClick: () => void }) {
 
   useEffect(() => {
     if (recentlyAdded !== null) {
-      setPulse(true);
+      setPulse(true); // eslint-disable-line react-hooks/set-state-in-effect
       const t = setTimeout(() => setPulse(false), 650);
       return () => clearTimeout(t);
     }
@@ -408,7 +408,7 @@ export default function Navbar() {
   const isSellerVerified = mounted && !!isSeller;
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
 
   useEffect(() => {
@@ -622,9 +622,11 @@ export default function Navbar() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#B42225]/10 flex items-center justify-center shrink-0">
                           {user.photoURL ? (
-                            <img
+                            <Image
                               src={user.photoURL}
                               alt=""
+                              width={40}
+                              height={40}
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
@@ -658,7 +660,9 @@ export default function Navbar() {
                             size={15}
                             className="text-gray-400 group-hover:text-blue-600"
                           />
-                          <span className="flex-1 text-left">Seller Status</span>
+                          <span className="flex-1 text-left">
+                            Seller Status
+                          </span>
                           <FiChevronRight
                             size={13}
                             className="ml-auto text-gray-300 group-hover:text-blue-600"
@@ -674,7 +678,9 @@ export default function Navbar() {
                             size={15}
                             className="text-gray-400 group-hover:text-green-600"
                           />
-                          <span className="flex-1 text-left">Switch to Seller</span>
+                          <span className="flex-1 text-left">
+                            Switch to Seller
+                          </span>
                           <FiChevronRight
                             size={13}
                             className="ml-auto text-gray-300 group-hover:text-green-600"
@@ -828,9 +834,11 @@ export default function Navbar() {
                   // Post-mount, logged-in: show photo or initials
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 border-2 border-white/30 overflow-hidden">
                     {user.photoURL ? (
-                      <img
+                      <Image
                         src={user.photoURL}
                         alt=""
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
@@ -849,8 +857,12 @@ export default function Navbar() {
                 {!mounted ? (
                   // Neutral text during SSR
                   <>
-                    <p className="text-white font-semibold text-sm">Hello, Guest</p>
-                    <p className="text-white/60 text-xs">Sign in for the best experience</p>
+                    <p className="text-white font-semibold text-sm">
+                      Hello, Guest
+                    </p>
+                    <p className="text-white/60 text-xs">
+                      Sign in for the best experience
+                    </p>
                   </>
                 ) : isLoggedIn ? (
                   <>
@@ -870,8 +882,12 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <p className="text-white font-semibold text-sm">Hello, Guest</p>
-                    <p className="text-white/60 text-xs">Sign in for the best experience</p>
+                    <p className="text-white font-semibold text-sm">
+                      Hello, Guest
+                    </p>
+                    <p className="text-white/60 text-xs">
+                      Sign in for the best experience
+                    </p>
                   </>
                 )}
               </div>
@@ -917,9 +933,21 @@ export default function Navbar() {
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { icon: <FiBox size={18} />, label: "Orders", to: "/orders" },
-                    { icon: <FiHeart size={18} />, label: "Wishlist", to: "/wishlist" },
-                    { icon: <FiUser size={18} />, label: "Profile", to: "/profile" },
+                    {
+                      icon: <FiBox size={18} />,
+                      label: "Orders",
+                      to: "/orders",
+                    },
+                    {
+                      icon: <FiHeart size={18} />,
+                      label: "Wishlist",
+                      to: "/wishlist",
+                    },
+                    {
+                      icon: <FiUser size={18} />,
+                      label: "Profile",
+                      to: "/profile",
+                    },
                   ].map(({ icon, label, to }) => (
                     <button
                       key={label}
@@ -1046,7 +1074,12 @@ export default function Navbar() {
               {[
                 { label: "Flash Sales", to: "/flash-sales" },
                 ...(isSellerVerified
-                  ? [{ label: "Switch to Seller", action: handleEnterSellerMode }]
+                  ? [
+                      {
+                        label: "Switch to Seller",
+                        action: handleEnterSellerMode,
+                      },
+                    ]
                   : [{ label: "Become a Seller", to: "/become-seller" }]),
                 { label: "Help Center", to: "/help" },
               ].map(({ label, to, action }: any) => (

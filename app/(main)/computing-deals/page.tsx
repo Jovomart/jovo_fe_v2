@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 // src/pages/ComputingDealsPage.jsx
 import { useState, useMemo } from "react";
 import { products } from "@/data/products";
@@ -20,7 +21,6 @@ import {
   MdOutlineDeveloperBoard,
 } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
-import Image from "next/image";
 
 // ─── Computing Badge ──────────────────────────────────────────────────────
 const ComputingBadge = () => (
@@ -36,20 +36,21 @@ const ComputingBadge = () => (
 );
 
 // ─── Stars ────────────────────────────────────────────────────────────────
-const Stars = ({ count = 4 }) => (
-  <div className="flex items-center gap-0.5 mt-2">
-    {[1, 2, 3, 4, 5].map((s) => (
-      <FaStar
-        key={s}
-        size={10}
-        style={{ color: s <= count ? "#94a3b8" : "#e5e7eb" }}
-      />
-    ))}
-    <span className="text-[10px] text-gray-400 ml-1">
-      ({Math.floor(Math.random() * 800) + 100})
-    </span>
-  </div>
-);
+const Stars = ({ count = 4 }) => {
+  const randomCount = useMemo(() => Math.floor(Math.random() * 800) + 100, []);
+  return (
+    <div className="flex items-center gap-0.5 mt-2">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FaStar
+          key={s}
+          size={10}
+          style={{ color: s <= count ? "#94a3b8" : "#e5e7eb" }}
+        />
+      ))}
+      <span className="text-[10px] text-gray-400 ml-1">({randomCount})</span>
+    </div>
+  );
+};
 
 // ─── Spec Tag ─────────────────────────────────────────────────────────────
 const SpecTag = ({ label }) => (
@@ -432,7 +433,7 @@ const ComputingDealsPage = () => {
           />
           <div className="relative z-10">
             <p className="text-slate-300/60 text-xs font-semibold tracking-widest uppercase mb-1 font-mono">
-              // sell.your.tech
+              {/* sell.your.tech */}
             </p>
             <h3 className="text-white text-xl md:text-2xl font-black">
               Sell Computing Products on Jovo

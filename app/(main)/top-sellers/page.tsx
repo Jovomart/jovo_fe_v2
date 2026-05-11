@@ -23,6 +23,10 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;
+  const soldCount = useMemo(
+    () => (Math.floor(Math.random() * 900) + 100).toLocaleString(),
+    [],
+  );
 
   const rankConfig = {
     1: {
@@ -126,8 +130,7 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         <div className="mt-2 flex items-center gap-1.5">
           <FiTrendingUp size={11} className="text-orange-500" />
           <span className="text-[10px] text-gray-400 font-medium">
-            {(Math.floor(Math.random() * 900) + 100).toLocaleString()} sold this
-            week
+            {soldCount} sold this week
           </span>
         </div>
       </div>
