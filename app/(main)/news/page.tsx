@@ -1327,10 +1327,11 @@ const NewsPage = () => {
                           className="relative rounded-xl overflow-hidden"
                           style={{ aspectRatio: "4/3" }}
                         >
-                          <img
+                          <Image
                             src={a.image}
                             alt={a.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                           <div

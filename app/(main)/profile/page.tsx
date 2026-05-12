@@ -160,7 +160,6 @@ const Profile = () => {
         address: user.address || "",
         phone: user.phone || "",
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSchoolId(user.school_id || user.schoolId || "");
     }
   }, [user, isEditModalOpen]);

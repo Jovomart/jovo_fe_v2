@@ -920,10 +920,11 @@ const ProductDetails = () => {
                     className="relative overflow-hidden"
                     style={{ aspectRatio: "1/1" }}
                   >
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-108"
                     />
                     {itemDiscount > 0 && (
                       <div className="absolute top-2 left-2 bg-[#B42225] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
