@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { products } from "@/data/products";
 import { useState } from "react";
@@ -392,9 +393,10 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                <img
+                <Image
                   src={product.image}
                   alt={product.name}
+                  fill
                   className="w-full h-full object-cover absolute inset-0"
                 />
               </div>

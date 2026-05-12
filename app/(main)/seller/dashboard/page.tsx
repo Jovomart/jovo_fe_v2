@@ -590,8 +590,9 @@ const SellerDashboard = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDashboard();
-  }, []); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
 
   const handleSwitchToBuyer = async () => {
     try {

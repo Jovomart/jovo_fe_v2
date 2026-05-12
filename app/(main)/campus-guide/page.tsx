@@ -1,5 +1,6 @@
-'use client'
-import { useRouter } from 'next/navigation'
+"use client";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 // src/pages/CampusGuidePage.jsx
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -827,10 +828,11 @@ const LocationCard = ({ loc, onBookmark, bookmarked, onSelect }) => {
     >
       {/* Image */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
-        <img
+        <Image
           src={loc.image}
           alt={loc.name}
-          className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-105"
+          fill
+          className="object-cover transition-transform duration-600 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
 
@@ -942,9 +944,10 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
       >
         {/* Image header */}
         <div className="relative shrink-0" style={{ height: "220px" }}>
-          <img
+          <Image
             src={loc.image}
             alt={loc.name}
+            fill
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
@@ -1374,10 +1377,12 @@ const CampusGuidePage = () => {
                             }}
                             className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
                           >
-                            <img
+                            <Image
                               src={l.image}
                               alt=""
-                              className="w-10 h-10 rounded-xl object-cover shrink-0"
+                              width={40}
+                              height={40}
+                              className="rounded-xl object-cover shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-bold text-gray-800">

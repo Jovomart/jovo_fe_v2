@@ -32,8 +32,19 @@ const TechBadge = () => (
 );
 
 // ─── Stars ────────────────────────────────────────────────────────────────
-const Stars = ({ count = 4 }) => {
-  const randomCount = useMemo(() => Math.floor(Math.random() * 800) + 100, []);
+const getStableReviewCount = (seed = "", min = 100, range = 900) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 100000;
+  }
+  return min + (hash % range);
+};
+
+const Stars = ({ count = 4, seed = "stars" }) => {
+  const randomCount = useMemo(
+    () => getStableReviewCount(seed, 100, 900),
+    [seed],
+  );
   return (
     <div className="flex items-center gap-0.5 mt-2">
       {[1, 2, 3, 4, 5].map((s) => (
@@ -132,7 +143,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
             </span>
           )}
         </div>
-        <Stars count={4} />
+        <Stars count={4} seed={product.id || product.name || "electronic"} />
       </div>
     </div>
   );

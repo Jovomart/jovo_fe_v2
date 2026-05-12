@@ -1,6 +1,7 @@
-'use client'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import {
   FiArrowLeft,
@@ -47,9 +48,7 @@ interface Errors {
 }
 
 // Only PASSPORT now
-const DOCUMENT_TYPES = [
-  { value: "PASSPORT", label: "International Passport" },
-];
+const DOCUMENT_TYPES = [{ value: "PASSPORT", label: "International Passport" }];
 
 const STEPS = [
   { id: 1, label: "Business Info", icon: <MdStorefront size={16} /> },
@@ -75,12 +74,18 @@ const FieldError = ({ msg }: { msg?: string }) =>
     </p>
   ) : null;
 
-const InputField = ({ label, required, error, hint, children }: { 
-  label: string; 
-  required?: boolean; 
-  error?: string; 
-  hint?: string; 
-  children: React.ReactNode 
+const InputField = ({
+  label,
+  required,
+  error,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
 }) => (
   <div className="flex flex-col gap-1">
     <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
@@ -100,12 +105,16 @@ const inputCls = (error?: string) =>
   }`;
 
 /* ── Status Screen ─────────────────────────────────────────── */
-const StatusScreen = ({ status, rejectionReason, onReapply }: { 
-  status: string; 
-  rejectionReason: string; 
-  onReapply: () => void 
+const StatusScreen = ({
+  status,
+  rejectionReason,
+  onReapply,
+}: {
+  status: string;
+  rejectionReason: string;
+  onReapply: () => void;
 }) => {
-  const router = useRouter()
+  const router = useRouter();
   const configs: Record<string, any> = {
     pending: {
       icon: <FiClock size={32} className="text-amber-500" />,
@@ -207,7 +216,8 @@ const StatusScreen = ({ status, rejectionReason, onReapply }: {
         >
           Check Status
         </button>
-        <Link href="/"
+        <Link
+          href="/"
           className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
         >
           Back to Home
@@ -219,7 +229,7 @@ const StatusScreen = ({ status, rejectionReason, onReapply }: {
 
 /* ── Main ──────────────────────────────────────────────────── */
 const SellerApplication = () => {
-  const router = useRouter()
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState(1);
@@ -227,7 +237,7 @@ const SellerApplication = () => {
   const [submitError, setSubmitError] = useState("");
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  
+
   // Categories from API (PRODUCT only)
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -253,18 +263,21 @@ const SellerApplication = () => {
       try {
         const response = await apiService.getPublicCategories("PRODUCT");
         console.log("Raw response:", response);
-        
+
         let categoriesArray: Category[] = [];
         if (Array.isArray(response)) {
           categoriesArray = response;
-        } else if (response?.data?.categories && Array.isArray(response.data.categories)) {
+        } else if (
+          response?.data?.categories &&
+          Array.isArray(response.data.categories)
+        ) {
           categoriesArray = response.data.categories;
         } else if (response?.categories && Array.isArray(response.categories)) {
           categoriesArray = response.categories;
         } else if (response?.data && Array.isArray(response.data)) {
           categoriesArray = response.data;
         }
-        
+
         console.log("Parsed categories:", categoriesArray);
         setCategories(categoriesArray);
       } catch (err: any) {
@@ -367,7 +380,7 @@ const SellerApplication = () => {
     setSubmitError("");
     try {
       const base64Doc = await fileToBase64(form.seller_document_file!);
-      
+
       await apiService.applyAsSeller({
         business_name: form.business_name.trim(),
         short_business_description: form.short_business_description.trim(),
@@ -376,7 +389,7 @@ const SellerApplication = () => {
         seller_document: base64Doc,
         seller_document_type: form.seller_document_type,
       });
-      
+
       router.push("/seller/application-status?justApplied=true");
     } catch (err: any) {
       setSubmitError(err.message || "Something went wrong. Please try again.");
@@ -404,7 +417,7 @@ const SellerApplication = () => {
 
   // Get category name by ID for display
   const getCategoryName = (categoryId: string) => {
-    const cat = categories.find(c => c.id === categoryId);
+    const cat = categories.find((c) => c.id === categoryId);
     return cat?.name || categoryId;
   };
 
@@ -426,7 +439,8 @@ const SellerApplication = () => {
           }}
         >
           <div className="max-w-3xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
-            <Link href="/"
+            <Link
+              href="/"
               className="flex items-center gap-2 text-white/60 hover:text-white text-xs font-semibold transition-colors"
             >
               <FiArrowLeft size={14} /> Back to Home
@@ -513,8 +527,7 @@ const SellerApplication = () => {
                                   background:
                                     "linear-gradient(135deg,#B42225,#FF6B00)",
                                   color: "#fff",
-                                  boxShadow:
-                                    "0 4px 16px rgba(180,34,37,0.35)",
+                                  boxShadow: "0 4px 16px rgba(180,34,37,0.35)",
                                 }
                               : { background: "#F3F4F6", color: "#9CA3AF" }
                         }
@@ -574,7 +587,9 @@ const SellerApplication = () => {
                         <input
                           type="text"
                           value={form.business_name}
-                          onChange={(e) => setFormField("business_name", e.target.value)}
+                          onChange={(e) =>
+                            setFormField("business_name", e.target.value)
+                          }
                           placeholder="e.g. Chidi's Gadget Hub"
                           className={inputCls(errors.business_name)}
                           maxLength={80}
@@ -590,7 +605,10 @@ const SellerApplication = () => {
                         <textarea
                           value={form.short_business_description}
                           onChange={(e) =>
-                            setFormField("short_business_description", e.target.value)
+                            setFormField(
+                              "short_business_description",
+                              e.target.value,
+                            )
                           }
                           placeholder="e.g. We sell quality phone accessories and gadgets at affordable prices to FUTO students..."
                           rows={4}
@@ -613,10 +631,23 @@ const SellerApplication = () => {
                       >
                         {loadingCategories ? (
                           <div className="flex items-center justify-center py-8">
-                            <svg className="animate-spin h-5 w-5 text-[#B42225]" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" />
+                            <svg
+                              className="animate-spin h-5 w-5 text-[#B42225]"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                            >
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeDasharray="30 70"
+                              />
                             </svg>
-                            <span className="ml-2 text-sm text-gray-400">Loading categories...</span>
+                            <span className="ml-2 text-sm text-gray-400">
+                              Loading categories...
+                            </span>
                           </div>
                         ) : categoriesError ? (
                           <div className="text-center py-4 text-red-500 text-sm">
@@ -629,7 +660,9 @@ const SellerApplication = () => {
                         ) : (
                           <div className="flex flex-wrap gap-2 mt-1">
                             {categories.map((cat) => {
-                              const selected = form.business_category.includes(cat.id);
+                              const selected = form.business_category.includes(
+                                cat.id,
+                              );
                               return (
                                 <button
                                   key={cat.id}
@@ -652,7 +685,10 @@ const SellerApplication = () => {
                                   }
                                 >
                                   {selected && (
-                                    <FiCheck size={10} className="inline mr-1" />
+                                    <FiCheck
+                                      size={10}
+                                      className="inline mr-1"
+                                    />
                                   )}
                                   {cat.name}
                                 </button>
@@ -813,10 +849,12 @@ const SellerApplication = () => {
                           {form.seller_document_file ? (
                             <div className="space-y-3">
                               {form.seller_document_preview ? (
-                                <img
+                                <Image
                                   src={form.seller_document_preview}
                                   alt="preview"
-                                  className="w-24 h-24 object-cover rounded-xl mx-auto border-2 border-green-200"
+                                  width={96}
+                                  height={96}
+                                  className="object-cover rounded-xl mx-auto border-2 border-green-200"
                                 />
                               ) : (
                                 <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto">
@@ -981,10 +1019,12 @@ const SellerApplication = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           {form.seller_document_preview ? (
-                            <img
+                            <Image
                               src={form.seller_document_preview}
                               alt="doc"
-                              className="w-14 h-14 object-cover rounded-xl border-2 border-white shadow-sm"
+                              width={56}
+                              height={56}
+                              className="object-cover rounded-xl border-2 border-white shadow-sm"
                             />
                           ) : (
                             <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">

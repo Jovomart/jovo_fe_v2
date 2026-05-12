@@ -476,9 +476,10 @@ const HeroCard = ({ article, onBookmark, bookmarked }) => (
     className="relative rounded-3xl overflow-hidden cursor-pointer group"
     style={{ minHeight: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}
   >
-    <img
+    <Image
       src={article.image}
       alt={article.title}
+      fill
       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
     />
     <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
@@ -633,9 +634,10 @@ const VideoCard = ({ video }) => (
     style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.12)" }}
   >
     <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
-      <img
+      <Image
         src={video.thumbnail}
         alt={video.title}
+        fill
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
@@ -889,10 +891,12 @@ const NewsPage = () => {
                             }}
                             className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
                           >
-                            <img
+                            <Image
                               src={a.image}
                               alt=""
-                              className="w-10 h-10 rounded-xl object-cover shrink-0"
+                              width={40}
+                              height={40}
+                              className="rounded-xl object-cover shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-bold text-gray-800 line-clamp-2">

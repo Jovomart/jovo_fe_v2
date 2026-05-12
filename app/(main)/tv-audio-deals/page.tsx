@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 // src/pages/TvAudioDealsPage.jsx
 import { useState, useMemo } from "react";
@@ -31,8 +32,19 @@ const TvBadge = () => (
 );
 
 // ─── Stars ────────────────────────────────────────────────────────────────
-const Stars = ({ count = 4 }) => {
-  const randomCount = useMemo(() => Math.floor(Math.random() * 800) + 100, []);
+const getStableReviewCount = (seed = "", min = 100, range = 900) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 100000;
+  }
+  return min + (hash % range);
+};
+
+const Stars = ({ count = 4, seed = "stars" }) => {
+  const randomCount = useMemo(
+    () => getStableReviewCount(seed, 100, 900),
+    [seed],
+  );
   return (
     <div className="flex items-center gap-0.5 mt-2">
       {[1, 2, 3, 4, 5].map((s) => (
@@ -74,10 +86,11 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         style={{ aspectRatio: "1/1" }}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
+        <Image
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-108"
+          fill
+          className="object-cover transition-transform duration-600 group-hover:scale-108"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -139,7 +152,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
             </span>
           )}
         </div>
-        <Stars count={4} />
+        <Stars count={4} seed={product.id || product.name || "tv-audio"} />
       </div>
     </div>
   );
@@ -156,10 +169,11 @@ const SuggestedCard = ({ product }) => {
       style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
     >
       <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-        <img
+        <Image
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>

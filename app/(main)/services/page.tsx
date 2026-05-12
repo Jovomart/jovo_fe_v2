@@ -570,9 +570,10 @@ export default function ServicesPage() {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsProvider(false);
       return;
-    } // eslint-disable-line react-hooks/set-state-in-effect
+    }
     apiService
       .getServiceProviderDetails()
       .then((res) => {

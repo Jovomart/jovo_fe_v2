@@ -17,6 +17,14 @@ import Footer from "@/components/layout/Footer";
 import Image from "next/image";
 
 // ─── Product Card ──────────────────────────────────────────────────────────
+const getStableSoldCount = (seed = "", min = 100, range = 900) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 100000;
+  }
+  return (min + (hash % range)).toLocaleString();
+};
+
 const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
   const router = useRouter();
   const navigate = (p: string) => router.push(p);
@@ -24,8 +32,8 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;
   const soldCount = useMemo(
-    () => (Math.floor(Math.random() * 900) + 100).toLocaleString(),
-    [],
+    () => getStableSoldCount(product.id || product.name || `rank-${rank}`),
+    [product.id, product.name, rank],
   );
 
   const rankConfig = {
@@ -58,12 +66,12 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         style={{ aspectRatio: "1/1" }}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
+        <Image
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-108"
+          fill
+          className="object-cover transition-transform duration-600 group-hover:scale-108"
         />
-
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 

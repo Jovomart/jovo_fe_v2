@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
@@ -27,7 +28,7 @@ export default function WishlistPage() {
     setAddedIds((prev) => [...prev, product.id]);
     setTimeout(
       () => setAddedIds((prev) => prev.filter((id) => id !== product.id)),
-      2500
+      2500,
     );
   };
 
@@ -42,30 +43,35 @@ export default function WishlistPage() {
   return (
     <>
       <div className="min-h-screen" style={{ background: "#F4F5F9" }}>
-
         {/* ── HERO BANNER ── */}
         <div
           className="relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 40%, #B42225 100%)",
+            background:
+              "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 40%, #B42225 100%)",
           }}
         >
           {/* decorative dot grid */}
           <div
             className="absolute inset-0 opacity-[0.07] pointer-events-none"
             style={{
-              backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+              backgroundImage:
+                "radial-gradient(circle, #fff 1px, transparent 1px)",
               backgroundSize: "24px 24px",
             }}
           />
           {/* decorative large circle */}
           <div
             className="absolute -right-20 -top-20 w-80 h-80 rounded-full opacity-10 pointer-events-none"
-            style={{ background: "radial-gradient(circle, #FF6B35, transparent 70%)" }}
+            style={{
+              background: "radial-gradient(circle, #FF6B35, transparent 70%)",
+            }}
           />
           <div
             className="absolute -left-10 -bottom-10 w-60 h-60 rounded-full opacity-10 pointer-events-none"
-            style={{ background: "radial-gradient(circle, #FF4500, transparent 70%)" }}
+            style={{
+              background: "radial-gradient(circle, #FF4500, transparent 70%)",
+            }}
           />
 
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
@@ -165,7 +171,8 @@ export default function WishlistPage() {
                 Your wishlist is empty
               </h2>
               <p className="text-sm text-gray-400 max-w-xs mx-auto leading-relaxed">
-                Tap the heart icon on any product to save it here for later. Your saved items will appear here.
+                Tap the heart icon on any product to save it here for later.
+                Your saved items will appear here.
               </p>
             </div>
 
@@ -183,7 +190,6 @@ export default function WishlistPage() {
           </div>
         ) : (
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 pb-20">
-
             {/* ── STATS ROW ── */}
             <div className="grid grid-cols-3 gap-3 mb-8 max-w-sm">
               {[
@@ -195,7 +201,10 @@ export default function WishlistPage() {
                 {
                   label: "You Save",
                   value: `₦${wishlist
-                    .reduce((s, p) => s + ((p.oldPrice ?? p.price) - p.price), 0)
+                    .reduce(
+                      (s, p) => s + ((p.oldPrice ?? p.price) - p.price),
+                      0,
+                    )
                     .toLocaleString()}`,
                 },
               ].map(({ label, value }) => (
@@ -210,7 +219,9 @@ export default function WishlistPage() {
                   <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">
                     {label}
                   </p>
-                  <p className="text-sm font-black text-gray-900 truncate">{value}</p>
+                  <p className="text-sm font-black text-gray-900 truncate">
+                    {value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -220,7 +231,8 @@ export default function WishlistPage() {
               {wishlist.map((product) => {
                 const discount = product.oldPrice
                   ? Math.round(
-                      ((product.oldPrice - product.price) / product.oldPrice) * 100
+                      ((product.oldPrice - product.price) / product.oldPrice) *
+                        100,
                     )
                   : 0;
                 const added = addedIds.includes(product.id);
@@ -234,7 +246,8 @@ export default function WishlistPage() {
                       boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
                       opacity: removing ? 0 : 1,
                       transform: removing ? "scale(0.95)" : "scale(1)",
-                      transition: "opacity 0.3s, transform 0.3s, box-shadow 0.3s",
+                      transition:
+                        "opacity 0.3s, transform 0.3s, box-shadow 0.3s",
                     }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.boxShadow =
@@ -251,10 +264,11 @@ export default function WishlistPage() {
                       style={{ aspectRatio: "1/1" }}
                       onClick={() => router.push(`/product/${product.id}`)}
                     >
-                      <img
+                      <Image
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                       />
 
                       {/* Overlay on hover */}
@@ -275,7 +289,8 @@ export default function WishlistPage() {
                         <div
                           className="absolute top-2.5 left-2.5 text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10"
                           style={{
-                            background: "linear-gradient(135deg,#B42225,#FF4500)",
+                            background:
+                              "linear-gradient(135deg,#B42225,#FF4500)",
                           }}
                         >
                           -{discount}%
@@ -365,7 +380,8 @@ export default function WishlistPage() {
             <div
               className="mt-10 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
               style={{
-                background: "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 50%, #B42225 100%)",
+                background:
+                  "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 50%, #B42225 100%)",
               }}
             >
               <div className="flex items-center gap-3">

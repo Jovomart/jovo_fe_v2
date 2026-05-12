@@ -972,7 +972,7 @@ export default function Checkout() {
     };
 
     fetchDeliveryOptions();
-  }, [items, subtotal, user]);
+  }, [items, subtotal, user, selectedDeliveryId]);
 
   useEffect(() => {
     const script = document.createElement("script");

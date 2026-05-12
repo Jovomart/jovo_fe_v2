@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -977,8 +978,9 @@ export default function ProviderDashboard() {
   }, [fetchCategories, router]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
-  }, [load]); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [load]);
 
   const saveProfile = async () => {
     setSavingProfile(true);
@@ -1233,10 +1235,12 @@ export default function ProviderDashboard() {
           <div className="flex items-center gap-3">
             <div className="relative shrink-0">
               {profile?.logo_url ? (
-                <img
+                <Image
                   src={profile.logo_url}
                   alt="logo"
-                  className="w-11 h-11 rounded-xl object-cover"
+                  width={44}
+                  height={44}
+                  className="rounded-xl object-cover"
                   style={{ boxShadow: "0 4px 12px rgba(249,115,22,0.35)" }}
                 />
               ) : (
@@ -1724,9 +1728,11 @@ export default function ProviderDashboard() {
                         }}
                       >
                         {profile?.logo_url ? (
-                          <img
+                          <Image
                             src={profile.logo_url}
                             alt="logo"
+                            width={80}
+                            height={80}
                             className="w-16 h-16 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-xl object-cover block"
                           />
                         ) : (
@@ -2309,9 +2315,10 @@ export default function ProviderDashboard() {
                 <div>
                   {profile?.cover_image_url && (
                     <div className="h-28 sm:h-36 overflow-hidden">
-                      <img
+                      <Image
                         src={profile.cover_image_url}
                         alt="cover"
+                        fill
                         className="w-full h-full object-cover"
                       />
                     </div>

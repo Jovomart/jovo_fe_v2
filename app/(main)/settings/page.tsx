@@ -163,6 +163,7 @@ const Settings = () => {
   // Load user data
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         first_name: user.first_name || "",
         last_name: user.last_name || "",
@@ -173,9 +174,11 @@ const Settings = () => {
         city: user.city || "",
         address: user.address || "",
         phone: user.phone || "",
-      }); // eslint-disable-line react-hooks/set-state-in-effect
+      });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSchoolId(user.school_id || user.schoolId || "");
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSchools();
   }, [user]);
 

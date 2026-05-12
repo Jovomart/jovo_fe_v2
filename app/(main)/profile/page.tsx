@@ -141,12 +141,14 @@ const Profile = () => {
 
   useEffect(() => {
     if (isEditModalOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchSchools();
     }
   }, [isEditModalOpen]);
 
   useEffect(() => {
     if (user && isEditModalOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditForm({
         first_name: user.first_name || "",
         last_name: user.last_name || "",
@@ -157,7 +159,8 @@ const Profile = () => {
         city: user.city || "",
         address: user.address || "",
         phone: user.phone || "",
-      }); // eslint-disable-line react-hooks/set-state-in-effect
+      });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSchoolId(user.school_id || user.schoolId || "");
     }
   }, [user, isEditModalOpen]);

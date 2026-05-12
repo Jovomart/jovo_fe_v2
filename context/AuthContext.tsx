@@ -84,9 +84,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
       return;
-    } // eslint-disable-line react-hooks/set-state-in-effect
+    }
     ApiService.getApplicationStatus()
       .then((res: any) => {
         const is_seller_flag = res?.is_seller;
