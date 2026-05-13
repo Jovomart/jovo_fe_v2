@@ -111,13 +111,6 @@ interface PopularRoute {
   steps: string[];
 }
 
-interface GuideData {
-  mustKnow: Location[];
-  popularLocs: Location[];
-  allLocs: Location[];
-  pagination: Record<string, unknown> | null;
-}
-
 /* ─────────────────────────────────────────────────────────────
    CONSTANTS
 ───────────────────────────────────────────────────────────── */
@@ -281,11 +274,9 @@ const popularRoutes: PopularRoute[] = [
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1562774053-701939374585?w=700&q=80";
 
-
 /* ─────────────────────────────────────────────────────────────
    ADAPTER — maps raw API shape → typed Location
 ───────────────────────────────────────────────────────────── */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const adaptGuide = (g: Record<string, any>): Location => {
   // Helper to safely convert facilities
   const parseFacilities = (facilities: any): string[] => {
@@ -294,7 +285,6 @@ const adaptGuide = (g: Record<string, any>): Location => {
       return facilities.map((item) => {
         if (typeof item === "string") return item;
         if (typeof item === "object" && item !== null) {
-          // Extract the key from object like {charging_stations: true}
           const keys = Object.keys(item);
           return keys.length > 0 ? keys[0] : String(item);
         }
@@ -430,7 +420,6 @@ const LocationCard = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        {/* Category badge */}
         <div
           className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-black px-2.5 py-1.5 rounded-full"
           style={{ background: color }}
@@ -439,14 +428,12 @@ const LocationCard = ({
           {loc.category.toUpperCase()}
         </div>
 
-        {/* Custom badge */}
         {loc.badge && (
           <div className="absolute top-3 right-10 bg-[#B42225] text-white text-[9px] font-black px-2 py-1 rounded-full">
             {loc.badge}
           </div>
         )}
 
-        {/* Bookmark button */}
         <button
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
@@ -461,7 +448,6 @@ const LocationCard = ({
           )}
         </button>
 
-        {/* Walk time */}
         {loc.walkTime && (
           <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/60 text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
             <FiClock size={10} /> {loc.walkTime}
@@ -543,32 +529,28 @@ const LocationModal = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  // Start with the card data as initial state
   const [fullData, setFullData] = useState<Location>(loc);
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
 
   const color = getCatColor(fullData.category);
 
-  /* On mount — auth check + parallel data fetch */
+  // Initialize auth state
   useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("access_token")
-        : null;
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
     setIsLoggedIn(!!token);
+  }, []);
 
+  // Load detail and reviews
+  useEffect(() => {
     const loadDetail = async (): Promise<void> => {
       setDetailLoading(true);
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data: any = await apiService.getCampusGuideById(loc.id);
         const adaptedData = adaptGuide(data?.data ?? data);
         
-        // Merge the API data with the card data to ensure we keep all fields
         setFullData((prev) => ({
           ...prev,
           ...adaptedData,
-          // Ensure critical fields are preserved if API doesn't return them
           id: loc.id,
           name: adaptedData.name || loc.name,
           category: adaptedData.category || loc.category,
@@ -587,7 +569,6 @@ const LocationModal = ({
         }));
       } catch (err) {
         console.error("Failed to load detail:", err);
-        // Keep the card data on error
       } finally {
         setDetailLoading(false);
       }
@@ -596,22 +577,17 @@ const LocationModal = ({
     const loadReviews = async (): Promise<void> => {
       setReviewsLoading(true);
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data: any = await apiService.getGuideReviews(loc.id, {
           limit: 20,
           verified_only: false,
         });
-        const list: Review[] =
-          data?.data?.reviews ?? data?.reviews ?? data?.data ?? [];
+        const list: Review[] = data?.data?.reviews ?? data?.reviews ?? data?.data ?? [];
         setReviews(list);
 
+        const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
         if (token) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const myData: any = await apiService.getMyCampusReviews({
-            limit: 50,
-          });
-          const myList: Review[] =
-            myData?.data?.reviews ?? myData?.reviews ?? myData?.data ?? [];
+          const myData: any = await apiService.getMyCampusReviews({ limit: 50 });
+          const myList: Review[] = myData?.data?.reviews ?? myData?.reviews ?? myData?.data ?? [];
           const found = myList.find((r) => r.campus_guide_id === loc.id);
           if (found) {
             setMyReview(found);
@@ -625,11 +601,10 @@ const LocationModal = ({
       }
     };
 
-    void loadDetail();
-    void loadReviews();
-  }, [loc.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    loadDetail();
+    loadReviews();
+  }, [loc.id]);
 
-  /* Submit (create or update) review */
   const handleSubmit = async (): Promise<void> => {
     if (form.review.trim().length < 10) {
       setSubmitError("Review must be at least 10 characters.");
@@ -639,7 +614,6 @@ const LocationModal = ({
     setSubmitError("");
     try {
       if (myReview && editMode) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const res: any = await apiService.updateCampusReview(myReview.id, {
           rating: form.rating,
           review: form.review,
@@ -651,7 +625,6 @@ const LocationModal = ({
           prev.map((r) => (r.id === myReview.id ? updated : r)),
         );
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const res: any = await apiService.createCampusReview({
           rating: form.rating,
           review: form.review,
@@ -671,7 +644,6 @@ const LocationModal = ({
     }
   };
 
-  /* Delete review */
   const handleDelete = async (): Promise<void> => {
     if (!myReview) return;
     try {
@@ -698,7 +670,6 @@ const LocationModal = ({
         style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.3)" }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-        {/* Image header */}
         <div className="relative shrink-0" style={{ height: "220px" }}>
           <Image
             src={fullData.image}
@@ -706,7 +677,6 @@ const LocationModal = ({
             fill
             className="object-cover"
             onError={(e) => {
-              // Fallback if image fails to load
               (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
             }}
           />
@@ -761,9 +731,7 @@ const LocationModal = ({
           </div>
         </div>
 
-        {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-gray-50 rounded-2xl p-3 text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
@@ -772,10 +740,7 @@ const LocationModal = ({
                     key={s}
                     size={9}
                     style={{
-                      color:
-                        s <= Math.round(fullData.rating || 0)
-                          ? "#F59E0B"
-                          : "#E5E7EB",
+                      color: s <= Math.round(fullData.rating || 0) ? "#F59E0B" : "#E5E7EB",
                     }}
                   />
                 ))}
@@ -803,7 +768,6 @@ const LocationModal = ({
             </div>
           </div>
 
-          {/* About */}
           {fullData.description && (
             <div>
               <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
@@ -815,7 +779,6 @@ const LocationModal = ({
             </div>
           )}
 
-          {/* Facilities */}
           {fullData.facilities && fullData.facilities.length > 0 && (
             <div>
               <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
@@ -823,7 +786,6 @@ const LocationModal = ({
               </h4>
               <div className="flex flex-wrap gap-2">
                 {fullData.facilities.map((f, idx) => {
-                  // Format facility name for display
                   const formattedName = String(f)
                     .replace(/_/g, " ")
                     .toLowerCase()
@@ -845,7 +807,6 @@ const LocationModal = ({
             </div>
           )}
 
-          {/* Directions */}
           {fullData.direction && (
             <div className="rounded-2xl border border-gray-100 overflow-hidden">
               <button
@@ -887,7 +848,6 @@ const LocationModal = ({
             </div>
           )}
 
-          {/* Pro tip */}
           {fullData.tips && (
             <div className="flex gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4">
               <span className="text-lg shrink-0">💡</span>
@@ -902,17 +862,14 @@ const LocationModal = ({
             </div>
           )}
 
-          {/* ── Reviews ── */}
           <div>
             <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
               Reviews{reviews.length > 0 ? ` (${reviews.length})` : ""}
             </h4>
 
-            {/* Auth guard — review form */}
             {isLoggedIn && (
               <div className="mb-4">
                 {myReview && !editMode ? (
-                  /* Existing review display */
                   <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-black text-blue-800">
@@ -949,7 +906,6 @@ const LocationModal = ({
                     </p>
                   </div>
                 ) : (
-                  /* Review form */
                   <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
                     <p className="text-xs font-black text-gray-700">
                       {myReview ? "Edit Your Review" : "Leave a Review"}
@@ -1005,7 +961,6 @@ const LocationModal = ({
               </div>
             )}
 
-            {/* Reviews list */}
             {reviewsLoading ? (
               <div className="space-y-3">
                 {[1, 2].map((i) => (
@@ -1042,14 +997,11 @@ const LocationModal = ({
                         </p>
                         {r.created_at && (
                           <span className="text-[9px] text-gray-400">
-                            {new Date(r.created_at).toLocaleDateString(
-                              "en-NG",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              },
-                            )}
+                            {new Date(r.created_at).toLocaleDateString("en-NG", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
                           </span>
                         )}
                       </div>
@@ -1073,7 +1025,6 @@ const LocationModal = ({
             )}
           </div>
 
-          {/* Actions */}
           {fullData.phone && (
             <a
               href={`tel:${fullData.phone}`}
@@ -1111,7 +1062,6 @@ const CampusGuidePage = () => {
   const [showBookmarks, setShowBookmarks] = useState<boolean>(false);
   const [showRoutes, setShowRoutes] = useState<boolean>(false);
 
-  // API data
   const [mustKnow, setMustKnow] = useState<Location[]>([]);
   const [popularLocs, setPopularLocs] = useState<Location[]>([]);
   const [allLocs, setAllLocs] = useState<Location[]>([]);
@@ -1123,105 +1073,89 @@ const CampusGuidePage = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* ── Resolve school_id ── */
+  // Resolve school_id
   useEffect(() => {
-    try {
-      const raw =
-        typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      if (raw) {
-        const u = JSON.parse(raw) as Record<string, unknown>;
-        if (typeof u.school_id === "string" && u.school_id) {
-          setSchoolId(u.school_id);
-          return;
+    const loadSchoolId = async () => {
+      try {
+        const raw = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+        if (raw) {
+          const u = JSON.parse(raw) as Record<string, unknown>;
+          if (typeof u.school_id === "string" && u.school_id) {
+            setSchoolId(u.school_id);
+            return;
+          }
         }
-      }
-    } catch {
-      /* ignore parse errors */
-    }
 
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
 
-    apiService
-      .getCurrentUser()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((data: any) => {
-        const sid: string | undefined =
-          data?.data?.school_id ?? data?.school_id;
+        const data: any = await apiService.getCurrentUser();
+        const sid: string | undefined = data?.data?.school_id ?? data?.school_id;
         if (sid) setSchoolId(sid);
-      })
-      .catch(() => {
-        /* not logged in — proceed without school_id */
-      });
+      } catch {
+        // not logged in — proceed without school_id
+      }
+    };
+
+    loadSchoolId();
   }, []);
 
-  /* ── Core fetch function ── */
- const fetchGuides = useCallback(
-  async (search = "", cat = "all"): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params: Record<string, unknown> = { limit: 60 };
-      if (schoolId) params.school_id = schoolId;
-      if (search) params.search = search;
-      if (cat !== "all") params.category = CATEGORY_API_MAP[cat];
-
+  const fetchGuides = useCallback(
+    async (search = "", cat = "all") => {
+      setLoading(true);
+      setError(null);
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data: any = await apiService.getCampusGuides(
-          params as Parameters<typeof apiService.getCampusGuides>[0],
-        );
-        const payload = data?.data ?? data;
+        const params: Record<string, unknown> = { limit: 60 };
+        if (schoolId) params.school_id = schoolId;
+        if (search) params.search = search;
+        if (cat !== "all") params.category = CATEGORY_API_MAP[cat];
 
-        setMustKnow(
-          ((payload.must_know_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
-        );
-        setPopularLocs(
-          ((payload.popular_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
-        );
-        setAllLocs(
-          ((payload.all_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
-        );
-      } catch (err: any) {
-        // If it's a 401, try again without auth by clearing any token that might be causing issues
-        if (err.message?.includes("401") || err.message?.includes("Authentication")) {
-          console.log("Auth error, retrying campus guide fetch...");
-          // Try one more time - the request will go without auth
-          const retryData: any = await apiService.getCampusGuides(
-            params as Parameters<typeof apiService.getCampusGuides>[0],
+        try {
+          const data: any = await apiService.getCampusGuides(params);
+          const payload = data?.data ?? data;
+
+          setMustKnow(
+            ((payload.must_know_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
           );
-          const retryPayload = retryData?.data ?? retryData;
-          setMustKnow((retryPayload.must_know_locations ?? []).map(adaptGuide));
-          setPopularLocs((retryPayload.popular_locations ?? []).map(adaptGuide));
-          setAllLocs((retryPayload.all_locations ?? []).map(adaptGuide));
-        } else {
-          throw err;
+          setPopularLocs(
+            ((payload.popular_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
+          );
+          setAllLocs(
+            ((payload.all_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
+          );
+        } catch (err: any) {
+          if (err.message?.includes("401") || err.message?.includes("Authentication")) {
+            console.log("Auth error, retrying campus guide fetch...");
+            const retryData: any = await apiService.getCampusGuides(params);
+            const retryPayload = retryData?.data ?? retryData;
+            setMustKnow((retryPayload.must_know_locations ?? []).map(adaptGuide));
+            setPopularLocs((retryPayload.popular_locations ?? []).map(adaptGuide));
+            setAllLocs((retryPayload.all_locations ?? []).map(adaptGuide));
+          } else {
+            throw err;
+          }
         }
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load campus guide. Please try again.",
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load campus guide. Please try again.",
-      );
-    } finally {
-      setLoading(false);
+    },
+    [schoolId],
+  );
+
+  // Initial load and category change
+  useEffect(() => {
+    if (schoolId !== undefined) {
+      fetchGuides("", activeCategory);
     }
-  },
-  [schoolId],
-);
-  /* ── Initial load ── */
-  useEffect(() => {
-    void fetchGuides("", activeCategory);
-  }, [schoolId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [schoolId, activeCategory, fetchGuides]);
 
-  /* ── Category change ── */
-  useEffect(() => {
-    void fetchGuides("", activeCategory);
-  }, [activeCategory]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ── Debounced search dropdown ── */
+  // Debounced search dropdown
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -1238,15 +1172,10 @@ const CampusGuidePage = () => {
         };
         if (schoolId) params.school_id = schoolId;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data: any = await apiService.getCampusGuides(
-          params as Parameters<typeof apiService.getCampusGuides>[0],
-        );
+        const data: any = await apiService.getCampusGuides(params);
         const payload = data?.data ?? data;
         setDropdownResults(
-          ((payload.all_locations ?? []) as Record<string, unknown>[]).map(
-            adaptGuide,
-          ),
+          ((payload.all_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
         );
       } catch {
         /* silent */
@@ -1258,7 +1187,7 @@ const CampusGuidePage = () => {
     };
   }, [searchQuery, schoolId]);
 
-  /* ── Close search dropdown on outside click ── */
+  // Close search dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent): void => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -1269,7 +1198,6 @@ const CampusGuidePage = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ── Helpers ── */
   const toggleBookmark = (id: string): void =>
     setBookmarks((prev) =>
       prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id],
@@ -1287,9 +1215,6 @@ const CampusGuidePage = () => {
   const isSearching = searchQuery.trim().length > 0;
   const skeletonCount = activeCategory === "all" ? 8 : 6;
 
-  /* ─────────────────────────────────────────────────────────
-     RENDER
-  ───────────────────────────────────────────────────────── */
   return (
     <>
       <style>{`
@@ -1308,7 +1233,6 @@ const CampusGuidePage = () => {
       )}
 
       <div className="min-h-screen" style={{ background: "#F3F4F8" }}>
-        {/* ══════════ HERO ══════════ */}
         <div
           className="relative overflow-hidden"
           style={{
@@ -1409,14 +1333,12 @@ const CampusGuidePage = () => {
           </svg>
         </div>
 
-        {/* ══════════ STICKY SEARCH + FILTERS ══════════ */}
         <div
           className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100"
           style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              {/* Search */}
               <div className="relative flex-1 max-w-sm" ref={searchRef}>
                 <div
                   className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 transition-all duration-200 ${
@@ -1454,7 +1376,6 @@ const CampusGuidePage = () => {
                   )}
                 </div>
 
-                {/* Dropdown */}
                 {searchFocused && searchQuery.trim().length > 0 && (
                   <div
                     className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-gray-100 overflow-hidden z-50"
@@ -1527,7 +1448,6 @@ const CampusGuidePage = () => {
                 )}
               </div>
 
-              {/* Category tabs */}
               <div
                 className="flex items-center gap-1.5 overflow-x-auto flex-nowrap pb-0.5 sm:pb-0 scrollbar-hide"
                 style={
@@ -1560,7 +1480,6 @@ const CampusGuidePage = () => {
                   </button>
                 ))}
 
-                {/* Saved */}
                 <button
                   onClick={() => {
                     setShowBookmarks((v) => !v);
@@ -1579,9 +1498,7 @@ const CampusGuidePage = () => {
           </div>
         </div>
 
-        {/* ══════════ BODY ══════════ */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-10">
-          {/* Error banner */}
           {error && !loading && (
             <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl p-4">
               <FiAlertCircle size={18} className="text-red-500 shrink-0" />
@@ -1595,7 +1512,6 @@ const CampusGuidePage = () => {
             </div>
           )}
 
-          {/* ── Bookmarks view ── */}
           {showBookmarks ? (
             <div>
               <div className="flex items-center gap-3 mb-5">
@@ -1635,9 +1551,7 @@ const CampusGuidePage = () => {
               )}
             </div>
           ) : (
-            /* ── Main content ── */
             <>
-              {/* Must-Know — only on "all" tab, no active search */}
               {activeCategory === "all" && !isSearching && (
                 <div>
                   <div className="flex items-center gap-3 mb-5">
@@ -1674,7 +1588,6 @@ const CampusGuidePage = () => {
                 </div>
               )}
 
-              {/* All / Category / Search results */}
               <div>
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
@@ -1737,7 +1650,6 @@ const CampusGuidePage = () => {
                 ) : null}
               </div>
 
-              {/* Popular Routes */}
               {activeCategory === "all" && !isSearching && (
                 <div
                   className="bg-white rounded-3xl p-6 md:p-8"
@@ -1824,7 +1736,6 @@ const CampusGuidePage = () => {
                 </div>
               )}
 
-              {/* Campus Tips */}
               {activeCategory === "all" && !isSearching && (
                 <div>
                   <div className="flex items-center gap-3 mb-5">
@@ -1862,7 +1773,6 @@ const CampusGuidePage = () => {
                 </div>
               )}
 
-              {/* Emergency contacts */}
               {activeCategory === "all" && !isSearching && (
                 <div
                   className="rounded-3xl p-6 md:p-8 text-white relative overflow-hidden"
