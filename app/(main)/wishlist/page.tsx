@@ -16,6 +16,22 @@ import { FaHeart } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
 
+// Helper function to ensure product has all required cart fields
+const toCartProduct = (product: any) => ({
+  id: product.id,
+  name: product.name,
+  price: product.price,
+  image: product.image,
+  category: product.category || "Uncategorized", // Provide fallback category
+  stock: product.stock ?? 1,
+  slug: product.slug || `${product.id}-${product.name?.toLowerCase().replace(/\s+/g, '-')}`,
+  sellerId: product.sellerId || null,
+  oldPrice: product.oldPrice,
+  rating: product.rating,
+  reviewsCount: product.reviewsCount,
+  brand: product.brand,
+});
+
 export default function WishlistPage() {
   const router = useRouter();
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
@@ -24,7 +40,7 @@ export default function WishlistPage() {
   const [removingIds, setRemovingIds] = useState<number[]>([]);
 
   const handleAddToCart = (product: (typeof wishlist)[0]) => {
-    addToCart(product, 1);
+    addToCart(toCartProduct(product), 1);
     setAddedIds((prev) => [...prev, product.id]);
     setTimeout(
       () => setAddedIds((prev) => prev.filter((id) => id !== product.id)),
@@ -123,7 +139,7 @@ export default function WishlistPage() {
                   </button>
                   <button
                     onClick={() => {
-                      wishlist.forEach((p) => addToCart(p, 1));
+                      wishlist.forEach((p) => addToCart(toCartProduct(p), 1));
                       router.push("/cart");
                     }}
                     className="flex items-center gap-2 text-xs text-white font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105 active:scale-95"
@@ -402,7 +418,7 @@ export default function WishlistPage() {
               </div>
               <button
                 onClick={() => {
-                  wishlist.forEach((p) => addToCart(p, 1));
+                  wishlist.forEach((p) => addToCart(toCartProduct(p), 1));
                   router.push("/cart");
                 }}
                 className="shrink-0 px-6 py-3 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95"
