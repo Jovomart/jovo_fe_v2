@@ -114,7 +114,7 @@ const ReportProduct = () => {
 
           <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8 pt-12 pb-24">
             <div className="flex items-center gap-2 text-xs text-white/30 mb-8">
-              <Link href="/" className="hover:text-white/60 transition-colors">Home</Link>
+              <Link href="/shop" className="hover:text-white/60 transition-colors">Shop</Link>
               <FiChevronRight size={11} />
               <span className="text-white/60">Report a Product</span>
             </div>
@@ -211,9 +211,9 @@ const ReportProduct = () => {
                   style={{ background: "linear-gradient(135deg,#B42225,#DC2626)", boxShadow: "0 4px 20px rgba(180,34,37,0.3)" }}>
                   Submit Another Report
                 </button>
-                <Link href="/"
+                <Link href="/shop"
                   className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">
-                  Back to Home <FiArrowRight size={13} />
+                  Back to Shop <FiArrowRight size={13} />
                 </Link>
               </div>
             </div>

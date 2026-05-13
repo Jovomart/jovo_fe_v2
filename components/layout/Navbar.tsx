@@ -24,6 +24,7 @@ import {
   FiClock,
   FiTruck,
   FiChevronDown,
+  FiBriefcase,
 } from "react-icons/fi";
 import {
   MdStorefront,
@@ -386,9 +387,14 @@ export default function Navbar() {
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
-  const { user, logout, isSeller, sellerMode, enterSellerMode } = useContext(
-    AuthContext,
-  ) as any;
+  const {
+    user,
+    logout,
+    isSeller,
+    isServiceProvider,
+    sellerMode,
+    enterSellerMode,
+  } = useContext(AuthContext) as any;
   const router = useRouter();
 
   const displayName =
@@ -406,6 +412,7 @@ export default function Navbar() {
   // ── Derive stable booleans only after mount so SSR output is neutral ──
   const isLoggedIn = mounted && !!user;
   const isSellerVerified = mounted && !!isSeller;
+  const isServiceProviderVerified = mounted && !!isServiceProvider;
 
   useEffect(() => {
     setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
@@ -514,7 +521,7 @@ export default function Navbar() {
           <Image
             src="/images/Jovo_official_logo.png"
             alt="Jovo"
-            onClick={() => router.push("/")}
+            onClick={() => router.push(isLoggedIn ? "/shop" : "/")}
             width={220}
             height={48}
             className="cursor-pointer shrink-0 md:w-55 md:h-12 w-28 h-10 object-cover"
@@ -647,6 +654,11 @@ export default function Navbar() {
                               <FaStore size={8} /> Verified Seller
                             </span>
                           )}
+                          {isServiceProviderVerified && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mt-0.5">
+                              <FiBriefcase size={8} /> Service Provider
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -684,6 +696,42 @@ export default function Navbar() {
                           <FiChevronRight
                             size={13}
                             className="ml-auto text-gray-300 group-hover:text-green-600"
+                          />
+                        </button>
+                      )}
+                      {!isServiceProviderVerified && (
+                        <button
+                          onClick={() => goTo("/become-service-provider")}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group"
+                        >
+                          <FiBriefcase
+                            size={15}
+                            className="text-gray-400 group-hover:text-purple-600"
+                          />
+                          <span className="flex-1 text-left">
+                            Become Service Provider
+                          </span>
+                          <FiChevronRight
+                            size={13}
+                            className="ml-auto text-gray-300 group-hover:text-purple-600"
+                          />
+                        </button>
+                      )}
+                      {isServiceProviderVerified && (
+                        <button
+                          onClick={() => goTo("/service-dashboard")}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group"
+                        >
+                          <FiBriefcase
+                            size={15}
+                            className="text-gray-400 group-hover:text-purple-600"
+                          />
+                          <span className="flex-1 text-left">
+                            Visit Service Dashboard
+                          </span>
+                          <FiChevronRight
+                            size={13}
+                            className="ml-auto text-gray-300 group-hover:text-purple-600"
                           />
                         </button>
                       )}
@@ -1081,6 +1129,14 @@ export default function Navbar() {
                       },
                     ]
                   : [{ label: "Become a Seller", to: "/become-seller" }]),
+                ...(isServiceProviderVerified
+                  ? []
+                  : [
+                      {
+                        label: "Become a Service Provider",
+                        to: "/become-service-provider",
+                      },
+                    ]),
                 { label: "Help Center", to: "/help" },
               ].map(({ label, to, action }: any) => (
                 <button

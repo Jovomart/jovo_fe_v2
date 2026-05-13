@@ -386,7 +386,7 @@ function EmptyOrders() {
         great deals!
       </p>
       <Link
-        href="/"
+        href="/shop"
         className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-white text-sm transition-all hover:scale-105 active:scale-95 shadow-xl"
         style={{
           background: "linear-gradient(135deg,#B42225,#FF8C00)",

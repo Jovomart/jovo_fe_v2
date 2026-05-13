@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 // src/pages/GroceriesPage.jsx
 import { useState, useMemo } from "react";
+import { useWishlist } from "@/context/WishlistContext";
 import { products } from "@/data/products";
 import { FiHeart, FiShoppingBag, FiSearch, FiX, FiZap } from "react-icons/fi";
 import { FaHeart, FaStar, FaLeaf } from "react-icons/fa";
@@ -135,7 +136,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
 const GroceriesPage = () => {
   const [search, setSearch] = useState("");
-  const [wishlist, setWishlist] = useState([]);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
   const groceryProducts = useMemo(() => {
     const base = products.filter((p) => {
@@ -161,10 +162,6 @@ const GroceriesPage = () => {
     );
   }, [search, groceryProducts]);
 
-  const toggleWishlist = (id) =>
-    setWishlist((p) =>
-      p.includes(id) ? p.filter((x) => x !== id) : [...p, id],
-    );
 
   return (
     <>
@@ -268,8 +265,8 @@ const GroceriesPage = () => {
                 <ProductCard
                   key={p.id}
                   product={p}
-                  wishlisted={wishlist.includes(p.id)}
-                  onWishlist={toggleWishlist}
+                  wishlisted={isWishlisted(p.id)}
+                  onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
                 />
               ))}
             </div>

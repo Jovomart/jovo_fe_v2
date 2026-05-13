@@ -185,7 +185,7 @@ const AccommodationDetails = () => {
         {/* ── Breadcrumb ── */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-2">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link href="/" className="hover:text-[#B42225] transition-colors">
+            <Link href="/shop" className="hover:text-[#B42225] transition-colors">
               Home
             </Link>
             <FiChevronRight size={12} />

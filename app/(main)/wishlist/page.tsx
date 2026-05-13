@@ -77,7 +77,7 @@ export default function WishlistPage() {
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs text-white/40 mb-6">
-              <Link href="/" className="hover:text-white/70 transition-colors">
+              <Link href="/shop" className="hover:text-white/70 transition-colors">
                 Home
               </Link>
               <FiChevronRight size={11} />
@@ -177,7 +177,7 @@ export default function WishlistPage() {
             </div>
 
             <Link
-              href="/"
+              href="/shop"
               className="mt-1 px-8 py-3.5 rounded-2xl text-white text-sm font-bold transition-all hover:scale-105 active:scale-95 inline-flex items-center gap-2"
               style={{
                 background: "linear-gradient(135deg, #B42225, #FF4500)",

@@ -45,7 +45,7 @@ const LoginInner = () => {
     setErrors({});
     try {
       await login(form.email, form.password);
-      router.push("/");
+      router.push("/shop");
     } catch (err: any) {
       const msg = err.message?.toLowerCase() || "";
       if (
@@ -273,7 +273,7 @@ const LoginInner = () => {
         <div className="w-full lg:w-[54%] xl:w-[52%] min-h-screen flex flex-col relative bg-white">
           {/* back button */}
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/shop")}
             className="absolute top-0 right-0 flex items-center gap-1.5 px-6 py-5 text-[13px] font-black text-[#B42225] hover:opacity-75 transition-opacity z-50"
           >
             <svg
@@ -289,7 +289,7 @@ const LoginInner = () => {
                 d="M13 19l-7-7 7-7m6 0l-7 7 7 7"
               />
             </svg>
-            Back to Home
+            Back to Shop
           </button>
 
           <div className="flex-1 flex items-center justify-center px-6 py-16 md:px-12 lg:px-14 xl:px-20">

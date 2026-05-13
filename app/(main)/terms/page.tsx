@@ -283,7 +283,7 @@ const Terms = () => {
           <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8 pt-12 pb-20">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs text-white/30 mb-8">
-              <Link href="/" className="hover:text-white/60 transition-colors">Home</Link>
+              <Link href="/shop" className="hover:text-white/60 transition-colors">Shop</Link>
               <FiChevronRight size={11} />
               <span className="text-white/60">Terms & Conditions</span>
             </div>

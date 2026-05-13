@@ -1,7 +1,7 @@
-'use client'
-import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+"use client";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
@@ -12,66 +12,66 @@ import {
   faShirt,
   faMicrochip,
   faLayerGroup,
-} from '@fortawesome/free-solid-svg-icons'
-import { PRODUCTS } from '@/data'
-import ProductCard from '@/components/ui/ProductCard'
-import type { Product } from '@/types'
+} from "@fortawesome/free-solid-svg-icons";
+import { products } from "@/data/products";
+import ProductCard from "@/components/ui/ProductCard";
+import type { Product } from "@/types";
 
 const TABS = [
-  { label: 'All',        value: 'all',         icon: faLayerGroup   },
-  { label: 'Phones',     value: 'phones',       icon: faMobileScreen },
-  { label: 'Electronics',value: 'electronics',  icon: faBoltLightning},
-  { label: 'Fashion',    value: 'fashion',       icon: faShirt        },
-  { label: 'Computing',  value: 'computing',     icon: faLaptop       },
-]
+  { label: "All", value: "all", icon: faLayerGroup },
+  { label: "Phones", value: "phones", icon: faMobileScreen },
+  { label: "Electronics", value: "electronics", icon: faBoltLightning },
+  { label: "Fashion", value: "fashion", icon: faShirt },
+  { label: "Computing", value: "computing", icon: faLaptop },
+];
 
 export default function FeaturedProductsSection() {
-  const [activeTab,      setActiveTab]      = useState('all')
-  const [fading,         setFading]         = useState(false)
-  const [showLeftArrow,  setShowLeftArrow]  = useState(false)
-  const [showRightArrow, setShowRightArrow] = useState(true)
-  const sliderRef = useRef<HTMLDivElement>(null)
+  const [activeTab, setActiveTab] = useState("all");
+  const [fading, setFading] = useState(false);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   const filtered: Product[] =
-    activeTab === 'all'
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.tab === activeTab)
+    activeTab === "all"
+      ? products
+      : products.filter((p) => p.category === activeTab);
 
   const checkScroll = () => {
-    const el = sliderRef.current
-    if (!el) return
-    setShowLeftArrow(el.scrollLeft > 20)
-    setShowRightArrow(el.scrollLeft + el.clientWidth < el.scrollWidth - 20)
-  }
+    const el = sliderRef.current;
+    if (!el) return;
+    setShowLeftArrow(el.scrollLeft > 20);
+    setShowRightArrow(el.scrollLeft + el.clientWidth < el.scrollWidth - 20);
+  };
 
   useEffect(() => {
-    const el = sliderRef.current
-    if (!el) return
-    el.addEventListener('scroll', checkScroll)
-    checkScroll()
-    return () => el.removeEventListener('scroll', checkScroll)
-  }, [filtered])
+    const el = sliderRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll);
+    checkScroll();
+    return () => el.removeEventListener("scroll", checkScroll);
+  }, [filtered]);
 
   const switchTab = (val: string) => {
-    if (val === activeTab) return
-    setFading(true)
+    if (val === activeTab) return;
+    setFading(true);
     setTimeout(() => {
-      setActiveTab(val)
-      setFading(false)
+      setActiveTab(val);
+      setFading(false);
       if (sliderRef.current) {
-        sliderRef.current.scrollLeft = 0
-        checkScroll()
+        sliderRef.current.scrollLeft = 0;
+        checkScroll();
       }
-    }, 220)
-  }
+    }, 220);
+  };
 
-  const scroll = (dir: 'left' | 'right') => {
-    const el = sliderRef.current
-    if (!el) return
-    const card = el.querySelector<HTMLElement>('.product-card')
-    const cardW = card ? card.offsetWidth + 16 : 300
-    el.scrollBy({ left: dir === 'left' ? -cardW : cardW, behavior: 'smooth' })
-  }
+  const scroll = (dir: "left" | "right") => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>(".product-card");
+    const cardW = card ? card.offsetWidth + 16 : 300;
+    el.scrollBy({ left: dir === "left" ? -cardW : cardW, behavior: "smooth" });
+  };
 
   return (
     <>
@@ -464,7 +464,6 @@ export default function FeaturedProductsSection() {
       `}</style>
 
       <section className="fps-root" aria-label="Featured products">
-
         {/* ── Background ─────────────────────────────────────── */}
         <div className="fps-bg" aria-hidden="true">
           <div className="fps-orb-r" />
@@ -475,7 +474,6 @@ export default function FeaturedProductsSection() {
         </div>
 
         <div className="fps-inner">
-
           {/* ── Header ─────────────────────────────────────────── */}
           <header className="fps-header">
             <div className="fps-eyebrow">
@@ -484,14 +482,17 @@ export default function FeaturedProductsSection() {
             </div>
 
             <h2 className="fps-h2">
-              Curated{' '}
-              <em className="fps-h2__grad" style={{ fontStyle: 'normal' }}>For&nbsp;You</em>
+              Curated{" "}
+              <em className="fps-h2__grad" style={{ fontStyle: "normal" }}>
+                For&nbsp;You
+              </em>
               <br />
               <span className="fps-h2__outline">Campus Picks</span>
             </h2>
 
             <p className="fps-sub">
-              Handpicked products from trusted campus sellers — quality you can count on.
+              Handpicked products from trusted campus sellers — quality you can
+              count on.
             </p>
 
             <div className="fps-rule">
@@ -502,37 +503,45 @@ export default function FeaturedProductsSection() {
           </header>
 
           {/* ── Tabs ───────────────────────────────────────────── */}
-          <div className="fps-tabs-wrap" role="tablist" aria-label="Filter products by category">
+          <div
+            className="fps-tabs-wrap"
+            role="tablist"
+            aria-label="Filter products by category"
+          >
             <div className="fps-tabs">
               {TABS.map(({ label, value, icon }) => {
-                const active = activeTab === value
+                const active = activeTab === value;
                 return (
                   <button
                     key={value}
                     role="tab"
                     aria-selected={active}
                     onClick={() => switchTab(value)}
-                    className={`fps-tab${active ? ' fps-tab--active' : ''}`}
+                    className={`fps-tab${active ? " fps-tab--active" : ""}`}
                   >
-                    {active && <span className="fps-tab__pill" aria-hidden="true" />}
-                    {icon && <FontAwesomeIcon icon={icon} className="fps-tab__icon" />}
+                    {active && (
+                      <span className="fps-tab__pill" aria-hidden="true" />
+                    )}
+                    {icon && (
+                      <FontAwesomeIcon icon={icon} className="fps-tab__icon" />
+                    )}
                     <span className="fps-tab__label">{label}</span>
                   </button>
-                )
+                );
               })}
             </div>
           </div>
 
           {/* ── Slider ─────────────────────────────────────────── */}
           <div
-            className={`fps-slider-shell${showLeftArrow ? ' fps-fade-left' : ''}`}
+            className={`fps-slider-shell${showLeftArrow ? " fps-fade-left" : ""}`}
             onMouseEnter={() => {}}
           >
             {/* Left arrow */}
             <button
-              onClick={() => scroll('left')}
+              onClick={() => scroll("left")}
               aria-label="Scroll left"
-              className={`fps-arrow fps-arrow--l${showLeftArrow ? ' fps-arrow--visible' : ''}`}
+              className={`fps-arrow fps-arrow--l${showLeftArrow ? " fps-arrow--visible" : ""}`}
             >
               <FontAwesomeIcon icon={faChevronLeft} />
             </button>
@@ -542,7 +551,7 @@ export default function FeaturedProductsSection() {
               <div
                 role="list"
                 aria-label="Featured products"
-                className={`fps-cards${fading ? ' fps-cards--fading' : ''}`}
+                className={`fps-cards${fading ? " fps-cards--fading" : ""}`}
               >
                 {filtered.map((product, i) => (
                   <div
@@ -559,9 +568,9 @@ export default function FeaturedProductsSection() {
 
             {/* Right arrow */}
             <button
-              onClick={() => scroll('right')}
+              onClick={() => scroll("right")}
               aria-label="Scroll right"
-              className={`fps-arrow fps-arrow--r${showRightArrow ? ' fps-arrow--visible' : ''}`}
+              className={`fps-arrow fps-arrow--r${showRightArrow ? " fps-arrow--visible" : ""}`}
             >
               <FontAwesomeIcon icon={faChevronRight} />
             </button>
@@ -570,8 +579,17 @@ export default function FeaturedProductsSection() {
           {/* ── Footer ─────────────────────────────────────────── */}
           <div className="fps-footer">
             <p className="fps-footer__count">
-              Showing <strong>{filtered.length}</strong> product{filtered.length !== 1 ? 's' : ''}
-              {activeTab !== 'all' && <> in <strong>{TABS.find(t => t.value === activeTab)?.label}</strong></>}
+              Showing <strong>{filtered.length}</strong> product
+              {filtered.length !== 1 ? "s" : ""}
+              {activeTab !== "all" && (
+                <>
+                  {" "}
+                  in{" "}
+                  <strong>
+                    {TABS.find((t) => t.value === activeTab)?.label}
+                  </strong>
+                </>
+              )}
             </p>
 
             <Link href="/shop" className="fps-cta">
@@ -580,17 +598,18 @@ export default function FeaturedProductsSection() {
             </Link>
 
             <div className="fps-trust">
-              {['Verified Sellers', 'Secure Checkout', 'Campus Delivery'].map((t, i, arr) => (
-                <span key={t} className="fps-trust__item">
-                  {t}
-                  {i < arr.length - 1 && <span className="fps-trust__dot" />}
-                </span>
-              ))}
+              {["Verified Sellers", "Secure Checkout", "Campus Delivery"].map(
+                (t, i, arr) => (
+                  <span key={t} className="fps-trust__item">
+                    {t}
+                    {i < arr.length - 1 && <span className="fps-trust__dot" />}
+                  </span>
+                ),
+              )}
             </div>
           </div>
-
         </div>
       </section>
     </>
-  )
+  );
 }

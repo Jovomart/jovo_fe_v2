@@ -11,14 +11,15 @@ interface Product {
   id: number;
   name: string;
   price: number;
-  oldPrice?: number;
-  stock: number;
-  category: string;
+  oldPrice?: number | null;
+  stock?: number;
+  category?: string;
   rating: number;
   reviews: number;
-  description: string;
+  description?: string;
   image: string;
   brand?: string;
+  alt?: string;
 }
 
 interface WishlistContextType {

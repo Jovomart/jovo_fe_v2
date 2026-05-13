@@ -424,7 +424,7 @@ const Register = () => {
         {/* ══ RIGHT PANEL ══ */}
         <div className="w-full lg:w-[58%] xl:w-[56%] min-h-screen flex flex-col relative bg-white">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/shop")}
             className="absolute top-0 right-0 flex items-center gap-1.5 px-6 py-5 text-[13px] font-black text-[#B42225] hover:opacity-75 transition-opacity z-50"
           >
             <svg
@@ -440,7 +440,7 @@ const Register = () => {
                 d="M13 19l-7-7 7-7m6 0l-7 7 7 7"
               />
             </svg>
-            Back to Home
+            Back to Shop
           </button>
 
           <div className="flex-1 flex items-center justify-center px-6 py-16 md:px-12 lg:px-14">

@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [sellerMode, setSellerMode] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
+  const [isServiceProvider, setIsServiceProvider] = useState(false);
 
   const mapUserData = (userData: any, existingUser: any = null) => ({
     id: userData.user_id || userData.id,
@@ -86,6 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
+      setIsServiceProvider(false);
       return;
     }
     ApiService.getApplicationStatus()
@@ -436,6 +438,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         enterSellerMode,
         exitSellerMode,
         isSeller,
+        isServiceProvider,
       }}
     >
       {children}

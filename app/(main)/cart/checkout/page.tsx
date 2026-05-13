@@ -1079,7 +1079,7 @@ export default function Checkout() {
               "Payment successful but order could not be saved. Please contact support.",
             );
             setPaying(false);
-            router.push("/");
+            router.push("/shop");
           }
         },
       });
@@ -1096,7 +1096,7 @@ export default function Checkout() {
     setShowSuccess(false);
     setPaymentCompleted(false);
     paymentCompletedRef.current = false;
-    router.push("/");
+    router.push("/shop");
   };
 
   return (

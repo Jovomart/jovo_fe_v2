@@ -1,32 +1,38 @@
-'use client'
-import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBolt, faArrowRight, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { useCountdown } from '@/hooks/useCountdown'
-import { FLASH_PRODUCTS } from '@/data'
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBolt,
+  faArrowRight,
+  faArrowUpRightFromSquare,
+} from "@fortawesome/free-solid-svg-icons";
+import { useCountdown } from "@/hooks/useCountdown";
+import { products } from "@/data/products";
 
 export default function FlashSalesSection() {
-  const { hours, mins, secs } = useCountdown()
-  const barsRef = useRef<HTMLDivElement>(null)
-  const [barsAnimated, setBarsAnimated] = useState(false)
+  const { hours, mins, secs } = useCountdown();
+  const barsRef = useRef<HTMLDivElement>(null);
+  const [barsAnimated, setBarsAnimated] = useState(false);
+
+  const flashProducts = products.filter((p) => p.category === "flash-sales");
 
   useEffect(() => {
-    const el = barsRef.current
-    if (!el) return
+    const el = barsRef.current;
+    if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setBarsAnimated(true)
-          obs.disconnect()
+          setBarsAnimated(true);
+          obs.disconnect();
         }
       },
-      { threshold: 0.25 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
+      { threshold: 0.25 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   return (
     <section className="flash-section" aria-label="Flash sales">
@@ -59,13 +65,15 @@ export default function FlashSalesSection() {
             <span className="flash-countdown__label">Ends in</span>
             <div className="flash-countdown__digits">
               {[
-                { val: hours, label: 'HRS' },
-                { val: mins,  label: 'MIN' },
-                { val: secs,  label: 'SEC' },
+                { val: hours, label: "HRS" },
+                { val: mins, label: "MIN" },
+                { val: secs, label: "SEC" },
               ].map(({ val, label }, i) => (
                 <div key={label} className="flash-countdown__group">
                   {i > 0 && (
-                    <span className="flash-countdown__colon" aria-hidden="true">:</span>
+                    <span className="flash-countdown__colon" aria-hidden="true">
+                      :
+                    </span>
                   )}
                   <div className="flash-countdown__block">
                     <strong className="flash-countdown__num">{val}</strong>
@@ -77,9 +85,16 @@ export default function FlashSalesSection() {
           </div>
 
           {/* Right — view all */}
-          <Link href="/flash-sales" className="flash-viewall" aria-label="View all flash sales">
+          <Link
+            href="/flash-sales"
+            className="flash-viewall"
+            aria-label="View all flash sales"
+          >
             View All
-            <FontAwesomeIcon icon={faArrowRight} className="flash-viewall__icon" />
+            <FontAwesomeIcon
+              icon={faArrowRight}
+              className="flash-viewall__icon"
+            />
           </Link>
         </header>
 
@@ -89,18 +104,18 @@ export default function FlashSalesSection() {
         {/* ── Product Grid ── */}
         <div
           ref={barsRef}
-          className="flash-grid"
+          className="flash-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           role="list"
           aria-label="Flash sale products"
         >
-          {FLASH_PRODUCTS.map((p, idx) => (
+          {flashProducts.map((p, idx) => (
             <Link
               key={p.id}
               href={`/product/${p.id}`}
               className="flash-card"
               role="listitem"
               aria-label={p.name}
-              style={{ '--card-delay': `${idx * 80}ms` } as React.CSSProperties}
+              style={{ "--card-delay": `${idx * 80}ms` } as React.CSSProperties}
             >
               {/* Image */}
               <div className="flash-card__img-wrap">
@@ -115,14 +130,20 @@ export default function FlashSalesSection() {
                 <div className="flash-card__veil" aria-hidden="true" />
 
                 {/* Discount badge */}
-                <span className="flash-card__discount" aria-label={`${p.discount}% off`}>
+                <span
+                  className="flash-card__discount"
+                  aria-label={`${p.discount}% off`}
+                >
                   −{p.discount}%
                 </span>
 
                 {/* Hover overlay */}
                 <div className="flash-card__hover-overlay" aria-hidden="true">
                   <span className="flash-card__explore-pill">
-                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="flash-card__explore-icon" />
+                    <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="flash-card__explore-icon"
+                    />
                     Explore
                   </span>
                 </div>
@@ -134,7 +155,9 @@ export default function FlashSalesSection() {
 
                 {/* Pricing */}
                 <div className="flash-card__pricing">
-                  <span className="flash-card__price">₦{p.price.toLocaleString()}</span>
+                  <span className="flash-card__price">
+                    ₦{p.price.toLocaleString()}
+                  </span>
                   <span className="flash-card__old-price">
                     <del>₦{p.oldPrice.toLocaleString()}</del>
                   </span>
@@ -152,10 +175,12 @@ export default function FlashSalesSection() {
                   >
                     <div
                       className="flash-card__progress-fill"
-                      style={{ width: barsAnimated ? `${p.sold}%` : '0%' }}
+                      style={{ width: barsAnimated ? `${p.sold}%` : "0%" }}
                     />
                   </div>
-                  <span className="flash-card__sold-label">{p.sold}% claimed</span>
+                  <span className="flash-card__sold-label">
+                    {p.sold}% claimed
+                  </span>
                 </div>
               </div>
             </Link>
@@ -163,5 +188,5 @@ export default function FlashSalesSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

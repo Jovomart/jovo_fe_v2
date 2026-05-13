@@ -206,10 +206,10 @@ const ProductDetails = () => {
         </div>
         <h2 className="text-xl font-bold text-gray-700">Product not found</h2>
         <Link
-          href="/"
+          href="/shop"
           className="px-6 py-2.5 bg-[#B42225] text-white rounded-xl text-sm font-semibold"
         >
-          Back to Home
+          Back to Shop
         </Link>
       </div>
     );
@@ -262,8 +262,11 @@ const ProductDetails = () => {
         {/* BREADCRUMB */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-5 pb-2">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link href="/" className="hover:text-[#B42225] transition-colors">
-              Home
+            <Link
+              href="/shop"
+              className="hover:text-[#B42225] transition-colors"
+            >
+              Shop
             </Link>
             <FiChevronRight size={12} />
             <Link
@@ -703,7 +706,7 @@ const ProductDetails = () => {
             className="bg-white rounded-3xl overflow-hidden"
             style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
           >
-            <div className="flex border-b border-gray-100 overflow-x-auto">
+            <div className="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
               {[
                 { key: "description", label: "Description" },
                 { key: "specs", label: "Specifications" },

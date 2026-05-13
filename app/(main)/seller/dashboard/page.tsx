@@ -598,7 +598,7 @@ const SellerDashboard = () => {
     try {
       if (typeof exitSellerMode === "function") await exitSellerMode();
     } catch {}
-    router.push("/");
+    router.push("/shop");
   };
 
   const navItems = [

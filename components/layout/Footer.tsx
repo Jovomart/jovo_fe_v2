@@ -1,7 +1,7 @@
 // src/components/Footer.jsx
-'use client'
-import Link from 'next/link'
-import Image from 'next/image'
+"use client";
+import Link from "next/link";
+import Image from "next/image";
 import {
   FiMail,
   FiPhone,
@@ -13,21 +13,23 @@ import {
   FiFacebook,
   FiYoutube,
 } from "react-icons/fi";
-import { useContext } from 'react'
-import { AuthContext } from '@/context/AuthContext'
- // your logo path
+import { useContext } from "react";
+import { AuthContext } from "@/context/AuthContext";
+// your logo path
 
 export default function Footer() {
-  const { isSeller } = useContext(AuthContext);
-  
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const { isSeller, isServiceProvider } = useContext(AuthContext);
+
+  const handleImageError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
     const target = e.currentTarget;
     target.style.display = "none";
     if (target.nextSibling && target.nextSibling instanceof HTMLElement) {
       target.nextSibling.style.display = "block";
     }
   };
-  
+
   return (
     <footer className="relative bg-[#0f0f0f] text-white overflow-hidden">
       {/* ── Decorative top accent line ── */}
@@ -52,16 +54,16 @@ export default function Footer() {
           {/* Logo & tagline */}
           <div className="flex flex-col gap-4 max-w-xs">
             {/* ── LOGO SLOT ── replace src with your logo variable if needed */}
-            <Image 
-             src="/images/Jovo_off_logo2.png"
-             alt="Jovo"
-             width={220}  // Adjust based on your design (md:w-55 ≈ 220px)
-             height={8}  // md:h-12 = 48px
-             className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
-             priority
-             onError={handleImageError}
-             // For responsive sizing, use style or add responsive classes
-           />
+            <Image
+              src="/images/Jovo_off_logo2.png"
+              alt="Jovo"
+              width={220} // Adjust based on your design (md:w-55 ≈ 220px)
+              height={8} // md:h-12 = 48px
+              className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
+              priority
+              onError={handleImageError}
+              // For responsive sizing, use style or add responsive classes
+            />
             <span
               className="text-2xl font-black tracking-tight text-white hidden"
               style={{ fontFamily: "'Georgia', serif" }}
@@ -172,6 +174,14 @@ export default function Footer() {
                 ...(isSeller
                   ? []
                   : [{ label: "Become a Seller", to: "/become-seller" }]),
+                ...(isServiceProvider
+                  ? []
+                  : [
+                      {
+                        label: "Become a Service Provider",
+                        to: "/become-service-provider",
+                      },
+                    ]),
                 { label: "Report a Product", to: "/report-product" },
                 { label: "Flash Sales", to: "/flash-sales" },
                 { label: "Top Sellers", to: "/top-sellers" },
@@ -229,4 +239,4 @@ export default function Footer() {
       </div>
     </footer>
   );
-};
+}

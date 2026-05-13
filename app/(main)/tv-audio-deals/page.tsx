@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 // src/pages/TvAudioDealsPage.jsx
 import { useState, useMemo } from "react";
+import { useWishlist } from "@/context/WishlistContext";
 import { products } from "@/data/products";
 import {
   FiHeart,
@@ -191,7 +192,7 @@ const SuggestedCard = ({ product }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────
 const TvAudioDealsPage = () => {
-  const [wishlist, setWishlist] = useState([]);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
   const tvAudio = useMemo(
     () => products.filter((p) => p.category === "tv-audio"),
@@ -202,11 +203,7 @@ const TvAudioDealsPage = () => {
     [],
   );
 
-  const toggleWishlist = (id) =>
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-
+  
   return (
     <div className="min-h-screen" style={{ background: "#F5F6F7" }}>
       {/* ══════════ HERO ══════════ */}
@@ -258,10 +255,10 @@ const TvAudioDealsPage = () => {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-16">
           <Link
-            href="/"
+            href="/shop"
             className="inline-flex items-center gap-1.5 text-white/75 hover:text-white text-sm transition-colors mb-8"
           >
-            <FiArrowLeft size={14} /> Back to Home
+            <FiArrowLeft size={14} /> Back to Shop
           </Link>
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -391,8 +388,8 @@ const TvAudioDealsPage = () => {
               <ProductCard
                 key={product.id}
                 product={product}
-                wishlisted={wishlist.includes(product.id)}
-                onWishlist={toggleWishlist}
+                wishlisted={isWishlisted(product.id)}
+                onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
               />
             ))}
           </div>

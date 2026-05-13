@@ -217,10 +217,10 @@ const StatusScreen = ({
           Check Status
         </button>
         <Link
-          href="/"
+          href="/shop"
           className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
         >
-          Back to Home
+          Back to Shop
         </Link>
       </div>
     </div>
@@ -440,10 +440,10 @@ const SellerApplication = () => {
         >
           <div className="max-w-3xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
             <Link
-              href="/"
+              href="/shop"
               className="flex items-center gap-2 text-white/60 hover:text-white text-xs font-semibold transition-colors"
             >
-              <FiArrowLeft size={14} /> Back to Home
+              <FiArrowLeft size={14} /> Back to Shop
             </Link>
             <div className="flex items-center gap-2">
               <div

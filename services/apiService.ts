@@ -96,83 +96,83 @@ class ApiService {
     return `Request failed with status ${statusCode}`;
   }
 
-  async makeRequest(
-    endpoint: string,
-    options: RequestInit & { headers?: any } = {},
-  ): Promise<any> {
-    if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
-    const url = `${this.baseURL}${endpoint}`;
+ async makeRequest(
+  endpoint: string,
+  options: RequestInit & { headers?: any } = {},
+): Promise<any> {
+  if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
+  const url = `${this.baseURL}${endpoint}`;
 
-    const publicPrefixes = [
-      "/auth/login",
-      "/auth/register",
-      "/auth/send-forgotten-password-code",
-      "/auth/reset-password-with-code",
-      "/auth/verify-email",
-      "/auth/resend-verification-code",
-      "/auth/google-sign-in",
-      "/auth/refresh",
-      "/delivery/public",
-      "/category/get-all-categories",
-      "/category/get-category",
-      "/auth/public/get-school",
-      "/auth/schools",
-      // ── service provider public endpoints ──
-      // ONLY the marketplace is truly public. Do NOT add '/service-provider/services/'
-      // here because it would match '/service-provider/services/my-services' and
-      // strip the auth token from that protected endpoint, causing 401 errors.
-      "/service-provider/services/marketplace",
-    ];
-    const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
+  const publicPrefixes = [
+    "/auth/login",
+    "/auth/register",
+    "/auth/send-forgotten-password-code",
+    "/auth/reset-password-with-code",
+    "/auth/verify-email",
+    "/auth/resend-verification-code",
+    "/auth/google-sign-in",
+    "/auth/refresh",
+    "/delivery/public",
+    "/category/get-all-categories",
+    "/category/get-category",
+    "/auth/public/get-school",
+    "/auth/schools",
+     "/campus-guide/",
+    "/campus-guide/search",
+    "/service-provider/services/marketplace",
+  ];
+  
+   
+  const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
 
-    const config: RequestInit & { headers: any } = {
-      headers: { "Content-Type": "application/json", ...options.headers },
-      ...options,
-    };
+  const config: RequestInit & { headers: any } = {
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  };
 
-    if (!isPublic) {
-      const token = await this.getValidAccessToken();
-      if (token) config.headers.Authorization = `Bearer ${token}`;
-      // If no token, request proceeds without auth header.
-      // Protected endpoints will 401, which we handle below.
-    }
+  // For public endpoints, don't try to add auth token at all
+  if (!isPublic) {
+    const token = await this.getValidAccessToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
 
+  try {
+    const response = await fetch(url, config);
+    let data: any;
+    const text = await response.text();
     try {
-      const response = await fetch(url, config);
-      let data: any;
-      const text = await response.text();
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { message: text };
-      }
-      if (!response.ok)
-        console.error(`API Error [${response.status}] ${endpoint}:`, data);
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+    if (!response.ok)
+      console.error(`API Error [${response.status}] ${endpoint}:`, data);
 
-      if (response.status === 401) {
-        // Don't clear tokens for service-provider endpoints — the user may simply
-        // not be a provider, which is a normal state (not an auth failure).
-        const isServiceProviderEndpoint =
-          endpoint.includes("/service-provider/");
-        if (!isServiceProviderEndpoint && !isPublic) {
+    // For public endpoints, don't clear tokens on 401
+    if (response.status === 401) {
+      // Only clear tokens for non-public endpoints
+      if (!isPublic) {
+        const isServiceProviderEndpoint = endpoint.includes("/service-provider/");
+        if (!isServiceProviderEndpoint) {
           this.clearTokens();
         }
-        throw new Error(
-          data?.detail?.message ||
-            data?.detail ||
-            data?.message ||
-            "Authentication required",
-        );
       }
-      if (!response.ok)
-        throw new Error(this.extractErrorMessage(data, response.status));
-      return data;
-    } catch (error: any) {
-      if (error.name === "TypeError" && error.message.includes("fetch"))
-        throw new Error("Network error: Unable to connect to server.");
-      throw error;
+      throw new Error(
+        data?.detail?.message ||
+          data?.detail ||
+          data?.message ||
+          "Authentication required",
+      );
     }
+    if (!response.ok)
+      throw new Error(this.extractErrorMessage(data, response.status));
+    return data;
+  } catch (error: any) {
+    if (error.name === "TypeError" && error.message.includes("fetch"))
+      throw new Error("Network error: Unable to connect to server.");
+    throw error;
   }
+}
 
   async register({
     firstName,
@@ -527,6 +527,94 @@ class ApiService {
     return this.makeRequest(`/service-provider/services/${service_id}`, {
       method: "DELETE",
     });
+  }
+
+  async getCampusGuides(params?: {
+    school_id?: string;
+    category?: string;
+    search?: string;
+    must_know?: boolean;
+    sort_by?: "popular" | "rating" | "newest" | "name" | "must_know";
+    page?: number;
+    limit?: number;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.school_id) q.append("school_id", params.school_id);
+    if (params?.category) q.append("category", params.category);
+    if (params?.search) q.append("search", params.search);
+    if (params?.must_know != null)
+      q.append("must_know", String(params.must_know));
+    if (params?.sort_by) q.append("sort_by", params.sort_by);
+    if (params?.page) q.append("page", String(params.page));
+    if (params?.limit) q.append("limit", String(params.limit));
+    const qs = q.toString();
+    return this.makeRequest(`/campus-guide/search${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
+  }
+
+  async getCampusGuideById(guide_id: string) {
+    return this.makeRequest(`/campus-guide/${guide_id}`, { method: "GET" });
+  }
+
+  async getGuideReviews(
+    guide_id: string,
+    params?: { page?: number; limit?: number; verified_only?: boolean },
+  ) {
+    const q = new URLSearchParams();
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    if (params?.verified_only != null)
+      q.append("verified_only", String(params.verified_only));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/campus-guide/${guide_id}/reviews${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  async createCampusReview(data: {
+    rating: number;
+    review: string;
+    is_verified?: boolean;
+    campus_guide_id: string;
+  }) {
+    return this.makeRequest("/campus-guide/reviews/create", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCampusReview(
+    review_id: string,
+    data: {
+      rating?: number;
+      review?: string;
+      is_verified?: boolean;
+      campus_guide_id?: string;
+    },
+  ) {
+    return this.makeRequest(`/campus-guide/reviews/${review_id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCampusReview(review_id: string) {
+    return this.makeRequest(`/campus-guide/reviews/${review_id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getMyCampusReviews(params?: { page?: number; limit?: number }) {
+    const q = new URLSearchParams();
+    if (params?.page) q.append("page", String(params.page));
+    if (params?.limit) q.append("limit", String(params.limit));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/campus-guide/reviews/my-reviews${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
   }
 
   logout() {

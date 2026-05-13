@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 // src/pages/CleaningHygienePage.jsx
 import { useState, useMemo } from "react";
+import { useWishlist } from "@/context/WishlistContext";
 import { products } from "@/data/products";
 import { FiHeart, FiShoppingBag, FiSearch, FiX, FiZap } from "react-icons/fi";
 import { FaHeart, FaStar } from "react-icons/fa";
@@ -140,7 +141,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
 const CleaningHygienePage = () => {
   const [search, setSearch] = useState("");
-  const [wishlist, setWishlist] = useState([]);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
   const cleaningProducts = useMemo(() => {
     const base = products.filter((p) => {
@@ -163,10 +164,6 @@ const CleaningHygienePage = () => {
     );
   }, [search, cleaningProducts]);
 
-  const toggleWishlist = (id) =>
-    setWishlist((p) =>
-      p.includes(id) ? p.filter((x) => x !== id) : [...p, id],
-    );
 
   return (
     <>
@@ -267,8 +264,8 @@ const CleaningHygienePage = () => {
                 <ProductCard
                   key={p.id}
                   product={p}
-                  wishlisted={wishlist.includes(p.id)}
-                  onWishlist={toggleWishlist}
+                  wishlisted={isWishlisted(p.id)}
+                  onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
                 />
               ))}
             </div>

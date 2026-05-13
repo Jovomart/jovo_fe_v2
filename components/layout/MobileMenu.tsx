@@ -1,47 +1,140 @@
-'use client'
-import { useEffect, useRef } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+"use client";
+import { useEffect, useRef, useContext } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faXmark, faPlug, faMobileScreen, faSpa, faTv, faShirt, faLaptop,
-  faGamepad, faBasketShopping, faBolt, faConciergeBell, faTruck,
-  faStore, faBagShopping, faUser, faChevronRight, faHeart,
-  faNewspaper, faPhone,
-} from '@fortawesome/free-solid-svg-icons'
+  faXmark,
+  faPlug,
+  faMobileScreen,
+  faSpa,
+  faTv,
+  faShirt,
+  faLaptop,
+  faGamepad,
+  faBasketShopping,
+  faBolt,
+  faConciergeBell,
+  faTruck,
+  faStore,
+  faBagShopping,
+  faUser,
+  faChevronRight,
+  faHeart,
+  faNewspaper,
+  faPhone,
+  faBriefcase,
+} from "@fortawesome/free-solid-svg-icons";
+import { AuthContext } from "../../context/AuthContext";
 
-interface Props { open: boolean; onClose: () => void }
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
 
 const categories = [
-  { href: '/appliances-deals', icon: faPlug, label: 'Appliances', color: '#f59e0b' },
-  { href: '/phone-deals', icon: faMobileScreen, label: 'Phones & Tablets', color: '#3b82f6' },
-  { href: '/beauty-deals', icon: faSpa, label: 'Health & Beauty', color: '#ec4899' },
-  { href: '/electronic-deals', icon: faTv, label: 'Electronics', color: '#8b5cf6' },
-  { href: '/fashion-deals', icon: faShirt, label: 'Fashion', color: '#B42225' },
-  { href: '/computing-deals', icon: faLaptop, label: 'Computing', color: '#06b6d4' },
-  { href: '/gaming-deals', icon: faGamepad, label: 'Gaming', color: '#10b981' },
-  { href: '/groceries', icon: faBasketShopping, label: 'Groceries', color: '#84cc16' },
-]
-
-const explore = [
-  { href: '/shop', icon: faBagShopping, label: 'Shop All', sub: 'Browse everything' },
-  { href: '/services', icon: faConciergeBell, label: 'Campus Services', sub: 'Skills & freelance' },
-  { href: '/logistics', icon: faTruck, label: 'Delivery', sub: 'Track your orders' },
-  { href: '/become-seller', icon: faStore, label: 'Sell on JOVO', sub: 'Start earning today' },
-  { href: '/wishlist', icon: faHeart, label: 'My Wishlist', sub: 'Saved items' },
-  { href: '/news', icon: faNewspaper, label: 'News', sub: 'Campus updates' },
-  { href: '/contact', icon: faPhone, label: 'Contact Us', sub: "We're here to help" },
-]
+  {
+    href: "/appliances-deals",
+    icon: faPlug,
+    label: "Appliances",
+    color: "#f59e0b",
+  },
+  {
+    href: "/phone-deals",
+    icon: faMobileScreen,
+    label: "Phones & Tablets",
+    color: "#3b82f6",
+  },
+  {
+    href: "/beauty-deals",
+    icon: faSpa,
+    label: "Health & Beauty",
+    color: "#ec4899",
+  },
+  {
+    href: "/electronic-deals",
+    icon: faTv,
+    label: "Electronics",
+    color: "#8b5cf6",
+  },
+  { href: "/fashion-deals", icon: faShirt, label: "Fashion", color: "#B42225" },
+  {
+    href: "/computing-deals",
+    icon: faLaptop,
+    label: "Computing",
+    color: "#06b6d4",
+  },
+  { href: "/gaming-deals", icon: faGamepad, label: "Gaming", color: "#10b981" },
+  {
+    href: "/groceries",
+    icon: faBasketShopping,
+    label: "Groceries",
+    color: "#84cc16",
+  },
+];
 
 export default function MobileMenu({ open, onClose }: Props) {
-  const panelRef = useRef<HTMLDivElement>(null)
+  const { isServiceProvider } = useContext(AuthContext);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const explore = [
+    {
+      href: "/shop",
+      icon: faBagShopping,
+      label: "Shop All",
+      sub: "Browse everything",
+    },
+    {
+      href: "/services",
+      icon: faConciergeBell,
+      label: "Campus Services",
+      sub: "Skills & freelance",
+    },
+    {
+      href: "/logistics",
+      icon: faTruck,
+      label: "Delivery",
+      sub: "Track your orders",
+    },
+    {
+      href: "/become-seller",
+      icon: faStore,
+      label: "Sell on JOVO",
+      sub: "Start earning today",
+    },
+    ...(isServiceProvider
+      ? []
+      : [
+          {
+            href: "/become-service-provider",
+            icon: faBriefcase,
+            label: "Become Service Provider",
+            sub: "Offer your services",
+          },
+        ]),
+    {
+      href: "/wishlist",
+      icon: faHeart,
+      label: "My Wishlist",
+      sub: "Saved items",
+    },
+    { href: "/news", icon: faNewspaper, label: "News", sub: "Campus updates" },
+    {
+      href: "/contact",
+      icon: faPhone,
+      label: "Contact Us",
+      sub: "We're here to help",
+    },
+  ];
 
   useEffect(() => {
-    if (!open) return
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', h)
-    return () => window.removeEventListener('keydown', h)
-  }, [open, onClose])
+    if (!open) return;
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [open, onClose]);
 
   return (
     <>
@@ -159,27 +252,51 @@ export default function MobileMenu({ open, onClose }: Props) {
         .jvm-signinbtn:hover { background: #9e1e21; transform: translateY(-1px); }
       `}</style>
 
-      <div className={`jvm-overlay ${open ? 'open' : ''}`} id="mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation">
+      <div
+        className={`jvm-overlay ${open ? "open" : ""}`}
+        id="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+      >
         <div className="jvm-backdrop" onClick={onClose} />
         <div className="jvm-panel" ref={panelRef}>
-
           {/* Header */}
           <div className="jvm-head">
             <div className="flex items-center justify-between relative z-10">
-              <Image src="/images/Jovo_off_logo2.png" alt="JOVO" width={90} height={32} className="h-7 w-24 object-cover" priority />
-              <button onClick={onClose} className="jvm-close" aria-label="Close">
+              <Image
+                src="/images/Jovo_off_logo2.png"
+                alt="JOVO"
+                width={90}
+                height={32}
+                className="h-7 w-24 object-cover"
+                priority
+              />
+              <button
+                onClick={onClose}
+                className="jvm-close"
+                aria-label="Close"
+              >
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
-            <p className="text-[10.5px] font-medium tracking-widest uppercase text-white/25 mt-2.5 relative z-10">Your Campus Marketplace</p>
+            <p className="text-[10.5px] font-medium tracking-widest uppercase text-white/25 mt-2.5 relative z-10">
+              Your Campus Marketplace
+            </p>
           </div>
 
           {/* Flash */}
           <Link href="/flash-sales" onClick={onClose} className="jvm-flash">
-            <div className="jvm-flash-ic"><FontAwesomeIcon icon={faBolt} /></div>
+            <div className="jvm-flash-ic">
+              <FontAwesomeIcon icon={faBolt} />
+            </div>
             <div className="flex-1">
-              <p className="text-[13px] font-bold text-[#FF8C00]">Flash Sales</p>
-              <p className="text-[11px] text-[#FF8C00]/50 mt-0.5">Limited time deals</p>
+              <p className="text-[13px] font-bold text-[#FF8C00]">
+                Flash Sales
+              </p>
+              <p className="text-[11px] text-[#FF8C00]/50 mt-0.5">
+                Limited time deals
+              </p>
             </div>
             <div className="w-2 h-2 rounded-full bg-[#FF8C00] jvm-pulse" />
           </Link>
@@ -188,8 +305,16 @@ export default function MobileMenu({ open, onClose }: Props) {
           <div className="jvm-body">
             <p className="jvm-sec">Shop by Category</p>
             {categories.map(({ href, icon, label, color }) => (
-              <Link key={href} href={href} onClick={onClose} className="jvm-item" style={{ '--ic': color } as React.CSSProperties}>
-                <div className="jvm-ic"><FontAwesomeIcon icon={icon} /></div>
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className="jvm-item"
+                style={{ "--ic": color } as React.CSSProperties}
+              >
+                <div className="jvm-ic">
+                  <FontAwesomeIcon icon={icon} />
+                </div>
                 <span className="jvm-lbl">{label}</span>
                 <FontAwesomeIcon icon={faChevronRight} className="jvm-arr" />
               </Link>
@@ -197,8 +322,15 @@ export default function MobileMenu({ open, onClose }: Props) {
             <div className="jvm-div" />
             <p className="jvm-sec">Explore</p>
             {explore.map(({ href, icon, label, sub }) => (
-              <Link key={href} href={href} onClick={onClose} className="jvm-item">
-                <div className="jvm-ic"><FontAwesomeIcon icon={icon} /></div>
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className="jvm-item"
+              >
+                <div className="jvm-ic">
+                  <FontAwesomeIcon icon={icon} />
+                </div>
                 <div className="flex-1">
                   <p className="jvm-lbl">{label}</p>
                   <p className="jvm-sub">{sub}</p>
@@ -215,9 +347,8 @@ export default function MobileMenu({ open, onClose }: Props) {
               Sign In / Register
             </Link>
           </div>
-
         </div>
       </div>
     </>
-  )
+  );
 }

@@ -235,9 +235,9 @@ const Profile = () => {
     setLoggingOut(true);
     try {
       await logout();
-      router.push("/");
+      router.push("/shop");
     } catch {
-      router.push("/");
+      router.push("/shop");
     }
   };
 

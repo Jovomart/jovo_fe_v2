@@ -232,7 +232,7 @@ function EmptyCart() {
         waiting for you.
       </p>
       <Link
-        href="/"
+        href="/shop"
         className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-white text-sm
                    transition-all hover:scale-105 active:scale-95 shadow-xl"
         style={{
@@ -425,7 +425,7 @@ export default function Cart() {
 
           <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
             <Link
-              href="/"
+              href="/shop"
               className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors"
             >
               <FiArrowLeft size={14} /> Continue Shopping

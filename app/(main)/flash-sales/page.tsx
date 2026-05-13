@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 // src/pages/FlashSalesPage.jsx
 import { products } from "@/data/products";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useWishlist } from "@/context/WishlistContext";
 import { FiHeart, FiShoppingBag, FiArrowLeft, FiZap } from "react-icons/fi";
 import { FaHeart, FaFire } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
@@ -165,7 +166,7 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
 const FlashSalesPage = () => {
   const router = useRouter();
   const navigate = (p: string) => router.push(p);
-  const [wishlist, setWishlist] = useState([]);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const { hours, minutes, seconds } = useCountdown(24 * 60 * 60);
 
   const flashProducts = useMemo(
@@ -174,11 +175,7 @@ const FlashSalesPage = () => {
   );
   const suggestedProducts = useMemo(() => products.slice(0, 8), []);
 
-  const toggleWishlist = (id) =>
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-
+  
   return (
     <div className="min-h-screen" style={{ background: "#F3F4F8" }}>
       {/* ══════════════════ HERO HEADER ══════════════════ */}
@@ -228,10 +225,10 @@ const FlashSalesPage = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-14">
           {/* Back link */}
           <Link
-            href="/"
+            href="/shop"
             className="inline-flex items-center gap-1.5 text-white/50 hover:text-white text-sm transition-colors mb-8"
           >
-            <FiArrowLeft size={14} /> Back to Home
+            <FiArrowLeft size={14} /> Back to Shop
           </Link>
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
@@ -332,8 +329,8 @@ const FlashSalesPage = () => {
               <ProductCard
                 key={product.id}
                 product={product}
-                wishlisted={wishlist.includes(product.id)}
-                onWishlist={toggleWishlist}
+                wishlisted={isWishlisted(product.id)}
+                onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
                 index={i}
               />
             ))}
@@ -401,8 +398,8 @@ const FlashSalesPage = () => {
             <ProductCard
               key={product.id}
               product={product}
-              wishlisted={wishlist.includes(product.id)}
-              onWishlist={toggleWishlist}
+              wishlisted={isWishlisted(product.id)}
+              onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
               index={i}
             />
           ))}
