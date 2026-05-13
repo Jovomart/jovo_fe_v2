@@ -60,7 +60,20 @@ export default function FlashSalesSection() {
             </span>
           </div>
 
-          {/* Center — countdown */}
+          {/* Right — view all (moves to bottom on mobile) */}
+          <Link
+            href="/flash-sales"
+            className="flash-viewall"
+            aria-label="View all flash sales"
+          >
+            View All
+            <FontAwesomeIcon
+              icon={faArrowRight}
+              className="flash-viewall__icon"
+            />
+          </Link>
+
+          {/* Center — countdown (moves to second row on mobile) */}
           <div className="flash-countdown" aria-label="Time remaining">
             <span className="flash-countdown__label">Ends in</span>
             <div className="flash-countdown__digits">
@@ -83,19 +96,6 @@ export default function FlashSalesSection() {
               ))}
             </div>
           </div>
-
-          {/* Right — view all */}
-          <Link
-            href="/flash-sales"
-            className="flash-viewall"
-            aria-label="View all flash sales"
-          >
-            View All
-            <FontAwesomeIcon
-              icon={faArrowRight}
-              className="flash-viewall__icon"
-            />
-          </Link>
         </header>
 
         {/* ── Divider ── */}

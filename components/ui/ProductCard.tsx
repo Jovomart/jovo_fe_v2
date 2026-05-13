@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -22,8 +22,14 @@ interface Props {
 
 export default function ProductCard({ product: p }: Props) {
   const [added, setAdded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(p.id);
+
+  // Ensure component only renders fully on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const discount = p.oldPrice
     ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)
@@ -67,12 +73,17 @@ export default function ProductCard({ product: p }: Props) {
             -{discount}%
           </span>
         )}
+        {/* Wishlist button - only show full interaction after client hydration */}
         <button
           onClick={toggleWishlist}
-          className={`product-wishlist absolute top-2 right-2 w-[30px] h-[30px] rounded-full bg-white/90 backdrop-blur-[8px] flex items-center justify-center text-[13px] transition-all hover:scale-110 opacity-0 ${wishlisted ? "!opacity-100 text-brand-red" : "text-gray-400 hover:text-brand-red"}`}
-          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={`product-wishlist absolute top-2 right-2 w-[30px] h-[30px] rounded-full bg-white/90 backdrop-blur-[8px] flex items-center justify-center text-[13px] transition-all hover:scale-110 opacity-0 group-hover:opacity-100 ${wishlisted && mounted ? "!opacity-100 text-brand-red" : "text-gray-400 hover:text-brand-red"} ${!mounted ? "opacity-0" : ""}`}
+          aria-label={mounted ? (wishlisted ? "Remove from wishlist" : "Add to wishlist") : "Add to wishlist"}
+          suppressHydrationWarning
         >
-          <FontAwesomeIcon icon={wishlisted ? faHeartSolid : faHeartRegular} />
+          <FontAwesomeIcon 
+            icon={mounted && wishlisted ? faHeartSolid : faHeartRegular} 
+            suppressHydrationWarning
+          />
         </button>
       </div>
       <div className="p-3">

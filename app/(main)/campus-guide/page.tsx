@@ -278,7 +278,6 @@ const FALLBACK_IMAGE =
    ADAPTER — maps raw API shape → typed Location
 ───────────────────────────────────────────────────────────── */
 const adaptGuide = (g: Record<string, any>): Location => {
-  // Helper to safely convert facilities
   const parseFacilities = (facilities: any): string[] => {
     if (!facilities) return [];
     if (Array.isArray(facilities)) {
@@ -356,7 +355,6 @@ const getCatIcon = (cat: string): ReactNode =>
    SUB-COMPONENTS
 ───────────────────────────────────────────────────────────── */
 
-/* Star rating input */
 interface StarInputProps {
   value: number;
   onChange: (rating: number) => void;
@@ -375,7 +373,6 @@ const StarInput = ({ value, onChange, size = 20 }: StarInputProps) => (
   </div>
 );
 
-/* Loading skeleton */
 const SkeletonCard = () => (
   <div
     className="bg-white rounded-3xl overflow-hidden animate-pulse"
@@ -391,7 +388,6 @@ const SkeletonCard = () => (
   </div>
 );
 
-/* Location card */
 interface LocationCardProps {
   loc: Location;
   onBookmark: (id: string) => void;
@@ -507,7 +503,6 @@ const LocationCard = ({
   );
 };
 
-/* Location detail modal */
 interface LocationModalProps {
   loc: Location;
   onClose: () => void;
@@ -534,21 +529,17 @@ const LocationModal = ({
 
   const color = getCatColor(fullData.category);
 
-  // Initialize auth state
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoggedIn(!!token);
   }, []);
 
-  // Load detail and reviews
   useEffect(() => {
     const loadDetail = async (): Promise<void> => {
       setDetailLoading(true);
       try {
         const data: any = await apiService.getCampusGuideById(loc.id);
         const adaptedData = adaptGuide(data?.data ?? data);
-        
         setFullData((prev) => ({
           ...prev,
           ...adaptedData,
@@ -585,14 +576,36 @@ const LocationModal = ({
         const list: Review[] = data?.data?.reviews ?? data?.reviews ?? data?.data ?? [];
         setReviews(list);
 
+        // ── fetch the user's own review separately ──────────────────────────
+        // Guard: only attempt if a token exists. Even then, wrap in its own
+        // try-catch so an expired/invalid token (401) doesn't surface as a
+        // console error or crash the public review list above.
         const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
         if (token) {
-          const myData: any = await apiService.getMyCampusReviews({ limit: 50 });
-          const myList: Review[] = myData?.data?.reviews ?? myData?.reviews ?? myData?.data ?? [];
-          const found = myList.find((r) => r.campus_guide_id === loc.id);
-          if (found) {
-            setMyReview(found);
-            setForm({ rating: found.rating, review: found.review });
+          try {
+            const myData: any = await apiService.getMyCampusReviews({ limit: 50 });
+            const myList: Review[] = myData?.data?.reviews ?? myData?.reviews ?? myData?.data ?? [];
+            const found = myList.find((r) => r.campus_guide_id === loc.id);
+            if (found) {
+              setMyReview(found);
+              setForm({ rating: found.rating, review: found.review });
+            }
+          } catch (myReviewErr: unknown) {
+            // Token exists but is expired or rejected by the server.
+            // Clear the stale token and quietly treat the user as logged-out
+            // so the review form hides gracefully instead of erroring.
+            const msg = myReviewErr instanceof Error ? myReviewErr.message : "";
+            if (
+              msg.includes("401") ||
+              msg.toLowerCase().includes("not authenticated") ||
+              msg.toLowerCase().includes("authentication")
+            ) {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("access_token");
+              }
+              setIsLoggedIn(false);
+            }
+            // No console.error — this is expected for expired sessions.
           }
         }
       } catch (err) {
@@ -621,20 +634,53 @@ const LocationModal = ({
           review: form.review,
           campus_guide_id: loc.id,
         });
-        const updated: Review = res?.data ?? res;
+        // Merge API response with known form data so UI always reflects
+        // what the user typed, even if the server returns a partial object.
+        const updated: Review = {
+          ...myReview,
+          rating: form.rating,
+          review: form.review,
+          ...(res?.data ?? res),
+        };
         setMyReview(updated);
         setReviews((prev) =>
           prev.map((r) => (r.id === myReview.id ? updated : r)),
         );
+        // Update the header rating average instantly
+        setFullData((prev) => {
+          const otherCount = Math.max(0, prev.reviews - 1);
+          const otherSum = prev.rating * prev.reviews - myReview.rating;
+          const newRating = (otherSum + form.rating) / prev.reviews;
+          return { ...prev, rating: Math.round(newRating * 10) / 10 };
+        });
       } else {
         const res: any = await apiService.createCampusReview({
           rating: form.rating,
           review: form.review,
           campus_guide_id: loc.id,
         });
-        const created: Review = res?.data ?? res;
+        // Build a complete review object from form data + whatever the API returns.
+        // This guarantees the "Your Review" card renders immediately.
+        const created: Review = {
+          id: String(Date.now()),         // temp id overwritten by API if provided
+          campus_guide_id: loc.id,
+          rating: form.rating,
+          review: form.review,
+          created_at: new Date().toISOString(),
+          ...(res?.data ?? res),
+        };
         setMyReview(created);
         setReviews((prev) => [created, ...prev]);
+        // Update header rating + count instantly
+        setFullData((prev) => {
+          const newCount = prev.reviews + 1;
+          const newRating = (prev.rating * prev.reviews + form.rating) / newCount;
+          return {
+            ...prev,
+            reviews: newCount,
+            rating: Math.round(newRating * 10) / 10,
+          };
+        });
       }
       setEditMode(false);
     } catch (err: unknown) {
@@ -794,7 +840,6 @@ const LocationModal = ({
                     .split(" ")
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(" ");
-                  
                   return (
                     <span
                       key={idx}
@@ -1075,7 +1120,6 @@ const CampusGuidePage = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Resolve school_id
   useEffect(() => {
     const loadSchoolId = async () => {
       try {
@@ -1150,20 +1194,16 @@ const CampusGuidePage = () => {
     [schoolId],
   );
 
-  // Initial load and category change
   useEffect(() => {
     if (schoolId !== undefined) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchGuides("", activeCategory);
     }
   }, [schoolId, activeCategory, fetchGuides]);
 
-  // Debounced search dropdown
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!searchQuery.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDropdownResults([]);
       return;
     }
@@ -1191,7 +1231,6 @@ const CampusGuidePage = () => {
     };
   }, [searchQuery, schoolId]);
 
-  // Close search dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent): void => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {

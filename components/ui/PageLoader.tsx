@@ -1,73 +1,128 @@
 "use client";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 
+const SESSION_KEY = "jovo_initial_loaded";
+
 export default function PageLoader() {
-  const pathname = usePathname();
-  const [show, setShow] = useState(false);
-  const [fading, setFading] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearTimers = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }, []);
 
   useEffect(() => {
-    setShow(true); // eslint-disable-line react-hooks/set-state-in-effect
-    setFading(false);
-    const fadeTimer = setTimeout(() => setFading(true), 900);
-    const hideTimer = setTimeout(() => {
-      setShow(false);
-      setFading(false);
-    }, 1300);
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [pathname]);
+    const alreadySeen = sessionStorage.getItem(SESSION_KEY);
+    if (alreadySeen) return;
 
-  if (!show) return null;
+    sessionStorage.setItem(SESSION_KEY, "1");
+
+    const el = loaderRef.current;
+    if (!el) return;
+
+    el.style.display = "flex";
+    void el.offsetHeight;
+    el.style.opacity = "1";
+
+    const t1 = setTimeout(() => {
+      if (loaderRef.current) loaderRef.current.style.opacity = "0";
+    }, 900);
+    const t2 = setTimeout(() => {
+      if (loaderRef.current) loaderRef.current.style.display = "none";
+    }, 1300);
+    timers.current = [t1, t2];
+
+    return clearTimers;
+  }, [clearTimers]);
 
   return (
     <div
-      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+      ref={loaderRef}
       style={{
+        display: "none",
+        opacity: 0,
+        position: "fixed",
+        inset: 0,
+        zIndex: 99999,
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
         background: "#000",
-        opacity: fading ? 0 : 1,
         transition: "opacity 0.4s ease",
-        pointerEvents: fading ? "none" : "all",
+        pointerEvents: "none",
       }}
     >
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
         style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "24rem",
+          height: "24rem",
+          borderRadius: "9999px",
+          pointerEvents: "none",
           background:
             "radial-gradient(circle, rgba(255,140,0,0.12), transparent 70%)",
         }}
       />
-      <div className="relative z-10 flex flex-col items-center gap-6">
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1.5rem",
+        }}
+      >
         <Image
           src="/images/Jovo_off_logo2.png"
           alt="JOVO"
           width={200}
           height={80}
-          className="object-cover w-50 h-20"
           priority
           style={{
+            objectFit: "cover",
+            width: "12.5rem",
+            height: "5rem",
             animation: "jovo-pulse 1s ease-in-out infinite",
             filter: "drop-shadow(0 0 20px rgba(255,140,0,0.4))",
           }}
         />
-        <p className="text-white/30 text-xs font-medium tracking-widest uppercase">
+        <p
+          style={{
+            color: "rgba(255,255,255,0.3)",
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+          }}
+        >
           Your Campus Marketplace
         </p>
-        <div className="w-40 h-1 bg-white/10 rounded-full overflow-hidden">
+        <div
+          style={{
+            width: "10rem",
+            height: "0.25rem",
+            background: "rgba(255,255,255,0.1)",
+            borderRadius: "9999px",
+            overflow: "hidden",
+          }}
+        >
           <div
-            className="h-full rounded-full"
             style={{
+              height: "100%",
+              borderRadius: "9999px",
               background: "linear-gradient(90deg, #B42225, #FF8C00)",
               animation: "jovo-bar 1s ease-out forwards",
               boxShadow: "0 0 8px rgba(255,140,0,0.6)",
             }}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           {[
             { anim: "jovo-dot1 1s ease-in-out infinite", color: "#B42225" },
             { anim: "jovo-dot2 1s ease-in-out infinite", color: "#FF8C00" },
@@ -75,8 +130,13 @@ export default function PageLoader() {
           ].map(({ anim, color }, i) => (
             <div
               key={i}
-              className="w-2 h-2 rounded-full"
-              style={{ background: color, animation: anim }}
+              style={{
+                width: "0.5rem",
+                height: "0.5rem",
+                borderRadius: "9999px",
+                background: color,
+                animation: anim,
+              }}
             />
           ))}
         </div>

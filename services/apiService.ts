@@ -96,83 +96,84 @@ class ApiService {
     return `Request failed with status ${statusCode}`;
   }
 
- async makeRequest(
-  endpoint: string,
-  options: RequestInit & { headers?: any } = {},
-): Promise<any> {
-  if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
-  const url = `${this.baseURL}${endpoint}`;
+  async makeRequest(
+    endpoint: string,
+    options: RequestInit & { headers?: any } = {},
+  ): Promise<any> {
+    if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
+    const url = `${this.baseURL}${endpoint}`;
 
-  const publicPrefixes = [
-    "/auth/login",
-    "/auth/register",
-    "/auth/send-forgotten-password-code",
-    "/auth/reset-password-with-code",
-    "/auth/verify-email",
-    "/auth/resend-verification-code",
-    "/auth/google-sign-in",
-    "/auth/refresh",
-    "/delivery/public",
-    "/category/get-all-categories",
-    "/category/get-category",
-    "/auth/public/get-school",
-    "/auth/schools",
-     "/campus-guide/",
-    "/campus-guide/search",
-    "/service-provider/services/marketplace",
-  ];
-  
-   
-  const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
+    const publicPrefixes = [
+      "/auth/login",
+      "/auth/register",
+      "/auth/send-forgotten-password-code",
+      "/auth/reset-password-with-code",
+      "/auth/verify-email",
+      "/auth/resend-verification-code",
+      "/auth/google-sign-in",
+      "/auth/refresh",
+      "/delivery/public",
+      "/category/get-all-categories",
+      "/category/get-category",
+      "/auth/public/get-school",
+      "/auth/schools",
+      
+      "/campus-guide/search",
+      "/service-provider/services/marketplace",
+    ];
 
-  const config: RequestInit & { headers: any } = {
-    headers: { "Content-Type": "application/json", ...options.headers },
-    ...options,
-  };
+    const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
 
-  // For public endpoints, don't try to add auth token at all
-  if (!isPublic) {
-    const token = await this.getValidAccessToken();
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  }
+    const config: RequestInit & { headers: any } = {
+      headers: { "Content-Type": "application/json", ...options.headers },
+      ...options,
+    };
 
-  try {
-    const response = await fetch(url, config);
-    let data: any;
-    const text = await response.text();
+    // For public endpoints, don't try to add auth token at all
+    if (!isPublic) {
+      const token = await this.getValidAccessToken();
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
+
     try {
-      data = JSON.parse(text);
-    } catch {
-      data = { message: text };
-    }
-    if (!response.ok)
-      console.error(`API Error [${response.status}] ${endpoint}:`, data);
-
-    // For public endpoints, don't clear tokens on 401
-    if (response.status === 401) {
-      // Only clear tokens for non-public endpoints
-      if (!isPublic) {
-        const isServiceProviderEndpoint = endpoint.includes("/service-provider/");
-        if (!isServiceProviderEndpoint) {
-          this.clearTokens();
-        }
+      const response = await fetch(url, config);
+      let data: any;
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text };
       }
-      throw new Error(
-        data?.detail?.message ||
-          data?.detail ||
-          data?.message ||
-          "Authentication required",
-      );
+
+      // Only log unexpected errors — 401 is a handled auth state, not a bug.
+      if (!response.ok && response.status !== 401)
+        console.error(`API Error [${response.status}] ${endpoint}:`, data);
+
+      // For public endpoints, don't clear tokens on 401
+      if (response.status === 401) {
+        // Only clear tokens for non-public endpoints
+        if (!isPublic) {
+          const isServiceProviderEndpoint = endpoint.includes("/service-provider/");
+          if (!isServiceProviderEndpoint) {
+            this.clearTokens();
+          }
+        }
+        throw new Error(
+          data?.detail?.message ||
+            data?.detail ||
+            data?.message ||
+            "Authentication required",
+        );
+      }
+      if (!response.ok)
+        throw new Error(this.extractErrorMessage(data, response.status));
+      return data;
+    } catch (error: any) {
+      if (error.name === "TypeError" && error.message.includes("fetch"))
+        throw new Error("Network error: Unable to connect to server.");
+      throw error;
     }
-    if (!response.ok)
-      throw new Error(this.extractErrorMessage(data, response.status));
-    return data;
-  } catch (error: any) {
-    if (error.name === "TypeError" && error.message.includes("fetch"))
-      throw new Error("Network error: Unable to connect to server.");
-    throw error;
   }
-}
 
   async register({
     firstName,
@@ -494,7 +495,6 @@ class ApiService {
     });
   }
 
-  // This endpoint is public on the backend but we still send the token if available — that's fine.
   async getServiceById(service_id: string) {
     return this.makeRequest(`/service-provider/services/${service_id}`, {
       method: "GET",

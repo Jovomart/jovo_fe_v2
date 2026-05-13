@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, useContext, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import {
   FiMenu,
@@ -315,7 +315,7 @@ function CartButton({ onClick }: { onClick: () => void }) {
 
   useEffect(() => {
     if (recentlyAdded !== null) {
-      setPulse(true); // eslint-disable-line react-hooks/set-state-in-effect
+      setPulse(true);
       const t = setTimeout(() => setPulse(false), 650);
       return () => clearTimeout(t);
     }
@@ -415,7 +415,7 @@ export default function Navbar() {
   const isServiceProviderVerified = mounted && !!isServiceProvider;
 
   useEffect(() => {
-    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -583,7 +583,6 @@ export default function Navbar() {
                 onClick={() => setAccountOpen((o) => !o)}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition text-gray-700"
               >
-                {/* ── Avatar: always render the neutral shell; fill after mount ── */}
                 <div className="relative w-8 h-8 rounded-full bg-[#B42225]/10 flex items-center justify-center shrink-0">
                   {!mounted ? (
                     <FiUser size={20} className="text-[#B42225]" />
@@ -699,6 +698,7 @@ export default function Navbar() {
                           />
                         </button>
                       )}
+                      {/* Service Provider Section - FIXED */}
                       {!isServiceProviderVerified && (
                         <button
                           onClick={() => goTo("/become-service-provider")}
@@ -727,7 +727,7 @@ export default function Navbar() {
                             className="text-gray-400 group-hover:text-purple-600"
                           />
                           <span className="flex-1 text-left">
-                            Visit Service Dashboard
+                            Service Dashboard
                           </span>
                           <FiChevronRight
                             size={13}
@@ -866,20 +866,13 @@ export default function Navbar() {
         <div
           className={`relative flex flex-col bg-white w-[320px] h-full shadow-2xl transform transition-transform duration-300 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
-          {/* ── Sidebar header ──────────────────────────────────────
-              FIX: gate on `mounted` so SSR always renders the guest
-              shell; the client hydrates to the same neutral output
-              and then swaps to user content after mount.
-          ─────────────────────────────────────────────────────── */}
+          {/* Sidebar header */}
           <div className="flex items-center justify-between px-5 py-4 bg-[#B42225]">
             <div className="flex items-center gap-3">
-              {/* Neutral avatar shell – identical on server & first client paint */}
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 {!mounted ? (
-                  // SSR / pre-hydration: always show the icon (no border-2)
                   <FiUser size={20} className="text-white" />
                 ) : isLoggedIn ? (
-                  // Post-mount, logged-in: show photo or initials
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 border-2 border-white/30 overflow-hidden">
                     {user.photoURL ? (
                       <Image
@@ -896,14 +889,12 @@ export default function Navbar() {
                     )}
                   </div>
                 ) : (
-                  // Post-mount, guest
                   <FiUser size={20} className="text-white" />
                 )}
               </div>
 
               <div>
                 {!mounted ? (
-                  // Neutral text during SSR
                   <>
                     <p className="text-white font-semibold text-sm">
                       Hello, Guest
@@ -921,6 +912,11 @@ export default function Navbar() {
                       {isSellerVerified && (
                         <span className="inline-flex items-center gap-1 text-[9px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full">
                           <FaStore size={7} /> Seller
+                        </span>
+                      )}
+                      {isServiceProviderVerified && (
+                        <span className="inline-flex items-center gap-1 text-[9px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full">
+                          <FiBriefcase size={7} /> Provider
                         </span>
                       )}
                     </div>
@@ -949,10 +945,7 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* ── Sign-in strip ────────────────────────────────────────
-              FIX: render nothing (not the guest buttons) until mounted
-              so the SSR output matches the initial client render.
-          ─────────────────────────────────────────────────────── */}
+          {/* Sign-in strip */}
           {mounted && !isLoggedIn && (
             <div className="px-4 py-3 flex gap-2 border-b border-gray-100">
               <button
@@ -971,9 +964,7 @@ export default function Navbar() {
           )}
 
           <div className="flex-1 overflow-y-auto">
-            {/* ── My Account quick links ───────────────────────────
-                FIX: gate on mounted so SSR produces nothing here.
-            ─────────────────────────────────────────────────── */}
+            {/* My Account quick links */}
             {mounted && isLoggedIn && (
               <div className="px-4 py-3 border-b border-gray-100">
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">
@@ -1129,8 +1120,16 @@ export default function Navbar() {
                       },
                     ]
                   : [{ label: "Become a Seller", to: "/become-seller" }]),
+                // Service Provider Section - FIXED for mobile sidebar
                 ...(isServiceProviderVerified
-                  ? []
+                  ? [
+                      {
+                        label: "Service Dashboard",
+                        to: "/service-dashboard",
+                        icon: <FiBriefcase size={13} className="inline mr-1.5 -mt-0.5" />,
+                        highlight: true,
+                      },
+                    ]
                   : [
                       {
                         label: "Become a Service Provider",
@@ -1138,25 +1137,26 @@ export default function Navbar() {
                       },
                     ]),
                 { label: "Help Center", to: "/help" },
-              ].map(({ label, to, action }: any) => (
+              ].map(({ label, to, action, icon, highlight }: any) => (
                 <button
                   key={label}
                   onClick={() => (action ? action() : goTo(to))}
-                  className={`w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 rounded-xl transition ${label === "Switch to Seller" ? "text-green-600 font-semibold" : "text-gray-600 hover:text-[#B42225]"}`}
+                  className={`w-full text-left px-3 py-2.5 text-sm rounded-xl transition ${
+                    highlight
+                      ? "text-purple-600 font-semibold"
+                      : label === "Switch to Seller"
+                      ? "text-green-600 font-semibold"
+                      : "text-gray-600 hover:text-[#B42225]"
+                  } ${!highlight && label !== "Switch to Seller" ? "hover:bg-gray-50" : ""}`}
                 >
-                  {label === "Switch to Seller" && (
-                    <FaStore size={13} className="inline mr-1.5 -mt-0.5" />
-                  )}
+                  {icon}
                   {label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ── Bottom logout button ─────────────────────────────────
-              FIX: gate on mounted so SSR renders nothing here, keeping
-              the server HTML identical to the first client paint.
-          ─────────────────────────────────────────────────────── */}
+          {/* Bottom logout button */}
           {mounted && isLoggedIn && (
             <div className="px-4 py-4 border-t border-gray-100 bg-gray-50/50">
               <button

@@ -43,7 +43,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     seller_id: userData.seller_id || null,
     seller_status: userData.seller_status || null,
     has_applied_as_seller: userData.has_applied_as_seller || false,
+    // Service provider fields
+    service_provider_id: userData.service_provider_id || null,
+    service_provider_status: userData.service_provider_status || null,
+    is_service_provider: userData.is_service_provider || false,
   });
+
+const checkServiceProviderStatus = async (userId: string) => {
+  try {
+    const response = await ApiService.getServiceProviderDetails();
+    const providerData = response?.data || response;
+    
+    // Check if user is a service provider - check provider_status === "active"
+    const isProvider = !!(providerData?.id && providerData?.provider_status === "active");
+    
+    setIsServiceProvider(isProvider);
+    
+    // Also update user object with provider info
+    if (isProvider && user) {
+      const updatedUser = {
+        ...user,
+        service_provider_id: providerData.id,
+        service_provider_status: providerData.provider_status || "active",
+        is_service_provider: true,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
+    
+    return isProvider;
+  } catch (error) {
+    setIsServiceProvider(false);
+    return false;
+  }
+};
 
   // FIXED: Auth persistence - async/await pattern to prevent race conditions
   useEffect(() => {
@@ -57,8 +90,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (storedUser && accessToken) {
         if (!ApiService.isTokenExpired(accessToken)) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
           setLoading(false);
+          
+          // Check service provider status for logged in user
+          await checkServiceProviderStatus(parsedUser.id);
         } else {
           try {
             await ApiService.refreshAccessToken();
@@ -66,6 +103,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const mappedUser = mapUserData(freshUser.data || freshUser);
             localStorage.setItem("user", JSON.stringify(mappedUser));
             setUser(mappedUser);
+            
+            // Check service provider status
+            await checkServiceProviderStatus(mappedUser.id);
           } catch (error) {
             console.error("Token refresh failed:", error);
             ApiService.clearTokens();
@@ -83,11 +123,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
+  // Check seller status
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
-      setIsServiceProvider(false);
       return;
     }
     ApiService.getApplicationStatus()
@@ -112,6 +151,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSellerMode(false);
         localStorage.setItem("sellerMode", "false");
       });
+  }, [user]);
+
+  // Check service provider status when user changes
+  useEffect(() => {
+    if (user && user.id) {
+      checkServiceProviderStatus(user.id);
+    } else {
+      setIsServiceProvider(false);
+    }
   }, [user]);
 
   const register = async (formData: any) => {
@@ -141,6 +189,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
         console.log("✅ User stored from getCurrentUser:", mappedUser);
+        
+        // Check service provider status after registration
+        await checkServiceProviderStatus(mappedUser.id);
       }
     } catch (err: any) {
       console.log(
@@ -174,6 +225,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         seller_id: null,
         seller_status: null,
         has_applied_as_seller: false,
+        service_provider_id: null,
+        service_provider_status: null,
+        is_service_provider: false,
       };
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
@@ -205,6 +259,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             "✅ Login - fetched complete user with phone:",
             mappedUser.phone,
           );
+          
+          // Check service provider status after login
+          await checkServiceProviderStatus(mappedUser.id);
+          
           console.log("===================================");
           return mappedUser;
         }
@@ -221,6 +279,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       );
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
+      
+      // Check service provider status after login
+      await checkServiceProviderStatus(mappedUser.id);
+      
       console.log("===================================");
       return mappedUser;
     }
@@ -269,6 +331,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
       console.log("📱 User stored:", mappedUser);
+      
+      // Check service provider status after Google login
+      await checkServiceProviderStatus(mappedUser.id);
     }
     console.log("===========================================");
     return { userData, response, requiresProfileCompletion };
@@ -297,6 +362,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(mappedUser);
         console.log("✅ Profile completed - fetched fresh user:", mappedUser);
         console.log("📱 Phone after completion:", mappedUser.phone);
+        
+        // Check service provider status after profile completion
+        await checkServiceProviderStatus(mappedUser.id);
+        
         return mappedUser;
       }
     } catch (err: any) {
@@ -357,6 +426,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(freshUser.data || freshUser);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
+        
+        // Check service provider status after verification
+        await checkServiceProviderStatus(mappedUser.id);
       } catch (err) {
         console.error("Failed to fetch user after verification:", err);
       }
@@ -364,6 +436,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const mappedUser = mapUserData(response.user);
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
+      
+      // Check service provider status after verification
+      await checkServiceProviderStatus(mappedUser.id);
     }
     return response;
   };
@@ -388,6 +463,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(userData, user);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
+        
+        // Check service provider status after refresh
+        await checkServiceProviderStatus(mappedUser.id);
+        
         return mappedUser;
       }
       return null;
@@ -406,6 +485,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     ApiService.clearTokens();
     setUser(null);
     setSellerMode(false);
+    setIsServiceProvider(false);
   };
 
   const enterSellerMode = () => {

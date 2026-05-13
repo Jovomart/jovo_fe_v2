@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,6 +20,7 @@ import {
   FaCamera,
 } from "react-icons/fa";
 import apiService from "@/services/apiService";
+import { AuthContext } from "@/context/AuthContext";
 
 const STEPS = ["Business Info", "Your Skills", "Review & Submit"];
 
@@ -87,17 +88,30 @@ interface DisplayCategory {
 
 export default function ApplyPage() {
   const router = useRouter();
+  const { isServiceProvider, isLoading: authLoading } = useContext(AuthContext) as any;
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<DisplayCategory[]>([]);
+  const [mounted, setMounted] = useState(false);
   const [form, setForm] = useState({
     business_name: "",
     business_bio: "",
     whatsapp_number: "",
     service_category: [] as string[],
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Redirect if already a service provider
+  useEffect(() => {
+    if (mounted && isServiceProvider) {
+      router.replace("/service-dashboard");
+    }
+  }, [isServiceProvider, router, mounted]);
 
   // Fetch categories from backend
   useEffect(() => {
@@ -107,7 +121,6 @@ export default function ApplyPage() {
         const response = await apiService.getPublicCategories("SERVICE");
         console.log("Categories API response:", response);
 
-        // Extract categories from response
         let categoriesData = response?.data || response;
 
         if (
@@ -124,7 +137,6 @@ export default function ApplyPage() {
           categoriesData = [];
         }
 
-        // Map API categories to display format
         const mappedCategories: DisplayCategory[] = categoriesData
           .filter((cat: ApiCategory) => cat.is_active !== false)
           .map((cat: ApiCategory) => ({
@@ -194,6 +206,20 @@ export default function ApplyPage() {
     }
   };
 
+  // Show loading while checking auth
+  if (!mounted || authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F4F5F9" }}>
+        <div className="w-8 h-8 border-2 border-[#B42225]/20 border-t-[#B42225] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If already a service provider, don't render
+  if (isServiceProvider) {
+    return null;
+  }
+
   /* ─── helpers ─────────────────────────────────────────────── */
   const dotBg = {
     backgroundImage:
@@ -217,26 +243,6 @@ export default function ApplyPage() {
           "linear-gradient(135deg,#0a0a0a 0%,#111 40%,#1a0a00 70%,#2a1500 100%)",
       }}
     >
-      {/* Category Skeleton */}
-      {(() => {
-        const CategorySkeleton = () => (
-          <div
-            className="relative flex items-center gap-3 p-4 rounded-2xl animate-pulse"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <div className="w-10 h-10 rounded-xl bg-gray-700" />
-            <div className="flex-1">
-              <div className="h-3 bg-gray-700 rounded w-24 mb-2" />
-              <div className="h-2 bg-gray-700 rounded w-32" />
-            </div>
-          </div>
-        );
-        return null;
-      })()}
-
       {/* bg textures */}
       <div
         className="fixed inset-0 opacity-[0.04] pointer-events-none"
@@ -440,7 +446,6 @@ export default function ApplyPage() {
               </div>
 
               {loadingCategories ? (
-                // Show skeletons while loading
                 <div className="space-y-3">
                   <CategorySkeleton />
                   <CategorySkeleton />

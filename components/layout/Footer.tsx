@@ -2,6 +2,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect, useContext } from "react";
 import {
   FiMail,
   FiPhone,
@@ -13,12 +14,15 @@ import {
   FiFacebook,
   FiYoutube,
 } from "react-icons/fi";
-import { useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
-// your logo path
 
 export default function Footer() {
   const { isSeller, isServiceProvider } = useContext(AuthContext);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>,
@@ -53,16 +57,14 @@ export default function Footer() {
         <div className="flex flex-col lg:flex-row justify-between items-start gap-10 pb-12 border-b border-white/10">
           {/* Logo & tagline */}
           <div className="flex flex-col gap-4 max-w-xs">
-            {/* ── LOGO SLOT ── replace src with your logo variable if needed */}
             <Image
               src="/images/Jovo_off_logo2.png"
               alt="Jovo"
-              width={220} // Adjust based on your design (md:w-55 ≈ 220px)
-              height={8} // md:h-12 = 48px
+              width={220}
+              height={48}
               className="cursor-pointer shrink-0 object-cover md:w-55 md:h-12 w-28 h-10"
               priority
               onError={handleImageError}
-              // For responsive sizing, use style or add responsive classes
             />
             <span
               className="text-2xl font-black tracking-tight text-white hidden"
@@ -171,10 +173,10 @@ export default function Footer() {
             </p>
             <ul className="space-y-3">
               {[
-                ...(isSeller
+                ...(isSeller && mounted
                   ? []
                   : [{ label: "Become a Seller", to: "/become-seller" }]),
-                ...(isServiceProvider
+                ...(isServiceProvider && mounted
                   ? []
                   : [
                       {
