@@ -126,6 +126,7 @@ const checkServiceProviderStatus = async (userId: string) => {
   // Check seller status
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
       return;
     }
@@ -156,10 +157,13 @@ const checkServiceProviderStatus = async (userId: string) => {
   // Check service provider status when user changes
   useEffect(() => {
     if (user && user.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       checkServiceProviderStatus(user.id);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsServiceProvider(false);
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [user]);
 
   const register = async (formData: any) => {

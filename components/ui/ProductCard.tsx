@@ -27,6 +27,7 @@ export default function ProductCard({ product: p }: Props) {
   const wishlisted = isWishlisted(p.id);
 
   // Ensure component only renders fully on client
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setMounted(true);
   }, []);

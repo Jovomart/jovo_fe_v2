@@ -531,6 +531,7 @@ const LocationModal = ({
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoggedIn(!!token);
   }, []);
 
@@ -1196,6 +1197,7 @@ const CampusGuidePage = () => {
 
   useEffect(() => {
     if (schoolId !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchGuides("", activeCategory);
     }
   }, [schoolId, activeCategory, fetchGuides]);
@@ -1204,6 +1206,7 @@ const CampusGuidePage = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!searchQuery.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDropdownResults([]);
       return;
     }

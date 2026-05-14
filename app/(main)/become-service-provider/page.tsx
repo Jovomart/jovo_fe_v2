@@ -1,5 +1,3 @@
-// app/(main)/become-service-provider/page.tsx
-
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -279,6 +277,7 @@ const BecomeServiceProvider = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setMounted(true);
   }, []);

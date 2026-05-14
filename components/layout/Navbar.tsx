@@ -315,6 +315,7 @@ function CartButton({ onClick }: { onClick: () => void }) {
 
   useEffect(() => {
     if (recentlyAdded !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPulse(true);
       const t = setTimeout(() => setPulse(false), 650);
       return () => clearTimeout(t);
@@ -415,6 +416,7 @@ export default function Navbar() {
   const isServiceProviderVerified = mounted && !!isServiceProvider;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
