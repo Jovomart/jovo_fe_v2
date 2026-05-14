@@ -275,19 +275,12 @@ const BecomeServiceProvider = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { user, isServiceProvider, isLoading } = useContext(AuthContext) as any;
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Redirect if already a service provider
-  useEffect(() => {
-    if (mounted && isServiceProvider) {
-      router.replace("/service-dashboard");
-    }
-  }, [isServiceProvider, router, mounted]);
+  // Redirect if already a service provider (handled during render)
+  if (!isLoading && isServiceProvider) {
+    router.replace("/service-dashboard");
+    return null;
+  }
 
   const handleApply = () => {
     if (!user) {
@@ -301,8 +294,8 @@ const BecomeServiceProvider = () => {
     router.push("/services/apply");
   };
 
-  // Show nothing while checking auth to prevent flash
-  if (!mounted || isLoading) {
+  // Show loading while checking auth
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#F4F5F9" }}>
         <div className="w-8 h-8 border-2 border-[#B42225]/20 border-t-[#B42225] rounded-full animate-spin" />
