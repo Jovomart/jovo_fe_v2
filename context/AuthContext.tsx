@@ -13,10 +13,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [sellerMode, setSellerMode] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const [isServiceProvider, setIsServiceProvider] = useState(false);
-  
+
   // Use refs to track if initial checks have been done
   const sellerChecked = useRef(false);
   const providerChecked = useRef(false);
+
+  // Derived value — when there's no user, isServiceProvider is always false.
+  // This avoids calling setIsServiceProvider(false) inside an effect.
+  const effectiveIsServiceProvider = user ? isServiceProvider : false;
 
   const mapUserData = (userData: any, existingUser: any = null) => ({
     id: userData.user_id || userData.id,
@@ -52,32 +56,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     is_service_provider: userData.is_service_provider || false,
   });
 
+  // Stable callback — uses functional setUser so it never needs `user` as a dep.
   const checkServiceProviderStatus = useCallback(async (userId: string) => {
     try {
       const response = await ApiService.getServiceProviderDetails();
       const providerData = response?.data || response;
-      
-      const isProvider = !!(providerData?.id && providerData?.provider_status === "active");
-      
+
+      const isProvider = !!(
+        providerData?.id && providerData?.provider_status === "active"
+      );
+
       setIsServiceProvider(isProvider);
-      
-      if (isProvider && user && user.id === userId) {
-        const updatedUser = {
-          ...user,
-          service_provider_id: providerData.id,
-          service_provider_status: providerData.provider_status || "active",
-          is_service_provider: true,
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
+
+      if (isProvider) {
+        // Functional updater reads the latest user without closing over it.
+        setUser((prevUser: any) => {
+          if (!prevUser || prevUser.id !== userId) return prevUser;
+          const updatedUser = {
+            ...prevUser,
+            service_provider_id: providerData.id,
+            service_provider_status: providerData.provider_status ?? "active",
+            is_service_provider: true,
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          return updatedUser;
+        });
       }
-      
+
       return isProvider;
-    } catch (error) {
+    } catch {
       setIsServiceProvider(false);
       return false;
     }
-  }, [user]);
+  }, []); // ✅ Stable — no user dependency
 
   // Auth persistence
   useEffect(() => {
@@ -94,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           setLoading(false);
-          
+
           await checkServiceProviderStatus(parsedUser.id);
           sellerChecked.current = true;
           providerChecked.current = true;
@@ -123,12 +134,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     initAuth();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // ↑ Intentionally empty — runs once on mount only.
 
-  // Check seller status - only runs once after user is loaded
+  // Check seller status — only runs once after user is first loaded.
   useEffect(() => {
     if (!user || sellerChecked.current) return;
-    
+
     sellerChecked.current = true;
     ApiService.getApplicationStatus()
       .then((res: any) => {
@@ -154,18 +166,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
   }, [user]);
 
-  // Check service provider status - only runs once after user is loaded
+  // Check service provider status — only runs once after user is first loaded.
+  // No setState in the else branch; effectiveIsServiceProvider handles that derivation.
   useEffect(() => {
-    if (user && user.id) {
+    if (user?.id) {
       if (!providerChecked.current) {
         providerChecked.current = true;
         checkServiceProviderStatus(user.id);
       }
     } else {
-      setIsServiceProvider(false);
       providerChecked.current = false;
+      // ✅ No setIsServiceProvider(false) here — effectiveIsServiceProvider
+      //    derives false automatically whenever user is null/undefined.
     }
-  }, [user]);
+  }, [user, checkServiceProviderStatus]); // ✅ exhaustive-deps satisfied
 
   const register = async (formData: any) => {
     console.log("========== REGISTER DEBUG ==========");
@@ -194,7 +208,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
         console.log("✅ User stored from getCurrentUser:", mappedUser);
-        
+
         await checkServiceProviderStatus(mappedUser.id);
       }
     } catch (err: any) {
@@ -263,9 +277,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             "✅ Login - fetched complete user with phone:",
             mappedUser.phone,
           );
-          
+
           await checkServiceProviderStatus(mappedUser.id);
-          
+
           console.log("===================================");
           return mappedUser;
         }
@@ -282,9 +296,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       );
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
-      
+
       await checkServiceProviderStatus(mappedUser.id);
-      
+
       console.log("===================================");
       return mappedUser;
     }
@@ -333,7 +347,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
       console.log("📱 User stored:", mappedUser);
-      
+
       await checkServiceProviderStatus(mappedUser.id);
     }
     console.log("===========================================");
@@ -363,9 +377,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(mappedUser);
         console.log("✅ Profile completed - fetched fresh user:", mappedUser);
         console.log("📱 Phone after completion:", mappedUser.phone);
-        
+
         await checkServiceProviderStatus(mappedUser.id);
-        
+
         return mappedUser;
       }
     } catch (err: any) {
@@ -426,7 +440,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(freshUser.data || freshUser);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
-        
+
         await checkServiceProviderStatus(mappedUser.id);
       } catch (err) {
         console.error("Failed to fetch user after verification:", err);
@@ -435,7 +449,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const mappedUser = mapUserData(response.user);
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
-      
+
       await checkServiceProviderStatus(mappedUser.id);
     }
     return response;
@@ -461,9 +475,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(userData, user);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
-        
+
         await checkServiceProviderStatus(mappedUser.id);
-        
+
         return mappedUser;
       }
       return null;
@@ -517,7 +531,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         enterSellerMode,
         exitSellerMode,
         isSeller,
-        isServiceProvider,
+        isServiceProvider: effectiveIsServiceProvider, // ✅ derived, never set in an effect
       }}
     >
       {children}

@@ -1,5 +1,11 @@
 "use client";
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
@@ -16,7 +22,6 @@ export default function TestimonialsSection() {
   const trackRef = useRef<HTMLDivElement>(null);
   const autoRef = useRef<ReturnType<typeof setInterval>>();
   const touchX = useRef(0);
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
     const update = () => {
@@ -31,27 +36,33 @@ export default function TestimonialsSection() {
 
   const maxIdx = Math.max(0, TESTIMONIALS.length - visibleCount);
 
+  // Derived value — auto-clamps current when visibleCount shrinks.
+  // No setState inside an effect needed.
+  const effectiveCurrent = Math.min(current, maxIdx);
+
   const goTo = useCallback(
     (idx: number) => {
-      const clamped = Math.max(0, Math.min(idx, maxIdx));
-      setCurrent(clamped);
-      if (trackRef.current) {
-        const card = trackRef.current.querySelector<HTMLElement>(".tsc-card");
-        const gap = 16;
-        const cardW = card ? card.offsetWidth + gap : 0;
-        trackRef.current.style.transform = `translateX(-${clamped * cardW}px)`;
-      }
+      setCurrent(Math.max(0, Math.min(idx, maxIdx)));
     },
     [maxIdx],
   );
 
+  // Pure DOM sync — reads effectiveCurrent, never calls setState.
+  useLayoutEffect(() => {
+    if (!trackRef.current) return;
+    const card = trackRef.current.querySelector<HTMLElement>(".tsc-card");
+    const gap = 16;
+    const cardW = card ? card.offsetWidth + gap : 0;
+    trackRef.current.style.transform = `translateX(-${effectiveCurrent * cardW}px)`;
+  }, [effectiveCurrent]);
+
   const next = useCallback(
-    () => goTo(current >= maxIdx ? 0 : current + 1),
-    [current, maxIdx, goTo],
+    () => goTo(effectiveCurrent >= maxIdx ? 0 : effectiveCurrent + 1),
+    [effectiveCurrent, maxIdx, goTo],
   );
   const prev = useCallback(
-    () => goTo(current > 0 ? current - 1 : maxIdx),
-    [current, maxIdx, goTo],
+    () => goTo(effectiveCurrent > 0 ? effectiveCurrent - 1 : maxIdx),
+    [effectiveCurrent, maxIdx, goTo],
   );
 
   const resetAuto = useCallback(() => {
@@ -63,21 +74,6 @@ export default function TestimonialsSection() {
     autoRef.current = setInterval(next, 4800);
     return () => clearInterval(autoRef.current);
   }, [next]);
-
-  // Update slider position when visibleCount changes
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useLayoutEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    // Only update if current is out of bounds
-    if (current > maxIdx) {
-      goTo(maxIdx);
-    } else {
-      goTo(current);
-    }
-  }, [visibleCount, current, maxIdx, goTo]);
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
 
@@ -564,7 +560,7 @@ export default function TestimonialsSection() {
                   }
                 }}
               >
-                {TESTIMONIALS.map((t, idx) => (
+                {TESTIMONIALS.map((t) => (
                   <blockquote key={t.id} className="tsc-card">
                     <div className="tsc-card__scan" aria-hidden="true" />
                     <FontAwesomeIcon
@@ -641,12 +637,12 @@ export default function TestimonialsSection() {
                   key={i}
                   role="tab"
                   aria-label={`Go to testimonial ${i + 1}`}
-                  aria-selected={i === current}
+                  aria-selected={i === effectiveCurrent}
                   onClick={() => {
                     goTo(i);
                     resetAuto();
                   }}
-                  className={`tsc-dot ${i === current ? "tsc-dot--active" : "tsc-dot--inactive"}`}
+                  className={`tsc-dot ${i === effectiveCurrent ? "tsc-dot--active" : "tsc-dot--inactive"}`}
                 />
               ))}
             </div>
