@@ -63,10 +63,15 @@ export default function TestimonialsSection() {
     return () => clearInterval(autoRef.current);
   }, [next]);
 
+  // Update slider position when visibleCount changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    goTo(current);
-  }, [visibleCount]);
+    // Only update if current is out of bounds
+    if (current > maxIdx) {
+      goTo(maxIdx);
+    } else {
+      goTo(current);
+    }
+  }, [visibleCount, current, maxIdx, goTo]);
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
 

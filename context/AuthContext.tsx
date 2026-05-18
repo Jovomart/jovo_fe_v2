@@ -43,42 +43,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     seller_id: userData.seller_id || null,
     seller_status: userData.seller_status || null,
     has_applied_as_seller: userData.has_applied_as_seller || false,
-    // Service provider fields
     service_provider_id: userData.service_provider_id || null,
     service_provider_status: userData.service_provider_status || null,
     is_service_provider: userData.is_service_provider || false,
   });
 
-const checkServiceProviderStatus = async (userId: string) => {
-  try {
-    const response = await ApiService.getServiceProviderDetails();
-    const providerData = response?.data || response;
-    
-    // Check if user is a service provider - check provider_status === "active"
-    const isProvider = !!(providerData?.id && providerData?.provider_status === "active");
-    
-    setIsServiceProvider(isProvider);
-    
-    // Also update user object with provider info
-    if (isProvider && user) {
-      const updatedUser = {
-        ...user,
-        service_provider_id: providerData.id,
-        service_provider_status: providerData.provider_status || "active",
-        is_service_provider: true,
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
+  const checkServiceProviderStatus = async (userId: string) => {
+    try {
+      const response = await ApiService.getServiceProviderDetails();
+      const providerData = response?.data || response;
+      
+      const isProvider = !!(providerData?.id && providerData?.provider_status === "active");
+      
+      setIsServiceProvider(isProvider);
+      
+      if (isProvider && user) {
+        const updatedUser = {
+          ...user,
+          service_provider_id: providerData.id,
+          service_provider_status: providerData.provider_status || "active",
+          is_service_provider: true,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+      
+      return isProvider;
+    } catch (error) {
+      setIsServiceProvider(false);
+      return false;
     }
-    
-    return isProvider;
-  } catch (error) {
-    setIsServiceProvider(false);
-    return false;
-  }
-};
+  };
 
-  // FIXED: Auth persistence - async/await pattern to prevent race conditions
+  // Auth persistence
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -94,7 +91,6 @@ const checkServiceProviderStatus = async (userId: string) => {
           setUser(parsedUser);
           setLoading(false);
           
-          // Check service provider status for logged in user
           await checkServiceProviderStatus(parsedUser.id);
         } else {
           try {
@@ -103,8 +99,6 @@ const checkServiceProviderStatus = async (userId: string) => {
             const mappedUser = mapUserData(freshUser.data || freshUser);
             localStorage.setItem("user", JSON.stringify(mappedUser));
             setUser(mappedUser);
-            
-            // Check service provider status
             await checkServiceProviderStatus(mappedUser.id);
           } catch (error) {
             console.error("Token refresh failed:", error);
@@ -126,7 +120,6 @@ const checkServiceProviderStatus = async (userId: string) => {
   // Check seller status
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
       return;
     }
@@ -157,13 +150,10 @@ const checkServiceProviderStatus = async (userId: string) => {
   // Check service provider status when user changes
   useEffect(() => {
     if (user && user.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       checkServiceProviderStatus(user.id);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsServiceProvider(false);
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [user]);
 
   const register = async (formData: any) => {
@@ -194,7 +184,6 @@ const checkServiceProviderStatus = async (userId: string) => {
         setUser(mappedUser);
         console.log("✅ User stored from getCurrentUser:", mappedUser);
         
-        // Check service provider status after registration
         await checkServiceProviderStatus(mappedUser.id);
       }
     } catch (err: any) {
@@ -264,7 +253,6 @@ const checkServiceProviderStatus = async (userId: string) => {
             mappedUser.phone,
           );
           
-          // Check service provider status after login
           await checkServiceProviderStatus(mappedUser.id);
           
           console.log("===================================");
@@ -284,7 +272,6 @@ const checkServiceProviderStatus = async (userId: string) => {
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
       
-      // Check service provider status after login
       await checkServiceProviderStatus(mappedUser.id);
       
       console.log("===================================");
@@ -336,7 +323,6 @@ const checkServiceProviderStatus = async (userId: string) => {
       setUser(mappedUser);
       console.log("📱 User stored:", mappedUser);
       
-      // Check service provider status after Google login
       await checkServiceProviderStatus(mappedUser.id);
     }
     console.log("===========================================");
@@ -367,7 +353,6 @@ const checkServiceProviderStatus = async (userId: string) => {
         console.log("✅ Profile completed - fetched fresh user:", mappedUser);
         console.log("📱 Phone after completion:", mappedUser.phone);
         
-        // Check service provider status after profile completion
         await checkServiceProviderStatus(mappedUser.id);
         
         return mappedUser;
@@ -431,7 +416,6 @@ const checkServiceProviderStatus = async (userId: string) => {
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
         
-        // Check service provider status after verification
         await checkServiceProviderStatus(mappedUser.id);
       } catch (err) {
         console.error("Failed to fetch user after verification:", err);
@@ -441,7 +425,6 @@ const checkServiceProviderStatus = async (userId: string) => {
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
       
-      // Check service provider status after verification
       await checkServiceProviderStatus(mappedUser.id);
     }
     return response;
@@ -468,7 +451,6 @@ const checkServiceProviderStatus = async (userId: string) => {
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
         
-        // Check service provider status after refresh
         await checkServiceProviderStatus(mappedUser.id);
         
         return mappedUser;
