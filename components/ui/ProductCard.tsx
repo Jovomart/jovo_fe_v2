@@ -26,6 +26,7 @@ export default function ProductCard({ product: p }: Props) {
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(p.id);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setIsClient(true);
   }, []);

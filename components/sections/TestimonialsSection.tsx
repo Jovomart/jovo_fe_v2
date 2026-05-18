@@ -64,16 +64,16 @@ export default function TestimonialsSection() {
   }, [next]);
 
   // Update slider position when visibleCount changes
-useEffect(() => {
-  // Only update if current is out of bounds
-  if (current > maxIdx) {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    goTo(maxIdx);
-  } else {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    goTo(current);
-  }
-}, [visibleCount, current, maxIdx, goTo]);
+  useEffect(() => {
+    // Only update if current is out of bounds
+    if (current > maxIdx) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      goTo(maxIdx);
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      goTo(current);
+    }
+  }, [visibleCount, current, maxIdx, goTo]);
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
 
