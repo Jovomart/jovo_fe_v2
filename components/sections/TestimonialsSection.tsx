@@ -64,7 +64,8 @@ export default function TestimonialsSection() {
     return () => clearInterval(autoRef.current);
   }, [next]);
 
-  // Update slider position when visibleCount changes - use useLayoutEffect and skip first render
+  // Update slider position when visibleCount changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useLayoutEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -79,7 +80,7 @@ export default function TestimonialsSection() {
   }, [visibleCount, current, maxIdx, goTo]);
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
-  
+
   return (
     <>
       <style>{`

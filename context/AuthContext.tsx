@@ -156,13 +156,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Check service provider status - only runs once after user is loaded
   useEffect(() => {
-    if (!user?.id || providerChecked.current) return;
-    
-    providerChecked.current = true;
-    checkServiceProviderStatus(user.id);
-  }, [user, checkServiceProviderStatus]);
+    if (user && user.id) {
+      if (!providerChecked.current) {
+        providerChecked.current = true;
+        checkServiceProviderStatus(user.id);
+      }
+    } else {
+      setIsServiceProvider(false);
+      providerChecked.current = false;
+    }
+  }, [user]);
 
-  // The rest of your code remains exactly the same...
   const register = async (formData: any) => {
     console.log("========== REGISTER DEBUG ==========");
     console.log("📱 Phone from form data:", formData.phone);
