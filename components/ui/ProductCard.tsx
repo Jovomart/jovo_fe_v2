@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -22,8 +22,13 @@ interface Props {
 
 export default function ProductCard({ product: p }: Props) {
   const [added, setAdded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(p.id);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const discount = p.oldPrice
     ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)
@@ -49,6 +54,9 @@ export default function ProductCard({ product: p }: Props) {
     setTimeout(() => setAdded(false), 1600);
   };
 
+  // On server and before client hydration, always show empty heart
+  const showFilledHeart = isClient && wishlisted;
+
   return (
     <article
       className="product-card w-[230px] flex-shrink-0 border border-gray-200 rounded-[20px] overflow-hidden bg-white hover:-translate-y-1 hover:shadow-brand-md transition-all duration-250 relative"
@@ -69,14 +77,10 @@ export default function ProductCard({ product: p }: Props) {
         )}
         <button
           onClick={toggleWishlist}
-          className={`product-wishlist absolute top-2 right-2 w-[30px] h-[30px] rounded-full bg-white/90 backdrop-blur-[8px] flex items-center justify-center text-[13px] transition-all hover:scale-110 opacity-0 group-hover:opacity-100 ${wishlisted ? "!opacity-100 text-brand-red" : "text-gray-400 hover:text-brand-red"}`}
-          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          suppressHydrationWarning
+          className={`product-wishlist absolute top-2 right-2 w-[30px] h-[30px] rounded-full bg-white/90 backdrop-blur-[8px] flex items-center justify-center text-[13px] transition-all hover:scale-110 opacity-0 group-hover:opacity-100 ${showFilledHeart ? "!opacity-100 text-brand-red" : "text-gray-400 hover:text-brand-red"}`}
+          aria-label={showFilledHeart ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <FontAwesomeIcon 
-            icon={wishlisted ? faHeartSolid : faHeartRegular} 
-            suppressHydrationWarning
-          />
+          <FontAwesomeIcon icon={showFilledHeart ? faHeartSolid : faHeartRegular} />
         </button>
       </div>
       <div className="p-3">
