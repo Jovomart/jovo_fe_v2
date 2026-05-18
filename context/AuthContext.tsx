@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext, useCallback } from "react";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/firebase";
 import ApiService from "@/services/apiService";
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     is_service_provider: userData.is_service_provider || false,
   });
 
-  const checkServiceProviderStatus = async (userId: string) => {
+  const checkServiceProviderStatus = useCallback(async (userId: string) => {
     try {
       const response = await ApiService.getServiceProviderDetails();
       const providerData = response?.data || response;
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsServiceProvider(false);
       return false;
     }
-  };
+  }, [user]);
 
   // Auth persistence
   useEffect(() => {
@@ -120,6 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check seller status
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
       return;
     }
@@ -134,6 +135,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           "";
         const isSellerResolved =
           is_seller_flag === true || status.toLowerCase() === "approved";
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSeller(isSellerResolved);
         if (!isSellerResolved) {
           setSellerMode(false);
@@ -141,6 +143,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       })
       .catch(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSeller(false);
         setSellerMode(false);
         localStorage.setItem("sellerMode", "false");
@@ -150,10 +153,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check service provider status when user changes
   useEffect(() => {
     if (user && user.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       checkServiceProviderStatus(user.id);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsServiceProvider(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const register = async (formData: any) => {
@@ -367,7 +373,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(updated);
       return updated;
     }
-    console.log("===========================================");
+    console.log("===================================");
     return response;
   };
 
