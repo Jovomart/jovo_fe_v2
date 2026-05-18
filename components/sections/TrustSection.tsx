@@ -56,7 +56,7 @@ export default function TrustSection() {
 
       {/* Mobile/Tablet View (below lg) - Auto Horizontal Slider */}
       <div 
-        className="lg:hidden relative py-5 px-4 bg-white"
+        className="lg:hidden relative py-3 px-4 bg-white"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -71,7 +71,7 @@ export default function TrustSection() {
                 key={title} 
                 className="w-full flex-shrink-0 px-3"
               >
-                <div className="bg-white rounded-2xl p-8 border border-gray-100">
+                <div className="bg-white rounded-2xl p-1 border border-gray-100">
                   <div className="flex flex-col items-center text-center">
                     <div className="w-16 h-16 rounded-full bg-brand-gradient text-white flex items-center justify-center text-[24px] mb-5">
                       <FontAwesomeIcon icon={icon} />

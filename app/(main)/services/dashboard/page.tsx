@@ -2318,6 +2318,7 @@ export default function ProviderDashboard() {
                       <Image
                         src={profile.cover_image_url}
                         alt="cover"
+                        sizes="(max-width: 639px) 100vw, 900px"
                         fill
                         className="w-full h-full object-cover"
                       />

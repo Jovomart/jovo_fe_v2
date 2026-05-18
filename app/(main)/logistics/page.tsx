@@ -484,6 +484,7 @@ const LogisticsPage = () => {
                     <Image
                       src={rider.image}
                       alt={rider.name}
+                      sizes="56px"
                       fill
                       className="rounded-2xl object-cover"
                     />

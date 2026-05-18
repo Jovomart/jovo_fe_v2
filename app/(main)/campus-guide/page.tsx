@@ -292,7 +292,7 @@ const adaptGuide = (g: Record<string, any>): Location => {
     }
     if (typeof facilities === "object" && facilities !== null) {
       return Object.keys(facilities).filter(
-        (key) => facilities[key] === true || facilities[key] === "true"
+        (key) => facilities[key] === true || facilities[key] === "true",
       );
     }
     return [];
@@ -310,7 +310,9 @@ const adaptGuide = (g: Record<string, any>): Location => {
     ),
     direction: String(g.directions ?? g.direction ?? ""),
     landmark: String(g.landmarks ?? g.landmark ?? ""),
-    openHours: String(g.open_hours ?? g.operating_hours ?? "Mon–Fri: 8am – 5pm"),
+    openHours: String(
+      g.open_hours ?? g.operating_hours ?? "Mon–Fri: 8am – 5pm",
+    ),
     rating: Number(g.average_rating ?? g.rating ?? 0),
     reviews: Number(g.review_count ?? g.total_reviews ?? 0),
     popular: Boolean(g.is_popular),
@@ -411,6 +413,7 @@ const LocationCard = ({
         <Image
           src={loc.image}
           alt={loc.name}
+          sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
           fill
           className="object-cover transition-transform duration-600 group-hover:scale-105"
         />
@@ -530,7 +533,10 @@ const LocationModal = ({
   const color = getCatColor(fullData.category);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("access_token")
+        : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoggedIn(!!token);
   }, []);
@@ -553,7 +559,10 @@ const LocationModal = ({
           direction: adaptedData.direction || loc.direction,
           walkTime: adaptedData.walkTime || loc.walkTime,
           openHours: adaptedData.openHours || loc.openHours,
-          facilities: adaptedData.facilities.length > 0 ? adaptedData.facilities : loc.facilities,
+          facilities:
+            adaptedData.facilities.length > 0
+              ? adaptedData.facilities
+              : loc.facilities,
           tips: adaptedData.tips || loc.tips,
           phone: adaptedData.phone || loc.phone,
           badge: adaptedData.badge || loc.badge,
@@ -574,18 +583,25 @@ const LocationModal = ({
           limit: 20,
           verified_only: false,
         });
-        const list: Review[] = data?.data?.reviews ?? data?.reviews ?? data?.data ?? [];
+        const list: Review[] =
+          data?.data?.reviews ?? data?.reviews ?? data?.data ?? [];
         setReviews(list);
 
         // ── fetch the user's own review separately ──────────────────────────
         // Guard: only attempt if a token exists. Even then, wrap in its own
         // try-catch so an expired/invalid token (401) doesn't surface as a
         // console error or crash the public review list above.
-        const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
         if (token) {
           try {
-            const myData: any = await apiService.getMyCampusReviews({ limit: 50 });
-            const myList: Review[] = myData?.data?.reviews ?? myData?.reviews ?? myData?.data ?? [];
+            const myData: any = await apiService.getMyCampusReviews({
+              limit: 50,
+            });
+            const myList: Review[] =
+              myData?.data?.reviews ?? myData?.reviews ?? myData?.data ?? [];
             const found = myList.find((r) => r.campus_guide_id === loc.id);
             if (found) {
               setMyReview(found);
@@ -663,7 +679,7 @@ const LocationModal = ({
         // Build a complete review object from form data + whatever the API returns.
         // This guarantees the "Your Review" card renders immediately.
         const created: Review = {
-          id: String(Date.now()),         // temp id overwritten by API if provided
+          id: String(Date.now()), // temp id overwritten by API if provided
           campus_guide_id: loc.id,
           rating: form.rating,
           review: form.review,
@@ -675,7 +691,8 @@ const LocationModal = ({
         // Update header rating + count instantly
         setFullData((prev) => {
           const newCount = prev.reviews + 1;
-          const newRating = (prev.rating * prev.reviews + form.rating) / newCount;
+          const newRating =
+            (prev.rating * prev.reviews + form.rating) / newCount;
           return {
             ...prev,
             reviews: newCount,
@@ -723,6 +740,7 @@ const LocationModal = ({
           <Image
             src={fullData.image}
             alt={fullData.name}
+            sizes="(max-width: 639px) 100vw, 600px"
             fill
             className="object-cover"
             onError={(e) => {
@@ -789,7 +807,10 @@ const LocationModal = ({
                     key={s}
                     size={9}
                     style={{
-                      color: s <= Math.round(fullData.rating || 0) ? "#F59E0B" : "#E5E7EB",
+                      color:
+                        s <= Math.round(fullData.rating || 0)
+                          ? "#F59E0B"
+                          : "#E5E7EB",
                     }}
                   />
                 ))}
@@ -839,7 +860,7 @@ const LocationModal = ({
                     .replace(/_/g, " ")
                     .toLowerCase()
                     .split(" ")
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(" ");
                   return (
                     <span
@@ -944,7 +965,10 @@ const LocationModal = ({
                           key={s}
                           size={10}
                           style={{
-                            color: s <= (myReview.rating || 0) ? "#F59E0B" : "#E5E7EB",
+                            color:
+                              s <= (myReview.rating || 0)
+                                ? "#F59E0B"
+                                : "#E5E7EB",
                           }}
                         />
                       ))}
@@ -1045,11 +1069,14 @@ const LocationModal = ({
                         </p>
                         {r.created_at && (
                           <span className="text-[9px] text-gray-400">
-                            {new Date(r.created_at).toLocaleDateString("en-NG", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
+                            {new Date(r.created_at).toLocaleDateString(
+                              "en-NG",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )}
                           </span>
                         )}
                       </div>
@@ -1059,7 +1086,8 @@ const LocationModal = ({
                             key={s}
                             size={9}
                             style={{
-                              color: s <= (r.rating || 0) ? "#F59E0B" : "#E5E7EB",
+                              color:
+                                s <= (r.rating || 0) ? "#F59E0B" : "#E5E7EB",
                             }}
                           />
                         ))}
@@ -1124,7 +1152,8 @@ const CampusGuidePage = () => {
   useEffect(() => {
     const loadSchoolId = async () => {
       try {
-        const raw = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+        const raw =
+          typeof window !== "undefined" ? localStorage.getItem("user") : null;
         if (raw) {
           const u = JSON.parse(raw) as Record<string, unknown>;
           if (typeof u.school_id === "string" && u.school_id) {
@@ -1137,7 +1166,8 @@ const CampusGuidePage = () => {
         if (!token) return;
 
         const data: any = await apiService.getCurrentUser();
-        const sid: string | undefined = data?.data?.school_id ?? data?.school_id;
+        const sid: string | undefined =
+          data?.data?.school_id ?? data?.school_id;
         if (sid) setSchoolId(sid);
       } catch {
         // not logged in — proceed without school_id
@@ -1162,21 +1192,34 @@ const CampusGuidePage = () => {
           const payload = data?.data ?? data;
 
           setMustKnow(
-            ((payload.must_know_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
+            (
+              (payload.must_know_locations ?? []) as Record<string, unknown>[]
+            ).map(adaptGuide),
           );
           setPopularLocs(
-            ((payload.popular_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
+            (
+              (payload.popular_locations ?? []) as Record<string, unknown>[]
+            ).map(adaptGuide),
           );
           setAllLocs(
-            ((payload.all_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
+            ((payload.all_locations ?? []) as Record<string, unknown>[]).map(
+              adaptGuide,
+            ),
           );
         } catch (err: any) {
-          if (err.message?.includes("401") || err.message?.includes("Authentication")) {
+          if (
+            err.message?.includes("401") ||
+            err.message?.includes("Authentication")
+          ) {
             console.log("Auth error, retrying campus guide fetch...");
             const retryData: any = await apiService.getCampusGuides(params);
             const retryPayload = retryData?.data ?? retryData;
-            setMustKnow((retryPayload.must_know_locations ?? []).map(adaptGuide));
-            setPopularLocs((retryPayload.popular_locations ?? []).map(adaptGuide));
+            setMustKnow(
+              (retryPayload.must_know_locations ?? []).map(adaptGuide),
+            );
+            setPopularLocs(
+              (retryPayload.popular_locations ?? []).map(adaptGuide),
+            );
             setAllLocs((retryPayload.all_locations ?? []).map(adaptGuide));
           } else {
             throw err;
@@ -1222,7 +1265,9 @@ const CampusGuidePage = () => {
         const data: any = await apiService.getCampusGuides(params);
         const payload = data?.data ?? data;
         setDropdownResults(
-          ((payload.all_locations ?? []) as Record<string, unknown>[]).map(adaptGuide),
+          ((payload.all_locations ?? []) as Record<string, unknown>[]).map(
+            adaptGuide,
+          ),
         );
       } catch {
         /* silent */

@@ -1,22 +1,27 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronLeft, faChevronRight, faStar, faQuoteLeft } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronLeft,
+  faChevronRight,
+  faStar,
+  faQuoteLeft,
+} from "@fortawesome/free-solid-svg-icons";
 import { TESTIMONIALS } from "@/data";
 
 export default function TestimonialsSection() {
-  const [current,      setCurrent]      = useState(0);
+  const [current, setCurrent] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
-  const [dragging,     setDragging]     = useState(false);
-  const trackRef  = useRef<HTMLDivElement>(null);
-  const autoRef   = useRef<ReturnType<typeof setInterval>>();
-  const touchX    = useRef(0);
+  const [dragging, setDragging] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const autoRef = useRef<ReturnType<typeof setInterval>>();
+  const touchX = useRef(0);
 
   useEffect(() => {
     const update = () => {
-      if      (window.innerWidth < 640) setVisibleCount(1);
+      if (window.innerWidth < 640) setVisibleCount(1);
       else if (window.innerWidth < 960) setVisibleCount(2);
-      else                              setVisibleCount(3);
+      else setVisibleCount(3);
     };
     update();
     window.addEventListener("resize", update);
@@ -25,19 +30,28 @@ export default function TestimonialsSection() {
 
   const maxIdx = Math.max(0, TESTIMONIALS.length - visibleCount);
 
-  const goTo = useCallback((idx: number) => {
-    const clamped = Math.max(0, Math.min(idx, maxIdx));
-    setCurrent(clamped);
-    if (trackRef.current) {
-      const card = trackRef.current.querySelector<HTMLElement>(".tsc-card");
-      const gap  = 16;
-      const cardW = card ? card.offsetWidth + gap : 0;
-      trackRef.current.style.transform = `translateX(-${clamped * cardW}px)`;
-    }
-  }, [maxIdx]);
+  const goTo = useCallback(
+    (idx: number) => {
+      const clamped = Math.max(0, Math.min(idx, maxIdx));
+      setCurrent(clamped);
+      if (trackRef.current) {
+        const card = trackRef.current.querySelector<HTMLElement>(".tsc-card");
+        const gap = 16;
+        const cardW = card ? card.offsetWidth + gap : 0;
+        trackRef.current.style.transform = `translateX(-${clamped * cardW}px)`;
+      }
+    },
+    [maxIdx],
+  );
 
-  const next = useCallback(() => goTo(current >= maxIdx ? 0 : current + 1), [current, maxIdx, goTo]);
-  const prev = useCallback(() => goTo(current > 0 ? current - 1 : maxIdx),  [current, maxIdx, goTo]);
+  const next = useCallback(
+    () => goTo(current >= maxIdx ? 0 : current + 1),
+    [current, maxIdx, goTo],
+  );
+  const prev = useCallback(
+    () => goTo(current > 0 ? current - 1 : maxIdx),
+    [current, maxIdx, goTo],
+  );
 
   const resetAuto = useCallback(() => {
     clearInterval(autoRef.current);
@@ -49,7 +63,9 @@ export default function TestimonialsSection() {
     return () => clearInterval(autoRef.current);
   }, [next]);
 
-  useEffect(() => { goTo(current); }, [visibleCount]); // eslint-disable-line
+  useEffect(() => {
+    goTo(current);
+  }, [visibleCount]); // eslint-disable-line
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
 
@@ -180,7 +196,7 @@ export default function TestimonialsSection() {
         .tsc-sub {
           font-size: 14px;
           line-height: 1.78;
-          color: rgba(255,255,255,0.3);
+          color: rgba(255,255,255,0.68);
           max-width: 400px;
         }
 
@@ -201,10 +217,10 @@ export default function TestimonialsSection() {
         .tsc-rating-text  {
           font-size: 11.5px;
           font-weight: 700;
-          color: rgba(255,255,255,0.35);
+          color: rgba(255,255,255,0.6);
           letter-spacing: 0.03em;
         }
-        .tsc-rating-text strong { color: rgba(255,255,255,0.65); font-weight: 800; }
+        .tsc-rating-text strong { color: rgba(255,255,255,0.85); font-weight: 800; }
 
         /* ── Slider shell ──────────────────────────────────────── */
         .tsc-slider-shell { position: relative; }
@@ -324,7 +340,7 @@ export default function TestimonialsSection() {
         .tsc-card__text {
           font-size: 13.5px;
           line-height: 1.8;
-          color: rgba(255,255,255,0.42);
+          color: rgba(255,255,255,0.7);
           font-style: italic;
           flex: 1;
           margin-bottom: 22px;
@@ -332,7 +348,7 @@ export default function TestimonialsSection() {
           z-index: 2;
           transition: color 0.22s ease;
         }
-        .tsc-card:hover .tsc-card__text { color: rgba(255,255,255,0.56); }
+        .tsc-card:hover .tsc-card__text { color: rgba(255,255,255,0.85); }
 
         /* Divider */
         .tsc-card__divider {
@@ -380,7 +396,7 @@ export default function TestimonialsSection() {
         .tsc-card__role {
           display: block;
           font-size: 11px;
-          color: rgba(255,255,255,0.25);
+          color: rgba(255,255,255,0.55);
           font-weight: 600;
           margin-top: 2px;
         }
@@ -413,7 +429,7 @@ export default function TestimonialsSection() {
           border-radius: 50%;
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.1);
-          color: rgba(255,255,255,0.45);
+          color: rgba(255,255,255,0.78);
           font-size: 13px;
           display: flex;
           align-items: center;
@@ -469,7 +485,6 @@ export default function TestimonialsSection() {
       `}</style>
 
       <section className="tsc-root" aria-label="Customer testimonials">
-
         {/* ── Background ─────────────────────────────────────── */}
         <div className="tsc-bg" aria-hidden="true">
           <div className="tsc-bg__grid" />
@@ -481,7 +496,6 @@ export default function TestimonialsSection() {
         </div>
 
         <div className="tsc-inner">
-
           {/* ── Header ─────────────────────────────────────────── */}
           <header className="tsc-header">
             <div className="tsc-eyebrow">
@@ -490,8 +504,7 @@ export default function TestimonialsSection() {
             </div>
 
             <h2 className="tsc-h2">
-              Loved by{' '}
-              <span className="tsc-h2__grad">Students</span>
+              Loved by <span className="tsc-h2__grad">Students</span>
               <br />
               <span className="tsc-h2__ghost">Across Campus</span>
             </h2>
@@ -500,11 +513,20 @@ export default function TestimonialsSection() {
               Don't take our word for it — hear directly from our community.
             </p>
 
-            <div className="tsc-rating-pill" aria-label="Average rating 4.9 from 2400 reviews">
+            <div
+              className="tsc-rating-pill"
+              aria-label="Average rating 4.9 from 2400 reviews"
+            >
               <div className="tsc-rating-stars" aria-hidden="true">
-                {Array(5).fill(null).map((_, i) => (
-                  <FontAwesomeIcon key={i} icon={faStar} className="tsc-rating-star" />
-                ))}
+                {Array(5)
+                  .fill(null)
+                  .map((_, i) => (
+                    <FontAwesomeIcon
+                      key={i}
+                      icon={faStar}
+                      className="tsc-rating-star"
+                    />
+                  ))}
               </div>
               <div className="tsc-rating-sep" />
               <span className="tsc-rating-text">
@@ -519,22 +541,37 @@ export default function TestimonialsSection() {
               <div
                 ref={trackRef}
                 className="tsc-track"
-                onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+                onTouchStart={(e) => {
+                  touchX.current = e.touches[0].clientX;
+                }}
                 onTouchEnd={(e) => {
                   const diff = touchX.current - e.changedTouches[0].clientX;
-                  if (Math.abs(diff) > 45) { diff > 0 ? next() : prev(); resetAuto(); }
+                  if (Math.abs(diff) > 45) {
+                    diff > 0 ? next() : prev();
+                    resetAuto();
+                  }
                 }}
               >
                 {TESTIMONIALS.map((t, idx) => (
                   <blockquote key={t.id} className="tsc-card">
                     <div className="tsc-card__scan" aria-hidden="true" />
-                    <FontAwesomeIcon icon={faQuoteLeft} className="tsc-card__quote-icon" aria-hidden="true" />
+                    <FontAwesomeIcon
+                      icon={faQuoteLeft}
+                      className="tsc-card__quote-icon"
+                      aria-hidden="true"
+                    />
 
                     {/* Stars */}
                     <div className="tsc-card__stars" aria-label="5 stars">
-                      {Array(5).fill(null).map((_, i) => (
-                        <FontAwesomeIcon key={i} icon={faStar} className="tsc-card__star" />
-                      ))}
+                      {Array(5)
+                        .fill(null)
+                        .map((_, i) => (
+                          <FontAwesomeIcon
+                            key={i}
+                            icon={faStar}
+                            className="tsc-card__star"
+                          />
+                        ))}
                     </div>
 
                     {/* Quote */}
@@ -556,7 +593,12 @@ export default function TestimonialsSection() {
                         <cite className="tsc-card__name">{t.name}</cite>
                         <span className="tsc-card__role">{t.role}</span>
                       </div>
-                      <span className="tsc-card__verified" aria-label="Verified buyer">✓ Verified</span>
+                      <span
+                        className="tsc-card__verified"
+                        aria-label="Verified buyer"
+                      >
+                        ✓ Verified
+                      </span>
                     </footer>
                   </blockquote>
                 ))}
@@ -567,35 +609,47 @@ export default function TestimonialsSection() {
           {/* ── Controls ───────────────────────────────────────── */}
           <div className="tsc-controls">
             <button
-              onClick={() => { prev(); resetAuto(); }}
+              onClick={() => {
+                prev();
+                resetAuto();
+              }}
               className="tsc-arrow"
               aria-label="Previous testimonial"
             >
               <FontAwesomeIcon icon={faChevronLeft} />
             </button>
 
-            <div className="tsc-dots" role="tablist" aria-label="Testimonial navigation">
+            <div
+              className="tsc-dots"
+              role="tablist"
+              aria-label="Testimonial navigation"
+            >
               {dots.map((i) => (
                 <button
                   key={i}
                   role="tab"
                   aria-label={`Go to testimonial ${i + 1}`}
                   aria-selected={i === current}
-                  onClick={() => { goTo(i); resetAuto(); }}
-                  className={`tsc-dot ${i === current ? 'tsc-dot--active' : 'tsc-dot--inactive'}`}
+                  onClick={() => {
+                    goTo(i);
+                    resetAuto();
+                  }}
+                  className={`tsc-dot ${i === current ? "tsc-dot--active" : "tsc-dot--inactive"}`}
                 />
               ))}
             </div>
 
             <button
-              onClick={() => { next(); resetAuto(); }}
+              onClick={() => {
+                next();
+                resetAuto();
+              }}
               className="tsc-arrow"
               aria-label="Next testimonial"
             >
               <FontAwesomeIcon icon={faChevronRight} />
             </button>
           </div>
-
         </div>
       </section>
     </>

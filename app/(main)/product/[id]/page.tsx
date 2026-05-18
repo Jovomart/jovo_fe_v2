@@ -399,6 +399,7 @@ const ProductDetails = () => {
                 <Image
                   src={product.image}
                   alt={product.name}
+                  sizes="(max-width: 1023px) 100vw, 50vw"
                   fill
                   className="w-full h-full object-cover absolute inset-0"
                 />
@@ -926,6 +927,7 @@ const ProductDetails = () => {
                     <Image
                       src={item.image}
                       alt={item.name}
+                      sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-108"
                     />

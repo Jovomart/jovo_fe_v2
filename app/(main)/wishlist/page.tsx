@@ -24,7 +24,9 @@ const toCartProduct = (product: any) => ({
   image: product.image,
   category: product.category || "Uncategorized", // Provide fallback category
   stock: product.stock ?? 1,
-  slug: product.slug || `${product.id}-${product.name?.toLowerCase().replace(/\s+/g, '-')}`,
+  slug:
+    product.slug ||
+    `${product.id}-${product.name?.toLowerCase().replace(/\s+/g, "-")}`,
   sellerId: product.sellerId || null,
   oldPrice: product.oldPrice,
   rating: product.rating,
@@ -93,7 +95,10 @@ export default function WishlistPage() {
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs text-white/40 mb-6">
-              <Link href="/shop" className="hover:text-white/70 transition-colors">
+              <Link
+                href="/shop"
+                className="hover:text-white/70 transition-colors"
+              >
                 Home
               </Link>
               <FiChevronRight size={11} />
@@ -283,6 +288,7 @@ export default function WishlistPage() {
                       <Image
                         src={product.image}
                         alt={product.name}
+                        sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                       />

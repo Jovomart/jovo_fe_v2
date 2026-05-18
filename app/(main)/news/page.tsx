@@ -479,6 +479,7 @@ const HeroCard = ({ article, onBookmark, bookmarked }) => (
     <Image
       src={article.image}
       alt={article.title}
+      sizes="(max-width: 1279px) 100vw, 1200px"
       fill
       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
     />
@@ -637,6 +638,7 @@ const VideoCard = ({ video }) => (
       <Image
         src={video.thumbnail}
         alt={video.title}
+        sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
         fill
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
@@ -1330,6 +1332,7 @@ const NewsPage = () => {
                           <Image
                             src={a.image}
                             alt={a.title}
+                            sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />

@@ -62,6 +62,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         <Image
           src={product.image}
           alt={product.name}
+          sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
           fill
           className="object-cover transition-transform duration-600 group-hover:scale-108"
         />
@@ -187,7 +188,6 @@ const SponsoredProductsPage = () => {
     [],
   );
 
-  
   return (
     <div className="min-h-screen" style={{ background: "#F3F4F8" }}>
       {/* ══════════ HERO ══════════ */}
@@ -365,7 +365,12 @@ const SponsoredProductsPage = () => {
                 key={product.id}
                 product={product}
                 wishlisted={isWishlisted(product.id)}
-                onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
+                onWishlist={(id) => {
+                  const product = products.find((p) => p.id === id);
+                  if (!product) return;
+                  if (isWishlisted(id)) removeFromWishlist(id);
+                  else addToWishlist(product);
+                }}
               />
             ))}
           </div>

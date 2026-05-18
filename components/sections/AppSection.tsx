@@ -1,40 +1,60 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Link from "next/link";
+import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faMobileScreen, faBell, faLocationDot,
-  faPercent, faMagnifyingGlass, faHouse,
-  faNewspaper, faBasketShopping, faBook, faCircleQuestion,
-  faChevronRight, faBoltLightning,
-} from '@fortawesome/free-solid-svg-icons'
-import { faApple, faGooglePlay } from '@fortawesome/free-brands-svg-icons'
+  faMobileScreen,
+  faBell,
+  faLocationDot,
+  faPercent,
+  faMagnifyingGlass,
+  faHouse,
+  faNewspaper,
+  faBasketShopping,
+  faBook,
+  faCircleQuestion,
+  faChevronRight,
+  faBoltLightning,
+} from "@fortawesome/free-solid-svg-icons";
+import { faApple, faGooglePlay } from "@fortawesome/free-brands-svg-icons";
 
 const FEATURES = [
-  { icon: faBell,        text: 'Instant deal alerts & flash sale notifications' },
-  { icon: faLocationDot, text: 'Real-time delivery tracking on map'             },
-  { icon: faPercent,     text: 'App-exclusive coupons & cashback offers'        },
-]
+  { icon: faBell, text: "Instant deal alerts & flash sale notifications" },
+  { icon: faLocationDot, text: "Real-time delivery tracking on map" },
+  { icon: faPercent, text: "App-exclusive coupons & cashback offers" },
+];
 
 const STORES = [
-  { icon: faApple,      sub: 'Download on the', main: 'App Store',   label: 'Download on the App Store', href: '#' },
-  { icon: faGooglePlay, sub: 'Get it on',        main: 'Google Play', label: 'Get it on Google Play',    href: '#' },
-]
+  {
+    icon: faApple,
+    sub: "Download on the",
+    main: "App Store",
+    label: "Download on the App Store",
+    href: "#",
+  },
+  {
+    icon: faGooglePlay,
+    sub: "Get it on",
+    main: "Google Play",
+    label: "Get it on Google Play",
+    href: "#",
+  },
+];
 
 const NAV_ITEMS = [
-  { icon: faHouse,           label: 'Home',   active: false },
-  { icon: faNewspaper,       label: 'News',   active: false },
-  { icon: faBasketShopping,  label: 'Cart',   active: true,  isCart: true },
-  { icon: faBook,            label: 'Guide',  active: false },
-  { icon: faCircleQuestion,  label: 'Help',   active: false },
-]
+  { icon: faHouse, label: "Home", active: false },
+  { icon: faNewspaper, label: "News", active: false },
+  { icon: faBasketShopping, label: "Cart", active: true, isCart: true },
+  { icon: faBook, label: "Guide", active: false },
+  { icon: faCircleQuestion, label: "Help", active: false },
+];
 
 const CATEGORIES = [
-  { emoji: '🏠', label: 'Appliances' },
-  { emoji: '📱', label: 'Phones &\nTablets' },
-  { emoji: '💊', label: 'Health &\nBeauty' },
-  { emoji: '💻', label: 'Electronics' },
-  { emoji: '👗', label: 'Fashion' },
-]
+  { emoji: "🏠", label: "Appliances" },
+  { emoji: "📱", label: "Phones &\nTablets" },
+  { emoji: "💊", label: "Health &\nBeauty" },
+  { emoji: "💻", label: "Electronics" },
+  { emoji: "👗", label: "Fashion" },
+];
 
 export default function AppSection() {
   return (
@@ -153,7 +173,7 @@ export default function AppSection() {
 
         .app2-sub {
           font-size: 14px; line-height: 1.78;
-          color: rgba(255,255,255,0.3);
+          color: rgba(255,255,255,0.67);
           max-width: 440px; margin-bottom: 36px;
         }
         @media (max-width: 1023px) { .app2-sub { max-width: 500px; } }
@@ -188,10 +208,10 @@ export default function AppSection() {
         .app2-feature:hover .app2-feature__icon { transform: scale(1.08); }
         .app2-feature__text {
           font-size: 13px; font-weight: 600;
-          color: rgba(255,255,255,0.48); line-height: 1.5;
+          color: rgba(255,255,255,0.75); line-height: 1.5;
           transition: color 0.22s ease;
         }
-        .app2-feature:hover .app2-feature__text { color: rgba(255,255,255,0.7); }
+        .app2-feature:hover .app2-feature__text { color: rgba(255,255,255,0.88); }
 
         .app2-stores { display: flex; gap: 12px; flex-wrap: wrap; }
         @media (max-width: 1023px) { .app2-stores { justify-content: center; } }
@@ -600,7 +620,6 @@ export default function AppSection() {
       `}</style>
 
       <section className="app2-root" aria-label="Download the JOVO app">
-
         {/* Background */}
         <div className="app2-bg" aria-hidden="true">
           <div className="app2-bg__grid" />
@@ -613,10 +632,8 @@ export default function AppSection() {
         </div>
 
         <div className="app2-inner">
-
           {/* ════ LEFT COPY ════ */}
           <div className="app2-left">
-
             <div className="app2-eyebrow">
               <span className="app2-eyebrow__dot" />
               <FontAwesomeIcon icon={faMobileScreen} />
@@ -624,9 +641,9 @@ export default function AppSection() {
             </div>
 
             <h2 className="app2-h2">
-              Shop on the Go<br />
-              with the{' '}
-              <span className="app2-h2__grad">JOVO App</span>
+              Shop on the Go
+              <br />
+              with the <span className="app2-h2__grad">JOVO App</span>
               <br />
               <span className="app2-h2__ghost">Anytime. Anywhere.</span>
             </h2>
@@ -649,9 +666,16 @@ export default function AppSection() {
 
             <div className="app2-stores">
               {STORES.map(({ icon, sub, main, label, href }, i) => (
-                <Link key={main} href={href} aria-label={label}
-                  className={`app2-store-btn${i === 0 ? ' app2-store-btn--primary' : ''}`}>
-                  <FontAwesomeIcon icon={icon} className="app2-store-btn__icon" />
+                <Link
+                  key={main}
+                  href={href}
+                  aria-label={label}
+                  className={`app2-store-btn${i === 0 ? " app2-store-btn--primary" : ""}`}
+                >
+                  <FontAwesomeIcon
+                    icon={icon}
+                    className="app2-store-btn__icon"
+                  />
                   <div>
                     <span className="app2-store-btn__sub">{sub}</span>
                     <span className="app2-store-btn__main">{main}</span>
@@ -659,12 +683,10 @@ export default function AppSection() {
                 </Link>
               ))}
             </div>
-
           </div>
 
           {/* ════ RIGHT — PHONE ════ */}
           <div className="app2-right" aria-hidden="true">
-
             <div className="app2-halo app2-halo--1" />
             <div className="app2-halo app2-halo--2" />
             <div className="app2-halo app2-halo--3" />
@@ -688,9 +710,13 @@ export default function AppSection() {
               <div className="app2-badge">
                 <div>
                   <div className="app2-badge__stars">
-                    {Array(5).fill(null).map((_, i) => (
-                      <span key={i} className="app2-badge__star">★</span>
-                    ))}
+                    {Array(5)
+                      .fill(null)
+                      .map((_, i) => (
+                        <span key={i} className="app2-badge__star">
+                          ★
+                        </span>
+                      ))}
                   </div>
                   <div className="app2-badge__num">4.9</div>
                   <div className="app2-badge__label">50k+ reviews</div>
@@ -701,7 +727,6 @@ export default function AppSection() {
                 <div className="app2-notch" />
 
                 <div className="app2-screen">
-
                   {/* ── Top bar ── */}
                   <div className="app2-screen__status">
                     <div className="app2-screen__hamburger">
@@ -715,15 +740,23 @@ export default function AppSection() {
                     </div>
                     <div className="app2-screen__actions">
                       <div className="app2-screen__avatar">BS</div>
-                      <FontAwesomeIcon icon={faBasketShopping} className="app2-screen__cart-icon" />
+                      <FontAwesomeIcon
+                        icon={faBasketShopping}
+                        className="app2-screen__cart-icon"
+                      />
                     </div>
                   </div>
 
                   {/* ── Search ── */}
                   <div className="app2-screen__search-row">
                     <div className="app2-screen__search-box">
-                      <FontAwesomeIcon icon={faMagnifyingGlass} className="app2-screen__search-icon" />
-                      <span className="app2-screen__search-text">Search products, categories...</span>
+                      <FontAwesomeIcon
+                        icon={faMagnifyingGlass}
+                        className="app2-screen__search-icon"
+                      />
+                      <span className="app2-screen__search-text">
+                        Search products, categories...
+                      </span>
                     </div>
                     <div className="app2-screen__search-btn">
                       <FontAwesomeIcon icon={faMagnifyingGlass} />
@@ -741,26 +774,33 @@ export default function AppSection() {
                         Flash Sales
                       </div>
                       <div className="app2-screen__banner-title">
-                        Up to 60% Off<br />Fashion &amp; Beauty
+                        Up to 60% Off
+                        <br />
+                        Fashion &amp; Beauty
                       </div>
                       <div className="app2-screen__banner-sub">
                         Limited time deals ending soon
                       </div>
                       <div className="app2-screen__banner-cta">
                         Grab Deals
-                        <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '6px' }} />
+                        <FontAwesomeIcon
+                          icon={faChevronRight}
+                          style={{ fontSize: "6px" }}
+                        />
                       </div>
                     </div>
                     <div className="app2-screen__dots">
-                      {[0,1,2,3,4,5,6].map((i) => (
-                        <div key={i} className={`app2-screen__dot${i === 2 ? ' app2-screen__dot--active' : ' app2-screen__dot--small'}`} />
+                      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                        <div
+                          key={i}
+                          className={`app2-screen__dot${i === 2 ? " app2-screen__dot--active" : " app2-screen__dot--small"}`}
+                        />
                       ))}
                     </div>
                   </div>
 
                   {/* ── Body ── */}
                   <div className="app2-screen__body">
-
                     {/* Categories */}
                     <div className="app2-screen__cats">
                       {CATEGORIES.map(({ emoji, label }) => (
@@ -776,16 +816,22 @@ export default function AppSection() {
                       <div className="app2-screen__sell-left">
                         <div className="app2-screen__sell-icon">🛍️</div>
                         <div>
-                          <div className="app2-screen__sell-title">Sell on JOVO</div>
-                          <div className="app2-screen__sell-sub">Reach campus buyers</div>
+                          <div className="app2-screen__sell-title">
+                            Sell on JOVO
+                          </div>
+                          <div className="app2-screen__sell-sub">
+                            Reach campus buyers
+                          </div>
                         </div>
                       </div>
                       <div className="app2-screen__sell-btn">
                         Start Now
-                        <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: '6px' }} />
+                        <FontAwesomeIcon
+                          icon={faChevronRight}
+                          style={{ fontSize: "6px" }}
+                        />
                       </div>
                     </div>
-
                   </div>
 
                   {/* ── Bottom nav ── */}
@@ -801,23 +847,23 @@ export default function AppSection() {
                         <div key={label} className="app2-screen__nav-item">
                           <FontAwesomeIcon
                             icon={icon}
-                            className={`app2-screen__nav-icon${active ? ' app2-screen__nav-icon--active' : ''}`}
+                            className={`app2-screen__nav-icon${active ? " app2-screen__nav-icon--active" : ""}`}
                           />
-                          <span className={`app2-screen__nav-lbl${active ? ' app2-screen__nav-lbl--active' : ''}`}>
+                          <span
+                            className={`app2-screen__nav-lbl${active ? " app2-screen__nav-lbl--active" : ""}`}
+                          >
                             {label}
                           </span>
                         </div>
-                      )
+                      ),
                     )}
                   </div>
-
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </section>
     </>
-  )
+  );
 }

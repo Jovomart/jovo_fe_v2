@@ -191,7 +191,7 @@ export default function FeaturedProductsSection() {
         .fps-sub {
           font-size: 14px;
           line-height: 1.75;
-          color: rgba(255,255,255,0.32);
+          color: rgba(255,255,255,0.68);
           max-width: 420px;
           animation: fps-fade-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.28s both;
         }
@@ -260,11 +260,11 @@ export default function FeaturedProductsSection() {
           cursor: pointer;
           border: none;
           background: transparent;
-          color: rgba(255,255,255,0.38);
+          color: rgba(255,255,255,0.75);
           transition: color 0.22s ease;
           white-space: nowrap;
         }
-        .fps-tab:hover { color: rgba(255,255,255,0.65); }
+        .fps-tab:hover { color: rgba(255,255,255,0.95); }
 
         .fps-tab--active {
           color: #fff;
@@ -395,7 +395,7 @@ export default function FeaturedProductsSection() {
 
         .fps-footer__count {
           font-size: 13px;
-          color: rgba(255,255,255,0.22);
+          color: rgba(255,255,255,0.55);
           font-weight: 600;
           letter-spacing: 0.04em;
         }
@@ -412,7 +412,7 @@ export default function FeaturedProductsSection() {
           border-radius: 100px;
           font-size: 13.5px;
           font-weight: 700;
-          color: rgba(255,255,255,0.55);
+          color: rgba(255,255,255,0.85);
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.1);
           letter-spacing: 0.02em;
@@ -443,7 +443,7 @@ export default function FeaturedProductsSection() {
           gap: 6px;
           font-size: 11px;
           font-weight: 600;
-          color: rgba(255,255,255,0.2);
+          color: rgba(255,255,255,0.55);
         }
         .fps-trust__dot {
           width: 4px; height: 4px;
