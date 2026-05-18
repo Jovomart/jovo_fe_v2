@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useState, useEffect, useContext, useCallback } from "react";
+import { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/firebase";
 import ApiService from "@/services/apiService";
@@ -13,6 +13,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [sellerMode, setSellerMode] = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const [isServiceProvider, setIsServiceProvider] = useState(false);
+  
+  // Use refs to track if initial checks have been done
+  const sellerChecked = useRef(false);
+  const providerChecked = useRef(false);
 
   const mapUserData = (userData: any, existingUser: any = null) => ({
     id: userData.user_id || userData.id,
@@ -57,26 +61,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setIsServiceProvider(isProvider);
       
-      setUser((prevUser: any) => {
-        if (isProvider && prevUser && prevUser.id === userId) {
-          const updatedUser = {
-            ...prevUser,
-            service_provider_id: providerData.id,
-            service_provider_status: providerData.provider_status || "active",
-            is_service_provider: true,
-          };
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          return updatedUser;
-        }
-        return prevUser;
-      });
+      if (isProvider && user && user.id === userId) {
+        const updatedUser = {
+          ...user,
+          service_provider_id: providerData.id,
+          service_provider_status: providerData.provider_status || "active",
+          is_service_provider: true,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
       
       return isProvider;
     } catch (error) {
       setIsServiceProvider(false);
       return false;
     }
-  }, []);
+  }, [user]);
 
   // Auth persistence
   useEffect(() => {
@@ -95,6 +96,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(false);
           
           await checkServiceProviderStatus(parsedUser.id);
+          sellerChecked.current = true;
+          providerChecked.current = true;
         } else {
           try {
             await ApiService.refreshAccessToken();
@@ -103,6 +106,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             localStorage.setItem("user", JSON.stringify(mappedUser));
             setUser(mappedUser);
             await checkServiceProviderStatus(mappedUser.id);
+            sellerChecked.current = true;
+            providerChecked.current = true;
           } catch (error) {
             console.error("Token refresh failed:", error);
             ApiService.clearTokens();
@@ -120,12 +125,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
-  // Check seller status
+  // Check seller status - only runs once after user is loaded
   useEffect(() => {
-    if (!user) {
-      setIsSeller(false);
-      return;
-    }
+    if (!user || sellerChecked.current) return;
+    
+    sellerChecked.current = true;
     ApiService.getApplicationStatus()
       .then((res: any) => {
         const is_seller_flag = res?.is_seller;
@@ -150,15 +154,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
   }, [user]);
 
-  // Check service provider status when user changes
+  // Check service provider status - only runs once after user is loaded
   useEffect(() => {
-    if (user && user.id) {
-      checkServiceProviderStatus(user.id);
-    } else {
-      setIsServiceProvider(false);
-    }
+    if (!user?.id || providerChecked.current) return;
+    
+    providerChecked.current = true;
+    checkServiceProviderStatus(user.id);
   }, [user, checkServiceProviderStatus]);
 
+  // The rest of your code remains exactly the same...
   const register = async (formData: any) => {
     console.log("========== REGISTER DEBUG ==========");
     console.log("📱 Phone from form data:", formData.phone);
@@ -475,6 +479,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setSellerMode(false);
     setIsServiceProvider(false);
+    sellerChecked.current = false;
+    providerChecked.current = false;
   };
 
   const enterSellerMode = () => {

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
@@ -16,6 +16,7 @@ export default function TestimonialsSection() {
   const trackRef = useRef<HTMLDivElement>(null);
   const autoRef = useRef<ReturnType<typeof setInterval>>();
   const touchX = useRef(0);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     const update = () => {
@@ -63,8 +64,12 @@ export default function TestimonialsSection() {
     return () => clearInterval(autoRef.current);
   }, [next]);
 
-   // Update slider position when visibleCount changes
-  useEffect(() => {
+  // Update slider position when visibleCount changes - use useLayoutEffect and skip first render
+  useLayoutEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     // Only update if current is out of bounds
     if (current > maxIdx) {
       goTo(maxIdx);
@@ -74,7 +79,7 @@ export default function TestimonialsSection() {
   }, [visibleCount, current, maxIdx, goTo]);
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
-
+  
   return (
     <>
       <style>{`
