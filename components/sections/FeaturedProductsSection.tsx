@@ -363,7 +363,7 @@ export default function FeaturedProductsSection() {
 
         .fps-cards {
           display: flex;
-          gap: 14px;
+          gap: 4px;
           transition: opacity 0.22s ease, transform 0.22s ease;
         }
         .fps-cards--fading {

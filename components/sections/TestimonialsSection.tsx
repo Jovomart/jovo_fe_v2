@@ -64,8 +64,9 @@ export default function TestimonialsSection() {
   }, [next]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     goTo(current);
-  }, [visibleCount]); // eslint-disable-line
+  }, [visibleCount]);
 
   const dots = Array.from({ length: maxIdx + 1 }, (_, i) => i);
 
