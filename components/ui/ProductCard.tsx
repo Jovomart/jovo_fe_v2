@@ -26,10 +26,11 @@ export default function ProductCard({ product: p }: Props) {
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(p.id);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setIsClient(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const discount = p.oldPrice
     ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)

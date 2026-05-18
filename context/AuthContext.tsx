@@ -57,23 +57,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setIsServiceProvider(isProvider);
       
-      if (isProvider && user) {
-        const updatedUser = {
-          ...user,
-          service_provider_id: providerData.id,
-          service_provider_status: providerData.provider_status || "active",
-          is_service_provider: true,
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      }
+      setUser((prevUser: any) => {
+        if (isProvider && prevUser && prevUser.id === userId) {
+          const updatedUser = {
+            ...prevUser,
+            service_provider_id: providerData.id,
+            service_provider_status: providerData.provider_status || "active",
+            is_service_provider: true,
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          return updatedUser;
+        }
+        return prevUser;
+      });
       
       return isProvider;
     } catch (error) {
       setIsServiceProvider(false);
       return false;
     }
-  }, [user]);
+  }, []);
 
   // Auth persistence
   useEffect(() => {
@@ -120,7 +123,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check seller status
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSeller(false);
       return;
     }
@@ -135,7 +137,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           "";
         const isSellerResolved =
           is_seller_flag === true || status.toLowerCase() === "approved";
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSeller(isSellerResolved);
         if (!isSellerResolved) {
           setSellerMode(false);
@@ -143,7 +144,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       })
       .catch(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSeller(false);
         setSellerMode(false);
         localStorage.setItem("sellerMode", "false");
@@ -153,14 +153,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check service provider status when user changes
   useEffect(() => {
     if (user && user.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       checkServiceProviderStatus(user.id);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsServiceProvider(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, checkServiceProviderStatus]);
 
   const register = async (formData: any) => {
     console.log("========== REGISTER DEBUG ==========");
