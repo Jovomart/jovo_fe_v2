@@ -12,6 +12,7 @@ import {
   FiCheck as FiCheckIcon,
   FiPhone,
 } from "react-icons/fi";
+import { User as LUser, Users as LUsers } from "lucide-react";
 import Image from "next/image";
 
 const GENDER_OPTIONS = ["MALE", "FEMALE"];
@@ -53,13 +54,11 @@ interface FormErrors {
   general?: string;
 }
 
-// Inner component — uses useSearchParams so must be inside Suspense
 function CompleteProfileContent() {
   const { user, completeProfile } = useContext(AuthContext);
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Fix 1: was using React Router's location.state — now uses URL searchParams or user object
   const email = searchParams.get("email") || user?.email || "";
 
   const [form, setForm] = useState<FormState>({
@@ -86,7 +85,6 @@ function CompleteProfileContent() {
     return name.includes(term) || code.includes(term);
   });
 
-  // Fix 2: was depending on `navigate` (unstable function ref) — now uses `router` directly
   useEffect(() => {
     if (user?.username && user?.gender && user?.country) {
       router.push("/shop");
@@ -119,13 +117,11 @@ function CompleteProfileContent() {
     fetchSchools();
   }, []);
 
-  // Fix 3: was untyped (field, value) params
   const set = (field: keyof FormState, value: string) => {
     setForm((p) => ({ ...p, [field]: value }));
     setErrors((p) => ({ ...p, [field]: "", general: "" }));
   };
 
-  // Fix 4: return type added
   const validate = (): boolean => {
     const e: FormErrors = {};
     if (!form.username.trim()) e.username = "Username is required";
@@ -144,7 +140,6 @@ function CompleteProfileContent() {
     return Object.keys(e).length === 0;
   };
 
-  // Fix 5: event param typed
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -168,7 +163,6 @@ function CompleteProfileContent() {
     }
   };
 
-  // Fix 6: field param typed
   const inputCls = (field: keyof FormErrors) =>
     `flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-200 ${
       errors[field]
@@ -176,7 +170,6 @@ function CompleteProfileContent() {
         : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
     }`;
 
-  // Fix 7: avoid calling .find() twice — compute once
   const selectedSchool = schools.find((s) => (s.id || s._id) === form.schoolId);
 
   return (
@@ -211,7 +204,7 @@ function CompleteProfileContent() {
 
           {errors.general && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 mb-5">
-              <FiAlertCircle size={15} className="text-red-500" />
+              <FiAlertCircle size={15} className="text-red-500 shrink-0" />
               <p className="text-red-600 text-sm">{errors.general}</p>
             </div>
           )}
@@ -223,7 +216,7 @@ function CompleteProfileContent() {
                 Username
               </label>
               <div className={inputCls("username")}>
-                <span className="text-gray-400 text-sm font-bold">@</span>
+                <span className="text-gray-400 text-sm font-bold shrink-0">@</span>
                 <input
                   type="text"
                   placeholder="choose a username"
@@ -247,7 +240,7 @@ function CompleteProfileContent() {
               <div className={inputCls("phone")}>
                 <FiPhone
                   size={15}
-                  className={errors.phone ? "text-red-400" : "text-gray-400"}
+                  className={`shrink-0 ${errors.phone ? "text-red-400" : "text-gray-400"}`}
                 />
                 <input
                   type="tel"
@@ -282,9 +275,21 @@ function CompleteProfileContent() {
                         : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300"
                     }`}
                   >
-                    <span className="text-lg">
-                      {g === "MALE" ? "👨" : "👩"}
-                    </span>
+                    {g === "MALE" ? (
+                      <LUser
+                        size={16}
+                        className={
+                          form.gender === g ? "text-[#B42225]" : "text-gray-400"
+                        }
+                      />
+                    ) : (
+                      <LUsers
+                        size={16}
+                        className={
+                          form.gender === g ? "text-[#B42225]" : "text-gray-400"
+                        }
+                      />
+                    )}
                     {g.charAt(0) + g.slice(1).toLowerCase()}
                   </button>
                 ))}
@@ -300,7 +305,10 @@ function CompleteProfileContent() {
                 Country
               </label>
               <div className={inputCls("country")}>
-                <FiMapPin size={15} className="text-gray-400" />
+                <FiMapPin
+                  size={15}
+                  className={`shrink-0 ${errors.country ? "text-red-400" : "text-gray-400"}`}
+                />
                 <input
                   type="text"
                   placeholder="e.g. Nigeria"
@@ -352,12 +360,13 @@ function CompleteProfileContent() {
               </div>
             </div>
 
-            {/* School */}
-            <div>
+            {/* School — position:relative + z-index so dropdown clears siblings below */}
+            <div className="relative" style={{ zIndex: 20 }}>
               <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-1.5">
                 School / Institution <span className="text-[#B42225]">*</span>
               </label>
               <div className="relative">
+                {/* trigger button */}
                 <button
                   type="button"
                   onClick={() => setSchoolDropdownOpen(!schoolDropdownOpen)}
@@ -368,15 +377,15 @@ function CompleteProfileContent() {
                   }`}
                   disabled={loadingSchools}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <FiBookOpen
-                      size={18}
-                      className={
-                        errors.schoolId ? "text-red-400" : "text-gray-400"
-                      }
+                      size={15}
+                      className={`shrink-0 ${errors.schoolId ? "text-red-400" : "text-gray-400"}`}
                     />
                     <span
-                      className={`text-sm ${form.schoolId ? "text-gray-800 font-medium" : "text-gray-400"}`}
+                      className={`text-sm truncate ${
+                        form.schoolId ? "text-gray-800 font-medium" : "text-gray-400"
+                      }`}
                     >
                       {selectedSchool
                         ? selectedSchool.school_name || selectedSchool.name
@@ -384,7 +393,9 @@ function CompleteProfileContent() {
                     </span>
                   </div>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${schoolDropdownOpen ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+                      schoolDropdownOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -398,122 +409,117 @@ function CompleteProfileContent() {
                   </svg>
                 </button>
 
+                {/* dropdown panel */}
                 {schoolDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm sm:hidden"
-                      onClick={() => setSchoolDropdownOpen(false)}
-                    />
-                    <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
-                      <div className="flex items-center justify-between p-4 border-b border-gray-100 sm:hidden">
-                        <h3 className="font-black text-gray-800">
-                          Select School
-                        </h3>
-                        <button
-                          onClick={() => setSchoolDropdownOpen(false)}
-                          className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"
-                        >
-                          <FiX size={16} />
-                        </button>
-                      </div>
-
-                      <div className="p-3 border-b border-gray-100">
-                        <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 bg-gray-50">
-                          <FiSearch size={14} className="text-gray-400" />
-                          <input
-                            type="text"
-                            placeholder="Search school..."
-                            value={schoolSearch}
-                            onChange={(e) => setSchoolSearch(e.target.value)}
-                            className="flex-1 text-sm text-gray-800 outline-none bg-transparent"
-                            autoFocus
-                          />
-                          {schoolSearch && (
-                            <button
-                              onClick={() => setSchoolSearch("")}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              <FiX size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="max-h-64 overflow-y-auto">
-                        {loadingSchools ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="w-5 h-5 border-2 border-gray-300 border-t-[#B42225] rounded-full animate-spin" />
-                            <span className="ml-2 text-sm text-gray-500">
-                              Loading schools...
-                            </span>
-                          </div>
-                        ) : filteredSchools.length === 0 ? (
-                          <div className="text-center py-8">
-                            <FiBookOpen
-                              size={32}
-                              className="text-gray-300 mx-auto mb-2"
-                            />
-                            <p className="text-sm text-gray-500">
-                              No schools found
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              Try a different search or contact support
-                            </p>
-                          </div>
-                        ) : (
-                          filteredSchools.map((school) => {
-                            const schoolId = school.id || school._id || "";
-                            const isSelected = schoolId === form.schoolId;
-                            return (
-                              <button
-                                key={schoolId}
-                                type="button"
-                                onClick={() => {
-                                  set("schoolId", schoolId);
-                                  setSchoolDropdownOpen(false);
-                                  setSchoolSearch("");
-                                }}
-                                className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-gray-50 ${isSelected ? "bg-[#B42225]/5" : ""}`}
-                              >
-                                <div className="flex-1">
-                                  <p
-                                    className={`text-sm font-medium ${isSelected ? "text-[#B42225]" : "text-gray-800"}`}
-                                  >
-                                    {school.school_name || school.name}
-                                  </p>
-                                  {school.school_code && (
-                                    <p className="text-xs text-gray-400 mt-0.5">
-                                      Code: {school.school_code}
-                                    </p>
-                                  )}
-                                </div>
-                                {isSelected && (
-                                  <FiCheckIcon
-                                    size={16}
-                                    className="text-[#B42225] shrink-0"
-                                  />
-                                )}
-                              </button>
-                            );
-                          })
+                  <div
+                    className="absolute left-0 right-0 z-50 mt-2 rounded-2xl bg-white overflow-hidden"
+                    style={{
+                      boxShadow: "0 16px 48px rgba(0,0,0,0.14)",
+                      border: "1px solid #F0F0F0",
+                    }}
+                  >
+                    {/* search */}
+                    <div className="p-3 border-b border-gray-100">
+                      <div
+                        className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 bg-gray-50"
+                      >
+                        <FiSearch size={13} className="text-gray-400 shrink-0" />
+                        <input
+                          type="text"
+                          placeholder="Search school..."
+                          value={schoolSearch}
+                          onChange={(e) => setSchoolSearch(e.target.value)}
+                          className="flex-1 text-sm text-gray-800 outline-none bg-transparent placeholder-gray-400"
+                          autoFocus
+                        />
+                        {schoolSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setSchoolSearch("")}
+                            className="text-gray-400 hover:text-gray-600 shrink-0"
+                          >
+                            <FiX size={13} />
+                          </button>
                         )}
                       </div>
-
-                      <div className="p-4 border-t border-gray-100 sm:hidden">
-                        <button
-                          onClick={() => setSchoolDropdownOpen(false)}
-                          className="w-full py-3 rounded-xl font-bold text-sm text-white bg-[#B42225]"
-                        >
-                          Done
-                        </button>
-                      </div>
                     </div>
-                  </>
+
+                    {/* list */}
+                    <div className="max-h-56 overflow-y-auto">
+                      {loadingSchools ? (
+                        <div className="flex items-center justify-center py-8 gap-2">
+                          <div className="w-4 h-4 border-2 border-gray-300 border-t-[#B42225] rounded-full animate-spin" />
+                          <span className="text-sm text-gray-500">
+                            Loading schools...
+                          </span>
+                        </div>
+                      ) : filteredSchools.length === 0 ? (
+                        <div className="text-center py-8">
+                          <FiBookOpen
+                            size={28}
+                            className="text-gray-300 mx-auto mb-2"
+                          />
+                          <p className="text-sm text-gray-500">
+                            No schools found
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Try a different search or contact support
+                          </p>
+                        </div>
+                      ) : (
+                        filteredSchools.map((school) => {
+                          const schoolId = school.id || school._id || "";
+                          const isSelected = schoolId === form.schoolId;
+                          return (
+                            <button
+                              key={schoolId}
+                              type="button"
+                              onClick={() => {
+                                set("schoolId", schoolId);
+                                setSchoolDropdownOpen(false);
+                                setSchoolSearch("");
+                              }}
+                              className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                                isSelected ? "bg-[#B42225]/5" : ""
+                              }`}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className={`text-sm font-medium truncate ${
+                                    isSelected
+                                      ? "text-[#B42225]"
+                                      : "text-gray-800"
+                                  }`}
+                                >
+                                  {school.school_name || school.name}
+                                </p>
+                                {school.school_code && (
+                                  <p className="text-xs text-gray-400 mt-0.5">
+                                    Code: {school.school_code}
+                                  </p>
+                                )}
+                              </div>
+                              {isSelected && (
+                                <FiCheckIcon
+                                  size={15}
+                                  className="text-[#B42225] shrink-0 ml-2"
+                                />
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
+
               {errors.schoolId && (
                 <p className="text-xs text-red-500 mt-1">{errors.schoolId}</p>
               )}
+              <p className="text-[10px] text-gray-400 mt-1.5">
+                Select your school for campus-specific deals and sellers.
+              </p>
             </div>
 
             {/* Address */}
@@ -523,7 +529,7 @@ function CompleteProfileContent() {
                 <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <div className={inputCls("address")}>
-                <FiMapPin size={15} className="text-gray-400" />
+                <FiMapPin size={15} className="text-gray-400 shrink-0" />
                 <input
                   type="text"
                   placeholder="Street address"
@@ -558,7 +564,6 @@ function CompleteProfileContent() {
   );
 }
 
-// Fix 8 & 9: useSearchParams() requires Suspense boundary in Next.js App Router
 export default function CompleteProfilePage() {
   return (
     <Suspense

@@ -2,7 +2,20 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useContext, useEffect } from "react";
-import { Eye, EyeOff, Check } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Check,
+  ShoppingBag,
+  Truck,
+  CreditCard,
+  GraduationCap,
+  MapPin as LMapPin,
+  Building2,
+  Zap,
+  Lock as LLock,
+  User as LUser,
+} from "lucide-react";
 import {
   FiUser,
   FiMail,
@@ -16,6 +29,7 @@ import {
   FiX,
   FiCheck as FiCheckIcon,
   FiPhone,
+  FiUsers,
 } from "react-icons/fi";
 import { AuthContext } from "@/context/AuthContext";
 import ApiService from "@/services/apiService";
@@ -245,28 +259,55 @@ const Register = () => {
   const iconColor = (field: keyof FormData) =>
     errors[field] ? "text-red-400 shrink-0" : "text-gray-400 shrink-0";
 
+  // Icon-based point data for left panel
   const leftContent =
     step === 1
       ? {
           headline: "Join Nigeria's #1 campus marketplace",
           sub: "Free to join. Thousands of students already shopping and selling every day.",
           points: [
-            { icon: "🛍️", text: "50,000+ products" },
-            { icon: "🚚", text: "Fast campus delivery" },
-            { icon: "💳", text: "Secure payments" },
-            { icon: "🎓", text: "Student-first platform" },
+            {
+              icon: <ShoppingBag size={15} className="text-orange-400 shrink-0" />,
+              text: "50,000+ products",
+            },
+            {
+              icon: <Truck size={15} className="text-orange-400 shrink-0" />,
+              text: "Fast campus delivery",
+            },
+            {
+              icon: <CreditCard size={15} className="text-orange-400 shrink-0" />,
+              text: "Secure payments",
+            },
+            {
+              icon: <GraduationCap size={15} className="text-orange-400 shrink-0" />,
+              text: "Student-first platform",
+            },
           ],
         }
       : {
           headline: "Almost there — just a few more details",
           sub: "Help us personalise your experience with local sellers and delivery options.",
           points: [
-            { icon: "📍", text: "Localised listings" },
-            { icon: "🏫", text: "Campus pickup available" },
-            { icon: "🔒", text: "Your data is private" },
-            { icon: "⚡", text: "Account ready instantly" },
+            {
+              icon: <LMapPin size={15} className="text-orange-400 shrink-0" />,
+              text: "Localised listings",
+            },
+            {
+              icon: <Building2 size={15} className="text-orange-400 shrink-0" />,
+              text: "Campus pickup available",
+            },
+            {
+              icon: <LLock size={15} className="text-orange-400 shrink-0" />,
+              text: "Your data is private",
+            },
+            {
+              icon: <Zap size={15} className="text-orange-400 shrink-0" />,
+              text: "Account ready instantly",
+            },
           ],
         };
+
+  const selectedSchool = schools.find((s) => (s.id || s._id) === form.schoolId);
 
   return (
     <>
@@ -411,7 +452,7 @@ const Register = () => {
                     border: "1px solid rgba(255,255,255,0.09)",
                   }}
                 >
-                  <span className="text-base shrink-0">{icon}</span>
+                  {icon}
                   <span className="text-[12px] text-white/50 font-medium">
                     {text}
                   </span>
@@ -837,9 +878,25 @@ const Register = () => {
                                 }
                           }
                         >
-                          <span className="text-lg">
-                            {g === "MALE" ? "👨" : "👩"}
-                          </span>
+                          {g === "MALE" ? (
+                            <LUser
+                              size={16}
+                              className={
+                                form.gender === g
+                                  ? "text-[#B42225]"
+                                  : "text-gray-400"
+                              }
+                            />
+                          ) : (
+                            <FiUsers
+                              size={16}
+                              className={
+                                form.gender === g
+                                  ? "text-[#B42225]"
+                                  : "text-gray-400"
+                              }
+                            />
+                          )}
                           {g.charAt(0) + g.slice(1).toLowerCase()}
                         </button>
                       ))}
@@ -921,13 +978,18 @@ const Register = () => {
                     </div>
                   </div>
 
-                  {/* school */}
-                  <div className="fade-up-3">
+                  {/* ── school dropdown ── */}
+                  {/* position:relative + z-index beats the stacking contexts created
+                      by the transform on .fade-up-4 / .fade-up-5 siblings below */}
+                  <div className="fade-up-3 relative" style={{ zIndex: 20 }}>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                       School / Institution{" "}
                       <span style={{ color: "#B42225" }}>*</span>
                     </label>
+
+                    {/* relative wrapper so the absolute dropdown is scoped here */}
                     <div className="relative">
+                      {/* trigger button */}
                       <button
                         type="button"
                         onClick={() =>
@@ -943,29 +1005,28 @@ const Register = () => {
                           background: errors.schoolId ? "#fff5f5" : "#F8F8F8",
                         }}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <FiBookOpen
                             size={15}
-                            className={
-                              errors.schoolId ? "text-red-400" : "text-gray-400"
-                            }
+                            className={`shrink-0 ${errors.schoolId ? "text-red-400" : "text-gray-400"}`}
                           />
                           <span
-                            className={`text-[13px] ${form.schoolId ? "text-gray-800 font-medium" : "text-gray-400"}`}
+                            className={`text-[13px] truncate ${
+                              form.schoolId
+                                ? "text-gray-800 font-medium"
+                                : "text-gray-400"
+                            }`}
                           >
-                            {form.schoolId
-                              ? schools.find(
-                                  (s) => (s.id || s._id) === form.schoolId,
-                                )?.school_name ||
-                                schools.find(
-                                  (s) => (s.id || s._id) === form.schoolId,
-                                )?.name ||
-                                "Select your school"
+                            {selectedSchool
+                              ? selectedSchool.school_name ||
+                                selectedSchool.name
                               : "Select your school"}
                           </span>
                         </div>
                         <svg
-                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${schoolDropdownOpen ? "rotate-180" : ""}`}
+                          className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+                            schoolDropdownOpen ? "rotate-180" : ""
+                          }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -979,134 +1040,112 @@ const Register = () => {
                         </svg>
                       </button>
 
+                      {/* dropdown panel */}
                       {schoolDropdownOpen && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm sm:hidden"
-                            onClick={() => setSchoolDropdownOpen(false)}
-                          />
-                          <div
-                            className="absolute left-0 right-0 z-50 mt-2 rounded-2xl bg-white overflow-hidden sm:max-h-72 sm:overflow-y-auto"
-                            style={{
-                              boxShadow: "0 16px 48px rgba(0,0,0,0.14)",
-                              border: "1px solid #F0F0F0",
-                            }}
-                          >
-                            <div className="flex items-center justify-between p-4 border-b border-gray-100 sm:hidden">
-                              <h3 className="font-black text-gray-800 text-sm">
-                                Select School
-                              </h3>
-                              <button
-                                onClick={() => setSchoolDropdownOpen(false)}
-                                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                            <div className="p-3 border-b border-gray-100">
-                              <div
-                                className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5"
-                                style={{ background: "#F8F8F8" }}
-                              >
-                                <FiSearch size={13} className="text-gray-400" />
-                                <input
-                                  type="text"
-                                  placeholder="Search school..."
-                                  value={schoolSearch}
-                                  onChange={(e) =>
-                                    setSchoolSearch(e.target.value)
-                                  }
-                                  autoFocus
-                                  className="flex-1 text-[13px] text-gray-800 outline-none bg-transparent placeholder-gray-400"
-                                />
-                                {schoolSearch && (
-                                  <button
-                                    onClick={() => setSchoolSearch("")}
-                                    className="text-gray-400 hover:text-gray-600"
-                                  >
-                                    <FiX size={13} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="max-h-56 overflow-y-auto">
-                              {loadingSchools ? (
-                                <div className="flex items-center justify-center py-8 gap-2">
-                                  <div className="w-4 h-4 border-2 border-gray-300 border-t-[#B42225] rounded-full animate-spin" />
-                                  <span className="text-sm text-gray-500">
-                                    Loading schools...
-                                  </span>
-                                </div>
-                              ) : filteredSchools.length === 0 ? (
-                                <div className="text-center py-8">
-                                  <FiBookOpen
-                                    size={28}
-                                    className="text-gray-300 mx-auto mb-2"
-                                  />
-                                  <p className="text-sm text-gray-500">
-                                    No schools found
-                                  </p>
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    Try a different search
-                                  </p>
-                                </div>
-                              ) : (
-                                filteredSchools.map((school) => {
-                                  const isSelected =
-                                    (school.id || school._id) === form.schoolId;
-                                  return (
-                                    <button
-                                      key={school.id || school._id}
-                                      type="button"
-                                      onClick={() => {
-                                        set(
-                                          "schoolId",
-                                          school.id || school._id || "",
-                                        );
-                                        setSchoolDropdownOpen(false);
-                                        setSchoolSearch("");
-                                      }}
-                                      className={`school-option w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${isSelected ? "selected" : ""}`}
-                                    >
-                                      <div>
-                                        <p
-                                          className={`text-[13px] font-medium ${isSelected ? "text-[#B42225]" : "text-gray-800"}`}
-                                        >
-                                          {school.school_name || school.name}
-                                        </p>
-                                        {school.school_code && (
-                                          <p className="text-[11px] text-gray-400 mt-0.5">
-                                            Code: {school.school_code}
-                                          </p>
-                                        )}
-                                      </div>
-                                      {isSelected && (
-                                        <FiCheckIcon
-                                          size={15}
-                                          style={{ color: "#B42225" }}
-                                        />
-                                      )}
-                                    </button>
-                                  );
-                                })
+                        <div
+                          className="absolute left-0 right-0 z-50 mt-2 rounded-2xl bg-white overflow-hidden"
+                          style={{
+                            boxShadow: "0 16px 48px rgba(0,0,0,0.14)",
+                            border: "1px solid #F0F0F0",
+                          }}
+                        >
+                          {/* search input */}
+                          <div className="p-3 border-b border-gray-100">
+                            <div
+                              className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5"
+                              style={{ background: "#F8F8F8" }}
+                            >
+                              <FiSearch size={13} className="text-gray-400 shrink-0" />
+                              <input
+                                type="text"
+                                placeholder="Search school..."
+                                value={schoolSearch}
+                                onChange={(e) =>
+                                  setSchoolSearch(e.target.value)
+                                }
+                                autoFocus
+                                className="flex-1 text-[13px] text-gray-800 outline-none bg-transparent placeholder-gray-400"
+                              />
+                              {schoolSearch && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSchoolSearch("")}
+                                  className="text-gray-400 hover:text-gray-600 shrink-0"
+                                >
+                                  <FiX size={13} />
+                                </button>
                               )}
                             </div>
-                            <div className="p-4 border-t border-gray-100 sm:hidden">
-                              <button
-                                onClick={() => setSchoolDropdownOpen(false)}
-                                className="w-full py-3 rounded-xl font-bold text-sm text-white"
-                                style={{
-                                  background:
-                                    "linear-gradient(135deg,#B42225,#FF6B00)",
-                                }}
-                              >
-                                Done
-                              </button>
-                            </div>
                           </div>
-                        </>
+
+                          {/* list */}
+                          <div className="max-h-56 overflow-y-auto">
+                            {loadingSchools ? (
+                              <div className="flex items-center justify-center py-8 gap-2">
+                                <div className="w-4 h-4 border-2 border-gray-300 border-t-[#B42225] rounded-full animate-spin" />
+                                <span className="text-sm text-gray-500">
+                                  Loading schools...
+                                </span>
+                              </div>
+                            ) : filteredSchools.length === 0 ? (
+                              <div className="text-center py-8">
+                                <FiBookOpen
+                                  size={28}
+                                  className="text-gray-300 mx-auto mb-2"
+                                />
+                                <p className="text-sm text-gray-500">
+                                  No schools found
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Try a different search
+                                </p>
+                              </div>
+                            ) : (
+                              filteredSchools.map((school) => {
+                                const isSelected =
+                                  (school.id || school._id) === form.schoolId;
+                                return (
+                                  <button
+                                    key={school.id || school._id}
+                                    type="button"
+                                    onClick={() => {
+                                      set(
+                                        "schoolId",
+                                        school.id || school._id || "",
+                                      );
+                                      setSchoolDropdownOpen(false);
+                                      setSchoolSearch("");
+                                    }}
+                                    className={`school-option w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${isSelected ? "selected" : ""}`}
+                                  >
+                                    <div>
+                                      <p
+                                        className={`text-[13px] font-medium ${isSelected ? "text-[#B42225]" : "text-gray-800"}`}
+                                      >
+                                        {school.school_name || school.name}
+                                      </p>
+                                      {school.school_code && (
+                                        <p className="text-[11px] text-gray-400 mt-0.5">
+                                          Code: {school.school_code}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {isSelected && (
+                                      <FiCheckIcon
+                                        size={15}
+                                        style={{ color: "#B42225" }}
+                                        className="shrink-0"
+                                      />
+                                    )}
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
+
                     {errors.schoolId && (
                       <p className="text-xs text-red-500 mt-1">
                         {errors.schoolId}

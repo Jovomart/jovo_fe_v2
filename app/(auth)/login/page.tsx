@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useContext, Suspense } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShoppingBag, Truck, Lock as LLock } from "lucide-react";
 import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
 import { AuthContext } from "@/context/AuthContext";
 import GoogleButton from "@/components/auth/GoogleButton";
@@ -65,6 +65,22 @@ const LoginInner = () => {
     }
   };
 
+  // Icon-based "Why Jovo?" feature rows
+  const whyJovoItems = [
+    {
+      icon: <ShoppingBag size={16} className="text-orange-400 shrink-0" />,
+      text: "Browse 50,000+ verified products",
+    },
+    {
+      icon: <Truck size={16} className="text-orange-400 shrink-0" />,
+      text: "Fast same-campus delivery",
+    },
+    {
+      icon: <LLock size={16} className="text-orange-400 shrink-0" />,
+      text: "Secure SSL-protected payments",
+    },
+  ];
+
   return (
     <>
       <style>{`
@@ -88,10 +104,6 @@ const LoginInner = () => {
         @keyframes badge-float {
           0%,100% { transform: translateY(0); }
           50%      { transform: translateY(-6px); }
-        }
-        @keyframes btn-shine {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
         }
         .orb-a { animation: orb-drift 9s  ease-in-out infinite; will-change: transform; }
         .orb-b { animation: orb-drift 13s ease-in-out infinite reverse; will-change: transform; }
@@ -191,7 +203,7 @@ const LoginInner = () => {
             <Image
               src="/images/Jovo_off_logo2.png"
               alt="Jovo"
-              className="w-24 object-cover  drop-shadow-lg"
+              className="w-24 object-cover drop-shadow-lg"
               width={96}
               height={96}
             />
@@ -254,13 +266,9 @@ const LoginInner = () => {
                 Why Jovo?
               </p>
               <div className="space-y-2.5">
-                {[
-                  { icon: "🛍️", text: "Browse 50,000+ verified products" },
-                  { icon: "🚚", text: "Fast same-campus delivery" },
-                  { icon: "🔒", text: "Secure SSL-protected payments" },
-                ].map(({ icon, text }) => (
+                {whyJovoItems.map(({ icon, text }) => (
                   <div key={text} className="flex items-center gap-3">
-                    <span className="text-base">{icon}</span>
+                    {icon}
                     <span className="text-[12.5px] text-white/50">{text}</span>
                   </div>
                 ))}
@@ -456,7 +464,7 @@ const LoginInner = () => {
               {/* divider */}
               <div className="fade-up-4 flex items-center gap-3 my-6">
                 <div
-                  className="flex-1 h-px bg-gray-150"
+                  className="flex-1 h-px"
                   style={{ background: "#EBEBEB" }}
                 />
                 <span className="text-[11.5px] text-gray-400 font-semibold whitespace-nowrap px-1">
