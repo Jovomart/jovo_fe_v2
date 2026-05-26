@@ -13,6 +13,10 @@ export default function MainLayout({
   const pathname = usePathname();
 
   const isSellerDashboard = pathname?.startsWith("/seller/dashboard");
+  const isSellerOrders = pathname?.startsWith("/seller/orders");
+  const isSellerWallet = pathname?.startsWith("/seller/wallet");
+  const isSellerProducts = pathname?.startsWith("/seller/products");
+  const isSellerDeliveries = pathname?.startsWith("/seller/deliveries");
   const isServiceDashboard = pathname?.startsWith("/services/dashboard");
   const isNewsSection = pathname?.startsWith("/news");
   const isHomePage = pathname === "/";
@@ -26,7 +30,8 @@ export default function MainLayout({
     pathname?.startsWith("/settings");
 
   const shouldHideNavbar =
-    isSellerDashboard || isServiceDashboard || isNewsSection || isHomePage;
+    isSellerDashboard || isServiceDashboard || isSellerDeliveries || isSellerOrders ||
+    isSellerProducts || isNewsSection || isHomePage;
   const shouldHideBottomNav = isSellerDashboard || isHomePage;
   const shouldShowLoader = isAPIPage || isHomePage;
 

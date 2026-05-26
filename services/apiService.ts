@@ -1,6 +1,3 @@
-// services/apiService.ts
-// Exact port of apiService.js — all logic preserved
-
 class ApiService {
   baseURL: string;
 
@@ -92,6 +89,9 @@ class ApiService {
         .join(", ");
     if (data?.message && typeof data.message === "string") return data.message;
     if (data?.error && typeof data.error === "string") return data.error;
+    if (data && typeof data === "object" && Object.keys(data).length === 0) {
+      return "Server returned an empty error response. Please check your input data.";
+    }
     console.error("Unrecognised error response shape:", data);
     return `Request failed with status ${statusCode}`;
   }
@@ -115,22 +115,34 @@ class ApiService {
       "/delivery/public",
       "/category/get-all-categories",
       "/category/get-category",
+      "/category/subcategory/get-all-subcategories",
+      "/category/subcategory/get-subcategory",
       "/auth/public/get-school",
       "/auth/schools",
-      
       "/campus-guide/search",
       "/service-provider/services/marketplace",
+      "/cart/clear",
+      "/cart/remove",
+      "/cart/update",
+      "/cart/validate",
     ];
 
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
+    const isOptionalCartEndpoint =
+      (endpoint === "/cart" || endpoint.startsWith("/cart?")) ||
+      (endpoint === "/cart/add" || endpoint.startsWith("/cart/add?"));
+
+    const effectivelyPublic = isPublic || isOptionalCartEndpoint;
 
     const config: RequestInit & { headers: any } = {
       headers: { "Content-Type": "application/json", ...options.headers },
       ...options,
     };
 
-    // For public endpoints, don't try to add auth token at all
-    if (!isPublic) {
+    if (!effectivelyPublic) {
+      const token = await this.getValidAccessToken();
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    } else {
       const token = await this.getValidAccessToken();
       if (token) config.headers.Authorization = `Bearer ${token}`;
     }
@@ -139,20 +151,22 @@ class ApiService {
       const response = await fetch(url, config);
       let data: any;
       const text = await response.text();
+      
       try {
         data = JSON.parse(text);
       } catch {
-        data = { message: text };
+        data = { message: text || `Request failed with status ${response.status}` };
       }
 
-      // Only log unexpected errors — 401 is a handled auth state, not a bug.
-      if (!response.ok && response.status !== 401)
+      if (!response.ok && response.status !== 401) {
         console.error(`API Error [${response.status}] ${endpoint}:`, data);
+        if (options.body) {
+          console.error("Request body:", options.body);
+        }
+      }
 
-      // For public endpoints, don't clear tokens on 401
       if (response.status === 401) {
-        // Only clear tokens for non-public endpoints
-        if (!isPublic) {
+        if (!effectivelyPublic) {
           const isServiceProviderEndpoint = endpoint.includes("/service-provider/");
           if (!isServiceProviderEndpoint) {
             this.clearTokens();
@@ -165,8 +179,12 @@ class ApiService {
             "Authentication required",
         );
       }
-      if (!response.ok)
-        throw new Error(this.extractErrorMessage(data, response.status));
+      
+      if (!response.ok) {
+        const errorMessage = this.extractErrorMessage(data, response.status);
+        throw new Error(errorMessage);
+      }
+      
       return data;
     } catch (error: any) {
       if (error.name === "TypeError" && error.message.includes("fetch"))
@@ -174,6 +192,8 @@ class ApiService {
       throw error;
     }
   }
+
+  // ─── AUTH ──────────────────────────────────────────────────────────────────
 
   async register({
     firstName,
@@ -226,16 +246,11 @@ class ApiService {
       `/auth/google-sign-in/sign-up?firebase_id_token=${encodeURIComponent(firebaseIdToken)}`,
       { method: "POST" },
     );
-    console.log("🔑 Google auth raw response:", response);
     const accessToken =
       response.access_token || response.data?.access_token || response.token;
-    const refreshToken = response.refresh_token || response.data?.refresh_token;
-    if (accessToken) {
-      this.storeTokens(accessToken, refreshToken);
-      console.log("✅ Tokens stored successfully");
-    } else {
-      console.log("❌ No access token found in response");
-    }
+    const refreshToken =
+      response.refresh_token || response.data?.refresh_token;
+    if (accessToken) this.storeTokens(accessToken, refreshToken);
     return response;
   }
 
@@ -342,6 +357,8 @@ class ApiService {
     });
   }
 
+  // ─── CATEGORIES ────────────────────────────────────────────────────────────
+
   async getPublicCategories(categoryType: string | null = null) {
     const params = new URLSearchParams();
     if (categoryType) params.append("category_type", categoryType);
@@ -358,6 +375,39 @@ class ApiService {
     });
   }
 
+  async getAllSubcategories(
+    category_id?: string,
+    include_effective_schema = false,
+  ) {
+    const params = new URLSearchParams();
+    if (category_id) params.append("category_id", category_id);
+    params.append(
+      "include_effective_schema",
+      String(include_effective_schema),
+    );
+    return this.makeRequest(
+      `/category/subcategory/get-all-subcategories?${params.toString()}`,
+      { method: "GET" },
+    );
+  }
+
+  async getSubcategoryById(
+    subcategory_id: string,
+    include_effective_schema = true,
+  ) {
+    const params = new URLSearchParams();
+    params.append(
+      "include_effective_schema",
+      String(include_effective_schema),
+    );
+    return this.makeRequest(
+      `/category/subcategory/get-subcategory/${encodeURIComponent(subcategory_id)}?${params.toString()}`,
+      { method: "GET" },
+    );
+  }
+
+  // ─── DELIVERY ──────────────────────────────────────────────────────────────
+
   async getAvailableDeliveryOptions(cartTotal = 0, totalWeight = 0) {
     return this.makeRequest(
       `/delivery/public/options/available?cart_total=${cartTotal}&total_weight=${totalWeight}`,
@@ -371,13 +421,153 @@ class ApiService {
     });
   }
 
+  // ─── CART ──────────────────────────────────────────────────────────────────
+
+  async getCart(session_id?: string) {
+    const qs = session_id
+      ? `?session_id=${encodeURIComponent(session_id)}`
+      : "";
+    return this.makeRequest(`/cart${qs}`, { method: "GET" });
+  }
+
+  async addToCart(
+    product_id: string,
+    quantity: number,
+    session_id?: string,
+  ) {
+    const qs = session_id
+      ? `?session_id=${encodeURIComponent(session_id)}`
+      : "";
+    return this.makeRequest(`/cart/add${qs}`, {
+      method: "POST",
+      body: JSON.stringify({ product_id, quantity }),
+    });
+  }
+
+  async updateCartItem(
+    product_id: string,
+    quantity: number,
+    session_id?: string,
+  ) {
+    const qs = session_id
+      ? `?session_id=${encodeURIComponent(session_id)}`
+      : "";
+    return this.makeRequest(`/cart/update${qs}`, {
+      method: "PATCH",
+      body: JSON.stringify({ product_id, quantity }),
+    });
+  }
+
+  async removeCartItem(product_id: string, session_id?: string) {
+    const qs = session_id
+      ? `?session_id=${encodeURIComponent(session_id)}`
+      : "";
+    return this.makeRequest(
+      `/cart/remove/${encodeURIComponent(product_id)}${qs}`,
+      { method: "DELETE" },
+    );
+  }
+
+  async clearCart(session_id?: string) {
+    const qs = session_id
+      ? `?session_id=${encodeURIComponent(session_id)}`
+      : "";
+    return this.makeRequest(`/cart/clear${qs}`, { method: "DELETE" });
+  }
+
+  async mergeCart(session_id: string) {
+    return this.makeRequest("/cart/merge", {
+      method: "POST",
+      body: JSON.stringify({ session_id }),
+    });
+  }
+
+  async validateCart(session_id?: string) {
+    const qs = session_id
+      ? `?session_id=${encodeURIComponent(session_id)}`
+      : "";
+    return this.makeRequest(`/cart/validate${qs}`, { method: "POST" });
+  }
+
+  async checkout(params: {
+    delivery_street_address: string;
+    delivery_city: string;
+    delivery_state: string;
+    delivery_country: string;
+    delivery_option_id: string;
+    delivery_notes?: string;
+    user_latitude?: number;
+    user_longitude?: number;
+  }) {
+    const q = new URLSearchParams();
+    q.append("delivery_street_address", params.delivery_street_address);
+    q.append("delivery_city", params.delivery_city);
+    q.append("delivery_state", params.delivery_state);
+    q.append("delivery_country", params.delivery_country);
+    q.append("delivery_option_id", params.delivery_option_id);
+    if (params.delivery_notes)
+      q.append("delivery_notes", params.delivery_notes);
+    if (params.user_latitude != null)
+      q.append("user_latitude", String(params.user_latitude));
+    if (params.user_longitude != null)
+      q.append("user_longitude", String(params.user_longitude));
+    return this.makeRequest(`/cart/checkout?${q.toString()}`, {
+      method: "POST",
+    });
+  }
+
+  // ─── PAYMENTS ──────────────────────────────────────────────────────────────
+
+  async verifyPayment(reference: string) {
+    return this.makeRequest(
+      `/payments/verify/${encodeURIComponent(reference)}`,
+      { method: "GET" },
+    );
+  }
+
+  // ─── USER ORDERS ───────────────────────────────────────────────────────────
+
+  async getUserOrders(params?: {
+    order_status?: string;
+    payment_status?: string;
+    start_date?: string;
+    end_date?: string;
+    page?: number;
+    per_page?: number;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.order_status) q.append("order_status", params.order_status);
+    if (params?.payment_status)
+      q.append("payment_status", params.payment_status);
+    if (params?.start_date) q.append("start_date", params.start_date);
+    if (params?.end_date) q.append("end_date", params.end_date);
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.per_page != null)
+      q.append("per_page", String(params.per_page));
+    const qs = q.toString();
+    return this.makeRequest(`/user/orders${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
+  }
+
+  async getOrderById(order_id: string) {
+    return this.makeRequest(`/user/orders/${order_id}`, { method: "GET" });
+  }
+
+  async cancelOrder(order_id: string) {
+    return this.makeRequest(`/user/orders/cancel/${order_id}`, {
+      method: "POST",
+    });
+  }
+
+  // ─── SELLER ────────────────────────────────────────────────────────────────
+
   async applyAsSeller(data: any) {
     return this.makeRequest("/seller/apply", {
       method: "POST",
       body: JSON.stringify({
         business_name: data.business_name,
         short_business_description: data.short_business_description,
-        category_ids: data.business_category,
         business_address: data.business_address,
         seller_document: data.seller_document,
         seller_document_type: data.seller_document_type,
@@ -392,6 +582,155 @@ class ApiService {
   async getSellerDashboard() {
     return this.makeRequest("/seller/dashboard", { method: "GET" });
   }
+
+  // ─── SELLER PRODUCTS ───────────────────────────────────────────────────────
+
+  async getMyProducts(params?: {
+    page?: number;
+    page_size?: number;
+    is_active?: boolean | null;
+    approval_status?: string | null;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.page_size != null)
+      q.append("page_size", String(params.page_size));
+    if (params?.is_active != null)
+      q.append("is_active", String(params.is_active));
+    if (params?.approval_status)
+      q.append("approval_status", params.approval_status);
+    const qs = q.toString();
+    return this.makeRequest(
+      `/seller/products/my-products${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  async getMyProductById(product_id: string) {
+    return this.makeRequest(`/seller/products/${product_id}`, {
+      method: "GET",
+    });
+  }
+
+  async createProduct(data: {
+    category_id: string;
+    subcategory_id?: string;
+    product_name: string;
+    product_description: string;
+    product_condition: "Like New" | "Good" | "Fair" | "Poor";
+    product_original_price: number;
+    product_images: string[];
+    is_on_sale?: boolean;
+    product_discount_price?: number | null;
+    stock_quantity?: number;
+    attributes?: Record<string, any>;
+    brand?: string;
+    is_digital?: boolean;
+    product_videos?: string[];
+    model?: string;
+    seo_title?: string;
+    seo_description?: string;
+    tags?: string[];
+    [key: string]: any;
+  }) {
+    console.log("Creating product with data:", JSON.stringify(data, null, 2));
+    const response = await this.makeRequest("/seller/products", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    console.log("Create product response:", response);
+    return response;
+  }
+
+  async updateProduct(
+    product_id: string,
+    data: {
+      category_id?: string;
+      subcategory_id?: string;
+      product_name?: string;
+      product_description?: string;
+      product_condition?: "Like New" | "Good" | "Fair" | "Poor";
+      product_original_price?: number;
+      is_on_sale?: boolean;
+      product_discount_price?: number | null;
+      stock_quantity?: number;
+      is_in_stock?: boolean;
+      is_active?: boolean;
+      attributes?: Record<string, any>;
+      brand?: string;
+      model?: string;
+      seo_title?: string;
+      seo_description?: string;
+      tags?: string[];
+      product_videos?: string[];
+    },
+  ) {
+    return this.makeRequest(`/seller/products/${product_id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteProduct(product_id: string) {
+    return this.makeRequest(`/seller/products/${product_id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // ─── SELLER ORDERS ─────────────────────────────────────────────────────────
+
+  async getSellerOrders(params?: {
+    order_status?: string | null;
+    payment_status?: string | null;
+    item_status?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    page?: number;
+    per_page?: number;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.order_status) q.append("order_status", params.order_status);
+    if (params?.payment_status)
+      q.append("payment_status", params.payment_status);
+    if (params?.item_status) q.append("item_status", params.item_status);
+    if (params?.start_date) q.append("start_date", params.start_date);
+    if (params?.end_date) q.append("end_date", params.end_date);
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.per_page != null)
+      q.append("per_page", String(params.per_page));
+    const qs = q.toString();
+    return this.makeRequest(`/seller/orders${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
+  }
+
+  async updateOrderItemStatus(order_item_id: string, new_status: string) {
+    return this.makeRequest(
+      `/seller/orders/item/${encodeURIComponent(order_item_id)}?new_status=${encodeURIComponent(new_status)}`,
+      { method: "PATCH" },
+    );
+  }
+
+  // ─── SELLER WALLET ─────────────────────────────────────────────────────────
+
+  async getSellerWallet() {
+    return this.makeRequest("/seller/wallet", { method: "GET" });
+  }
+
+  async getSellerWalletTransactions(params?: {
+    skip?: number;
+    limit?: number;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.skip != null) q.append("skip", String(params.skip));
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    const qs = q.toString();
+    return this.makeRequest(`/seller/wallet/transactions${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
+  }
+
+  // ─── SERVICE PROVIDER ──────────────────────────────────────────────────────
 
   async applyAsServiceProvider(data: {
     business_name: string;
@@ -529,6 +868,8 @@ class ApiService {
     });
   }
 
+  // ─── CAMPUS GUIDE ──────────────────────────────────────────────────────────
+
   async getCampusGuides(params?: {
     school_id?: string;
     category?: string;
@@ -617,11 +958,25 @@ class ApiService {
     );
   }
 
+  async getSchoolPickupStations(
+    school_id: string,
+    params?: { search?: string; page?: number; per_page?: number },
+  ) {
+    const q = new URLSearchParams();
+    if (params?.search) q.append("search", params.search);
+    if (params?.page) q.append("page", String(params.page));
+    if (params?.per_page) q.append("per_page", String(params.per_page));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/pickup-station/school/${school_id}${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
   logout() {
     this.clearTokens();
   }
 }
 
 const apiService = new ApiService();
-
 export default apiService;

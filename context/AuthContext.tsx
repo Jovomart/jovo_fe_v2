@@ -14,12 +14,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSeller, setIsSeller] = useState(false);
   const [isServiceProvider, setIsServiceProvider] = useState(false);
 
-  // Use refs to track if initial checks have been done
   const sellerChecked = useRef(false);
   const providerChecked = useRef(false);
 
-  // Derived value — when there's no user, isServiceProvider is always false.
-  // This avoids calling setIsServiceProvider(false) inside an effect.
   const effectiveIsServiceProvider = user ? isServiceProvider : false;
 
   const mapUserData = (userData: any, existingUser: any = null) => ({
@@ -56,20 +53,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     is_service_provider: userData.is_service_provider || false,
   });
 
-  // Stable callback — uses functional setUser so it never needs `user` as a dep.
+  // ── Merge guest cart into the newly authenticated user's cart ──────────────
+  // Call this right after login/google-auth/email-verification succeeds.
+  // Non-fatal: if the merge fails we just log and continue.
+  const mergeGuestCart = async () => {
+    if (typeof window === "undefined") return;
+    const guestSessionId = localStorage.getItem("guest_session_id");
+    if (!guestSessionId) return;
+    try {
+      await ApiService.mergeCart(guestSessionId);
+      localStorage.removeItem("guest_session_id");
+    } catch (err) {
+      // Non-critical — user's account cart still works; guest items may be lost.
+      console.warn("Cart merge failed (non-fatal):", err);
+    }
+  };
+
+  // ── Service provider check ────────────────────────────────────────────────
   const checkServiceProviderStatus = useCallback(async (userId: string) => {
     try {
       const response = await ApiService.getServiceProviderDetails();
       const providerData = response?.data || response;
-
       const isProvider = !!(
         providerData?.id && providerData?.provider_status === "active"
       );
-
       setIsServiceProvider(isProvider);
-
       if (isProvider) {
-        // Functional updater reads the latest user without closing over it.
         setUser((prevUser: any) => {
           if (!prevUser || prevUser.id !== userId) return prevUser;
           const updatedUser = {
@@ -82,15 +91,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return updatedUser;
         });
       }
-
       return isProvider;
     } catch {
       setIsServiceProvider(false);
       return false;
     }
-  }, []); // ✅ Stable — no user dependency
+  }, []);
 
-  // Auth persistence
+  // ── Auth persistence on mount ─────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -105,7 +113,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           setLoading(false);
-
           await checkServiceProviderStatus(parsedUser.id);
           sellerChecked.current = true;
           providerChecked.current = true;
@@ -135,12 +142,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initAuth();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // ↑ Intentionally empty — runs once on mount only.
 
-  // Check seller status — only runs once after user is first loaded.
+  // ── Seller status check ───────────────────────────────────────────────────
   useEffect(() => {
     if (!user || sellerChecked.current) return;
-
     sellerChecked.current = true;
     ApiService.getApplicationStatus()
       .then((res: any) => {
@@ -166,8 +171,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
   }, [user]);
 
-  // Check service provider status — only runs once after user is first loaded.
-  // No setState in the else branch; effectiveIsServiceProvider handles that derivation.
+  // ── Service provider status check ─────────────────────────────────────────
   useEffect(() => {
     if (user?.id) {
       if (!providerChecked.current) {
@@ -176,14 +180,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } else {
       providerChecked.current = false;
-      // ✅ No setIsServiceProvider(false) here — effectiveIsServiceProvider
-      //    derives false automatically whenever user is null/undefined.
     }
-  }, [user, checkServiceProviderStatus]); // ✅ exhaustive-deps satisfied
+  }, [user, checkServiceProviderStatus]);
+
+  // ─── Auth actions ──────────────────────────────────────────────────────────
 
   const register = async (formData: any) => {
-    console.log("========== REGISTER DEBUG ==========");
-    console.log("📱 Phone from form data:", formData.phone);
     const response = await ApiService.register({
       firstName: formData.firstName,
       lastName: formData.lastName,
@@ -199,24 +201,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       schoolId: formData.schoolId,
       phone: formData.phone,
     });
-    console.log("📦 Registration response:", response);
     try {
       const freshUser = await ApiService.getCurrentUser();
-      console.log("✅ getCurrentUser success:", freshUser);
       if (freshUser && (freshUser.data || freshUser)) {
         const mappedUser = mapUserData(freshUser.data || freshUser);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
-        console.log("✅ User stored from getCurrentUser:", mappedUser);
-
         await checkServiceProviderStatus(mappedUser.id);
       }
-    } catch (err: any) {
-      console.log(
-        "❌ getCurrentUser failed (expected before email verification):",
-        err.message,
-      );
-      console.log("📱 Manually storing phone from form:", formData.phone);
+    } catch {
       const basicUserData = response.data || response;
       const mappedUser = {
         id: basicUserData.user_id || basicUserData.id,
@@ -249,75 +242,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
-      console.log("💾 User stored manually with phone:", mappedUser);
-      console.log("📱 Phone in stored user:", mappedUser.phone);
     }
-    console.log("===================================");
     return response;
   };
 
   const login = async (email: string, password: string) => {
-    console.log("========== LOGIN DEBUG ==========");
     const response = await ApiService.login({ email, password });
-    console.log("📦 Login response:", response);
     const userData =
       response.data?.user || response.user || response.data || null;
+
     if (userData) {
       const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
-      console.log("📱 Existing user phone:", existingUser.phone);
-      console.log("📱 New login response phone:", userData.phone_number);
       try {
         const freshUser = await ApiService.getCurrentUser();
         if (freshUser && (freshUser.data || freshUser)) {
-          const completeUserData = freshUser.data || freshUser;
-          const mappedUser = mapUserData(completeUserData);
+          const mappedUser = mapUserData(freshUser.data || freshUser);
           localStorage.setItem("user", JSON.stringify(mappedUser));
           setUser(mappedUser);
-          console.log(
-            "✅ Login - fetched complete user with phone:",
-            mappedUser.phone,
-          );
-
           await checkServiceProviderStatus(mappedUser.id);
-
-          console.log("===================================");
+          // Merge any guest cart items into this user's cart
+          await mergeGuestCart();
           return mappedUser;
         }
       } catch (err: any) {
-        console.log(
-          "⚠️ Could not fetch complete user after login:",
-          err.message,
-        );
+        console.warn("Could not fetch complete user after login:", err.message);
       }
       const mappedUser = mapUserData(userData, { phone: existingUser.phone });
-      console.log(
-        "📱 Mapped user phone (preserved from existing):",
-        mappedUser.phone,
-      );
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
-
       await checkServiceProviderStatus(mappedUser.id);
-
-      console.log("===================================");
+      // Merge any guest cart items into this user's cart
+      await mergeGuestCart();
       return mappedUser;
     }
-    console.log("===================================");
     return userData;
   };
 
   const googleLogin = async () => {
     if (!auth || !googleProvider)
       throw new Error("Google Sign-In is not configured yet.");
-    console.log("========== GOOGLE LOGIN DEBUG ==========");
     const result = await signInWithPopup(auth, googleProvider);
     const idToken = await result.user.getIdToken();
-    console.log("📱 Firebase ID Token obtained");
     const response = await ApiService.googleAuth(idToken);
-    console.log("📦 Google auth response:", response);
     if (response.access_token) {
       ApiService.storeTokens(response.access_token, response.refresh_token);
-      console.log("✅ Tokens stored from Google auth");
     }
     let userData =
       response.data?.user || response.user || response.data || null;
@@ -329,34 +297,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const freshUser = await ApiService.getCurrentUser();
       if (freshUser && (freshUser.data || freshUser)) {
         userData = freshUser.data || freshUser;
-        console.log("✅ Fetched fresh user data:", userData);
       }
     } catch (err: any) {
-      console.log("⚠️ Could not fetch fresh user:", err.message);
+      console.warn("Could not fetch fresh user after Google login:", err.message);
     }
     const requiresProfileCompletion =
       !userData?.username ||
       !userData?.gender ||
       !userData?.country ||
       !userData?.phone;
-    console.log("📱 User data:", userData);
-    console.log("📱 Phone in user data:", userData?.phone);
-    console.log("⚠️ Requires profile completion:", requiresProfileCompletion);
     if (userData) {
       const mappedUser = mapUserData(userData);
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
-      console.log("📱 User stored:", mappedUser);
-
       await checkServiceProviderStatus(mappedUser.id);
+      // Merge any guest cart items into this user's cart
+      await mergeGuestCart();
     }
-    console.log("===========================================");
     return { userData, response, requiresProfileCompletion };
   };
 
   const completeProfile = async (profileData: any) => {
-    console.log("========== COMPLETE PROFILE DEBUG ==========");
-    console.log("📱 Phone being sent:", profileData.phone);
     const response = await ApiService.completeProfile({
       username: profileData.username,
       gender: profileData.gender,
@@ -367,7 +328,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       schoolId: profileData.schoolId,
       phone: profileData.phone,
     });
-    console.log("📦 Complete profile response:", response);
     try {
       const freshUser = await ApiService.getCurrentUser();
       if (freshUser && (freshUser.data || freshUser)) {
@@ -375,24 +335,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(userData);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
-        console.log("✅ Profile completed - fetched fresh user:", mappedUser);
-        console.log("📱 Phone after completion:", mappedUser.phone);
-
         await checkServiceProviderStatus(mappedUser.id);
-
         return mappedUser;
       }
-    } catch (err: any) {
-      console.log(
-        "⚠️ Could not fetch fresh user after completion:",
-        err.message,
-      );
+    } catch {
       const updated = { ...user, ...profileData };
       localStorage.setItem("user", JSON.stringify(updated));
       setUser(updated);
       return updated;
     }
-    console.log("===================================");
     return response;
   };
 
@@ -440,8 +391,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(freshUser.data || freshUser);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
-
         await checkServiceProviderStatus(mappedUser.id);
+        // Merge any guest cart items into this user's cart
+        await mergeGuestCart();
       } catch (err) {
         console.error("Failed to fetch user after verification:", err);
       }
@@ -449,16 +401,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const mappedUser = mapUserData(response.user);
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
-
       await checkServiceProviderStatus(mappedUser.id);
+      await mergeGuestCart();
     }
     return response;
   };
 
   const resendVerificationCode = async (email: string) =>
     ApiService.resendVerificationCode(email);
+
   const forgotPassword = async (email: string) =>
     ApiService.sendForgotPasswordCode(email);
+
   const resetPassword = async (
     email: string,
     code: string,
@@ -475,9 +429,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const mappedUser = mapUserData(userData, user);
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
-
         await checkServiceProviderStatus(mappedUser.id);
-
         return mappedUser;
       }
       return null;
@@ -491,8 +443,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (auth) await signOut(auth);
     } catch {}
+    // Clear everything auth-related
     localStorage.removeItem("user");
     localStorage.removeItem("sellerMode");
+    // Remove guest session so a fresh one is created for the next guest session
+    localStorage.removeItem("guest_session_id");
     ApiService.clearTokens();
     setUser(null);
     setSellerMode(false);
@@ -531,7 +486,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         enterSellerMode,
         exitSellerMode,
         isSeller,
-        isServiceProvider: effectiveIsServiceProvider, // ✅ derived, never set in an effect
+        isServiceProvider: effectiveIsServiceProvider,
       }}
     >
       {children}

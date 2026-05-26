@@ -1,5 +1,7 @@
-// CartContext.tsx
 "use client";
+// NOTE: CartProvider must be rendered INSIDE AuthProvider in your layout.
+// e.g. <AuthProvider><CartProvider>{children}</CartProvider></AuthProvider>
+
 import {
   createContext,
   useContext,
@@ -8,23 +10,29 @@ import {
   useCallback,
   ReactNode,
 } from "react";
+import { useAuth } from "@/context/AuthContext";
+import ApiService from "@/services/apiService";
+
+// ─── Types — match the backend cart API response shape ────────────────────────
 
 export interface CartItem {
-  id: number;
+  product_id: string;       // UUID string from backend
   name: string;
   price: number;
-  oldPrice?: number;
-  image: string;
+  image_url: string;
   quantity: number;
-  category: string;
-  brand?: string;
-  stock: number;
+  subtotal: number;         // price × quantity, computed by backend
+  stock_available: number;
+  is_in_stock: boolean;
 }
 
-// Type for product when adding to cart (without quantity)
-export type CartProduct = Omit<CartItem, "quantity">;
+export interface CartData {
+  items: CartItem[];
+  total_items: number;      // sum of all quantities
+  total_price: number;      // sum of all subtotals
+}
 
-// Delivery Info Type
+// ─── Delivery info type (used by checkout page) ───────────────────────────────
 export interface DeliveryInfo {
   fullName: string;
   phone: string;
@@ -34,277 +42,243 @@ export interface DeliveryInfo {
   state: string;
   country: string;
   notes?: string;
-  deliveryMethod?: string;
 }
 
-// Saved Order Type
-export interface SavedOrder {
-  id: string;
-  reference: string;
-  items: CartItem[];
-  subtotal: number;
-  deliveryCost: number;
-  total: number;
-  deliveryInfo: DeliveryInfo;
-  status: "processing" | "confirmed" | "shipped" | "delivered" | "cancelled";
-  paymentMethod: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
+// ─── Context shape ────────────────────────────────────────────────────────────
 interface CartContextType {
+  cartData: CartData | null;
   items: CartItem[];
-  addToCart: (product: CartProduct, qty?: number) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, qty: number) => void;
-  clearCart: () => void;
   itemCount: number;
   subtotal: number;
-  isInCart: (id: number) => boolean;
-  getItemQuantity: (id: number) => number;
-  recentlyAdded: number | null;
-  // NEW: Order management
-  orders: SavedOrder[];
-  saveOrder: (orderData: Omit<SavedOrder, "id" | "createdAt">) => SavedOrder;
-  getOrderById: (id: string) => SavedOrder | undefined;
-  updateOrderStatus: (id: string, status: SavedOrder["status"]) => void;
+  loading: boolean;
+  operationLoading: boolean; // true while an add/remove/update call is in flight
+  error: string | null;
+  recentlyAdded: string | null; // product_id of the most recently added item
+  addToCart: (product_id: string, qty?: number) => Promise<void>;
+  removeFromCart: (product_id: string) => Promise<void>;
+  updateQuantity: (product_id: string, qty: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  validateCart: () => Promise<any>;
+  isInCart: (product_id: string) => boolean;
+  getItemQuantity: (product_id: string) => number;
+  refetchCart: () => Promise<void>;
 }
 
-// Default values for context
+// ─── Defaults (used before context is available — should never happen in practice) ──
 const defaultValues: CartContextType = {
+  cartData: null,
   items: [],
-  addToCart: () => {},
-  removeFromCart: () => {},
-  updateQuantity: () => {},
-  clearCart: () => {},
   itemCount: 0,
   subtotal: 0,
+  loading: false,
+  operationLoading: false,
+  error: null,
+  recentlyAdded: null,
+  addToCart: async () => {},
+  removeFromCart: async () => {},
+  updateQuantity: async () => {},
+  clearCart: async () => {},
+  validateCart: async () => null,
   isInCart: () => false,
   getItemQuantity: () => 0,
-  recentlyAdded: null,
-  orders: [],
-  saveOrder: () => ({
-    id: "",
-    reference: "",
-    items: [],
-    subtotal: 0,
-    deliveryCost: 0,
-    total: 0,
-    deliveryInfo: {} as DeliveryInfo,
-    status: "processing",
-    paymentMethod: "",
-    createdAt: "",
-  }),
-  getOrderById: () => undefined,
-  updateOrderStatus: () => {},
+  refetchCart: async () => {},
 };
 
 export const CartContext = createContext<CartContextType>(defaultValues);
 
-// Provider component
-interface CartProviderProps {
-  children: ReactNode;
+// ─── Guest session ID helpers ─────────────────────────────────────────────────
+function getOrCreateSessionId(): string {
+  if (typeof window === "undefined") return "";
+  let sid = localStorage.getItem("guest_session_id");
+  if (!sid) {
+    sid =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `guest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem("guest_session_id", sid);
+  }
+  return sid;
 }
 
-export function CartProvider({ children }: CartProviderProps) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<SavedOrder[]>([]);
-  const [recentlyAdded, setRecentlyAdded] = useState<number | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+// ─── Provider ─────────────────────────────────────────────────────────────────
+export function CartProvider({ children }: { children: ReactNode }) {
+  // Wait for auth to resolve before fetching cart so we don't do a
+  // spurious guest fetch for an already-logged-in user on page load.
+  const { user, loading: authLoading } = useAuth();
 
-  // Load cart AND orders from localStorage on mount
+  const [cartData, setCartData] = useState<CartData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [operationLoading, setOperationLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
+
+  // ── Fetch cart from backend ──────────────────────────────────────────────
+  const fetchCart = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Authenticated users: backend identifies cart by their JWT.
+      // Guest users: we pass the session_id query param.
+      const sessionId = user ? undefined : getOrCreateSessionId();
+      const res = await ApiService.getCart(sessionId);
+      const payload: CartData = res?.data ?? {
+        items: [],
+        total_items: 0,
+        total_price: 0,
+      };
+      setCartData(payload);
+    } catch (err: any) {
+      // A failed cart fetch is non-fatal — show empty cart, log the error.
+      console.error("CartContext: failed to fetch cart", err);
+      setError(err?.message ?? "Failed to load cart");
+      setCartData({ items: [], total_items: 0, total_price: 0 });
+    } finally {
+      setLoading(false);
+    }
+  }, [user]); // re-create when user changes so auth state is fresh
+
+  // ── Fetch cart once auth has resolved (avoids double-fetch on page load) ─
   useEffect(() => {
-    // Load cart
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        setItems(parsedCart); // eslint-disable-line react-hooks/set-state-in-effect
-      } catch (error) {
-        console.error("Failed to parse cart from localStorage:", error);
-      }
-    }
+    if (authLoading) return; // wait until we know who the user is
+    fetchCart();
+  }, [fetchCart, authLoading]);
 
-    // Load orders
-    const savedOrders = localStorage.getItem("jovo_orders");
-    if (savedOrders) {
-      try {
-        const parsedOrders = JSON.parse(savedOrders);
-        setOrders(parsedOrders);
-      } catch (error) {
-        console.error("Failed to parse orders from localStorage:", error);
-      }
-    }
-
-    setIsInitialized(true);
-  }, []);
-
-  // Save cart to localStorage whenever it changes
+  // ── Clear recentlyAdded badge after 3 s ──────────────────────────────────
   useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("cart", JSON.stringify(items));
-    }
-  }, [items, isInitialized]);
-
-  // Save orders to localStorage whenever they change
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("jovo_orders", JSON.stringify(orders));
-    }
-  }, [orders, isInitialized]);
-
-  // Clear recentlyAdded after 3 seconds
-  useEffect(() => {
-    if (recentlyAdded !== null) {
-      const timer = setTimeout(() => {
-        setRecentlyAdded(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!recentlyAdded) return;
+    const t = setTimeout(() => setRecentlyAdded(null), 3000);
+    return () => clearTimeout(t);
   }, [recentlyAdded]);
 
-  const addToCart = useCallback((product: CartProduct, qty: number = 1) => {
-    setItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.id === product.id);
+  // ─── Cart mutations ────────────────────────────────────────────────────────
 
-      if (existingItem) {
-        // Update existing item quantity
-        const newQuantity = Math.min(
-          existingItem.quantity + qty,
-          product.stock,
-        );
-        if (newQuantity <= 0) return currentItems;
-
-        return currentItems.map((item) =>
-          item.id === product.id ? { ...item, quantity: newQuantity } : item,
-        );
-      } else {
-        // Add new item
-        const newQuantity = Math.min(qty, product.stock);
-        if (newQuantity <= 0) return currentItems;
-
-        return [...currentItems, { ...product, quantity: newQuantity }];
+  const addToCart = useCallback(
+    async (product_id: string, qty = 1) => {
+      setOperationLoading(true);
+      setError(null);
+      try {
+        const sessionId = user ? undefined : getOrCreateSessionId();
+        await ApiService.addToCart(product_id, qty, sessionId);
+        setRecentlyAdded(product_id);
+        await fetchCart();
+      } catch (err: any) {
+        const msg = err?.message ?? "Failed to add item to cart";
+        setError(msg);
+        throw new Error(msg); // re-throw so the caller (product page) can react
+      } finally {
+        setOperationLoading(false);
       }
-    });
+    },
+    [user, fetchCart],
+  );
 
-    // Set recently added product ID
-    setRecentlyAdded(product.id);
-  }, []);
+  const removeFromCart = useCallback(
+    async (product_id: string) => {
+      setOperationLoading(true);
+      setError(null);
+      try {
+        const sessionId = user ? undefined : getOrCreateSessionId();
+        await ApiService.removeCartItem(product_id, sessionId);
+        await fetchCart();
+      } catch (err: any) {
+        const msg = err?.message ?? "Failed to remove item";
+        setError(msg);
+        throw new Error(msg);
+      } finally {
+        setOperationLoading(false);
+      }
+    },
+    [user, fetchCart],
+  );
 
-  const removeFromCart = useCallback((id: number) => {
-    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
-  }, []);
-
+  /**
+   * Update an item's quantity.
+   * Passing qty = 0 removes the item (the backend supports this).
+   */
   const updateQuantity = useCallback(
-    (id: number, qty: number) => {
-      if (qty <= 0) {
-        removeFromCart(id);
-        return;
+    async (product_id: string, qty: number) => {
+      setOperationLoading(true);
+      setError(null);
+      try {
+        const sessionId = user ? undefined : getOrCreateSessionId();
+        await ApiService.updateCartItem(product_id, qty, sessionId);
+        await fetchCart();
+      } catch (err: any) {
+        const msg = err?.message ?? "Failed to update quantity";
+        setError(msg);
+        throw new Error(msg);
+      } finally {
+        setOperationLoading(false);
       }
-
-      setItems((currentItems) =>
-        currentItems.map((item) => {
-          if (item.id === id) {
-            // Respect stock limit
-            const validQty = Math.min(qty, item.stock);
-            return { ...item, quantity: validQty };
-          }
-          return item;
-        }),
-      );
     },
-    [removeFromCart],
+    [user, fetchCart],
   );
 
-  const clearCart = useCallback(() => {
-    setItems([]);
-  }, []);
+  const clearCart = useCallback(async () => {
+    setOperationLoading(true);
+    setError(null);
+    try {
+      const sessionId = user ? undefined : getOrCreateSessionId();
+      await ApiService.clearCart(sessionId);
+      setCartData({ items: [], total_items: 0, total_price: 0 });
+    } catch (err: any) {
+      const msg = err?.message ?? "Failed to clear cart";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setOperationLoading(false);
+    }
+  }, [user]);
 
-  // NEW: Save order
-  const saveOrder = useCallback(
-    (orderData: Omit<SavedOrder, "id" | "createdAt">): SavedOrder => {
-      const newOrder: SavedOrder = {
-        ...orderData,
-        id: `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+  const validateCart = useCallback(async () => {
+    const sessionId = user ? undefined : getOrCreateSessionId();
+    return ApiService.validateCart(sessionId);
+  }, [user]);
 
-      setOrders((prevOrders) => [newOrder, ...prevOrders]);
-      return newOrder;
-    },
-    [],
-  );
-
-  // NEW: Get order by ID
-  const getOrderById = useCallback(
-    (id: string): SavedOrder | undefined => {
-      return orders.find((order) => order.id === id);
-    },
-    [orders],
-  );
-
-  // NEW: Update order status
-  const updateOrderStatus = useCallback(
-    (id: string, status: SavedOrder["status"]) => {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === id
-            ? { ...order, status, updatedAt: new Date().toISOString() }
-            : order,
-        ),
-      );
-    },
-    [],
-  );
-
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-
-  const subtotal = items.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0,
-  );
+  // ─── Derived values ────────────────────────────────────────────────────────
+  const items = cartData?.items ?? [];
+  const itemCount = cartData?.total_items ?? 0;
+  const subtotal = cartData?.total_price ?? 0;
 
   const isInCart = useCallback(
-    (id: number) => {
-      return items.some((item) => item.id === id);
-    },
+    (product_id: string) => items.some((i) => i.product_id === product_id),
     [items],
   );
 
   const getItemQuantity = useCallback(
-    (id: number) => {
-      const item = items.find((item) => item.id === id);
-      return item?.quantity || 0;
-    },
+    (product_id: string) =>
+      items.find((i) => i.product_id === product_id)?.quantity ?? 0,
     [items],
   );
 
-  const value: CartContextType = {
-    items,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    itemCount,
-    subtotal,
-    isInCart,
-    getItemQuantity,
-    recentlyAdded,
-    orders,
-    saveOrder,
-    getOrderById,
-    updateOrderStatus,
-  };
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{
+        cartData,
+        items,
+        itemCount,
+        subtotal,
+        loading,
+        operationLoading,
+        error,
+        recentlyAdded,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        validateCart,
+        isInCart,
+        getItemQuantity,
+        refetchCart: fetchCart,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 }
 
-// Custom hook with error checking
 export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used within a CartProvider");
+  return ctx;
 }

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -15,22 +15,15 @@ import {
   FiCheckCircle,
   FiClock,
   FiRefreshCw,
-  FiPackage,
 } from "react-icons/fi";
 import { FaStore, FaRocket } from "react-icons/fa";
 import { MdStorefront } from "react-icons/md";
 import apiService from "@/services/apiService";
 
 // Types
-interface Category {
-  id: string;
-  name: string;
-}
-
 interface FormData {
   business_name: string;
   short_business_description: string;
-  business_category: string[];
   business_address: string;
   seller_document_type: string;
   seller_document_file: File | null;
@@ -41,13 +34,12 @@ interface FormData {
 interface Errors {
   business_name?: string;
   short_business_description?: string;
-  business_category?: string;
   business_address?: string;
   seller_document_type?: string;
   seller_document_file?: string;
 }
 
-// Only PASSPORT now
+// Only PASSPORT
 const DOCUMENT_TYPES = [{ value: "PASSPORT", label: "International Passport" }];
 
 const STEPS = [
@@ -238,15 +230,9 @@ const SellerApplication = () => {
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Categories from API (PRODUCT only)
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  const [categoriesError, setCategoriesError] = useState("");
-
   const [form, setForm] = useState<FormData>({
     business_name: "",
     short_business_description: "",
-    business_category: [],
     business_address: "",
     seller_document_type: "PASSPORT",
     seller_document_file: null,
@@ -255,54 +241,9 @@ const SellerApplication = () => {
   });
   const [errors, setErrors] = useState<Errors>({});
 
-  // Fetch PRODUCT categories from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
-      setCategoriesError("");
-      try {
-        const response = await apiService.getPublicCategories("PRODUCT");
-        console.log("Raw response:", response);
-
-        let categoriesArray: Category[] = [];
-        if (Array.isArray(response)) {
-          categoriesArray = response;
-        } else if (
-          response?.data?.categories &&
-          Array.isArray(response.data.categories)
-        ) {
-          categoriesArray = response.data.categories;
-        } else if (response?.categories && Array.isArray(response.categories)) {
-          categoriesArray = response.categories;
-        } else if (response?.data && Array.isArray(response.data)) {
-          categoriesArray = response.data;
-        }
-
-        console.log("Parsed categories:", categoriesArray);
-        setCategories(categoriesArray);
-      } catch (err: any) {
-        console.error("Failed to fetch categories:", err);
-        setCategoriesError(err.message || "Failed to load categories");
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-    fetchCategories();
-  }, []);
-
   const setFormField = <K extends keyof FormData>(key: K, val: FormData[K]) => {
     setForm((p) => ({ ...p, [key]: val }));
     setErrors((p) => ({ ...p, [key]: "" }));
-  };
-
-  const toggleCategory = (categoryId: string) => {
-    setForm((p) => ({
-      ...p,
-      business_category: p.business_category.includes(categoryId)
-        ? p.business_category.filter((id) => id !== categoryId)
-        : [...p.business_category, categoryId],
-    }));
-    setErrors((p) => ({ ...p, business_category: "" }));
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -345,8 +286,6 @@ const SellerApplication = () => {
       e.short_business_description = "Description is required.";
     else if (form.short_business_description.trim().length < 20)
       e.short_business_description = "Please write at least 20 characters.";
-    if (form.business_category.length === 0)
-      e.business_category = "Select at least one category.";
     if (!form.business_address.trim())
       e.business_address = "Business address is required.";
     setErrors(e);
@@ -384,7 +323,6 @@ const SellerApplication = () => {
       await apiService.applyAsSeller({
         business_name: form.business_name.trim(),
         short_business_description: form.short_business_description.trim(),
-        business_category: form.business_category,
         business_address: form.business_address.trim(),
         seller_document: base64Doc,
         seller_document_type: form.seller_document_type,
@@ -404,7 +342,6 @@ const SellerApplication = () => {
     setForm({
       business_name: "",
       short_business_description: "",
-      business_category: [],
       business_address: "",
       seller_document_type: "PASSPORT",
       seller_document_file: null,
@@ -415,19 +352,11 @@ const SellerApplication = () => {
     setSubmitError("");
   };
 
-  // Get category name by ID for display
-  const getCategoryName = (categoryId: string) => {
-    const cat = categories.find((c) => c.id === categoryId);
-    return cat?.name || categoryId;
-  };
-
   return (
     <>
       <style>{`
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         .fade-up { animation: fadeUp 0.35s ease forwards; }
-        .cat-chip { transition: all 0.18s ease; }
-        .cat-chip:hover { transform: translateY(-1px); }
       `}</style>
 
       <div className="min-h-screen" style={{ background: "#F4F5F9" }}>
@@ -552,7 +481,7 @@ const SellerApplication = () => {
                 </div>
               </div>
 
-              {/* ── STEP 1 ── */}
+              {/* ── STEP 1 — Business Info ── */}
               {step === 1 && (
                 <div className="fade-up space-y-5">
                   <div
@@ -577,6 +506,7 @@ const SellerApplication = () => {
                         </p>
                       </div>
                     </div>
+
                     <div className="space-y-5">
                       <InputField
                         label="Business Name"
@@ -624,86 +554,6 @@ const SellerApplication = () => {
                       </InputField>
 
                       <InputField
-                        label="Business Category"
-                        required
-                        error={errors.business_category}
-                        hint="Select all categories that apply to your business."
-                      >
-                        {loadingCategories ? (
-                          <div className="flex items-center justify-center py-8">
-                            <svg
-                              className="animate-spin h-5 w-5 text-[#B42225]"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                            >
-                              <circle
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                strokeDasharray="30 70"
-                              />
-                            </svg>
-                            <span className="ml-2 text-sm text-gray-400">
-                              Loading categories...
-                            </span>
-                          </div>
-                        ) : categoriesError ? (
-                          <div className="text-center py-4 text-red-500 text-sm">
-                            {categoriesError}
-                          </div>
-                        ) : categories.length === 0 ? (
-                          <div className="text-center py-4 text-gray-500 text-sm">
-                            No categories available. Please contact support.
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {categories.map((cat) => {
-                              const selected = form.business_category.includes(
-                                cat.id,
-                              );
-                              return (
-                                <button
-                                  key={cat.id}
-                                  type="button"
-                                  onClick={() => toggleCategory(cat.id)}
-                                  className={`cat-chip text-xs font-semibold px-3 py-2 rounded-xl border transition-all ${
-                                    selected
-                                      ? "text-white border-transparent"
-                                      : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#B42225]/30 hover:text-[#B42225]"
-                                  }`}
-                                  style={
-                                    selected
-                                      ? {
-                                          background:
-                                            "linear-gradient(135deg,#B42225,#FF6B00)",
-                                          boxShadow:
-                                            "0 3px 10px rgba(180,34,37,0.25)",
-                                        }
-                                      : {}
-                                  }
-                                >
-                                  {selected && (
-                                    <FiCheck
-                                      size={10}
-                                      className="inline mr-1"
-                                    />
-                                  )}
-                                  {cat.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {form.business_category.length > 0 && (
-                          <p className="text-[11px] text-[#B42225] font-semibold mt-2">
-                            {form.business_category.length} selected
-                          </p>
-                        )}
-                      </InputField>
-
-                      <InputField
                         label="Business Address"
                         required
                         error={errors.business_address}
@@ -721,6 +571,7 @@ const SellerApplication = () => {
                       </InputField>
                     </div>
                   </div>
+
                   <div className="flex justify-end mb-8">
                     <button
                       onClick={nextStep}
@@ -736,7 +587,7 @@ const SellerApplication = () => {
                 </div>
               )}
 
-              {/* ── STEP 2 ── */}
+              {/* ── STEP 2 — Identity Verification ── */}
               {step === 2 && (
                 <div className="fade-up space-y-5">
                   <div
@@ -761,6 +612,7 @@ const SellerApplication = () => {
                         </p>
                       </div>
                     </div>
+
                     <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-100 mb-6">
                       <FiShield
                         size={16}
@@ -772,8 +624,9 @@ const SellerApplication = () => {
                         shared with third parties.
                       </p>
                     </div>
+
                     <div className="space-y-5">
-                      {/* Document Type - Only PASSPORT now */}
+                      {/* Document Type */}
                       <InputField
                         label="Document Type"
                         required
@@ -900,6 +753,7 @@ const SellerApplication = () => {
                       </InputField>
                     </div>
                   </div>
+
                   <div className="flex items-center justify-between mb-8">
                     <button
                       onClick={prevStep}
@@ -921,7 +775,7 @@ const SellerApplication = () => {
                 </div>
               )}
 
-              {/* ── STEP 3 ── */}
+              {/* ── STEP 3 — Review ── */}
               {step === 3 && (
                 <div className="fade-up space-y-5">
                   <div
@@ -946,7 +800,9 @@ const SellerApplication = () => {
                         </p>
                       </div>
                     </div>
+
                     <div className="space-y-4">
+                      {/* Business Info review */}
                       <div className="rounded-2xl bg-gray-50 p-5 space-y-3">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
@@ -984,27 +840,10 @@ const SellerApplication = () => {
                               {form.short_business_description}
                             </p>
                           </div>
-                          <div className="sm:col-span-2">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1.5">
-                              Categories
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {form.business_category.map((catId) => (
-                                <span
-                                  key={catId}
-                                  className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white"
-                                  style={{
-                                    background:
-                                      "linear-gradient(135deg,#B42225,#FF6B00)",
-                                  }}
-                                >
-                                  {getCategoryName(catId)}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
                         </div>
                       </div>
+
+                      {/* Verification review */}
                       <div className="rounded-2xl bg-gray-50 p-5">
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
@@ -1045,6 +884,7 @@ const SellerApplication = () => {
                         </div>
                       </div>
                     </div>
+
                     <div className="mt-5 p-4 rounded-2xl bg-amber-50 border border-amber-100">
                       <p className="text-xs text-amber-700 leading-relaxed">
                         By submitting, you confirm all information is accurate
@@ -1059,6 +899,7 @@ const SellerApplication = () => {
                         .
                       </p>
                     </div>
+
                     {submitError && (
                       <div className="mt-4 flex items-start gap-2.5 p-4 rounded-2xl bg-red-50 border border-red-200">
                         <FiAlertCircle
@@ -1069,6 +910,7 @@ const SellerApplication = () => {
                       </div>
                     )}
                   </div>
+
                   <div className="flex items-center justify-between mb-8">
                     <button
                       onClick={prevStep}

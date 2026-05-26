@@ -19,21 +19,11 @@ import {
   FiLock,
   FiZap,
   FiArrowLeft,
-  FiPackage,
+  FiLoader,
 } from "react-icons/fi";
-import { MdVerified } from "react-icons/md";
-import { useCart } from "@/context/CartContext";
+import { useCart, CartItem } from "@/context/CartContext";
 import { AuthContext } from "@/context/AuthContext";
 import Footer from "@/components/layout/Footer";
-
-// ─────────────────────────────────────────────────────────────
-// DEMO PROMO CODES
-// ─────────────────────────────────────────────────────────────
-const PROMOS: Record<string, { pct: number; label: string }> = {
-  JOVO10: { pct: 0.1, label: "10% off your order" },
-  WELCOME: { pct: 0.15, label: "15% welcome discount" },
-  FUTO20: { pct: 0.2, label: "20% FUTO student discount" },
-};
 
 const fmt = (n: number) => `₦${n.toLocaleString()}`;
 
@@ -45,28 +35,45 @@ function CartItemCard({
   index,
   onQty,
   onRemove,
+  disabled,
 }: {
-  item: ReturnType<typeof useCart>["items"][number];
+  item: CartItem;
   index: number;
-  onQty: (id: number, qty: number) => void;
-  onRemove: (id: number) => void;
+  onQty: (product_id: string, qty: number) => Promise<void>;
+  onRemove: (product_id: string) => Promise<void>;
+  disabled: boolean;
 }) {
   const [exiting, setExiting] = useState(false);
   const [qtyAnim, setQtyAnim] = useState<"up" | "down" | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
 
-  const discount = item.oldPrice
-    ? Math.round(((item.oldPrice - item.price) / item.oldPrice) * 100)
-    : 0;
+  const busy = disabled || localLoading;
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     setExiting(true);
-    setTimeout(() => onRemove(item.id), 340);
+    setLocalLoading(true);
+    try {
+      await onRemove(item.product_id);
+    } catch {
+      // CartContext already set error; reverse animation
+      setExiting(false);
+    } finally {
+      setLocalLoading(false);
+    }
   };
 
-  const handleQty = (dir: "up" | "down") => {
+  const handleQty = async (dir: "up" | "down") => {
+    if (busy) return;
+    const newQty =
+      dir === "up" ? item.quantity + 1 : item.quantity - 1;
     setQtyAnim(dir);
     setTimeout(() => setQtyAnim(null), 280);
-    onQty(item.id, dir === "up" ? item.quantity + 1 : item.quantity - 1);
+    setLocalLoading(true);
+    try {
+      await onQty(item.product_id, newQty);
+    } finally {
+      setLocalLoading(false);
+    }
   };
 
   return (
@@ -77,82 +84,67 @@ function CartItemCard({
         animation: exiting
           ? "cartItemOut 0.34s cubic-bezier(.4,0,.6,1) forwards"
           : `cartItemIn 0.45s cubic-bezier(.34,1.06,.64,1) ${index * 70}ms both`,
+        opacity: localLoading ? 0.6 : 1,
+        transition: "opacity 0.2s",
       }}
     >
       <div className="flex gap-4 p-4 sm:p-5">
         {/* Thumbnail */}
-        <Link href={`/product/${item.id}`} className="relative shrink-0">
+        <div className="relative shrink-0">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
             <Image
-              src={item.image}
+              src={item.image_url}
               alt={item.name}
               width={112}
               height={112}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
-          {discount > 0 && (
-            <span
-              className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-white px-1.5 py-0.5 rounded-full"
-              style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)" }}
-            >
-              -{discount}%
+          {!item.is_in_stock && (
+            <span className="absolute -top-1.5 -left-1.5 text-[9px] font-black text-white px-1.5 py-0.5 rounded-full bg-gray-500">
+              Out of stock
             </span>
           )}
-        </Link>
+        </div>
 
         {/* Details */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              {item.brand && (
-                <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-[10px] font-bold text-[#B42225] uppercase tracking-wider">
-                    {item.brand}
-                  </span>
-                  <MdVerified className="text-[#B42225]" size={10} />
-                </div>
-              )}
-              <Link href={`/product/${item.id}`}>
-                <h3 className="text-sm font-bold text-gray-800 line-clamp-2 leading-snug hover:text-[#B42225] transition-colors">
-                  {item.name}
-                </h3>
-              </Link>
-              <span className="inline-block mt-1 text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full capitalize">
-                {item.category}
-              </span>
+              <h3 className="text-sm font-bold text-gray-800 line-clamp-2 leading-snug">
+                {item.name}
+              </h3>
             </div>
-
             <button
               onClick={handleRemove}
+              disabled={busy}
               className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-300
                          hover:text-red-500 hover:bg-red-50 transition-all duration-200
-                         opacity-0 group-hover:opacity-100 focus:opacity-100"
+                         opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:cursor-not-allowed"
               title="Remove item"
             >
-              <FiTrash2 size={14} />
+              {localLoading ? (
+                <FiLoader size={13} className="animate-spin" />
+              ) : (
+                <FiTrash2 size={14} />
+              )}
             </button>
           </div>
 
-          {/* Price row */}
+          {/* Price */}
           <div className="flex items-center gap-2 mt-auto flex-wrap">
             <span className="text-base font-black text-gray-900">
               {fmt(item.price)}
             </span>
-            {item.oldPrice && (
-              <span className="text-xs text-gray-400 line-through">
-                {fmt(item.oldPrice)}
-              </span>
-            )}
           </div>
 
-          {/* Qty + line total */}
+          {/* Qty stepper + line total */}
           <div className="flex items-center justify-between flex-wrap gap-2">
-            {/* Stepper */}
             <div className="flex items-center rounded-2xl border border-gray-200 overflow-hidden bg-gray-50">
               <button
                 onClick={() => handleQty("down")}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+                disabled={busy}
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {item.quantity === 1 ? (
                   <FiTrash2 size={12} />
@@ -161,7 +153,7 @@ function CartItemCard({
                 )}
               </button>
               <span
-                className="w-9 text-center text-sm font-black text-gray-800 select-none transition-all duration-200"
+                className="w-9 text-center text-sm font-black text-gray-800 select-none transition-all duration-200 inline-block"
                 style={{
                   transform:
                     qtyAnim === "up"
@@ -170,14 +162,13 @@ function CartItemCard({
                         ? "scale(0.75)"
                         : "scale(1)",
                   color: qtyAnim ? "#B42225" : undefined,
-                  display: "inline-block",
                 }}
               >
                 {item.quantity}
               </span>
               <button
                 onClick={() => handleQty("up")}
-                disabled={item.quantity >= item.stock}
+                disabled={busy || item.quantity >= item.stock_available}
                 className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <FiPlus size={12} />
@@ -187,10 +178,18 @@ function CartItemCard({
             <p className="text-xs text-gray-400">
               Line total:{" "}
               <span className="text-[#B42225] font-bold">
-                {fmt(item.price * item.quantity)}
+                {fmt(item.subtotal)}
               </span>
             </p>
           </div>
+
+          {/* Out of stock warning */}
+          {!item.is_in_stock && (
+            <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+              <FiAlertCircle size={11} /> This item is out of stock and won't
+              be included at checkout.
+            </p>
+          )}
         </div>
       </div>
 
@@ -275,7 +274,6 @@ function AuthPrompt({ onClose }: { onClose: () => void }) {
         >
           <FiX size={16} />
         </button>
-
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
           style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}
@@ -326,49 +324,25 @@ export default function Cart() {
     clearCart,
     subtotal,
     itemCount,
+    loading,
+    operationLoading,
+    error,
   } = useCart();
   const { user } = useContext(AuthContext);
   const router = useRouter();
 
-  const [promoInput, setPromoInput] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<{
-    code: string;
-    pct: number;
-    label: string;
-  } | null>(null);
-  const [promoError, setPromoError] = useState("");
-  const [promoOk, setPromoOk] = useState(false);
   const [showClear, setShowClear] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
-  const discount = appliedPromo ? subtotal * appliedPromo.pct : 0;
-  const orderTotal = subtotal - discount;
-  const savings =
-    items.reduce((s, i) => s + (i.oldPrice ?? i.price) * i.quantity, 0) -
-    subtotal +
-    discount;
-
-  const applyPromo = () => {
-    const code = promoInput.trim().toUpperCase();
-    if (!code) {
-      setPromoError("Please enter a promo code");
-      return;
+  const handleClearCart = async () => {
+    setClearing(true);
+    try {
+      await clearCart();
+    } finally {
+      setClearing(false);
+      setShowClear(false);
     }
-    const promo = PROMOS[code];
-    if (!promo) {
-      setPromoError("Invalid or expired promo code");
-      return;
-    }
-    setAppliedPromo({ code, ...promo });
-    setPromoError("");
-    setPromoOk(true);
-    setTimeout(() => setPromoOk(false), 3000);
-  };
-
-  const removePromo = () => {
-    setAppliedPromo(null);
-    setPromoInput("");
-    setPromoError("");
   };
 
   const handleCheckout = () => {
@@ -376,11 +350,20 @@ export default function Cart() {
       setShowAuth(true);
       return;
     }
-    if (appliedPromo)
-      sessionStorage.setItem("jovo_promo", JSON.stringify(appliedPromo));
-    else sessionStorage.removeItem("jovo_promo");
     router.push("/cart/checkout");
   };
+
+  // Show full-page skeleton while initial cart is loading
+  if (loading && !items.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F8FC]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-sm">Loading your cart…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -390,11 +373,6 @@ export default function Cart() {
         @keyframes fadeUp      { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
         @keyframes floatBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
         @keyframes scaleIn     { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
-        @keyframes badgePop    {
-          0%{transform:scale(0) rotate(-20deg);opacity:0}
-          60%{transform:scale(1.25) rotate(5deg);opacity:1}
-          100%{transform:scale(1) rotate(0);opacity:1}
-        }
       `}</style>
 
       {showAuth && <AuthPrompt onClose={() => setShowAuth(false)} />}
@@ -416,13 +394,6 @@ export default function Cart() {
               backgroundSize: "28px 28px",
             }}
           />
-          <div
-            className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 pointer-events-none"
-            style={{
-              background: "radial-gradient(circle,#FF8C00,transparent 65%)",
-            }}
-          />
-
           <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
             <Link
               href="/shop"
@@ -445,7 +416,7 @@ export default function Cart() {
                 </p>
               </div>
               {itemCount > 0 && (
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto">
                   <div
                     className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white"
                     style={{
@@ -462,6 +433,16 @@ export default function Cart() {
           </div>
         </div>
 
+        {/* ── ERROR BANNER ── */}
+        {error && (
+          <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
+              <FiAlertCircle size={15} className="shrink-0" />
+              {error}
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
           {itemCount === 0 ? (
             <EmptyCart />
@@ -469,7 +450,6 @@ export default function Cart() {
             <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
               {/* ── LEFT: ITEMS ── */}
               <div className="flex flex-col gap-4">
-                {/* Header row */}
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-black text-gray-800">
                     Cart Items{" "}
@@ -479,7 +459,8 @@ export default function Cart() {
                   </h2>
                   <button
                     onClick={() => setShowClear(true)}
-                    className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+                    disabled={operationLoading || clearing}
+                    className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 disabled:opacity-50"
                   >
                     <FiTrash2 size={12} /> Clear all
                   </button>
@@ -494,10 +475,7 @@ export default function Cart() {
                       animation: "fadeUp 0.3s ease both",
                     }}
                   >
-                    <FiAlertCircle
-                      size={18}
-                      className="text-red-500 shrink-0"
-                    />
+                    <FiAlertCircle size={18} className="text-red-500 shrink-0" />
                     <p className="text-sm text-gray-700 flex-1 font-medium">
                       Remove all items from your cart?
                     </p>
@@ -509,129 +487,39 @@ export default function Cart() {
                         Cancel
                       </button>
                       <button
-                        onClick={() => {
-                          clearCart();
-                          setShowClear(false);
-                        }}
-                        className="text-xs font-bold text-white px-3 py-1.5 rounded-xl transition"
+                        onClick={handleClearCart}
+                        disabled={clearing}
+                        className="text-xs font-bold text-white px-3 py-1.5 rounded-xl transition flex items-center gap-1 disabled:opacity-60"
                         style={{
                           background: "linear-gradient(135deg,#B42225,#FF6B00)",
                         }}
                       >
+                        {clearing ? (
+                          <FiLoader size={11} className="animate-spin" />
+                        ) : null}
                         Clear Cart
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Items */}
+                {/* Items list */}
                 <div className="flex flex-col gap-3">
                   {items.map((item, i) => (
                     <CartItemCard
-                      key={item.id}
+                      key={item.product_id}
                       item={item}
                       index={i}
                       onQty={updateQuantity}
                       onRemove={removeFromCart}
+                      disabled={operationLoading}
                     />
                   ))}
                 </div>
-
-                {/* Savings banner */}
-                {savings > 0 && (
-                  <div
-                    className="flex items-center gap-3 p-4 rounded-2xl"
-                    style={{
-                      background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
-                      animation: "fadeUp 0.5s ease both",
-                    }}
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center shrink-0">
-                      <FiCheck size={18} className="text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-green-800">
-                        You're saving {fmt(savings)}!
-                      </p>
-                      <p className="text-xs text-green-600 mt-0.5">
-                        Combined discounts from deals and promo codes.
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* ── RIGHT: SUMMARY ── */}
               <div className="flex flex-col gap-4 lg:sticky lg:top-24">
-                {/* Promo code */}
-                <div
-                  className="bg-white rounded-3xl p-5"
-                  style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <FiTag size={16} className="text-[#B42225]" />
-                    <h3 className="text-sm font-black text-gray-800">
-                      Promo Code
-                    </h3>
-                  </div>
-
-                  {appliedPromo ? (
-                    <div
-                      className="flex items-center gap-2 p-3 bg-green-50 rounded-2xl border border-green-200"
-                      style={{ animation: "scaleIn 0.3s ease both" }}
-                    >
-                      <FiCheck size={16} className="text-green-600 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black text-green-800">
-                          {appliedPromo.code}
-                        </p>
-                        <p className="text-xs text-green-600">
-                          {appliedPromo.label}
-                        </p>
-                      </div>
-                      <button
-                        onClick={removePromo}
-                        className="shrink-0 w-6 h-6 rounded-full bg-green-200 flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition text-green-700"
-                      >
-                        <FiX size={12} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Enter code..."
-                        value={promoInput}
-                        onChange={(e) => {
-                          setPromoInput(e.target.value);
-                          setPromoError("");
-                        }}
-                        onKeyDown={(e) => e.key === "Enter" && applyPromo()}
-                        className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#B42225] focus:ring-2 focus:ring-[#B42225]/15 transition bg-gray-50 font-medium"
-                      />
-                      <button
-                        onClick={applyPromo}
-                        className="px-4 py-2.5 rounded-xl text-sm font-black text-white transition-all hover:scale-[1.03] active:scale-95 shrink-0"
-                        style={{
-                          background: "linear-gradient(135deg,#B42225,#FF8C00)",
-                        }}
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  )}
-                  {promoError && (
-                    <p className="text-xs text-red-500 mt-2 font-medium">
-                      {promoError}
-                    </p>
-                  )}
-                  {promoOk && (
-                    <p className="text-xs text-green-600 mt-2 font-black">
-                      ✓ Promo applied!
-                    </p>
-                  )}
-                </div>
-
                 {/* Order summary */}
                 <div
                   className="bg-white rounded-3xl p-6"
@@ -653,18 +541,6 @@ export default function Cart() {
                         {fmt(subtotal)}
                       </span>
                     </div>
-
-                    {appliedPromo && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-green-600 font-medium flex items-center gap-1">
-                          <FiTag size={12} /> {appliedPromo.code}
-                        </span>
-                        <span className="font-bold text-green-600">
-                          -{fmt(discount)}
-                        </span>
-                      </div>
-                    )}
-
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500 flex items-center gap-1.5">
                         <FiTruck size={13} /> Delivery fee
@@ -673,20 +549,20 @@ export default function Cart() {
                         Calculated at checkout
                       </span>
                     </div>
-
                     <div className="border-t border-dashed border-gray-200 pt-3 flex items-center justify-between">
                       <span className="font-black text-gray-900">
                         Estimated Total
                       </span>
                       <span className="text-xl font-black text-[#B42225]">
-                        {fmt(orderTotal)}
+                        {fmt(subtotal)}
                       </span>
                     </div>
                   </div>
 
                   <button
                     onClick={handleCheckout}
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl hover:shadow-2xl"
+                    disabled={operationLoading || loading}
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed"
                     style={{
                       background: "linear-gradient(135deg,#B42225,#FF8C00)",
                       boxShadow: "0 8px 30px rgba(180,34,37,0.4)",
