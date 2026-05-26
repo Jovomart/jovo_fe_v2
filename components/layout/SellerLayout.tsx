@@ -33,7 +33,7 @@ import {
   MdAnalytics,
 } from "react-icons/md";
 import { FaStore, FaBullhorn, FaCrown, FaRocket } from "react-icons/fa";
-import { HiOutlineTable, HiOutlineSupport } from "react-icons/hi";
+import { HiTable, HiOutlineSupport } from "react-icons/hi";
 import { GiConfirmed } from "react-icons/gi";
 import { GrProductHunt } from "react-icons/gr";
 import {
@@ -123,18 +123,6 @@ const SellerLayout = ({
       );
     }
   }, [user]);
-
-  // Prevent body scroll when mobile search is open
-  useEffect(() => {
-    if (showMobileSearch) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showMobileSearch]);
 
   const navigate = (p: string) => {
     router.push(p);
@@ -396,52 +384,43 @@ const SellerLayout = ({
         </div>
       </aside>
 
-      {/* ═══════ MOBILE SEARCH OVERLAY (moved outside header for proper z-index) ═══════ */}
-      {showMobileSearch && (
-        <div className="fixed inset-0 z-[100] bg-white lg:hidden">
-          <div className="flex items-center gap-3 p-4 border-b border-slate-100">
-            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
-              <FiSearch size={18} className="text-slate-400" />
-              <input
-                type="text"
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search orders, products, customers..."
-                className="flex-1 bg-transparent outline-none text-slate-700 text-sm"
-              />
-            </div>
-            <button
-              onClick={() => {
-                setShowMobileSearch(false);
-                setSearchQuery("");
-              }}
-              className="px-3 py-2 text-sm font-semibold text-slate-600"
-            >
-              Cancel
-            </button>
-          </div>
-          <div className="p-4">
-            <p className="text-xs text-slate-400 mb-2">Recent searches</p>
-            {/* Add recent searches here */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <FiSearch size={12} />
-                <span>Nike shoes</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <FiSearch size={12} />
-                <span>iPhone 15</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ═══════ MAIN AREA ═══════ */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* ENHANCED RESPONSIVE TOPBAR */}
         <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-sm">
+          
+          {/* Mobile Search Overlay (when search is active on mobile) */}
+          {showMobileSearch && (
+            <div className="fixed inset-0 z-50 bg-white lg:hidden">
+              <div className="flex items-center gap-3 p-4 border-b border-slate-100">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <FiSearch size={18} className="text-slate-400" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search orders, products, customers..."
+                    className="flex-1 bg-transparent outline-none text-slate-700 text-sm"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setShowMobileSearch(false);
+                    setSearchQuery("");
+                  }}
+                  className="px-3 py-2 text-sm font-semibold text-slate-600"
+                >
+                  Cancel
+                </button>
+              </div>
+              <div className="p-4">
+                <p className="text-xs text-slate-400 mb-2">Recent searches</p>
+                {/* Add recent searches here */}
+              </div>
+            </div>
+          )}
+
           {/* Main Topbar Row */}
           <div className="px-3 sm:px-4 md:px-6 py-2.5 md:py-3">
             <div className="flex items-center justify-between gap-2 md:gap-4">
@@ -466,15 +445,17 @@ const SellerLayout = ({
                   </div>
                 </div>
 
-                {/* Mobile Greeting */}
-                <div className="lg:hidden">
-                  <p className="text-[10px] text-slate-400 font-medium" suppressHydrationWarning>
-                    {greeting}
-                  </p>
-                  <p className="text-sm font-bold text-slate-800 leading-tight" suppressHydrationWarning>
-                    {displayName.split(" ")[0]}
-                  </p>
-                </div>
+                {/* Mobile Greeting (visible only on mobile when search not active) */}
+                {!showMobileSearch && (
+                  <div className="lg:hidden">
+                    <p className="text-[10px] text-slate-400 font-medium" suppressHydrationWarning>
+                      {greeting}
+                    </p>
+                    <p className="text-sm font-bold text-slate-800 leading-tight" suppressHydrationWarning>
+                      {displayName.split(" ")[0]}
+                    </p>
+                  </div>
+                )}
 
                 {/* Desktop Page Title */}
                 {pageTitle && (
@@ -487,7 +468,7 @@ const SellerLayout = ({
                 )}
               </div>
 
-              {/* Center Section - Search (Desktop full) */}
+              {/* Center Section - Search (Desktop full, Mobile icon) */}
               <div className="hidden md:flex flex-1 max-w-md mx-4">
                 <div className="w-full relative">
                   <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -614,7 +595,7 @@ const SellerLayout = ({
             </div>
           </div>
 
-          {/* Quick Action Chips (Mobile Only) */}
+          {/* Quick Action Chips (Mobile Only) - All emojis replaced with icons */}
           <div className="sm:hidden px-3 pb-3 overflow-x-auto flex gap-2 scrollbar-hide">
             <button className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5">
               <FiTruck size={10} />
