@@ -244,7 +244,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return ApiService.validateCart(sessionId);
   }, [user]);
 
-  // ─── Derived values ────────────────────────────────────────────────────────
+  // ── Derived values ────────────────────────────────────────────────────────
   // FIX: Use useMemo to memoize items and derived values to prevent unnecessary re-renders
   const items = useMemo(() => cartData?.items ?? [], [cartData?.items]);
   const itemCount = useMemo(() => cartData?.total_items ?? 0, [cartData?.total_items]);
