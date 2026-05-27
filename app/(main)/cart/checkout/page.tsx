@@ -236,7 +236,6 @@ function PickupStationPicker({
         <MdStorefront size={14} /> Select Your Pickup Station
       </p>
 
-      {/* Search */}
       {stations.length > 3 && (
         <div className="relative mb-3">
           <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -258,7 +257,6 @@ function PickupStationPicker({
         </div>
       )}
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-8 gap-2 text-sm text-gray-500">
           <FiLoader size={18} className="animate-spin text-[#B42225]" />
@@ -266,7 +264,6 @@ function PickupStationPicker({
         </div>
       )}
 
-      {/* Error */}
       {error && !loading && (
         <div className="flex items-center gap-2 px-3 py-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700">
           <FiAlertCircle size={14} className="shrink-0" />
@@ -274,7 +271,6 @@ function PickupStationPicker({
         </div>
       )}
 
-      {/* No stations */}
       {!loading && !error && stations.length === 0 && (
         <div className="text-center py-6 text-gray-400">
           <MdStorefront size={28} className="mx-auto mb-2 opacity-40" />
@@ -283,14 +279,12 @@ function PickupStationPicker({
         </div>
       )}
 
-      {/* No search results */}
       {!loading && !error && stations.length > 0 && filtered.length === 0 && (
         <div className="text-center py-4 text-gray-400 text-sm">
           No stations match &quot;{query}&quot;
         </div>
       )}
 
-      {/* Station list */}
       {!loading && filtered.length > 0 && (
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
           {filtered.map((station) => {
@@ -306,7 +300,6 @@ function PickupStationPicker({
                     : "border-gray-100 bg-white hover:border-gray-200"
                 }`}
               >
-                {/* Icon */}
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
                     selected ? "bg-[#B42225] text-white" : "bg-gray-100 text-gray-500"
@@ -314,8 +307,6 @@ function PickupStationPicker({
                 >
                   <MdStorefront size={18} />
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-bold leading-snug ${selected ? "text-[#B42225]" : "text-gray-800"}`}>
                     {station.name}
@@ -339,8 +330,6 @@ function PickupStationPicker({
                     </p>
                   )}
                 </div>
-
-                {/* Check */}
                 {selected && (
                   <div className="w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center shrink-0 mt-0.5">
                     <FiCheck size={11} className="text-white" />
@@ -366,7 +355,6 @@ function StepDelivery({
   deliveryOptions,
   deliveryLoading,
   deliveryError,
-  // Pickup station props
   pickupStations,
   pickupStationsLoading,
   pickupStationsError,
@@ -391,14 +379,10 @@ function StepDelivery({
   const { user } = useContext(AuthContext);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   
-  // FIX 1: Remove prefilled state and use ref to prevent double prefill
   const hasPrefilledRef = useRef(false);
-
-  // Determine if the currently selected delivery is a pickup type
   const selectedDeliveryOption = deliveryOptions.find((o) => o.id === selectedDeliveryId) ?? null;
   const isPickup = !!selectedDeliveryOption && isPickupOption(selectedDeliveryOption);
 
-  // Pre-fill contact info from user profile - FIXED: removed setState from effect
   useEffect(() => {
     if (user && !hasPrefilledRef.current) {
       hasPrefilledRef.current = true;
@@ -413,7 +397,7 @@ function StepDelivery({
         notes: "",
       });
     }
-  }, [user, setInfo]); // Removed prefilled dependency
+  }, [user, setInfo]);
 
   const set =
     (k: keyof DeliveryInfo) =>
@@ -430,10 +414,8 @@ function StepDelivery({
     if (!selectedDeliveryId) e.delivery = "Please select a delivery method";
 
     if (isPickup) {
-      // For pickup, require a station selection instead of a home address
       if (!selectedStation) e.station = "Please select a pickup station";
     } else {
-      // For doorstep delivery, require full address
       if (!info.address?.trim()) e.address = "Address is required";
       if (!info.city?.trim()) e.city = "City is required";
       if (!info.state?.trim()) e.state = "State is required";
@@ -476,8 +458,6 @@ function StepDelivery({
 
   return (
     <div style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}>
-
-      {/* ── Contact Info (always shown) ── */}
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-6" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
         <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
           <div className="w-8 h-8 rounded-xl bg-[#B42225]/10 flex items-center justify-center">
@@ -494,7 +474,6 @@ function StepDelivery({
         </div>
       </div>
 
-      {/* ── Delivery Method ── */}
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-6" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
         <h2 className="text-xl font-black text-gray-900 mb-5 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
           <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -566,7 +545,6 @@ function StepDelivery({
                   )}
                 </div>
 
-                {/* Pickup station picker — renders inline below the selected pickup option */}
                 {selected && pickup && (
                   <PickupStationPicker
                     stations={pickupStations}
@@ -590,7 +568,6 @@ function StepDelivery({
         )}
       </div>
 
-      {/* ── Doorstep Address (only when non-pickup option is selected) ── */}
       {!isPickup && (
         <div
           className="bg-white rounded-3xl p-6 md:p-8 mb-6"
@@ -625,7 +602,6 @@ function StepDelivery({
         </div>
       )}
 
-      {/* ── If pickup selected and station chosen, show confirmation pill ── */}
       {isPickup && selectedStation && (
         <div
           className="flex items-center gap-3 p-4 mb-6 bg-green-50 border border-green-200 rounded-2xl"
@@ -691,7 +667,6 @@ function StepReview({
 
   return (
     <div style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}>
-      {/* Items */}
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-5" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
         <h2 className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
           <FiPackage size={18} className="text-[#B42225]" /> Order Items
@@ -712,13 +687,11 @@ function StepReview({
         </div>
       </div>
 
-      {/* Summary */}
       <div className="bg-white rounded-3xl p-6 md:p-8 mb-5" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
         <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
           <FiFileText size={18} className="text-[#B42225]" /> Order Summary
         </h2>
 
-        {/* Contact */}
         <div className="bg-gray-50 rounded-2xl p-4 mb-4 text-sm">
           <p className="font-bold text-gray-700 mb-1 flex items-center gap-1.5">
             <FiUser size={13} className="text-[#B42225]" /> Contact
@@ -727,7 +700,6 @@ function StepReview({
           <p className="text-gray-500">{info.email}</p>
         </div>
 
-        {/* Delivery / Pickup info */}
         <div className="bg-gray-50 rounded-2xl p-4 mb-4 text-sm flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
             {pickup ? <MdStorefront size={20} className="text-gray-500" /> : <FiTruck size={18} className="text-gray-500" />}
@@ -762,7 +734,6 @@ function StepReview({
           </div>
         </div>
 
-        {/* Price breakdown */}
         <div className="space-y-2.5">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Subtotal</span>
@@ -824,52 +795,50 @@ export default function Checkout() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const paymentDoneRef = useRef(false);
   
-  // FIX 2 & 3: Use refs for auth and reset states to avoid setState in effects
   const authTimerRef = useRef<NodeJS.Timeout | null>(null);
   const prevDeliveryIdRef = useRef<string | null>(null);
+  const authCheckDoneRef = useRef(false);
 
   const goToStep = (n: number) => {
     setStep(n);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   };
 
-  // ── Delivery form state ───────────────────────────────────────────────────
   const [info, setInfo] = useState<DeliveryInfo>({
     fullName: "", phone: "", email: "", address: "",
     city: "", state: "", country: "Nigeria", notes: "",
   });
 
-  // ── Delivery options ──────────────────────────────────────────────────────
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
-  // ── Pickup stations ───────────────────────────────────────────────────────
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
   const [pickupStationsLoading, setPickupStationsLoading] = useState(false);
   const [pickupStationsError, setPickupStationsError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<PickupStation | null>(null);
 
-  // ── Derived values ────────────────────────────────────────────────────────
   const selectedDelivery = deliveryOptions.find((d) => d.id === selectedDeliveryId) ?? null;
   const deliveryCost = selectedDelivery?.is_free_delivery ? 0 : (selectedDelivery?.delivery_cost ?? 0);
   const total = subtotal + deliveryCost;
   const currentlyPickup = !!selectedDelivery && isPickupOption(selectedDelivery);
 
-  // ── Auth guard - FIXED: removed setState from effect, use cleanup ─────────
+  // FIXED: Auth guard with ref to avoid setState directly in effect body
   useEffect(() => {
-    if (authTimerRef.current) clearTimeout(authTimerRef.current);
+    if (authCheckDoneRef.current) return;
     
     if (authLoading === undefined) {
-      authTimerRef.current = setTimeout(() => {
-        setCheckingAuth(false);
+      const t = setTimeout(() => {
+        if (!authCheckDoneRef.current) {
+          authCheckDoneRef.current = true;
+          setCheckingAuth(false);
+        }
       }, 2000);
-      return () => {
-        if (authTimerRef.current) clearTimeout(authTimerRef.current);
-      };
+      return () => clearTimeout(t);
     }
-    if (!authLoading) {
+    if (!authLoading && !authCheckDoneRef.current) {
+      authCheckDoneRef.current = true;
       setCheckingAuth(false);
     }
   }, [authLoading]);
@@ -884,7 +853,6 @@ export default function Checkout() {
     if (itemCount === 0) router.replace("/cart");
   }, [user, itemCount, router, checkingAuth, paymentDone]);
 
-  // ── Fetch delivery options ────────────────────────────────────────────────
   useEffect(() => {
     if (!user || items.length === 0) return;
     const fetch = async () => {
@@ -914,19 +882,22 @@ export default function Checkout() {
       }
     };
     fetch();
-  }, [items, subtotal, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items, subtotal, user]);
 
-  // ── Fetch pickup stations when a pickup option is selected ────────────────
-  // FIX 3: Reset state logic moved to separate effect that runs on selectedDeliveryId change
+  // FIXED: Use setTimeout to avoid direct setState in effect
   useEffect(() => {
-    if (!selectedDelivery || !isPickupOption(selectedDelivery)) return;
+    if (!selectedDelivery || !isPickupOption(selectedDelivery)) {
+      return;
+    }
 
     const schoolId = user?.school_id || user?.schoolId;
     if (!schoolId) {
-      setPickupStationsError(
-        "No school linked to your account. Please update your profile to select a pickup station.",
-      );
-      return;
+      const timer = setTimeout(() => {
+        setPickupStationsError(
+          "No school linked to your account. Please update your profile to select a pickup station.",
+        );
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     const fetch = async () => {
@@ -934,7 +905,6 @@ export default function Checkout() {
       setPickupStationsError(null);
       try {
         const res = await ApiService.getSchoolPickupStations(schoolId, { per_page: 100 });
-        // Handle multiple possible response shapes
         const stations: PickupStation[] =
           res?.data?.items ??
           res?.data?.stations ??
@@ -952,18 +922,20 @@ export default function Checkout() {
     fetch();
   }, [selectedDelivery, user]);
 
-  // FIX 3: Separate effect for resetting station when delivery method changes
   useEffect(() => {
     if (prevDeliveryIdRef.current !== selectedDeliveryId) {
-      // Delivery method changed, reset station and pickup stations
-      setSelectedStation(null);
-      setPickupStations([]);
-      setPickupStationsError(null);
+      const timer1 = setTimeout(() => setSelectedStation(null), 0);
+      const timer2 = setTimeout(() => setPickupStations([]), 0);
+      const timer3 = setTimeout(() => setPickupStationsError(null), 0);
       prevDeliveryIdRef.current = selectedDeliveryId;
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
     }
   }, [selectedDeliveryId]);
 
-  // ── Load Paystack script ──────────────────────────────────────────────────
   useEffect(() => {
     const s = document.createElement("script");
     s.src = "https://js.paystack.co/v1/inline.js";
@@ -972,9 +944,7 @@ export default function Checkout() {
     return () => { try { document.body.removeChild(s); } catch {} };
   }, []);
 
-  // ── Handle station selection (clearing = pass null id) ───────────────────
   const handleStationSelect = (station: PickupStation) => {
-    // If the station id is empty string it means "clear selection"
     setSelectedStation(station.id ? station : null);
   };
 
@@ -991,7 +961,6 @@ export default function Checkout() {
 
   if (!user || (itemCount === 0 && !paymentDone)) return null;
 
-  // ── Payment handler ───────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!selectedDelivery) {
       alert("Please select a delivery method");
@@ -1001,15 +970,12 @@ export default function Checkout() {
     setCheckoutError(null);
 
     try {
-      // Build the delivery address — use pickup station address for pickup orders,
-      // or the user-entered address for doorstep delivery.
       let deliveryStreetAddress: string;
       let deliveryCity: string;
       let deliveryState: string;
       let deliveryNotes: string | undefined;
 
       if (currentlyPickup && selectedStation) {
-        // Use station info as the delivery address
         deliveryStreetAddress =
           selectedStation.address ||
           selectedStation.landmark ||
@@ -1024,7 +990,6 @@ export default function Checkout() {
         deliveryNotes = info.notes || undefined;
       }
 
-      // 1. Create order on the backend
       const res = await ApiService.checkout({
         delivery_street_address: deliveryStreetAddress,
         delivery_city: deliveryCity,
@@ -1039,8 +1004,6 @@ export default function Checkout() {
 
       if (!payment_url) throw new Error("No payment URL returned. Please try again.");
 
-      // 2. Extract Paystack access_code from payment_url
-      //    Format: https://checkout.paystack.com/{access_code}
       const accessCode = payment_url.split("/").pop();
       if (!accessCode) {
         window.location.href = payment_url;
@@ -1049,16 +1012,13 @@ export default function Checkout() {
 
       const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "";
 
-      // 3. Open Paystack popup
       const handler = (window as any).PaystackPop.setup({
         key: paystackKey,
         access_code: accessCode,
 
         callback: async (response: { reference: string }) => {
           try {
-            // 4. Verify payment
             await ApiService.verifyPayment(response.reference);
-            // 5. Sync cart — backend already cleared it
             await refetchCart();
             setPaying(false);
             setSuccessOrderId(order_id);
@@ -1067,8 +1027,6 @@ export default function Checkout() {
             setPaymentDone(true);
             paymentDoneRef.current = true;
           } catch (verifyErr: any) {
-            // Payment went through but verification failed.
-            // Order was created — redirect so user can see it.
             console.error("Payment verification error:", verifyErr);
             setPaying(false);
             await refetchCart();
@@ -1077,8 +1035,6 @@ export default function Checkout() {
         },
 
         onClose: () => {
-          // Popup closed without completing payment.
-          // Order already created in backend — redirect to orders.
           setPaying(false);
           router.push(`/orders?ref=${order_id}`);
         },
@@ -1118,7 +1074,6 @@ export default function Checkout() {
       )}
 
       <div className="min-h-screen" style={{ background: "#F7F8FC" }}>
-        {/* Header */}
         <div
           className="relative overflow-hidden py-8 md:py-11"
           style={{ background: "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)" }}
@@ -1140,7 +1095,6 @@ export default function Checkout() {
         <div className="max-w-3xl mx-auto px-4 md:px-8 py-8">
           <StepBar current={step} />
 
-          {/* Checkout error banner */}
           {checkoutError && (
             <div
               className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600"

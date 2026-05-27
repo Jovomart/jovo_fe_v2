@@ -28,9 +28,6 @@ import Footer from "@/components/layout/Footer";
 
 const fmt = (n: number) => `₦${n.toLocaleString()}`;
 
-// ─────────────────────────────────────────────────────────────
-// TYPES — match the backend /user/orders response
-// ─────────────────────────────────────────────────────────────
 export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
 export type PaymentStatus = "pending" | "paid" | "failed";
 
@@ -68,9 +65,6 @@ export interface Order {
   updated_at?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// STATUS CONFIG
-// ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
   OrderStatus,
   { label: string; color: string; bg: string; icon: React.ReactNode; step: number }
@@ -114,9 +108,6 @@ const STATUS_CONFIG: Record<
 
 const TIMELINE = ["Order Placed", "Confirmed", "Shipped", "Delivered"];
 
-// ─────────────────────────────────────────────────────────────
-// ORDER CARD
-// ─────────────────────────────────────────────────────────────
 function OrderCard({
   order,
   defaultOpen,
@@ -165,7 +156,6 @@ function OrderCard({
       className="bg-white rounded-3xl overflow-hidden transition-all duration-300"
       style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)", animation: "fadeUp 0.5s ease both" }}
     >
-      {/* Header — always visible */}
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-4 p-5 md:p-6 text-left hover:bg-gray-50/60 transition-colors"
@@ -208,12 +198,10 @@ function OrderCard({
         </div>
       </button>
 
-      {/* Expanded detail */}
       {open && (
         <div style={{ animation: "slideDown 0.3s ease both" }}>
           <div className="border-t border-gray-100" />
 
-          {/* Timeline */}
           {order.order_status !== "cancelled" && (
             <div className="px-5 md:px-6 py-5">
               <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Order Progress</p>
@@ -261,7 +249,6 @@ function OrderCard({
             </div>
           )}
 
-          {/* Items */}
           {order.items && order.items.length > 0 && (
             <div className="px-5 md:px-6 pb-3">
               <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Items Ordered</p>
@@ -290,7 +277,6 @@ function OrderCard({
             </div>
           )}
 
-          {/* Delivery + Payment breakdown */}
           <div className="grid sm:grid-cols-2 gap-4 px-5 md:px-6 py-4">
             {order.delivery_info && (
               <div className="bg-gray-50 rounded-2xl p-4">
@@ -348,7 +334,6 @@ function OrderCard({
             </div>
           </div>
 
-          {/* Reference */}
           {(order.payment_reference || order.order_number) && (
             <div className="px-5 md:px-6 pb-3">
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl">
@@ -368,7 +353,6 @@ function OrderCard({
             </div>
           )}
 
-          {/* Cancel order (only for pending + unpaid) */}
           {canCancel && (
             <div className="px-5 md:px-6 pb-5">
               {!confirmCancel ? (
@@ -414,9 +398,6 @@ function OrderCard({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// EMPTY STATE
-// ─────────────────────────────────────────────────────────────
 function EmptyOrders() {
   return (
     <div
@@ -446,9 +427,6 @@ function EmptyOrders() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// MAIN ORDERS PAGE
-// ─────────────────────────────────────────────────────────────
 export default function Orders() {
   const { user } = useContext(AuthContext);
   const params = useSearchParams();
@@ -462,13 +440,13 @@ export default function Orders() {
   const [hasMore, setHasMore] = useState(false);
   const PER_PAGE = 20;
 
-  // FIX: Use useCallback to memoize fetchOrders and avoid dependency issues
+  const ordersFetchedRef = useRef(false);
+
   const fetchOrders = useCallback(async (p = 1, append = false) => {
     setLoading(true);
     setError(null);
     try {
       const res = await ApiService.getUserOrders({ page: p, per_page: PER_PAGE });
-      // Handle different possible response shapes
       const raw = res?.data ?? res;
       const list: Order[] = Array.isArray(raw)
         ? raw
@@ -479,7 +457,6 @@ export default function Orders() {
             : [];
 
       setOrders((prev) => (append ? [...prev, ...list] : list));
-      // If we got a full page, there might be more
       setHasMore(list.length === PER_PAGE);
     } catch (err: any) {
       setError(err?.message ?? "Failed to load orders");
@@ -488,16 +465,18 @@ export default function Orders() {
     }
   }, []);
 
-  // FIX: Add fetchOrders to dependency array, but fetchOrders is memoized
+  // FIXED: Use ref to ensure fetchOrders is only called once when user is available
   useEffect(() => {
     if (!user) return;
-    fetchOrders(1, false);
+    if (!ordersFetchedRef.current) {
+      ordersFetchedRef.current = true;
+      fetchOrders(1, false);
+    }
   }, [user, fetchOrders]);
 
   const handleCancel = async (order_id: string) => {
     try {
       await ApiService.cancelOrder(order_id);
-      // Refresh to get updated status
       await fetchOrders(1, false);
     } catch (err: any) {
       alert(err?.message ?? "Failed to cancel order");
@@ -538,7 +517,6 @@ export default function Orders() {
       `}</style>
 
       <div className="min-h-screen" style={{ background: "#F7F8FC" }}>
-        {/* Banner */}
         <div
           className="relative overflow-hidden py-8 md:py-11"
           style={{ background: "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)" }}
@@ -556,7 +534,6 @@ export default function Orders() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-8">
-          {/* New order success banner */}
           {newOrderRef && (
             <div
               className="flex items-center gap-3 p-4 mb-6 rounded-2xl border border-green-200"
@@ -574,7 +551,6 @@ export default function Orders() {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
               <FiAlertCircle size={15} className="shrink-0" />
@@ -583,7 +559,6 @@ export default function Orders() {
             </div>
           )}
 
-          {/* Initial loading skeleton */}
           {loading && orders.length === 0 ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -603,7 +578,6 @@ export default function Orders() {
             <EmptyOrders />
           ) : (
             <>
-              {/* Filter tabs */}
               <div className="flex gap-2 flex-wrap mb-5 overflow-x-auto pb-1">
                 {(["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as const).map(
                   (f) => (
@@ -627,7 +601,6 @@ export default function Orders() {
                 )}
               </div>
 
-              {/* Order list */}
               {filtered.length === 0 ? (
                 <p className="text-center text-gray-400 py-16 font-medium">
                   No orders with this status.
@@ -645,7 +618,6 @@ export default function Orders() {
                 </div>
               )}
 
-              {/* Load more */}
               {hasMore && filter === "all" && (
                 <div className="flex justify-center mt-6">
                   <button

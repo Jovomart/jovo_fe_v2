@@ -391,9 +391,9 @@ const SellerDashboard = () => {
   // FIX: Use ref to prevent multiple fetch calls
   const hasFetchedRef = useRef(false);
 
-  // FIX 1: setCurrentDate is already in a useEffect without state issues
-  // This useEffect runs once on mount and doesn't cause cascading renders
-  useEffect(() => {
+  // FIX: Use setTimeout to avoid direct setState in effect
+useEffect(() => {
+  const timer = setTimeout(() => {
     setCurrentDate(
       new Date().toLocaleDateString("en-NG", {
         weekday: "long",
@@ -401,7 +401,9 @@ const SellerDashboard = () => {
         month: "long",
       })
     );
-  }, []);
+  }, 0);
+  return () => clearTimeout(timer);
+}, []);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
 

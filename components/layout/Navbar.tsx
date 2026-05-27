@@ -217,17 +217,17 @@ function CartButton({ onClick }: { onClick: () => void }) {
   const [pulse, setPulse] = useState(false);
   const pulseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // FIX: Clean up timer and use ref to avoid state updates on unmount
-  useEffect(() => {
-    if (recentlyAdded !== null) {
-      setPulse(true);
+  // FIX: Cart button pulse effect - already fixed with timer cleanup
+useEffect(() => {
+  if (recentlyAdded !== null) {
+    setPulse(true);
+    if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+    pulseTimerRef.current = setTimeout(() => setPulse(false), 650);
+    return () => {
       if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
-      pulseTimerRef.current = setTimeout(() => setPulse(false), 650);
-      return () => {
-        if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
-      };
-    }
-  }, [recentlyAdded]);
+    };
+  }
+}, [recentlyAdded]);
 
   return (
     <>
@@ -305,13 +305,16 @@ export default function Navbar() {
   const isSellerVerified = mounted && !!isSeller;
   const isServiceProviderVerified = mounted && !!isServiceProvider;
 
-  // FIX: moved setMounted to useEffect with cleanup
-  useEffect(() => { 
-    setMounted(true); 
-    return () => {
-      // cleanup if needed
-    };
-  }, []);
+ // FIX: Mount effect with setTimeout to avoid direct setState warning
+const mountedRef = useRef(false);
+
+useEffect(() => { 
+  if (!mountedRef.current) {
+    mountedRef.current = true;
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }
+}, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);

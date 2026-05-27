@@ -935,9 +935,14 @@ export default function ProviderDashboard() {
     }
   }, [fetchCategories, router]);
 
-  useEffect(() => {
+  const dashboardLoadedRef = useRef(false);
+
+useEffect(() => {
+  if (!dashboardLoadedRef.current) {
+    dashboardLoadedRef.current = true;
     load();
-  }, [load]);
+  }
+}, [load]);
 
   const saveProfile = async () => {
     setSavingProfile(true);

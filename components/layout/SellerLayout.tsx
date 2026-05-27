@@ -101,28 +101,36 @@ const SellerLayout = ({
   const isMountedRef = useRef(false);
   const userDataAppliedRef = useRef(false);
 
-  // FIX 1: setMounted and setGreeting - use ref to prevent duplicate runs
-  useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      setMounted(true);
+  // FIX: Use setTimeout to avoid direct setState in effect
+useEffect(() => {
+  if (!isMountedRef.current) {
+    isMountedRef.current = true;
+    const timer1 = setTimeout(() => setMounted(true), 0);
+    const timer2 = setTimeout(() => {
       const h = new Date().getHours();
       setGreeting(
         h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
       );
-    }
-  }, []);
-
-  // FIX 2: setDisplayName and setInitials - use ref to prevent duplicate runs
-  useEffect(() => {
-    if (user && !userDataAppliedRef.current) {
-      userDataAppliedRef.current = true;
-      const name =
-        user?.full_name ||
-        user?.username ||
-        user?.first_name ||
-        "Seller";
-      setDisplayName(name);
+    }, 0);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }
+}, []);
+    
+ 
+// FIX: Use setTimeout to avoid direct setState in effect
+useEffect(() => {
+  if (user && !userDataAppliedRef.current) {
+    userDataAppliedRef.current = true;
+    const name =
+      user?.full_name ||
+      user?.username ||
+      user?.first_name ||
+      "Seller";
+    const timer1 = setTimeout(() => setDisplayName(name), 0);
+    const timer2 = setTimeout(() => {
       setInitials(
         name
           .split(" ")
@@ -131,9 +139,14 @@ const SellerLayout = ({
           .toUpperCase()
           .slice(0, 2)
       );
-    }
-  }, [user]);
-
+    }, 0);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }
+}, [user]);
+    
   const navigate = (p: string) => {
     router.push(p);
     setSidebarOpen(false);

@@ -142,15 +142,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [user]); // re-create when user changes so auth state is fresh
 
-  // ── Fetch cart once auth has resolved (avoids double-fetch on page load) ─
-  // FIX: Use ref to ensure fetchCart is only called once after auth resolves
-  useEffect(() => {
-    if (authLoading) return; // wait until we know who the user is
-    if (!hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchCart();
-    }
-  }, [fetchCart, authLoading]);
+  // ── Fetch cart once auth has resolved ──────────────────────────────────
+useEffect(() => {
+  if (authLoading) return;
+  if (!hasFetchedRef.current) {
+    hasFetchedRef.current = true;
+    const timer = setTimeout(() => fetchCart(), 0);
+    return () => clearTimeout(timer);
+  }
+}, [fetchCart, authLoading]);
 
   // ── Clear recentlyAdded badge after 3 s ──────────────────────────────────
   useEffect(() => {

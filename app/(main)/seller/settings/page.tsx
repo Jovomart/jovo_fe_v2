@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AuthContext } from "@/context/AuthContext";
@@ -234,10 +234,15 @@ const SellerSettingsPage = () => {
     setLoadingProfile(false);
   }, [user]);
 
-  // FIX: Add 'loadUserAndSeller' to dependency array (was missing)
-  useEffect(() => {
+  const settingsLoadedRef = useRef(false);
+
+// FIX: Use ref to ensure loadUserAndSeller is only called once
+useEffect(() => {
+  if (!settingsLoadedRef.current) {
+    settingsLoadedRef.current = true;
     loadUserAndSeller();
-  }, [loadUserAndSeller]);
+  }
+}, [loadUserAndSeller]);
 
   const handleSaveProfile = async () => {
     setProfileError("");
