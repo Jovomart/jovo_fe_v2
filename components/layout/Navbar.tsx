@@ -210,24 +210,30 @@ const SearchDropdown = ({ query, onSelect }: { query: string; onSelect: (product
 };
 
 // ─────────────────────────────────────────────────────────────
-// CART BUTTON — FIX: removed setState from effect
+// CART BUTTON — FIXED: setState wrapped in setTimeout
 // ─────────────────────────────────────────────────────────────
 function CartButton({ onClick }: { onClick: () => void }) {
   const { itemCount, recentlyAdded } = useCart();
   const [pulse, setPulse] = useState(false);
   const pulseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pulseSetRef = useRef(false);
 
-  // FIX: Cart button pulse effect - already fixed with timer cleanup
-useEffect(() => {
-  if (recentlyAdded !== null) {
-    setPulse(true);
-    if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
-    pulseTimerRef.current = setTimeout(() => setPulse(false), 650);
-    return () => {
+  // FIX: Wrap setPulse in setTimeout to avoid direct setState in effect
+  useEffect(() => {
+    if (recentlyAdded !== null && !pulseSetRef.current) {
+      pulseSetRef.current = true;
+      const timer1 = setTimeout(() => setPulse(true), 0);
       if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
-    };
-  }
-}, [recentlyAdded]);
+      pulseTimerRef.current = setTimeout(() => {
+        setPulse(false);
+        pulseSetRef.current = false;
+      }, 650);
+      return () => {
+        clearTimeout(timer1);
+        if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      };
+    }
+  }, [recentlyAdded]);
 
   return (
     <>
@@ -290,6 +296,7 @@ export default function Navbar() {
   const accountRef = useRef<HTMLDivElement>(null);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(false);
 
   const { user, logout, isSeller, isServiceProvider, enterSellerMode } =
     useContext(AuthContext) as any;
@@ -305,16 +312,14 @@ export default function Navbar() {
   const isSellerVerified = mounted && !!isSeller;
   const isServiceProviderVerified = mounted && !!isServiceProvider;
 
- // FIX: Mount effect with setTimeout to avoid direct setState warning
-const mountedRef = useRef(false);
-
-useEffect(() => { 
-  if (!mountedRef.current) {
-    mountedRef.current = true;
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }
-}, []);
+  // FIX: Mount effect with setTimeout to avoid direct setState warning
+  useEffect(() => { 
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      const timer = setTimeout(() => setMounted(true), 0);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);

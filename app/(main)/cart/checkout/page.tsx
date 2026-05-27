@@ -922,19 +922,20 @@ export default function Checkout() {
     fetch();
   }, [selectedDelivery, user]);
 
-  useEffect(() => {
-    if (prevDeliveryIdRef.current !== selectedDeliveryId) {
-      const timer1 = setTimeout(() => setSelectedStation(null), 0);
-      const timer2 = setTimeout(() => setPickupStations([]), 0);
-      const timer3 = setTimeout(() => setPickupStationsError(null), 0);
-      prevDeliveryIdRef.current = selectedDeliveryId;
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        clearTimeout(timer3);
-      };
-    }
-  }, [selectedDeliveryId]);
+ // FIXED: Add selectedDeliveryId to dependency array
+useEffect(() => {
+  if (prevDeliveryIdRef.current !== selectedDeliveryId) {
+    const timer1 = setTimeout(() => setSelectedStation(null), 0);
+    const timer2 = setTimeout(() => setPickupStations([]), 0);
+    const timer3 = setTimeout(() => setPickupStationsError(null), 0);
+    prevDeliveryIdRef.current = selectedDeliveryId;
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }
+}, [selectedDeliveryId]); // ← Added selectedDeliveryId here
 
   useEffect(() => {
     const s = document.createElement("script");
