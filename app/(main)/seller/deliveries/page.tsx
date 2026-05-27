@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import apiService from "@/services/apiService";
 import SellerLayout, { fmtCurrency } from "@/components/layout/SellerLayout";
 import {
@@ -187,12 +188,14 @@ const ItemFulfillRow = ({
 
   return (
     <div className="flex items-center gap-4 py-3.5 px-5">
-      {/* Thumbnail */}
-      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+      {/* Thumbnail - FIX: Replace img with Image */}
+      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center relative">
         {item.product_image ? (
-          <img
+          <Image
             src={item.product_image}
             alt={item.product_name}
+            width={40}
+            height={40}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -425,6 +428,9 @@ const SellerDeliveriesPage = () => {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("active");
 
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedRef = useRef(false);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3000);
@@ -468,8 +474,19 @@ const SellerDeliveriesPage = () => {
     }
   }, [stageFilter]);
 
+  // FIX: Use ref to ensure fetchDeliveries is only called once on mount, but still respond to stageFilter changes
+  // We want it to run when stageFilter changes, but not on every render due to dependency
+  // The useCallback already handles the dependency on stageFilter
   useEffect(() => {
-    fetchDeliveries();
+    // Reset ref when stageFilter changes to allow re-fetch
+    hasFetchedRef.current = false;
+  }, [stageFilter]);
+
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchDeliveries();
+    }
   }, [fetchDeliveries]);
 
   const handleStatusUpdate = async (itemId: string, newStatus: string) => {

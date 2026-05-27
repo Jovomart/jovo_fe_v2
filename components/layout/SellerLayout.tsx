@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import apiService from "@/services/apiService";
@@ -97,16 +97,26 @@ const SellerLayout = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
+  // FIX: Use refs to prevent multiple state updates
+  const isMountedRef = useRef(false);
+  const userDataAppliedRef = useRef(false);
+
+  // FIX 1: setMounted and setGreeting - use ref to prevent duplicate runs
   useEffect(() => {
-    setMounted(true);
-    const h = new Date().getHours();
-    setGreeting(
-      h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
-    );
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      setMounted(true);
+      const h = new Date().getHours();
+      setGreeting(
+        h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
+      );
+    }
   }, []);
 
+  // FIX 2: setDisplayName and setInitials - use ref to prevent duplicate runs
   useEffect(() => {
-    if (user) {
+    if (user && !userDataAppliedRef.current) {
+      userDataAppliedRef.current = true;
       const name =
         user?.full_name ||
         user?.username ||

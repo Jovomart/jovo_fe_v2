@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import apiService from "@/services/apiService";
 import SellerLayout, { fmtCurrency } from "@/components/layout/SellerLayout";
 import {
@@ -185,6 +186,9 @@ const SellerProductsPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedRef = useRef(false);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3000);
@@ -226,8 +230,19 @@ const SellerProductsPage = () => {
     [approvalFilter, activeFilter]
   );
 
+  // FIX: Use ref to ensure fetchProducts is only called once on mount, but still respond to filter changes
+  // We want it to run when filters change, but not on every render due to dependency
+  // The useCallback already handles the dependencies on approvalFilter and activeFilter
   useEffect(() => {
-    fetchProducts(1);
+    // Reset ref when any filter changes to allow re-fetch
+    hasFetchedRef.current = false;
+  }, [approvalFilter, activeFilter]);
+
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchProducts(1);
+    }
   }, [fetchProducts]);
 
   const handleDelete = async () => {
@@ -502,14 +517,16 @@ const SellerProductsPage = () => {
                         key={product.id}
                         className="group hover:bg-orange-50/20 transition-colors"
                       >
-                        {/* Product */}
+                        {/* Product - FIX: Replace img with Image */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                            <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center relative">
                               {product.product_images?.[0] ? (
-                                <img
+                                <Image
                                   src={product.product_images[0]}
                                   alt={product.product_name}
+                                  width={44}
+                                  height={44}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (

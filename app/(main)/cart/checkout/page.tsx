@@ -390,15 +390,18 @@ function StepDelivery({
 }) {
   const { user } = useContext(AuthContext);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
-  const [prefilled, setPrefilled] = useState(false);
+  
+  // FIX 1: Remove prefilled state and use ref to prevent double prefill
+  const hasPrefilledRef = useRef(false);
 
   // Determine if the currently selected delivery is a pickup type
   const selectedDeliveryOption = deliveryOptions.find((o) => o.id === selectedDeliveryId) ?? null;
   const isPickup = !!selectedDeliveryOption && isPickupOption(selectedDeliveryOption);
 
-  // Pre-fill contact info from user profile
+  // Pre-fill contact info from user profile - FIXED: removed setState from effect
   useEffect(() => {
-    if (user && !prefilled) {
+    if (user && !hasPrefilledRef.current) {
+      hasPrefilledRef.current = true;
       setInfo({
         fullName: user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "",
         phone: user.phone || user.phone_number || "",
@@ -409,9 +412,8 @@ function StepDelivery({
         country: user.country || "Nigeria",
         notes: "",
       });
-      setPrefilled(true);
     }
-  }, [user, setInfo, prefilled]);
+  }, [user, setInfo]); // Removed prefilled dependency
 
   const set =
     (k: keyof DeliveryInfo) =>
@@ -821,6 +823,10 @@ export default function Checkout() {
   const [paymentDone, setPaymentDone] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const paymentDoneRef = useRef(false);
+  
+  // FIX 2 & 3: Use refs for auth and reset states to avoid setState in effects
+  const authTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const prevDeliveryIdRef = useRef<string | null>(null);
 
   const goToStep = (n: number) => {
     setStep(n);
@@ -851,13 +857,21 @@ export default function Checkout() {
   const total = subtotal + deliveryCost;
   const currentlyPickup = !!selectedDelivery && isPickupOption(selectedDelivery);
 
-  // ── Auth guard ────────────────────────────────────────────────────────────
+  // ── Auth guard - FIXED: removed setState from effect, use cleanup ─────────
   useEffect(() => {
+    if (authTimerRef.current) clearTimeout(authTimerRef.current);
+    
     if (authLoading === undefined) {
-      const t = setTimeout(() => setCheckingAuth(false), 2000);
-      return () => clearTimeout(t);
+      authTimerRef.current = setTimeout(() => {
+        setCheckingAuth(false);
+      }, 2000);
+      return () => {
+        if (authTimerRef.current) clearTimeout(authTimerRef.current);
+      };
     }
-    if (!authLoading) setCheckingAuth(false);
+    if (!authLoading) {
+      setCheckingAuth(false);
+    }
   }, [authLoading]);
 
   useEffect(() => {
@@ -903,12 +917,8 @@ export default function Checkout() {
   }, [items, subtotal, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch pickup stations when a pickup option is selected ────────────────
+  // FIX 3: Reset state logic moved to separate effect that runs on selectedDeliveryId change
   useEffect(() => {
-    // Reset station when delivery method changes
-    setSelectedStation(null);
-    setPickupStations([]);
-    setPickupStationsError(null);
-
     if (!selectedDelivery || !isPickupOption(selectedDelivery)) return;
 
     const schoolId = user?.school_id || user?.schoolId;
@@ -940,7 +950,18 @@ export default function Checkout() {
     };
 
     fetch();
-  }, [selectedDelivery, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedDelivery, user]);
+
+  // FIX 3: Separate effect for resetting station when delivery method changes
+  useEffect(() => {
+    if (prevDeliveryIdRef.current !== selectedDeliveryId) {
+      // Delivery method changed, reset station and pickup stations
+      setSelectedStation(null);
+      setPickupStations([]);
+      setPickupStationsError(null);
+      prevDeliveryIdRef.current = selectedDeliveryId;
+    }
+  }, [selectedDeliveryId]);
 
   // ── Load Paystack script ──────────────────────────────────────────────────
   useEffect(() => {

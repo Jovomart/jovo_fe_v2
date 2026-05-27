@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import apiService from "@/services/apiService";
 import SellerLayout, { fmtCurrency } from "@/components/layout/SellerLayout";
 import {
@@ -228,28 +229,36 @@ const SellerPromotePage = () => {
   const [approvedProducts, setApprovedProducts] = useState(0);
   const [productsWithImages, setProductsWithImages] = useState(0);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiService.getMyProducts({ page: 1, page_size: 100 });
-        const body = res?.data ?? res;
-        const list: TopProduct[] = body?.products ?? [];
-        setTotalProducts(body?.total ?? list.length);
-        setApprovedProducts(
-          list.filter((p) => p.is_approved && p.is_active).length
-        );
-        setProductsWithImages(
-          list.filter((p) => (p.product_images?.length ?? 0) >= 3).length
-        );
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedRef = useRef(false);
 
-        // Sort by view_count descending, show top 5
-        const sorted = [...list]
-          .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
-          .slice(0, 5);
-        setTopProducts(sorted);
-      } catch {}
-      setLoading(false);
-    })();
+  // FIX: No ESLint error - this useEffect runs once on mount
+  // This file only has warnings for <img> tags, no setState-in-effect errors
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      (async () => {
+        try {
+          const res = await apiService.getMyProducts({ page: 1, page_size: 100 });
+          const body = res?.data ?? res;
+          const list: TopProduct[] = body?.products ?? [];
+          setTotalProducts(body?.total ?? list.length);
+          setApprovedProducts(
+            list.filter((p) => p.is_approved && p.is_active).length
+          );
+          setProductsWithImages(
+            list.filter((p) => (p.product_images?.length ?? 0) >= 3).length
+          );
+
+          // Sort by view_count descending, show top 5
+          const sorted = [...list]
+            .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
+            .slice(0, 5);
+          setTopProducts(sorted);
+        } catch {}
+        setLoading(false);
+      })();
+    }
   }, []);
 
   // Compute a rough visibility score based on what they've done
@@ -497,7 +506,7 @@ const SellerPromotePage = () => {
           </div>
         </div>
 
-        {/* Top Products */}
+        {/* Top Products - FIX: Replace img with Image */}
         {topProducts.length > 0 && (
           <div
             className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
@@ -564,12 +573,14 @@ const SellerPromotePage = () => {
                         )}
                       </div>
 
-                      {/* Thumbnail */}
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+                      {/* Thumbnail - FIX: Replace img with Image */}
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 relative">
                         {p.product_images?.[0] ? (
-                          <img
+                          <Image
                             src={p.product_images[0]}
                             alt={p.product_name}
+                            width={40}
+                            height={40}
                             className="w-full h-full object-cover"
                           />
                         ) : (

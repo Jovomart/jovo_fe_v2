@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { AuthContext } from "@/context/AuthContext";
 import apiService from "@/services/apiService";
 import SellerLayout from "@/components/layout/SellerLayout";
@@ -113,6 +114,46 @@ const Section = ({
   </div>
 );
 
+// ─── Notification Row Component (moved outside to avoid useState inside callback) ───
+const NotificationRow = ({
+  label,
+  desc,
+  defaultOn,
+}: {
+  label: string;
+  desc: string;
+  defaultOn: boolean;
+}) => {
+  const [on, setOn] = useState(defaultOn);
+  return (
+    <div
+      className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition"
+    >
+      <div>
+        <p className="text-sm font-bold text-slate-800">
+          {label}
+        </p>
+        <p className="text-[11px] text-slate-400 mt-0.5">
+          {desc}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setOn((v) => !v)}
+        className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+          on ? "bg-orange-500" : "bg-slate-300"
+        }`}
+      >
+        <span
+          className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+            on ? "translate-x-5" : ""
+          }`}
+        />
+      </button>
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const SellerSettingsPage = () => {
@@ -154,46 +195,49 @@ const SellerSettingsPage = () => {
     setTimeout(() => setToastMsg(""), 3500);
   };
 
-  // Load user + seller details
+  // FIX: Use useCallback to memoize the load function and add missing dependency
+  const loadUserAndSeller = useCallback(async () => {
+    setLoadingProfile(true);
+    try {
+      const [userRes, sellerRes] = await Promise.all([
+        apiService.getCurrentUser().catch(() => null),
+        apiService.getSellerDashboard().catch(() => null),
+      ]);
+
+      const u = userRes?.data ?? userRes ?? user;
+      if (u) {
+        setProfile({
+          first_name: u.first_name ?? "",
+          last_name: u.last_name ?? "",
+          username: u.username ?? "",
+          gender: u.gender ?? "",
+          country: u.country ?? "",
+          state: u.state ?? "",
+          city: u.city ?? "",
+          address: u.address ?? "",
+          phone: u.phone_number ?? u.phone ?? "",
+        });
+      }
+
+      const s = sellerRes?.data ?? sellerRes;
+      if (s) {
+        setSellerInfo({
+          business_name: s.business_name ?? s.seller?.business_name ?? "",
+          business_bio:
+            s.business_bio ?? s.seller?.business_bio ?? "",
+          logo_url: s.logo_url ?? s.seller?.logo_url ?? "",
+          whatsapp_number:
+            s.whatsapp_number ?? s.seller?.whatsapp_number ?? "",
+        });
+      }
+    } catch {}
+    setLoadingProfile(false);
+  }, [user]);
+
+  // FIX: Add 'loadUserAndSeller' to dependency array (was missing)
   useEffect(() => {
-    (async () => {
-      setLoadingProfile(true);
-      try {
-        const [userRes, sellerRes] = await Promise.all([
-          apiService.getCurrentUser().catch(() => null),
-          apiService.getSellerDashboard().catch(() => null),
-        ]);
-
-        const u = userRes?.data ?? userRes ?? user;
-        if (u) {
-          setProfile({
-            first_name: u.first_name ?? "",
-            last_name: u.last_name ?? "",
-            username: u.username ?? "",
-            gender: u.gender ?? "",
-            country: u.country ?? "",
-            state: u.state ?? "",
-            city: u.city ?? "",
-            address: u.address ?? "",
-            phone: u.phone_number ?? u.phone ?? "",
-          });
-        }
-
-        const s = sellerRes?.data ?? sellerRes;
-        if (s) {
-          setSellerInfo({
-            business_name: s.business_name ?? s.seller?.business_name ?? "",
-            business_bio:
-              s.business_bio ?? s.seller?.business_bio ?? "",
-            logo_url: s.logo_url ?? s.seller?.logo_url ?? "",
-            whatsapp_number:
-              s.whatsapp_number ?? s.seller?.whatsapp_number ?? "",
-          });
-        }
-      } catch {}
-      setLoadingProfile(false);
-    })();
-  }, []);
+    loadUserAndSeller();
+  }, [loadUserAndSeller]);
 
   const handleSaveProfile = async () => {
     setProfileError("");
@@ -235,6 +279,35 @@ const SellerSettingsPage = () => {
     { id: "business", label: "Business", icon: <FiShoppingBag size={14} /> },
     { id: "security", label: "Security", icon: <FiShield size={14} /> },
     { id: "notifications", label: "Alerts", icon: <FiBell size={14} /> },
+  ];
+
+  // Notification preferences array - moved outside of render to avoid recreating on each render
+  const notificationOptions = [
+    {
+      label: "New Order",
+      desc: "When a customer places an order for your product",
+      defaultOn: true,
+    },
+    {
+      label: "Order Cancelled",
+      desc: "When a customer cancels their order",
+      defaultOn: true,
+    },
+    {
+      label: "Payment Received",
+      desc: "When a payment clears into your wallet",
+      defaultOn: true,
+    },
+    {
+      label: "Product Approved",
+      desc: "When admin approves or rejects a listing",
+      defaultOn: true,
+    },
+    {
+      label: "Promotional Emails",
+      desc: "Platform tips, seller guides and feature updates",
+      defaultOn: false,
+    },
   ];
 
   return (
@@ -536,15 +609,20 @@ const SellerSettingsPage = () => {
                       }))
                     }
                   />
+                  {/* FIX: Replace img with Image */}
                   {sellerInfo.logo_url && (
-                    <img
-                      src={sellerInfo.logo_url}
-                      alt="Logo preview"
-                      className="mt-3 w-16 h-16 rounded-xl object-cover border border-slate-200"
-                      onError={(e) =>
-                        ((e.target as HTMLImageElement).style.display = "none")
-                      }
-                    />
+                    <div className="mt-3 w-16 h-16 rounded-xl overflow-hidden border border-slate-200 relative">
+                      <Image
+                        src={sellerInfo.logo_url}
+                        alt="Logo preview"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        onError={(e) =>
+                          ((e.target as HTMLImageElement).style.display = "none")
+                        }
+                      />
+                    </div>
                   )}
                 </Field>
 
@@ -657,6 +735,7 @@ const SellerSettingsPage = () => {
             )}
 
             {/* ── Notifications Tab ─────────────────────────────────────────── */}
+            {/* FIX: Moved useState outside of map to separate component */}
             {activeTab === "notifications" && (
               <Section
                 id="notifications"
@@ -665,63 +744,14 @@ const SellerSettingsPage = () => {
                 desc="Choose what you want to be notified about"
               >
                 <div className="space-y-3">
-                  {[
-                    {
-                      label: "New Order",
-                      desc: "When a customer places an order for your product",
-                      defaultOn: true,
-                    },
-                    {
-                      label: "Order Cancelled",
-                      desc: "When a customer cancels their order",
-                      defaultOn: true,
-                    },
-                    {
-                      label: "Payment Received",
-                      desc: "When a payment clears into your wallet",
-                      defaultOn: true,
-                    },
-                    {
-                      label: "Product Approved",
-                      desc: "When admin approves or rejects a listing",
-                      defaultOn: true,
-                    },
-                    {
-                      label: "Promotional Emails",
-                      desc: "Platform tips, seller guides and feature updates",
-                      defaultOn: false,
-                    },
-                  ].map(({ label, desc, defaultOn }) => {
-                    const [on, setOn] = useState(defaultOn);
-                    return (
-                      <div
-                        key={label}
-                        className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition"
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-slate-800">
-                            {label}
-                          </p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
-                            {desc}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setOn((v) => !v)}
-                          className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-                            on ? "bg-orange-500" : "bg-slate-300"
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                              on ? "translate-x-5" : ""
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    );
-                  })}
+                  {notificationOptions.map(({ label, desc, defaultOn }) => (
+                    <NotificationRow
+                      key={label}
+                      label={label}
+                      desc={desc}
+                      defaultOn={defaultOn}
+                    />
+                  ))}
                 </div>
                 <div className="flex justify-end">
                   <button

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -462,7 +462,8 @@ export default function Orders() {
   const [hasMore, setHasMore] = useState(false);
   const PER_PAGE = 20;
 
-  const fetchOrders = async (p = 1, append = false) => {
+  // FIX: Use useCallback to memoize fetchOrders and avoid dependency issues
+  const fetchOrders = useCallback(async (p = 1, append = false) => {
     setLoading(true);
     setError(null);
     try {
@@ -485,12 +486,13 @@ export default function Orders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // FIX: Add fetchOrders to dependency array, but fetchOrders is memoized
   useEffect(() => {
     if (!user) return;
     fetchOrders(1, false);
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, fetchOrders]);
 
   const handleCancel = async (order_id: string) => {
     try {
@@ -577,7 +579,7 @@ export default function Orders() {
             <div className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
               <FiAlertCircle size={15} className="shrink-0" />
               <span>{error}</span>
-              <button onClick={() => fetchOrders(1)} className="ml-auto text-xs font-bold underline">Retry</button>
+              <button onClick={() => fetchOrders(1, false)} className="ml-auto text-xs font-bold underline">Retry</button>
             </div>
           )}
 

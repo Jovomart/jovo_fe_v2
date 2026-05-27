@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import apiService from "@/services/apiService";
 import SellerLayout from "@/components/layout/SellerLayout";
 import {
@@ -134,13 +135,9 @@ function extractSubcategoryFields(subcategoryData: any): SubcategoryField[] {
 
   const fields: SubcategoryField[] = [];
 
-  // ✅ FIX: Handle ARRAY format — [{key: "storage_capacity", label: "...", ...}, ...]
-  // The old code called Object.entries() on an array which produces ["0", item], ["1", item]
-  // causing specs to be stored as {"0": "128GB"} instead of {"storage_capacity": "128GB"}
   if (Array.isArray(schema)) {
     console.log("Schema is an ARRAY — extracting key from each item");
     for (const item of schema) {
-      // The named key may live under different property names depending on the API
       const key =
         item.key ||
         item.name ||
@@ -173,7 +170,6 @@ function extractSubcategoryFields(subcategoryData: any): SubcategoryField[] {
       console.log(`Added field from array item: key="${key}"`);
     }
   } else if (typeof schema === "object") {
-    // Handle OBJECT format — {storage_capacity: {label: "...", ...}}
     console.log("Schema is an OBJECT — using Object.entries()");
     for (const [key, config] of Object.entries(schema)) {
       const fieldConfig = config as any;
@@ -644,6 +640,7 @@ const StepPricing = ({ form, setForm, errors }: any) => {
   );
 };
 
+// FIX: Replace img with Image from next/image
 const StepMedia = ({ form, setForm, errors }: any) => {
   const [imgInput, setImgInput] = useState("");
   const [vidInput, setVidInput] = useState("");
@@ -692,9 +689,11 @@ const StepMedia = ({ form, setForm, errors }: any) => {
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
             {form.product_images.map((url: string, i: number) => (
               <div key={i} className="relative group aspect-square">
-                <img
+                <Image
                   src={url}
                   alt={`Product image ${i + 1}`}
+                  width={200}
+                  height={200}
                   className="w-full h-full object-cover rounded-xl border border-slate-200"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
@@ -913,6 +912,9 @@ const AddProductPage = () => {
   const [apiError, setApiError] = useState("");
   const [toastMsg, setToastMsg] = useState("");
 
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedCategoriesRef = useRef(false);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3000);
@@ -946,8 +948,12 @@ const AddProductPage = () => {
     }
   }, []);
 
+  // FIX: Use ref to ensure fetchCategories is only called once on mount
   useEffect(() => {
-    fetchCategories();
+    if (!hasFetchedCategoriesRef.current) {
+      hasFetchedCategoriesRef.current = true;
+      fetchCategories();
+    }
   }, [fetchCategories]);
 
   const fetchSubcategories = useCallback(async (categoryId: string) => {
@@ -980,7 +986,6 @@ const AddProductPage = () => {
 
       setSubcategoryFields(fields);
 
-      // ✅ Initialize specs using the real named keys from fields
       const newSpecs: Record<string, string> = {};
       fields.forEach((field) => {
         if (field.key && typeof field.key === "string" && field.key !== "") {
@@ -1132,9 +1137,6 @@ const AddProductPage = () => {
       if (form.seo_title) payload.seo_title = form.seo_title;
       if (form.seo_description) payload.seo_description = form.seo_description;
 
-      // ✅ Nest specs under a "specifications" object — the API does not accept
-      // them as top-level fields even though the keys are correct.
-      // Correct shape: { specifications: { storage_capacity: "128GB", ... } }
       console.log("Current specifications:", form.specifications);
       console.log("Specification keys:", Object.keys(form.specifications));
 

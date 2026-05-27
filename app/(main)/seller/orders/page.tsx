@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import apiService from "@/services/apiService";
 import SellerLayout, { fmtCurrency } from "@/components/layout/SellerLayout";
 import {
@@ -335,18 +336,20 @@ const OrderRow = ({
             </div>
           )}
 
-          {/* Items */}
+          {/* Items - FIX: Replace img with Image */}
           <div className="divide-y divide-slate-100">
             {(order.items ?? []).map((item) => (
               <div
                 key={item.id}
                 className="flex items-center gap-4 px-5 py-3.5"
               >
-                <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center relative">
                   {item.product_image ? (
-                    <img
+                    <Image
                       src={item.product_image}
                       alt={item.product_name}
+                      width={40}
+                      height={40}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -419,6 +422,9 @@ const SellerOrdersPage = () => {
   const [endDate, setEndDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedRef = useRef(false);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3000);
@@ -459,8 +465,19 @@ const SellerOrdersPage = () => {
     [orderStatus, paymentFilter, startDate, endDate]
   );
 
+  // FIX: Use ref to ensure fetchOrders is only called once on mount, but still respond to filter changes
+  // We want it to run when filters change, but not on every render due to dependency
+  // The useCallback already handles the dependencies on filters
   useEffect(() => {
-    fetchOrders(1);
+    // Reset ref when any filter changes to allow re-fetch
+    hasFetchedRef.current = false;
+  }, [orderStatus, paymentFilter, startDate, endDate]);
+
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchOrders(1);
+    }
   }, [fetchOrders]);
 
   const handleStatusUpdate = async (itemId: string, newStatus: string) => {

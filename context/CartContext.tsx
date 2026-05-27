@@ -9,6 +9,8 @@ import {
   useEffect,
   useCallback,
   ReactNode,
+  useMemo,
+  useRef,
 } from "react";
 import { useAuth } from "@/context/AuthContext";
 import ApiService from "@/services/apiService";
@@ -112,6 +114,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
 
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedRef = useRef(false);
+
   // ── Fetch cart from backend ──────────────────────────────────────────────
   const fetchCart = useCallback(async () => {
     setLoading(true);
@@ -138,9 +143,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [user]); // re-create when user changes so auth state is fresh
 
   // ── Fetch cart once auth has resolved (avoids double-fetch on page load) ─
+  // FIX: Use ref to ensure fetchCart is only called once after auth resolves
   useEffect(() => {
     if (authLoading) return; // wait until we know who the user is
-    fetchCart();
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchCart();
+    }
   }, [fetchCart, authLoading]);
 
   // ── Clear recentlyAdded badge after 3 s ──────────────────────────────────
@@ -236,10 +245,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   // ─── Derived values ────────────────────────────────────────────────────────
-  const items = cartData?.items ?? [];
-  const itemCount = cartData?.total_items ?? 0;
-  const subtotal = cartData?.total_price ?? 0;
+  // FIX: Use useMemo to memoize items and derived values to prevent unnecessary re-renders
+  const items = useMemo(() => cartData?.items ?? [], [cartData?.items]);
+  const itemCount = useMemo(() => cartData?.total_items ?? 0, [cartData?.total_items]);
+  const subtotal = useMemo(() => cartData?.total_price ?? 0, [cartData?.total_price]);
 
+  // FIX: Memoize isInCart and getItemQuantity with useCallback using stable dependencies
   const isInCart = useCallback(
     (product_id: string) => items.some((i) => i.product_id === product_id),
     [items],

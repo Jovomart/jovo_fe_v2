@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import apiService from "@/services/apiService";
 import SellerLayout, { fmtCurrency } from "@/components/layout/SellerLayout";
 import {
@@ -137,6 +137,10 @@ const SellerWalletPage = () => {
   const LIMIT = 20;
   const [total, setTotal] = useState(0);
 
+  // FIX: Use refs to prevent multiple fetch calls
+  const walletFetchedRef = useRef(false);
+  const txFetchedRef = useRef(false);
+
   const fetchWallet = useCallback(async () => {
     setLoadingWallet(true);
     setError("");
@@ -177,10 +181,20 @@ const SellerWalletPage = () => {
     []
   );
 
+  // FIX: Use refs to ensure each fetch runs only once on mount
   useEffect(() => {
-    fetchWallet();
-    fetchTransactions(0);
-  }, [fetchWallet, fetchTransactions]);
+    if (!walletFetchedRef.current) {
+      walletFetchedRef.current = true;
+      fetchWallet();
+    }
+  }, [fetchWallet]);
+
+  useEffect(() => {
+    if (!txFetchedRef.current) {
+      txFetchedRef.current = true;
+      fetchTransactions(0);
+    }
+  }, [fetchTransactions]);
 
   const currentPage = Math.floor(skip / LIMIT) + 1;
   const totalPages = Math.ceil(total / LIMIT);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import apiService from "@/services/apiService";
@@ -387,7 +387,12 @@ const SellerDashboard = () => {
   );
   // ── FIX: date string in state, set only after mount ───────────────────────
   const [currentDate, setCurrentDate] = useState("");
+  
+  // FIX: Use ref to prevent multiple fetch calls
+  const hasFetchedRef = useRef(false);
 
+  // FIX 1: setCurrentDate is already in a useEffect without state issues
+  // This useEffect runs once on mount and doesn't cause cascading renders
   useEffect(() => {
     setCurrentDate(
       new Date().toLocaleDateString("en-NG", {
@@ -446,7 +451,6 @@ const SellerDashboard = () => {
       }));
 
       // ── Products ────────────────────────────────────────────────────────────
-      // API response shape: { data: { total, products: [] } }
       const productsBody = productsRes?.data ?? productsRes;
       const totalProducts =
         productsBody?.total ??
@@ -483,6 +487,8 @@ const SellerDashboard = () => {
             .fill(0)
             .map(() => Math.round(base * (0.3 + Math.random() * 0.7)))
         );
+      } else {
+        setMonthlyChart(new Array(12).fill(0));
       }
     } catch (err: any) {
       setError(err.message ?? "Failed to load dashboard. Please try again.");
@@ -491,8 +497,13 @@ const SellerDashboard = () => {
     }
   }, []);
 
+  // FIX 2: fetchDashboard is now properly memoized with useCallback
+  // Removed the eslint-disable comment and added hasFetchedRef to prevent duplicate calls
   useEffect(() => {
-    fetchDashboard();
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchDashboard();
+    }
   }, [fetchDashboard]);
 
   return (

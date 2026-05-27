@@ -260,7 +260,7 @@ async function uploadImageFile(file: File): Promise<string> {
   return URL.createObjectURL(file);
 }
 
-/* ─── Image Upload Field ─────────────────────────────────────────── */
+/* ─── Image Upload Field - FIX: Replace img with Image ─────────────────────────── */
 function ImageUploadField({
   label,
   value,
@@ -318,15 +318,19 @@ function ImageUploadField({
       >
         {value ? (
           <>
-            {/* Preview image */}
-            <img
-              src={value}
-              alt={label}
-              className="w-full h-full object-cover"
-              style={{ minHeight: aspectSquare ? "120px" : "96px", maxHeight: aspectSquare ? "120px" : "96px" }}
-            />
+            {/* Preview image - FIX: Replace img with Image */}
+            <div className="relative w-full" style={{ minHeight: aspectSquare ? "120px" : "96px", maxHeight: aspectSquare ? "120px" : "96px" }}>
+              <Image
+                src={value}
+                alt={label}
+                width={aspectSquare ? 120 : 300}
+                height={aspectSquare ? 120 : 96}
+                className="w-full h-full object-cover rounded-2xl"
+                style={{ minHeight: aspectSquare ? "120px" : "96px", maxHeight: aspectSquare ? "120px" : "96px" }}
+              />
+            </div>
             {/* Hover overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-2xl">
               <FiUpload size={20} className="text-white mb-1" />
               <p className="text-white text-[11px] font-bold">Change photo</p>
             </div>
@@ -356,7 +360,7 @@ function ImageUploadField({
         )}
 
         {uploading && value && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
             <div className="w-7 h-7 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         )}
@@ -791,10 +795,16 @@ export default function ProviderDashboard() {
   const [profError, setProfError] = useState("");
   const [serviceError, setServiceError] = useState("");
 
+  // FIX: Use ref to prevent multiple load calls
+  const hasLoadedRef = useRef(false);
+  const categoriesFetchedRef = useRef(false);
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const fetchCategories = useCallback(async () => {
+    if (categoriesFetchedRef.current) return;
+    categoriesFetchedRef.current = true;
     setCategoriesLoading(true);
     const timeoutId = setTimeout(() => {
       setCategories(FALLBACK_CATEGORIES);
@@ -829,6 +839,8 @@ export default function ProviderDashboard() {
   }, []);
 
   const load = useCallback(async () => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     setPageLoading(true);
     setPageError("");
     try {
@@ -923,7 +935,9 @@ export default function ProviderDashboard() {
     }
   }, [fetchCategories, router]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const saveProfile = async () => {
     setSavingProfile(true);
@@ -1058,7 +1072,7 @@ export default function ProviderDashboard() {
           <FiAlertCircle size={40} className="text-red-400 mx-auto mb-4" />
           <p className="font-black text-slate-800 text-lg mb-2">Oops, something went wrong</p>
           <p className="text-slate-400 text-sm mb-5">{pageError}</p>
-          <button onClick={load} className="px-6 py-3 rounded-2xl text-sm font-black text-white" style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+          <button onClick={() => { hasLoadedRef.current = false; load(); }} className="px-6 py-3 rounded-2xl text-sm font-black text-white" style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
             Try Again
           </button>
         </div>
@@ -1491,8 +1505,8 @@ export default function ProviderDashboard() {
               {hasService && service && !editingService && (
                 <div>
                   {profile?.cover_image_url && (
-                    <div className="h-28 sm:h-36 overflow-hidden">
-                      <Image src={profile.cover_image_url} alt="cover" sizes="(max-width: 639px) 100vw, 900px" fill className="w-full h-full object-cover" />
+                    <div className="h-28 sm:h-36 overflow-hidden relative">
+                      <Image src={profile.cover_image_url} alt="cover" width={900} height={144} className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="p-4 sm:p-6">

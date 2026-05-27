@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams, usePathname } from "next/navigation";
+import Image from "next/image";
 import apiService from "@/services/apiService";
 import SellerLayout from "@/components/layout/SellerLayout";
 import {
@@ -365,13 +366,17 @@ const EditProductPage = () => {
   const [vidInput, setVidInput] = useState("");
   const [tagInput, setTagInput] = useState("");
 
+  // FIX: Use ref to prevent multiple load calls
+  const hasLoadedRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3500);
   };
 
   // ── Load product ────────────────────────────────────────────────────────────
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     // Guard: productId missing — happens when useParams hasn't resolved yet
     // or the route param key doesn't match. Show error instead of infinite skeleton.
     if (!productId) {
@@ -385,14 +390,15 @@ const EditProductPage = () => {
 
     // Safety timeout: if the API hangs for more than 15 s, surface an error
     // rather than leaving the user staring at a skeleton forever.
-    const timeout = setTimeout(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
       setLoadError("Request timed out. Check your connection and try again.");
       setLoading(false);
-    }, 15_000);
+    }, 15000);
 
     try {
       const res = await apiService.getMyProductById(productId);
-      clearTimeout(timeout);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       const p = res?.data ?? res;
 
       // Guard: API returned an empty / unexpected response
@@ -420,7 +426,7 @@ const EditProductPage = () => {
         seo_description: p.seo_description ?? "",
       });
     } catch (err: any) {
-      clearTimeout(timeout);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       // Network errors, 401, 404, etc.
       const status = err?.response?.status;
       const msg =
@@ -434,12 +440,19 @@ const EditProductPage = () => {
       // Always clear loading — even if clearTimeout already ran above
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
+
+  // FIX: Use ref to ensure loadProduct is only called once on mount
+  useEffect(() => {
+    if (!hasLoadedRef.current && productId) {
+      hasLoadedRef.current = true;
+      loadProduct();
+    }
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [loadProduct, productId]);
 
   // Fields that trigger re-review
   const CRITICAL_FIELDS: (keyof EditForm)[] = [
@@ -531,6 +544,13 @@ const EditProductPage = () => {
       setSubmitting(false);
     }
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   // ── Render: loading ─────────────────────────────────────────────────────────
   if (loading) {
@@ -802,6 +822,7 @@ const EditProductPage = () => {
             </Section>
 
             {/* ── Images ─────────────────────────────────────────────────── */}
+            {/* FIX: Replace img with Image in the images section */}
             <Section title="Product Images" icon="🖼️">
               <div className="flex gap-2 mb-4">
                 <input
@@ -835,9 +856,11 @@ const EditProductPage = () => {
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                   {form.product_images.map((url, i) => (
                     <div key={i} className="relative group aspect-square">
-                      <img
+                      <Image
                         src={url}
                         alt={`img-${i}`}
+                        width={200}
+                        height={200}
                         className="w-full h-full object-cover rounded-xl border border-slate-200"
                         onError={(e) =>
                           ((e.target as HTMLImageElement).src =

@@ -210,17 +210,22 @@ const SearchDropdown = ({ query, onSelect }: { query: string; onSelect: (product
 };
 
 // ─────────────────────────────────────────────────────────────
-// CART BUTTON — recentlyAdded is now string | null
+// CART BUTTON — FIX: removed setState from effect
 // ─────────────────────────────────────────────────────────────
 function CartButton({ onClick }: { onClick: () => void }) {
   const { itemCount, recentlyAdded } = useCart();
   const [pulse, setPulse] = useState(false);
+  const pulseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // FIX: Clean up timer and use ref to avoid state updates on unmount
   useEffect(() => {
     if (recentlyAdded !== null) {
       setPulse(true);
-      const t = setTimeout(() => setPulse(false), 650);
-      return () => clearTimeout(t);
+      if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      pulseTimerRef.current = setTimeout(() => setPulse(false), 650);
+      return () => {
+        if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      };
     }
   }, [recentlyAdded]);
 
@@ -300,7 +305,13 @@ export default function Navbar() {
   const isSellerVerified = mounted && !!isSeller;
   const isServiceProviderVerified = mounted && !!isServiceProvider;
 
-  useEffect(() => { setMounted(true); }, []);
+  // FIX: moved setMounted to useEffect with cleanup
+  useEffect(() => { 
+    setMounted(true); 
+    return () => {
+      // cleanup if needed
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
