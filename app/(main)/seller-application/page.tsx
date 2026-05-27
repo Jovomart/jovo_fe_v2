@@ -966,3 +966,6 @@ const SellerApplication = () => {
 };
 
 export default SellerApplication;
+
+
+

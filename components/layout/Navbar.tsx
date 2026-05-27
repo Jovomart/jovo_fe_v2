@@ -532,7 +532,7 @@ export default function Navbar() {
                         </button>
                       )}
                       {isServiceProviderVerified && (
-                        <button onClick={() => goTo("/service-dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group">
+                        <button onClick={() => goTo("/services/dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group">
                           <FiBriefcase size={15} className="text-gray-400 group-hover:text-purple-600" />
                           <span className="flex-1 text-left">Service Dashboard</span>
                           <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-purple-600" />
@@ -744,7 +744,7 @@ export default function Navbar() {
                   ? [{ label: "Switch to Seller", action: handleEnterSellerMode }]
                   : [{ label: "Become a Seller", to: "/become-seller" }]),
                 ...(isServiceProviderVerified
-                  ? [{ label: "Service Dashboard", to: "/service-dashboard" }]
+                  ? [{ label: "Service Dashboard", to: "/services/dashboard" }]
                   : [{ label: "Become a Service Provider", to: "/become-service-provider" }]),
                 { label: "Help Center", to: "/help" },
               ].map(({ label, to, action }: any) => (

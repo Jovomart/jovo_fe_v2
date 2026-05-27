@@ -432,7 +432,7 @@ const SellerProductsPage = () => {
             className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
             style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
           >
-            <div className="overflow-x-auto no-scrollbar">
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[900px]">
                 <thead>
                   <tr style={{ background: "#F8FAFC" }}>
