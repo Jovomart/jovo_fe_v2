@@ -1,7 +1,7 @@
 "use client";
-import { useRouter } from "next/navigation";
 // src/pages/NewsPage.jsx
 import { useState, useMemo, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   FiSearch,
   FiX,
@@ -472,8 +472,9 @@ const getCategoryColor = (cat) => {
 
 // Featured hero card
 const HeroCard = ({ article, onBookmark, bookmarked }) => (
-  <div
-    className="relative rounded-3xl overflow-hidden cursor-pointer group"
+  <Link
+    href={`/news/${article.id}`}
+    className="relative rounded-3xl overflow-hidden cursor-pointer group block"
     style={{ minHeight: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}
   >
     <Image
@@ -525,6 +526,7 @@ const HeroCard = ({ article, onBookmark, bookmarked }) => (
         </div>
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onBookmark(article.id);
           }}
@@ -538,12 +540,13 @@ const HeroCard = ({ article, onBookmark, bookmarked }) => (
         </button>
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 // Standard news card
 const NewsCard = ({ article, onBookmark, bookmarked, compact = false }) => (
-  <div
+  <Link
+    href={`/news/${article.id}`}
     className={`group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 flex ${compact ? "flex-row gap-0" : "flex-col"}`}
     style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}
   >
@@ -608,6 +611,7 @@ const NewsCard = ({ article, onBookmark, bookmarked, compact = false }) => (
         {!compact && (
           <button
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               onBookmark(article.id);
             }}
@@ -625,13 +629,14 @@ const NewsCard = ({ article, onBookmark, bookmarked, compact = false }) => (
         )}
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 // Video card
 const VideoCard = ({ video }) => (
-  <div
-    className="group relative rounded-2xl overflow-hidden cursor-pointer"
+  <Link
+    href={`/news/video/${video.id}`}
+    className="group relative rounded-2xl overflow-hidden cursor-pointer block"
     style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.12)" }}
   >
     <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
@@ -669,7 +674,7 @@ const VideoCard = ({ video }) => (
         <FiVideo size={10} /> Video
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 // Section header

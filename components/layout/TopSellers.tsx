@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products } from "@/data/products";
@@ -9,8 +9,6 @@ import { FaTrophy } from "react-icons/fa";
 const TopSellers = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
 
   //  Get top-sellers products (ONLY 4 for homepage)
   const topProducts = products
@@ -91,12 +89,12 @@ const TopSellers = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => router.push("/top-sellers")}
+        <Link
+          href="/top-sellers"
           className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
-        </button>
+        </Link>
       </div>
       {/* PRODUCTS */}
       <div
@@ -116,10 +114,10 @@ const TopSellers = () => {
               );
 
               return (
-                <div
+                <Link
                   key={product.id}
-                  onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-45 md:min-w-60 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  href={`/product/${product.id}`}
+                  className="min-w-45 md:min-w-60 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer block"
                 >
                   <div className="relative h-40 md:h-52 overflow-hidden rounded-t-xl">
                     <Image
@@ -160,7 +158,7 @@ const TopSellers = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
       </div>

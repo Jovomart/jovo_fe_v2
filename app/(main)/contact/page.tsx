@@ -1,6 +1,5 @@
 'use client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from "react";
 import Footer from "@/components/layout/Footer";
 import {
@@ -370,9 +369,9 @@ const Contact = () => {
                   For product drop-offs, pickups, or in-person support, visit our ICT Centre location on campus.
                 </p>
               </div>
-              <a href="#" className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white bg-white/15 border border-white/20 hover:bg-white/25 transition-all">
+              <Link href="#" className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white bg-white/15 border border-white/20 hover:bg-white/25 transition-all">
                 Get Directions <FiArrowRight size={14} />
-              </a>
+              </Link>
             </div>
           </div>
 

@@ -1,17 +1,14 @@
 'use client'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 // src/components/home/ServicesSection.jsx
 import { FiArrowRight } from "react-icons/fi";
 
 const ServicesSection = () => {
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
-
   return (
     <div className="w-full px-0 md:px-1 py-8">
-      <div
-        onClick={() => router.push("/services")}
-        className="relative overflow-hidden  cursor-pointer group transition-all duration-300 hover:-translate-y-1"
+      <Link
+        href="/services"
+        className="relative overflow-hidden cursor-pointer group transition-all duration-300 hover:-translate-y-1 block"
         style={{
           background: "linear-gradient(135deg,#0a0a0a 0%,#1a0a00 50%,#2a1500 100%)",
           boxShadow: "0 8px 40px rgba(0,0,0,0.25)",
@@ -54,7 +51,7 @@ const ServicesSection = () => {
             Visit Services <FiArrowRight size={15} />
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 };

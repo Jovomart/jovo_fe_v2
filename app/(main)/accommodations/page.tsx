@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 // src/pages/AccommodationsPage.jsx
 import { useState, useMemo } from "react";
 import { accommodations } from "@/data/accommodation";
@@ -55,10 +55,10 @@ const amenityIcon = (a) => {
 };
 
 /* ── Grid Card ── */
-const AccomCard = ({ place, onClick }) => (
-  <div
-    onClick={onClick}
-    className="group bg-white rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+const AccomCard = ({ place }) => (
+  <Link
+    href={`/accommodation/${place.id}`}
+    className="group bg-white rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer block"
     style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
   >
     <div className="relative overflow-hidden" style={{ aspectRatio: "4/3" }}>
@@ -129,6 +129,10 @@ const AccomCard = ({ place, onClick }) => (
           <span className="text-[10px] md:text-xs text-gray-400"> /yr</span>
         </div>
         <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
           className="px-3 ml-2 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-black text-white transition-all hover:opacity-90 active:scale-95"
           style={{
             background: "linear-gradient(135deg,#B42225,#FF8C00)",
@@ -139,13 +143,13 @@ const AccomCard = ({ place, onClick }) => (
         </button>
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 /* ── List Row ── */
-const AccomRow = ({ place, onClick }) => (
-  <div
-    onClick={onClick}
+const AccomRow = ({ place }) => (
+  <Link
+    href={`/accommodation/${place.id}`}
     className="group bg-white rounded-2xl overflow-hidden flex transition-all duration-200 hover:shadow-lg cursor-pointer"
     style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
   >
@@ -204,6 +208,10 @@ const AccomRow = ({ place, onClick }) => (
             <span className="text-[10px] md:text-xs text-gray-400"> /yr</span>
           </div>
           <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             className="px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-black text-white transition-all hover:opacity-90 shrink-0"
             style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}
           >
@@ -212,13 +220,11 @@ const AccomRow = ({ place, onClick }) => (
         </div>
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 /* ── Main Page ── */
 const AccommodationsPage = () => {
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
   const [search, setSearch] = useState("");
   const [activeType, setType] = useState("All");
   const [sortBy, setSortBy] = useState("Featured");
@@ -482,21 +488,13 @@ const AccommodationsPage = () => {
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
               {filtered.map((place) => (
-                <AccomCard
-                  key={place.id}
-                  place={place}
-                  onClick={() => navigate(`/accommodation/${place.id}`)}
-                />
+                <AccomCard key={place.id} place={place} />
               ))}
             </div>
           ) : (
             <div className="flex flex-col gap-3 md:gap-4">
               {filtered.map((place) => (
-                <AccomRow
-                  key={place.id}
-                  place={place}
-                  onClick={() => navigate(`/accommodation/${place.id}`)}
-                />
+                <AccomRow key={place.id} place={place} />
               ))}
             </div>
           )}

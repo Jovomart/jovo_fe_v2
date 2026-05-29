@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { products } from "@/data/products";
@@ -8,8 +8,6 @@ import { FaExclamationTriangle } from "react-icons/fa";
 
 const LimitedStockDeals = () => {
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
 
   const limited = products.filter((p) => p.category === "limited").slice(0, 4);
 
@@ -62,12 +60,12 @@ const LimitedStockDeals = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => router.push("/limited-deals")}
+        <Link
+          href="/limited-deals"
           className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
-        </button>
+        </Link>
       </div>
 
       {/* GRID PRODUCTS */}
@@ -83,10 +81,10 @@ const LimitedStockDeals = () => {
               const stockPercent = Math.min(product.stock * 5, 100);
 
               return (
-                <div
+                <Link
                   key={product.id}
-                  onClick={() => navigate(`/product/${product.id}`)}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden"
+                  href={`/product/${product.id}`}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden block"
                 >
                   <div className="relative h-36 md:h-48 overflow-hidden">
                     <Image
@@ -128,7 +126,7 @@ const LimitedStockDeals = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
       </div>

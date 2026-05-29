@@ -1,5 +1,4 @@
 'use client'
-import { useRouter } from 'next/navigation'
 // src/pages/Privacy.jsx
 import { useState } from "react";
 import Footer from "@/components/layout/Footer";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useContext, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AuthContext } from "@/context/AuthContext";
 import apiService from "@/services/apiService";
 import {
@@ -86,7 +86,6 @@ const SellerLayout = ({
   stats = {},
 }: SellerLayoutProps) => {
   const { user, exitSellerMode } = useContext(AuthContext) as any;
-  const router = useRouter();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -102,22 +101,22 @@ const SellerLayout = ({
   const userDataAppliedRef = useRef(false);
 
   // FIX: Use setTimeout to avoid direct setState in effect
-useEffect(() => {
-  if (!isMountedRef.current) {
-    isMountedRef.current = true;
-    const timer1 = setTimeout(() => setMounted(true), 0);
-    const timer2 = setTimeout(() => {
-      const h = new Date().getHours();
-      setGreeting(
-        h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
-      );
-    }, 0);
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }
-}, []);
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      const timer1 = setTimeout(() => setMounted(true), 0);
+      const timer2 = setTimeout(() => {
+        const h = new Date().getHours();
+        setGreeting(
+          h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
+        );
+      }, 0);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, []);
     
  
 // FIX: Use setTimeout to avoid direct setState in effect
@@ -148,7 +147,7 @@ useEffect(() => {
 }, [user]);
     
   const navigate = (p: string) => {
-    router.push(p);
+    window.location.href = p;
     setSidebarOpen(false);
   };
 
@@ -156,7 +155,7 @@ useEffect(() => {
     try {
       if (typeof exitSellerMode === "function") await exitSellerMode();
     } catch {}
-    router.push("/shop");
+    window.location.href = "/shop";
   };
 
   const navItems = [
@@ -327,9 +326,10 @@ useEffect(() => {
             Main Menu
           </p>
           {navItems.slice(0, 5).map((item) => (
-            <button
+            <Link
               key={item.id}
-              onClick={() => navigate(item.to)}
+              href={item.to}
+              onClick={() => setSidebarOpen(false)}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left group ${
                 activeNav === item.id
                   ? "bg-orange-500 text-white shadow-lg shadow-orange-200"
@@ -356,15 +356,16 @@ useEffect(() => {
                 </span>
               )}
               {activeNav === item.id && <FiChevronRight size={13} />}
-            </button>
+            </Link>
           ))}
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-3.5 pt-4 pb-1.5">
             Manage
           </p>
           {navItems.slice(5).map((item) => (
-            <button
+            <Link
               key={item.id}
-              onClick={() => navigate(item.to)}
+              href={item.to}
+              onClick={() => setSidebarOpen(false)}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left group ${
                 activeNav === item.id
                   ? "bg-orange-500 text-white shadow-lg shadow-orange-200"
@@ -376,7 +377,7 @@ useEffect(() => {
               </span>
               <span className="flex-1">{item.label}</span>
               {activeNav === item.id && <FiChevronRight size={13} />}
-            </button>
+            </Link>
           ))}
         </nav>
 
@@ -398,7 +399,7 @@ useEffect(() => {
           <button
             onClick={() => {
               apiService.logout();
-              router.push("/");
+              window.location.href = "/";
             }}
             className="w-full flex items-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-50 transition"
           >
@@ -572,14 +573,14 @@ useEffect(() => {
 
                 {/* Primary Action Button */}
                 {headerAction ?? (
-                  <button
-                    onClick={() => router.push("/seller/add-product")}
+                  <Link
+                    href="/seller/add-product"
                     className="flex items-center gap-1.5 px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg active:scale-95"
                   >
                     <FiPlus size={14} className="md:w-4 md:h-4" />
                     <span className="hidden xs:inline">Add</span>
                     <span className="hidden sm:inline ml-0">Product</span>
-                  </button>
+                  </Link>
                 )}
               </div>
             </div>
@@ -620,26 +621,41 @@ useEffect(() => {
 
           {/* Quick Action Chips (Mobile Only) - All emojis replaced with icons */}
           <div className="sm:hidden px-3 pb-3 overflow-x-auto flex gap-2 scrollbar-hide">
-            <button className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5">
+            <Link
+              href="/seller/orders"
+              className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
+            >
               <FiTruck size={10} />
               Manage Orders
-            </button>
-            <button className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5">
+            </Link>
+            <Link
+              href="/seller/analytics"
+              className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
+            >
               <FiBarChart2 size={10} />
               Analytics
-            </button>
-            <button className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 active:bg-orange-200 transition flex items-center gap-1.5">
+            </Link>
+            <Link
+              href="/seller/promote"
+              className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 active:bg-orange-200 transition flex items-center gap-1.5"
+            >
               <FaRocket size={9} />
               Boost Sales
-            </button>
-            <button className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5">
+            </Link>
+            <Link
+              href="/seller/support"
+              className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
+            >
               <HiOutlineSupport size={10} />
               Support
-            </button>
-            <button className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5">
+            </Link>
+            <Link
+              href="/seller/promotions"
+              className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
+            >
               <FiTag size={10} />
               Promotions
-            </button>
+            </Link>
           </div>
         </header>
 

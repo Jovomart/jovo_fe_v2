@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 // src/components/home/AccommodationDeals.jsx
 import { useState, useEffect } from "react";
 import { accommodations } from "@/data/accommodation";
@@ -7,8 +7,6 @@ import Image from "next/image";
 
 const AccommodationDeals = () => {
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
@@ -22,12 +20,12 @@ const AccommodationDeals = () => {
         <h2 className="text-xl md:text-4xl font-bold text-white">
           Accommodation Deals
         </h2>
-        <button
-          onClick={() => router.push("/accommodations")}
+        <Link
+          href="/accommodations"
           className="text-xl md:text-3xl font-light text-[#FF8C00] hover:underline"
         >
           See All
-        </button>
+        </Link>
       </div>
 
       {/* GRID */}
@@ -40,10 +38,10 @@ const AccommodationDeals = () => {
               />
             ))
           : accommodations.slice(0, 4).map((place) => (
-              <div
+              <Link
                 key={place.id}
-                className="relative group rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition duration-500 cursor-pointer"
-                onClick={() => navigate(`/accommodation/${place.id}`)}
+                href={`/accommodation/${place.id}`}
+                className="relative group rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition duration-500 cursor-pointer block"
               >
                 {/* IMAGE */}
                 <Image
@@ -86,7 +84,7 @@ const AccommodationDeals = () => {
                     </button>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
       </div>
     </div>

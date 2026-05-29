@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 // src/pages/TopSellersPage.jsx
 import { products } from "@/data/products";
 import { useState, useMemo } from "react";
@@ -27,8 +26,6 @@ const getStableSoldCount = (seed = "", min = 100, range = 900) => {
 };
 
 const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;
@@ -62,10 +59,10 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
       style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}
     >
       {/* Image */}
-      <div
-        className="relative overflow-hidden cursor-pointer"
+      <Link
+        href={`/product/${product.id}`}
+        className="relative overflow-hidden block"
         style={{ aspectRatio: "1/1" }}
-        onClick={() => navigate(`/product/${product.id}`)}
       >
         <Image
           src={product.image}
@@ -100,6 +97,7 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         {/* Wishlist */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onWishlist(product.id);
           }}
@@ -114,11 +112,18 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
 
         {/* Slide-up add to cart */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-orange-600 hover:text-white transition-colors duration-200">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Add to cart logic here
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-orange-600 hover:text-white transition-colors duration-200"
+          >
             <FiShoppingBag size={13} /> Add to Cart
           </button>
         </div>
-      </div>
+      </Link>
 
       {/* Info */}
       <div className="p-3.5">
@@ -150,12 +155,10 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
 
 // ─── Suggested Card ────────────────────────────────────────────────────────
 const SuggestedCard = ({ product }) => {
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
   return (
-    <div
-      onClick={() => navigate(`/product/${product.id}`)}
-      className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
+    <Link
+      href={`/product/${product.id}`}
+      className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 block"
       style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
     >
       <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
@@ -176,7 +179,7 @@ const SuggestedCard = ({ product }) => {
           ₦{product.price.toLocaleString()}
         </p>
       </div>
-    </div>
+    </Link>
   );
 };
 

@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { 
@@ -274,24 +273,24 @@ const StepCard = ({ step, isLast }: { step: (typeof steps)[0]; isLast: boolean }
 const BecomeServiceProvider = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { user, isServiceProvider, isLoading } = useContext(AuthContext) as any;
-  const router = useRouter();
 
-  // Redirect if already a service provider (handled during render)
-  if (!isLoading && isServiceProvider) {
-    router.replace("/service-dashboard");
-    return null;
-  }
+  // Redirect if already a service provider
+  useEffect(() => {
+    if (!isLoading && isServiceProvider) {
+      window.location.href = "/service-dashboard";
+    }
+  }, [isLoading, isServiceProvider]);
 
   const handleApply = () => {
     if (!user) {
-      router.push("/login?redirect=/services/apply");
+      window.location.href = "/login?redirect=/services/apply";
       return;
     }
     if (isServiceProvider) {
-      router.push("/service-dashboard");
+      window.location.href = "/service-dashboard";
       return;
     }
-    router.push("/services/apply");
+    window.location.href = "/services/apply";
   };
 
   // Show loading while checking auth

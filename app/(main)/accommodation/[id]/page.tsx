@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 // src/pages/AccommodationDetails.jsx
 import { useState } from "react";
 import { accommodations } from "@/data/accommodation";
@@ -130,9 +130,6 @@ const mockReviews = [
 
 const AccommodationDetails = () => {
   const { id } = useParams();
-  const router = useRouter();
-  const navigate = (p: any) =>
-    typeof p === "number" ? router.back() : router.push(p);
 
   const place = accommodations.find((a) => a.id === Number(id));
 
@@ -608,10 +605,10 @@ const AccommodationDetails = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {suggested.map((item) => (
-                <div
+                <Link
                   key={item.id}
-                  onClick={() => navigate(`/accommodation/${item.id}`)}
-                  className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
+                  href={`/accommodation/${item.id}`}
+                  className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 block"
                   style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.07)" }}
                 >
                   <div
@@ -645,7 +642,7 @@ const AccommodationDetails = () => {
                       ₦{item.price.toLocaleString()}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

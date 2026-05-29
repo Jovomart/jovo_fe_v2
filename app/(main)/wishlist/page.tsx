@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { useState } from "react";
@@ -17,7 +16,6 @@ import { MdVerified } from "react-icons/md";
 import Footer from "@/components/layout/Footer";
 
 export default function WishlistPage() {
-  const router = useRouter();
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
   const [addedIds, setAddedIds] = useState<number[]>([]);
@@ -46,7 +44,7 @@ export default function WishlistPage() {
     wishlist.forEach((product) => {
       addToCart(String(product.id), 1);
     });
-    router.push("/cart");
+    window.location.href = "/cart";
   };
 
   return (
@@ -248,8 +246,9 @@ export default function WishlistPage() {
                 const removing = removingIds.includes(product.id);
 
                 return (
-                  <div
+                  <Link
                     key={product.id}
+                    href={`/product/${product.id}`}
                     className="group bg-white rounded-3xl overflow-hidden flex flex-col transition-all duration-300"
                     style={{
                       boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
@@ -269,9 +268,8 @@ export default function WishlistPage() {
                   >
                     {/* Image area */}
                     <div
-                      className="relative overflow-hidden cursor-pointer bg-gray-50"
+                      className="relative overflow-hidden bg-gray-50"
                       style={{ aspectRatio: "1/1" }}
-                      onClick={() => router.push(`/product/${product.id}`)}
                     >
                       <Image
                         src={product.image}
@@ -310,6 +308,7 @@ export default function WishlistPage() {
                       {/* Remove button */}
                       <button
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleRemove(product.id);
                         }}
@@ -333,10 +332,7 @@ export default function WishlistPage() {
                         </div>
                       )}
 
-                      <p
-                        className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug cursor-pointer hover:text-[#B42225] transition-colors"
-                        onClick={() => router.push(`/product/${product.id}`)}
-                      >
+                      <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#B42225] transition-colors">
                         {product.name}
                       </p>
 
@@ -357,7 +353,11 @@ export default function WishlistPage() {
 
                       {/* Add to cart */}
                       <button
-                        onClick={() => handleAddToCart(product)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
                         className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300"
                         style={{
                           background: added
@@ -381,7 +381,7 @@ export default function WishlistPage() {
                         )}
                       </button>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

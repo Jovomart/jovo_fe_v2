@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 // src/components/home/SuppliesSection.jsx
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -51,8 +51,6 @@ const categories = [
 
 const SuppliesSection = () => {
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -78,10 +76,10 @@ const SuppliesSection = () => {
               />
             ))
           : categories.map((category) => (
-              <div
+              <Link
                 key={category.id}
-                onClick={() => navigate(category.route)}
-                className="relative group rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.03] transition duration-500 cursor-pointer"
+                href={category.route}
+                className="relative group rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.03] transition duration-500 cursor-pointer block"
               >
                 {/* IMAGE */}
                 <Image
@@ -104,7 +102,7 @@ const SuppliesSection = () => {
                     Explore top deals →
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
       </div>
     </div>

@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 // src/pages/FlashSalesPage.jsx
 import { products } from "@/data/products";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -59,8 +58,6 @@ const Sep = () => (
 
 /* ── Product card ────────────────────────────────────────────────────────── */
 const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;
@@ -74,10 +71,10 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
       }}
     >
       {/* Image */}
-      <div
-        className="relative overflow-hidden cursor-pointer"
+      <Link
+        href={`/product/${product.id}`}
+        className="relative overflow-hidden block"
         style={{ aspectRatio: "1/1" }}
-        onClick={() => navigate(`/product/${product.id}`)}
       >
         <Image
           src={product.image}
@@ -103,6 +100,7 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
         {/* Wishlist */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onWishlist(product.id);
           }}
@@ -117,11 +115,18 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
 
         {/* Quick add — slides up on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-[#B42225] hover:text-white transition-colors duration-200">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Add to cart logic here
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-[#B42225] hover:text-white transition-colors duration-200"
+          >
             <FiShoppingBag size={13} /> Add to Cart
           </button>
         </div>
-      </div>
+      </Link>
 
       {/* Info */}
       <div className="p-3.5">
@@ -164,8 +169,6 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
 
 /* ── Main Page ───────────────────────────────────────────────────────────── */
 const FlashSalesPage = () => {
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const { hours, minutes, seconds } = useCountdown(24 * 60 * 60);
 

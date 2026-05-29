@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useContext } from "react";
-import { useRouter } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import PageLoader from "@/components/ui/PageLoader";
 import BackToTop from "@/components/ui/BackToTop";
@@ -20,11 +19,12 @@ import NewsletterSection from "@/components/sections/NewsletterSection";
 
 export default function Home() {
   const { user, loading } = useContext(AuthContext);
-  const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) router.replace("/shop");
-  }, [loading, user, router]);
+    if (!loading && user) {
+      window.location.href = "/shop";
+    }
+  }, [loading, user]);
 
   if (!loading && user) return null;
 

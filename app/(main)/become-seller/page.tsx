@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import {
@@ -337,24 +336,23 @@ const StepCard = ({ step, isLast }) => (
 const BecomeSeller = () => {
   const [openFaq, setOpenFaq] = useState(null);
   const { user, isSeller } = useContext(AuthContext);
-  const router = useRouter();
 
   useEffect(() => {
     if (isSeller) {
-      router.push("/seller/dashboard");
+      window.location.href = "/seller/dashboard";
     }
-  }, [isSeller, router]);
+  }, [isSeller]);
 
   const handleApply = () => {
     if (!user) {
-      router.push("/login");
+      window.location.href = "/login";
       return;
     }
     if (isSeller) {
-      router.push("/seller/dashboard");
+      window.location.href = "/seller/dashboard";
       return;
     }
-    router.push("/seller-application");
+    window.location.href = "/seller-application";
   };
 
   if (isSeller) return null;
