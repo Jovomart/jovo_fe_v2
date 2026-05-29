@@ -974,15 +974,14 @@ export default function Checkout() {
     fetch();
   }, [selectedDelivery, user]);
 
-  // Reset station when delivery changes
   useEffect(() => {
-    if (prevDeliveryIdRef.current !== selectedDeliveryId) {
-      setSelectedStation(null);
-      setPickupStations([]);
-      setPickupStationsError(null);
-      prevDeliveryIdRef.current = selectedDeliveryId;
-    }
-  }, [selectedDeliveryId]);
+  if (prevDeliveryIdRef.current !== selectedDeliveryId) {
+    setSelectedStation(null);
+    setPickupStations([]);
+    setPickupStationsError(null);
+    prevDeliveryIdRef.current = selectedDeliveryId;
+  }
+}, [selectedDeliveryId]); // ✅ Add selectedDeliveryId here
 
   const handleStationSelect = (station: PickupStation) => {
     setSelectedStation(station.id ? station : null);

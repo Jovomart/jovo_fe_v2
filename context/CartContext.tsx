@@ -141,6 +141,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const hasFetchedRef = useRef(false);
   const productCacheRef = useRef<Map<string, { data: any; timestamp: number }>>(new Map());
+  const cartItemsRef = useRef(cartData?.items);
+
+  // Keep ref in sync with cartData
+  useEffect(() => {
+    cartItemsRef.current = cartData?.items;
+  }, [cartData?.items]);
 
   const fetchCart = useCallback(async () => {
     setLoading(true);
@@ -208,13 +214,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [user, cartData?.items, fetchCart]);
 
   // ─── Refresh all cart prices and apply updates ──────────────────────────────
+  // FIXED: Using ref to avoid dependency issues with React Compiler
   const syncCartPrices = useCallback(async () => {
     const priceChanges = new Map<string, { oldPrice: number; newPrice: number }>();
-    if (!cartData?.items.length) return priceChanges;
+    const currentItems = cartItemsRef.current;
+    
+    if (!currentItems?.length) return priceChanges;
     
     setOperationLoading(true);
     
-    for (const item of cartData.items) {
+    for (const item of currentItems) {
       const freshProduct = await getFreshProductData(item.product_id);
       if (freshProduct && freshProduct.current_price !== item.price) {
         priceChanges.set(item.product_id, {
@@ -228,7 +237,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     setOperationLoading(false);
     return priceChanges;
-  }, [cartData?.items, getFreshProductData, updateCartItemPrice]);
+  }, [getFreshProductData, updateCartItemPrice]);
 
   // ─── Cart mutations ─────────────────────────────────────────────────────────
   const addToCart = useCallback(async (product_id: string, qty = 1) => {
