@@ -5,18 +5,9 @@ import TopSellers from "@/components/layout/TopSellers";
 import SponsoredProducts from "@/components/layout/SponsoredProducts";
 import LimitedStockDeals from "@/components/layout/LimitedStockDeals";
 import AccommodationDeals from "@/components/layout/AccommodationDeals";
-import AppliancesDeals from "@/components/layout/AppliancesDeal";
-import Tv_Audio_Deals from "@/components/layout/TvAudioDeals";
 import SuppliesSection from "@/components/layout/SuppliesSection";
-import PhoneDeals from "@/components/layout/PhoneDeals";
-import BeautyAndCosmeticsDeals from "@/components/layout/BeautyDeals";
-import FashionDeals from "@/components/layout/FashionDeals";
-import GamingDeals from "@/components/layout/GamingDeals";
-import HomeDeals from "@/components/layout/HomeDeals";
-import ElectronicDeals from "@/components/layout/ElectronicDeals";
-import DrinkDeals from "@/components/layout/DrinkDeals";
-import ComputingDeals from "@/components/layout/ComputingDeals";
 import ServicesSection from "@/components/layout/Service";
+import ShopCategories from "@/components/layout/ShopCategories";
 import Footer from "@/components/layout/Footer";
 
 const Shop = () => {
@@ -29,17 +20,15 @@ const Shop = () => {
       <TopSellers />
       <SponsoredProducts />
       <LimitedStockDeals />
-      <AppliancesDeals />
-      <Tv_Audio_Deals />
+
+      {/*
+        ShopCategories fetches GET /api/v1/marketspace/shop-homepage and renders
+        one carousel per category returned by the backend. Color-coding is
+        automatic based on category name/slug.
+      */}
+      <ShopCategories limitPerCategory={4} />
+
       <SuppliesSection />
-      <PhoneDeals />
-      <BeautyAndCosmeticsDeals />
-      <FashionDeals />
-      <GamingDeals />
-      <HomeDeals />
-      <ElectronicDeals />
-      <DrinkDeals />
-      <ComputingDeals />
       <Footer />
     </div>
   );

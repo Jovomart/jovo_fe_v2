@@ -781,7 +781,7 @@ function StepReview({
 // MAIN CHECKOUT PAGE
 // ─────────────────────────────────────────────────────────────
 export default function Checkout() {
-  const { items, subtotal, refetchCart, itemCount } = useCart();
+  const { items, subtotal, refetchCart, itemCount, loading: cartLoading } = useCart();
   const { user, loading: authLoading } = useContext(AuthContext) as any;
   const router = useRouter();
 
@@ -793,11 +793,13 @@ export default function Checkout() {
   const [successTotal, setSuccessTotal] = useState(0);
   const [paymentDone, setPaymentDone] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const paymentDoneRef = useRef(false);
+  const [paystackLoaded, setPaystackLoaded] = useState(false);
+  const [validatingCart, setValidatingCart] = useState(false);
   
-  const authTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const paymentDoneRef = useRef(false);
   const prevDeliveryIdRef = useRef<string | null>(null);
   const authCheckDoneRef = useRef(false);
+  const cartRedirectDoneRef = useRef(false);
 
   const goToStep = (n: number) => {
     setStep(n);
@@ -824,7 +826,34 @@ export default function Checkout() {
   const total = subtotal + deliveryCost;
   const currentlyPickup = !!selectedDelivery && isPickupOption(selectedDelivery);
 
-  // FIXED: Auth guard with ref to avoid setState directly in effect body
+  // Load Paystack script
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    if ((window as any).PaystackPop) {
+      setPaystackLoaded(true);
+      return;
+    }
+    
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => {
+      setPaystackLoaded(true);
+    };
+    script.onerror = () => {
+      console.error("Failed to load Paystack script");
+    };
+    document.body.appendChild(script);
+    
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Auth guard
   useEffect(() => {
     if (authCheckDoneRef.current) return;
     
@@ -843,6 +872,27 @@ export default function Checkout() {
     }
   }, [authLoading]);
 
+  // Check cart and redirect if empty
+  useEffect(() => {
+    if (checkingAuth || paymentDone || cartRedirectDoneRef.current) return;
+    if (!user) return;
+    
+    // Wait for cart to load
+    if (cartLoading) return;
+    
+    console.log("Cart items on checkout:", items.length);
+    console.log("Cart loading state:", cartLoading);
+    
+    if (items.length === 0) {
+      console.log("Cart is empty, redirecting to shop...");
+      cartRedirectDoneRef.current = true;
+      setCheckoutError("Your cart is empty. Redirecting you to shop...");
+      setTimeout(() => {
+        router.push("/shop");
+      }, 2000);
+    }
+  }, [items.length, cartLoading, checkingAuth, paymentDone, user, router]);
+
   useEffect(() => {
     if (checkingAuth || paymentDone) return;
     if (!user) {
@@ -850,9 +900,9 @@ export default function Checkout() {
       router.replace("/login");
       return;
     }
-    if (itemCount === 0) router.replace("/cart");
-  }, [user, itemCount, router, checkingAuth, paymentDone]);
+  }, [user, router, checkingAuth, paymentDone]);
 
+  // Fetch delivery options
   useEffect(() => {
     if (!user || items.length === 0) return;
     const fetch = async () => {
@@ -884,7 +934,7 @@ export default function Checkout() {
     fetch();
   }, [items, subtotal, user]);
 
-  // FIXED: Use setTimeout to avoid direct setState in effect
+  // Fetch pickup stations
   useEffect(() => {
     if (!selectedDelivery || !isPickupOption(selectedDelivery)) {
       return;
@@ -892,12 +942,10 @@ export default function Checkout() {
 
     const schoolId = user?.school_id || user?.schoolId;
     if (!schoolId) {
-      const timer = setTimeout(() => {
-        setPickupStationsError(
-          "No school linked to your account. Please update your profile to select a pickup station.",
-        );
-      }, 0);
-      return () => clearTimeout(timer);
+      setPickupStationsError(
+        "No school linked to your account. Please update your profile to select a pickup station.",
+      );
+      return;
     }
 
     const fetch = async () => {
@@ -922,55 +970,83 @@ export default function Checkout() {
     fetch();
   }, [selectedDelivery, user]);
 
- // FIXED: Add selectedDeliveryId to dependency array
-useEffect(() => {
-  if (prevDeliveryIdRef.current !== selectedDeliveryId) {
-    const timer1 = setTimeout(() => setSelectedStation(null), 0);
-    const timer2 = setTimeout(() => setPickupStations([]), 0);
-    const timer3 = setTimeout(() => setPickupStationsError(null), 0);
-    prevDeliveryIdRef.current = selectedDeliveryId;
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
-  }
-}, [selectedDeliveryId]); // ← Added selectedDeliveryId here
-
+  // Reset station when delivery changes
   useEffect(() => {
-    const s = document.createElement("script");
-    s.src = "https://js.paystack.co/v1/inline.js";
-    s.async = true;
-    document.body.appendChild(s);
-    return () => { try { document.body.removeChild(s); } catch {} };
-  }, []);
+    if (prevDeliveryIdRef.current !== selectedDeliveryId) {
+      setSelectedStation(null);
+      setPickupStations([]);
+      setPickupStationsError(null);
+      prevDeliveryIdRef.current = selectedDeliveryId;
+    }
+  }, [selectedDeliveryId]);
 
   const handleStationSelect = (station: PickupStation) => {
     setSelectedStation(station.id ? station : null);
   };
 
-  if (checkingAuth || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Checking authentication…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || (itemCount === 0 && !paymentDone)) return null;
-
   const handlePay = async () => {
-    if (!selectedDelivery) {
-      alert("Please select a delivery method");
+    // FIRST: Check frontend cart
+    if (!items || items.length === 0) {
+      setCheckoutError("Your cart is empty. Please add items before checkout.");
+      setTimeout(() => {
+        router.push("/shop");
+      }, 2000);
       return;
     }
+
+    console.log("Frontend cart items:", items.length);
+    console.log("Frontend subtotal:", subtotal);
+
+    if (!selectedDelivery) {
+      setCheckoutError("Please select a delivery method");
+      return;
+    }
+    
+    if (!paystackLoaded) {
+      setCheckoutError("Payment system is loading. Please try again in a moment.");
+      return;
+    }
+    
     setPaying(true);
     setCheckoutError(null);
+    setValidatingCart(true);
 
     try {
+      // STEP 1: Validate the cart with backend
+      console.log("Validating cart with backend...");
+      let validationResult;
+      try {
+        validationResult = await ApiService.validateCart();
+        console.log("Cart validation result:", validationResult);
+      } catch (validateErr: any) {
+        console.error("Cart validation error:", validateErr);
+        await refetchCart();
+        throw new Error("Unable to validate cart. Please refresh and try again.");
+      }
+      
+      const validationData = validationResult?.data || validationResult;
+      
+      // Check if backend cart is empty
+      const backendItems = validationData?.items || validationData?.data?.items || [];
+      if (backendItems.length === 0) {
+        console.error("Backend cart is empty but frontend has items");
+        await refetchCart();
+        throw new Error("Cart session expired. Please refresh the page and try again.");
+      }
+      
+      // Check if cart is valid
+      if (validationData?.valid === false || validationData?.data?.valid === false) {
+        const errors = validationData?.errors || validationData?.data?.errors || [];
+        const errorMsg = errors.length > 0 
+          ? errors.join(", ") 
+          : "Your cart has issues. Please review your items.";
+        throw new Error(errorMsg);
+      }
+      
+      console.log("Cart validation passed. Backend items:", backendItems.length);
+      setValidatingCart(false);
+      
+      // STEP 2: Prepare delivery details
       let deliveryStreetAddress: string;
       let deliveryCity: string;
       let deliveryState: string;
@@ -985,38 +1061,68 @@ useEffect(() => {
         deliveryState = selectedStation.state || user?.state || info.state || "";
         deliveryNotes = `Campus Pickup — ${selectedStation.name}${selectedStation.landmark ? ` (${selectedStation.landmark})` : ""}`;
       } else {
+        if (!info.address?.trim()) {
+          throw new Error("Delivery address is required");
+        }
+        if (!info.city?.trim()) {
+          throw new Error("City is required");
+        }
+        if (!info.state?.trim()) {
+          throw new Error("State is required");
+        }
         deliveryStreetAddress = info.address;
         deliveryCity = info.city;
         deliveryState = info.state;
         deliveryNotes = info.notes || undefined;
       }
 
-      const res = await ApiService.checkout({
+      // STEP 3: Call checkout
+      const checkoutParams = {
         delivery_street_address: deliveryStreetAddress,
         delivery_city: deliveryCity,
         delivery_state: deliveryState,
         delivery_country: info.country || "Nigeria",
         delivery_option_id: selectedDelivery.id,
         delivery_notes: deliveryNotes,
-      });
+      };
+
+      console.log("Checkout params:", checkoutParams);
+
+      const res = await ApiService.checkout(checkoutParams);
+      
+      console.log("Checkout response:", res);
 
       const result = res?.data || res;
       const { order_id, total_amount, payment_url } = result;
 
-      if (!payment_url) throw new Error("No payment URL returned. Please try again.");
+      if (!payment_url) {
+        throw new Error("No payment URL returned. Please try again.");
+      }
 
-      const accessCode = payment_url.split("/").pop();
+      // STEP 4: Initialize Paystack
+      const urlParts = payment_url.split("/");
+      const accessCode = urlParts[urlParts.length - 1];
+      
       if (!accessCode) {
         window.location.href = payment_url;
         return;
       }
 
-      const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "";
+      const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      
+      if (!paystackKey) {
+        throw new Error("Paystack public key is not configured.");
+      }
 
-      const handler = (window as any).PaystackPop.setup({
+      const PaystackPop = (window as any).PaystackPop;
+      
+      if (!PaystackPop) {
+        throw new Error("Paystack is not loaded. Please refresh the page and try again.");
+      }
+
+      const handler = PaystackPop.setup({
         key: paystackKey,
         access_code: accessCode,
-
         callback: async (response: { reference: string }) => {
           try {
             await ApiService.verifyPayment(response.reference);
@@ -1034,7 +1140,6 @@ useEffect(() => {
             router.push(`/orders?ref=${order_id}`);
           }
         },
-
         onClose: () => {
           setPaying(false);
           router.push(`/orders?ref=${order_id}`);
@@ -1044,9 +1149,28 @@ useEffect(() => {
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
-      const msg = err?.message ?? "Checkout failed. Please try again.";
-      setCheckoutError(msg);
-      console.error("Checkout error:", err);
+      setValidatingCart(false);
+      
+      let errorMsg = err?.message ?? "Checkout failed. Please try again.";
+      
+      if (err?.response?.data?.detail?.message) {
+        errorMsg = err.response.data.detail.message;
+      } else if (err?.detail?.message) {
+        errorMsg = err.detail.message;
+      } else if (err?.message?.includes("401") || err?.message?.includes("Authentication")) {
+        errorMsg = "Please log in again to complete your purchase.";
+        setTimeout(() => {
+          router.push("/login?redirect=/cart/checkout");
+        }, 2000);
+      } else if (errorMsg.includes("empty")) {
+        errorMsg = "Your cart is empty. Redirecting you to shop...";
+        setTimeout(() => {
+          router.push("/shop");
+        }, 2000);
+      }
+      
+      setCheckoutError(errorMsg);
+      console.error("Checkout error details:", err);
     }
   };
 
@@ -1056,6 +1180,20 @@ useEffect(() => {
     paymentDoneRef.current = false;
     router.push(`/orders?ref=${successOrderId}`);
   };
+
+  // Show loading while checking auth or cart
+  if (checkingAuth || authLoading || (cartLoading && !paymentDone)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Loading your cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (itemCount === 0 && !paymentDone)) return null;
 
   return (
     <>
@@ -1095,6 +1233,16 @@ useEffect(() => {
 
         <div className="max-w-3xl mx-auto px-4 md:px-8 py-8">
           <StepBar current={step} />
+
+          {validatingCart && (
+            <div
+              className="flex items-center gap-2 p-4 mb-6 bg-blue-50 border border-blue-100 rounded-2xl text-sm text-blue-600"
+              style={{ animation: "fadeUp 0.3s ease both" }}
+            >
+              <FiLoader size={16} className="animate-spin shrink-0" />
+              <span>Validating your cart...</span>
+            </div>
+          )}
 
           {checkoutError && (
             <div

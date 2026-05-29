@@ -1,7 +1,6 @@
 "use client";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   FiShoppingCart,
@@ -14,12 +13,12 @@ import {
   FiTruck,
   FiRefreshCw,
   FiX,
-  FiCheck,
   FiAlertCircle,
   FiLock,
   FiZap,
   FiArrowLeft,
   FiLoader,
+  FiPercent,
 } from "react-icons/fi";
 import { useCart, CartItem } from "@/context/CartContext";
 import { AuthContext } from "@/context/AuthContext";
@@ -27,9 +26,6 @@ import Footer from "@/components/layout/Footer";
 
 const fmt = (n: number) => `₦${n.toLocaleString()}`;
 
-// ─────────────────────────────────────────────────────────────
-// CART ITEM CARD
-// ─────────────────────────────────────────────────────────────
 function CartItemCard({
   item,
   index,
@@ -48,6 +44,9 @@ function CartItemCard({
   const [localLoading, setLocalLoading] = useState(false);
 
   const busy = disabled || localLoading;
+  const hasDiscount = item.is_on_sale && item.discount_percentage && item.discount_percentage > 0;
+  const originalPrice = item.original_price || item.price;
+  const discountPercent = item.discount_percentage;
 
   const handleRemove = async () => {
     setExiting(true);
@@ -55,7 +54,6 @@ function CartItemCard({
     try {
       await onRemove(item.product_id);
     } catch {
-      // CartContext already set error; reverse animation
       setExiting(false);
     } finally {
       setLocalLoading(false);
@@ -64,8 +62,8 @@ function CartItemCard({
 
   const handleQty = async (dir: "up" | "down") => {
     if (busy) return;
-    const newQty =
-      dir === "up" ? item.quantity + 1 : item.quantity - 1;
+    const newQty = dir === "up" ? item.quantity + 1 : item.quantity - 1;
+    if (newQty < 1) return;
     setQtyAnim(dir);
     setTimeout(() => setQtyAnim(null), 280);
     setLocalLoading(true);
@@ -89,7 +87,6 @@ function CartItemCard({
       }}
     >
       <div className="flex gap-4 p-4 sm:p-5">
-        {/* Thumbnail */}
         <div className="relative shrink-0">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
             <Image
@@ -98,6 +95,7 @@ function CartItemCard({
               width={112}
               height={112}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="eager"
             />
           </div>
           {!item.is_in_stock && (
@@ -105,9 +103,13 @@ function CartItemCard({
               Out of stock
             </span>
           )}
+          {hasDiscount && discountPercent && (
+            <span className="absolute -bottom-1.5 -right-1.5 text-[9px] font-black text-white px-1.5 py-0.5 rounded-full bg-red-500 flex items-center gap-0.5">
+              <FiPercent size={8} /> {Math.round(discountPercent)}% OFF
+            </span>
+          )}
         </div>
 
-        {/* Details */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -121,7 +123,6 @@ function CartItemCard({
               className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-300
                          hover:text-red-500 hover:bg-red-50 transition-all duration-200
                          opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:cursor-not-allowed"
-              title="Remove item"
             >
               {localLoading ? (
                 <FiLoader size={13} className="animate-spin" />
@@ -131,36 +132,30 @@ function CartItemCard({
             </button>
           </div>
 
-          {/* Price */}
           <div className="flex items-center gap-2 mt-auto flex-wrap">
             <span className="text-base font-black text-gray-900">
               {fmt(item.price)}
             </span>
+            {hasDiscount && originalPrice > item.price && (
+              <span className="text-xs text-gray-400 line-through">
+                {fmt(originalPrice)}
+              </span>
+            )}
           </div>
 
-          {/* Qty stepper + line total */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center rounded-2xl border border-gray-200 overflow-hidden bg-gray-50">
               <button
                 onClick={() => handleQty("down")}
                 disabled={busy}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40"
               >
-                {item.quantity === 1 ? (
-                  <FiTrash2 size={12} />
-                ) : (
-                  <FiMinus size={12} />
-                )}
+                <FiMinus size={12} />
               </button>
               <span
-                className="w-9 text-center text-sm font-black text-gray-800 select-none transition-all duration-200 inline-block"
+                className="w-9 text-center text-sm font-black text-gray-800 select-none transition-all duration-200"
                 style={{
-                  transform:
-                    qtyAnim === "up"
-                      ? "scale(1.35)"
-                      : qtyAnim === "down"
-                        ? "scale(0.75)"
-                        : "scale(1)",
+                  transform: qtyAnim === "up" ? "scale(1.35)" : qtyAnim === "down" ? "scale(0.75)" : "scale(1)",
                   color: qtyAnim ? "#B42225" : undefined,
                 }}
               >
@@ -169,31 +164,24 @@ function CartItemCard({
               <button
                 onClick={() => handleQty("up")}
                 disabled={busy || item.quantity >= item.stock_available}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors disabled:opacity-30"
               >
                 <FiPlus size={12} />
               </button>
             </div>
-
             <p className="text-xs text-gray-400">
-              Line total:{" "}
-              <span className="text-[#B42225] font-bold">
-                {fmt(item.subtotal)}
-              </span>
+              Total: <span className="text-[#B42225] font-bold">{fmt(item.subtotal)}</span>
             </p>
           </div>
 
-          {/* Out of stock warning */}
           {!item.is_in_stock && (
             <p className="text-xs text-red-500 font-medium flex items-center gap-1">
-              <FiAlertCircle size={11} /> This item is out of stock and won't
-              be included at checkout.
+              <FiAlertCircle size={11} /> Out of stock
             </p>
           )}
         </div>
       </div>
 
-      {/* Hover accent bar */}
       <div
         className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full transition-all duration-500 rounded-full"
         style={{ background: "linear-gradient(90deg,#B42225,#FF8C00)" }}
@@ -202,42 +190,19 @@ function CartItemCard({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// EMPTY STATE
-// ─────────────────────────────────────────────────────────────
 function EmptyCart() {
   return (
-    <div
-      className="flex flex-col items-center justify-center py-4 text-center col-span-full"
-      style={{ animation: "fadeUp 0.6s ease both" }}
-    >
-      <div
-        className="w-32 h-32 rounded-full flex items-center justify-center mb-6"
-        style={{
-          background: "linear-gradient(135deg,#FEF2F2,#FFF7ED)",
-          animation: "floatBounce 3s ease-in-out infinite",
-        }}
-      >
+    <div className="flex flex-col items-center justify-center py-4 text-center col-span-full">
+      <div className="w-32 h-32 rounded-full flex items-center justify-center mb-6 bg-gradient-to-br from-red-50 to-orange-50">
         <FiShoppingCart size={52} className="text-[#B42225] opacity-60" />
       </div>
-      <h2
-        className="text-2xl font-black text-gray-800 mb-2"
-        style={{ fontFamily: "'Georgia', serif" }}
-      >
-        Your cart is empty
-      </h2>
-      <p className="text-gray-400 text-sm max-w-xs mb-8 leading-relaxed">
-        Looks like you haven't added anything yet. Explore thousands of deals
-        waiting for you.
+      <h2 className="text-2xl font-black text-gray-800 mb-2">Your cart is empty</h2>
+      <p className="text-gray-400 text-sm max-w-xs mb-8">
+        Looks like you haven't added anything yet.
       </p>
       <Link
         href="/shop"
-        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-white text-sm
-                   transition-all hover:scale-105 active:scale-95 shadow-xl"
-        style={{
-          background: "linear-gradient(135deg,#B42225,#FF8C00)",
-          boxShadow: "0 8px 30px rgba(180,34,37,0.35)",
-        }}
+        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-white text-sm bg-gradient-to-r from-[#B42225] to-[#FF8C00] hover:scale-105 transition"
       >
         <FiZap size={16} /> Shop Now
       </Link>
@@ -245,77 +210,31 @@ function EmptyCart() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// AUTH PROMPT MODAL
-// ─────────────────────────────────────────────────────────────
 function AuthPrompt({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        background: "rgba(0,0,0,0.7)",
-        backdropFilter: "blur(8px)",
-        animation: "fadeUp 0.3s ease both",
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-sm bg-white rounded-3xl p-8 text-center relative"
-        style={{
-          boxShadow: "0 40px 80px rgba(0,0,0,0.25)",
-          animation: "scaleIn 0.3s cubic-bezier(.34,1.56,.64,1) both",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition"
-        >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-sm bg-white rounded-3xl p-8 text-center relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
           <FiX size={16} />
         </button>
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}
-        >
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-gradient-to-r from-[#B42225] to-[#FF8C00]">
           <FiLock size={28} className="text-white" />
         </div>
-        <h3
-          className="text-xl font-black text-gray-900 mb-2"
-          style={{ fontFamily: "'Georgia', serif" }}
-        >
-          Sign in to continue
-        </h3>
-        <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-          Create an account or sign in to securely complete your purchase on
-          Jovo.
-        </p>
+        <h3 className="text-xl font-black text-gray-900 mb-2">Sign in to continue</h3>
+        <p className="text-gray-400 text-sm mb-6">Create an account or sign in to complete your purchase.</p>
         <div className="flex flex-col gap-3">
-          <button
-            onClick={() => router.push("/login?redirect=/checkout")}
-            className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95"
-            style={{
-              background: "linear-gradient(135deg,#B42225,#FF8C00)",
-              boxShadow: "0 8px 24px rgba(180,34,37,0.35)",
-            }}
-          >
+          <Link href="/login?redirect=/checkout" className="w-full py-3.5 rounded-2xl font-black text-white text-sm bg-gradient-to-r from-[#B42225] to-[#FF8C00]">
             Sign In
-          </button>
-          <button
-            onClick={() => router.push("/register?redirect=/checkout")}
-            className="w-full py-3.5 rounded-2xl font-black text-[#B42225] text-sm border-2 border-[#B42225] hover:bg-[#B42225] hover:text-white transition-all"
-          >
+          </Link>
+          <Link href="/register?redirect=/checkout" className="w-full py-3.5 rounded-2xl font-black text-[#B42225] text-sm border-2 border-[#B42225] hover:bg-[#B42225] hover:text-white transition">
             Create Account
-          </button>
+          </Link>
         </div>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// MAIN CART PAGE
-// ─────────────────────────────────────────────────────────────
 export default function Cart() {
   const {
     items,
@@ -327,22 +246,42 @@ export default function Cart() {
     loading,
     operationLoading,
     error,
+    syncCartPrices,
+    refetchCart,
   } = useCart();
   const { user } = useContext(AuthContext);
-  const router = useRouter();
 
   const [showClear, setShowClear] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [initialSyncDone, setInitialSyncDone] = useState(false);
+  const [initialSyncLoading, setInitialSyncLoading] = useState(true);
+
+  // Sync prices ONCE when cart loads - BEFORE showing the cart
+  useEffect(() => {
+    const syncPricesOnLoad = async () => {
+      if (loading) return; // Wait for initial cart load
+      if (initialSyncDone) return; // Only sync once
+      
+      setInitialSyncLoading(true);
+      try {
+        await syncCartPrices();
+      } catch (err) {
+        console.error("Failed to sync cart prices:", err);
+      } finally {
+        setInitialSyncLoading(false);
+        setInitialSyncDone(true);
+      }
+    };
+    
+    syncPricesOnLoad();
+  }, [loading, syncCartPrices, initialSyncDone]);
 
   const handleClearCart = async () => {
     setClearing(true);
-    try {
-      await clearCart();
-    } finally {
-      setClearing(false);
-      setShowClear(false);
-    }
+    await clearCart();
+    setClearing(false);
+    setShowClear(false);
   };
 
   const handleCheckout = () => {
@@ -350,82 +289,49 @@ export default function Cart() {
       setShowAuth(true);
       return;
     }
-    router.push("/cart/checkout");
+    window.location.href = "/checkout";
   };
 
-  // Show full-page skeleton while initial cart is loading
-  if (loading && !items.length) {
+  // Show loading spinner while syncing prices (so user never sees wrong price)
+  if (loading || initialSyncLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F7F8FC]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Loading your cart…</p>
+          <p className="text-gray-500 text-sm">Loading your cart...</p>
         </div>
       </div>
     );
   }
 
+  if (!user && itemCount === 0) return null;
+
   return (
     <>
       <style>{`
-        @keyframes cartItemIn  { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes cartItemIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
         @keyframes cartItemOut { to{opacity:0;transform:translateX(30px) scale(.96);max-height:0;padding:0;margin:0} }
-        @keyframes fadeUp      { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes floatBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
-        @keyframes scaleIn     { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
       {showAuth && <AuthPrompt onClose={() => setShowAuth(false)} />}
 
-      <div className="min-h-screen" style={{ background: "#F7F8FC" }}>
-        {/* ── TOP BANNER ── */}
-        <div
-          className="relative overflow-hidden py-8 md:py-11"
-          style={{
-            background:
-              "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
-          }}
-        >
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
-              backgroundSize: "28px 28px",
-            }}
-          />
-          <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors"
-            >
+      <div className="min-h-screen bg-[#F7F8FC]">
+        <div className="relative overflow-hidden py-8 md:py-11 bg-gradient-to-r from-[#0d0d0d] via-[#1c0202] to-[#B42225]">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <Link href="/shop" className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4">
               <FiArrowLeft size={14} /> Continue Shopping
             </Link>
             <div className="flex items-end gap-4 flex-wrap">
               <div>
-                <h1
-                  className="text-3xl md:text-4xl font-black text-white"
-                  style={{ fontFamily: "'Georgia',serif" }}
-                >
-                  My Cart
-                </h1>
+                <h1 className="text-3xl md:text-4xl font-black text-white">My Cart</h1>
                 <p className="text-white/50 text-sm mt-1">
-                  {itemCount > 0
-                    ? `${itemCount} item${itemCount > 1 ? "s" : ""} ready for checkout`
-                    : "Your cart is waiting to be filled"}
+                  {itemCount > 0 ? `${itemCount} item${itemCount > 1 ? "s" : ""}` : "Your cart is empty"}
                 </p>
               </div>
               {itemCount > 0 && (
                 <div className="ml-auto">
-                  <div
-                    className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white"
-                    style={{
-                      background: "rgba(255,255,255,0.12)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                  >
-                    <FiShoppingCart size={16} />
-                    {fmt(subtotal)}
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white bg-white/20 backdrop-blur">
+                    <FiShoppingCart size={16} /> {fmt(subtotal)}
                   </div>
                 </div>
               )}
@@ -433,12 +339,10 @@ export default function Cart() {
           </div>
         </div>
 
-        {/* ── ERROR BANNER ── */}
         {error && (
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
-              <FiAlertCircle size={15} className="shrink-0" />
-              {error}
+              <FiAlertCircle size={15} /> {error}
             </div>
           </div>
         )}
@@ -447,63 +351,36 @@ export default function Cart() {
           {itemCount === 0 ? (
             <EmptyCart />
           ) : (
-            <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
-              {/* ── LEFT: ITEMS ── */}
+            <div className="grid lg:grid-cols-[1fr_380px] gap-6">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-black text-gray-800">
-                    Cart Items{" "}
-                    <span className="text-gray-400 font-semibold">
-                      ({itemCount})
-                    </span>
-                  </h2>
+                  <h2 className="text-base font-black text-gray-800">Cart Items ({itemCount})</h2>
                   <button
                     onClick={() => setShowClear(true)}
                     disabled={operationLoading || clearing}
-                    className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 disabled:opacity-50"
+                    className="text-xs font-bold text-gray-400 hover:text-red-500 flex items-center gap-1"
                   >
                     <FiTrash2 size={12} /> Clear all
                   </button>
                 </div>
 
-                {/* Clear confirm */}
                 {showClear && (
-                  <div
-                    className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-red-100"
-                    style={{
-                      boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
-                      animation: "fadeUp 0.3s ease both",
-                    }}
-                  >
+                  <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-red-100">
                     <FiAlertCircle size={18} className="text-red-500 shrink-0" />
-                    <p className="text-sm text-gray-700 flex-1 font-medium">
-                      Remove all items from your cart?
-                    </p>
-                    <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => setShowClear(false)}
-                        className="text-xs font-bold text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleClearCart}
-                        disabled={clearing}
-                        className="text-xs font-bold text-white px-3 py-1.5 rounded-xl transition flex items-center gap-1 disabled:opacity-60"
-                        style={{
-                          background: "linear-gradient(135deg,#B42225,#FF6B00)",
-                        }}
-                      >
-                        {clearing ? (
-                          <FiLoader size={11} className="animate-spin" />
-                        ) : null}
-                        Clear Cart
-                      </button>
-                    </div>
+                    <p className="text-sm text-gray-700 flex-1 font-medium">Remove all items from your cart?</p>
+                    <button onClick={() => setShowClear(false)} className="text-xs font-bold text-gray-500 px-3 py-1.5 rounded-xl hover:bg-gray-100">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleClearCart}
+                      disabled={clearing}
+                      className="text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#B42225] to-[#FF6B00]"
+                    >
+                      {clearing ? <FiLoader size={11} className="animate-spin" /> : "Clear Cart"}
+                    </button>
                   </div>
                 )}
 
-                {/* Items list */}
                 <div className="flex flex-col gap-3">
                   {items.map((item, i) => (
                     <CartItemCard
@@ -518,103 +395,30 @@ export default function Cart() {
                 </div>
               </div>
 
-              {/* ── RIGHT: SUMMARY ── */}
               <div className="flex flex-col gap-4 lg:sticky lg:top-24">
-                {/* Order summary */}
-                <div
-                  className="bg-white rounded-3xl p-6"
-                  style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-                >
-                  <h3
-                    className="text-base font-black text-gray-900 mb-5"
-                    style={{ fontFamily: "'Georgia',serif" }}
-                  >
-                    Order Summary
-                  </h3>
-
+                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                  <h3 className="text-base font-black text-gray-900 mb-5">Order Summary</h3>
                   <div className="space-y-3 mb-5">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">
-                        Subtotal ({itemCount} items)
-                      </span>
-                      <span className="font-bold text-gray-800">
-                        {fmt(subtotal)}
-                      </span>
+                      <span className="text-gray-500">Subtotal ({itemCount} items)</span>
+                      <span className="font-bold text-gray-800">{fmt(subtotal)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 flex items-center gap-1.5">
-                        <FiTruck size={13} /> Delivery fee
-                      </span>
-                      <span className="text-gray-400 font-medium text-xs">
-                        Calculated at checkout
-                      </span>
+                      <span className="text-gray-500 flex items-center gap-1.5"><FiTruck size={13} /> Delivery fee</span>
+                      <span className="text-gray-400 text-xs">Calculated at checkout</span>
                     </div>
                     <div className="border-t border-dashed border-gray-200 pt-3 flex items-center justify-between">
-                      <span className="font-black text-gray-900">
-                        Estimated Total
-                      </span>
-                      <span className="text-xl font-black text-[#B42225]">
-                        {fmt(subtotal)}
-                      </span>
+                      <span className="font-black text-gray-900">Estimated Total</span>
+                      <span className="text-xl font-black text-[#B42225]">{fmt(subtotal)}</span>
                     </div>
                   </div>
-
                   <button
                     onClick={handleCheckout}
                     disabled={operationLoading || loading}
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{
-                      background: "linear-gradient(135deg,#B42225,#FF8C00)",
-                      boxShadow: "0 8px 30px rgba(180,34,37,0.4)",
-                    }}
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-white text-sm bg-gradient-to-r from-[#B42225] to-[#FF8C00] hover:scale-105 transition disabled:opacity-50"
                   >
-                    <FiLock size={15} />
-                    Proceed to Checkout
-                    <FiChevronRight size={15} />
+                    <FiLock size={15} /> Proceed to Checkout <FiChevronRight size={15} />
                   </button>
-
-                  <p className="text-center text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
-                    <FiShield size={11} /> Secured with SSL encryption
-                  </p>
-                </div>
-
-                {/* Trust badges */}
-                <div
-                  className="bg-white rounded-3xl p-5"
-                  style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-                >
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      {
-                        icon: <FiShield size={18} className="text-green-500" />,
-                        label: "Secure",
-                        sub: "SSL protected",
-                      },
-                      {
-                        icon: <FiTruck size={18} className="text-blue-500" />,
-                        label: "Fast",
-                        sub: "Quick delivery",
-                      },
-                      {
-                        icon: (
-                          <FiRefreshCw size={18} className="text-purple-500" />
-                        ),
-                        label: "Returns",
-                        sub: "7-day policy",
-                      },
-                    ].map(({ icon, label, sub }) => (
-                      <div
-                        key={label}
-                        className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gray-50 text-center"
-                      >
-                        {icon}
-                        <p className="text-[11px] font-black text-gray-700">
-                          {label}
-                        </p>
-                        <p className="text-[10px] text-gray-400">{sub}</p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>

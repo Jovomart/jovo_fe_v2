@@ -125,6 +125,7 @@ class ApiService {
       "/cart/remove",
       "/cart/update",
       "/cart/validate",
+      "/marketspace", // ✅ Fixed: was "/api/v1/marketspace"
     ];
 
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
@@ -151,7 +152,7 @@ class ApiService {
       const response = await fetch(url, config);
       let data: any;
       const text = await response.text();
-      
+
       try {
         data = JSON.parse(text);
       } catch {
@@ -179,12 +180,12 @@ class ApiService {
             "Authentication required",
         );
       }
-      
+
       if (!response.ok) {
         const errorMessage = this.extractErrorMessage(data, response.status);
         throw new Error(errorMessage);
       }
-      
+
       return data;
     } catch (error: any) {
       if (error.name === "TypeError" && error.message.includes("fetch"))
@@ -402,6 +403,52 @@ class ApiService {
     );
     return this.makeRequest(
       `/category/subcategory/get-subcategory/${encodeURIComponent(subcategory_id)}?${params.toString()}`,
+      { method: "GET" },
+    );
+  }
+
+  // ─── MARKETSPACE ───────────────────────────────────────────────────────────
+
+  async getShopHomepage(limitPerCategory = 4, includeEmpty = false) {
+    const params = new URLSearchParams({
+      limit_per_category: String(limitPerCategory),
+      include_empty: String(includeEmpty),
+    });
+    return this.makeRequest(
+      `/marketspace/shop-homepage?${params.toString()}`, // ✅ Fixed: removed /api/v1 prefix
+      { method: "GET" },
+    );
+  }
+
+  async getCategoryMarketspace(
+    categoryId: string,
+    params?: {
+      subcategory_id?: string | null;
+      min_price?: number | null;
+      max_price?: number | null;
+      condition?: string | null;
+      brand?: string | null;
+      on_sale?: boolean | null;
+      search?: string | null;
+      sort_by?: "newest" | "price_asc" | "price_desc" | "most_popular" | "top_rated";
+      limit?: number;
+      offset?: number;
+    },
+  ) {
+    const q = new URLSearchParams();
+    if (params?.subcategory_id) q.append("subcategory_id", params.subcategory_id);
+    if (params?.min_price != null) q.append("min_price", String(params.min_price));
+    if (params?.max_price != null) q.append("max_price", String(params.max_price));
+    if (params?.condition) q.append("condition", params.condition);
+    if (params?.brand) q.append("brand", params.brand);
+    if (params?.on_sale != null) q.append("on_sale", String(params.on_sale));
+    if (params?.search) q.append("search", params.search);
+    if (params?.sort_by) q.append("sort_by", params.sort_by);
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    if (params?.offset != null) q.append("offset", String(params.offset));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/marketspace/category/${encodeURIComponent(categoryId)}${qs ? `?${qs}` : ""}`, // ✅ Fixed: removed /api/v1 prefix
       { method: "GET" },
     );
   }
@@ -972,6 +1019,47 @@ class ApiService {
       { method: "GET" },
     );
   }
+
+// ─── PRODUCT REVIEWS ─────────────────────────────────────────────────────────
+
+async getProductReviews(productId: string, params?: {
+  rating?: number | null;
+  is_verified?: boolean | null;
+  page?: number;
+  per_page?: number;
+}) {
+  const q = new URLSearchParams();
+  if (params?.rating != null) q.append("rating", String(params.rating));
+  if (params?.is_verified != null) q.append("is_verified", String(params.is_verified));
+  if (params?.page != null) q.append("page", String(params.page));
+  if (params?.per_page != null) q.append("per_page", String(params.per_page));
+  const qs = q.toString();
+  return this.makeRequest(
+    `/reviews/product/${encodeURIComponent(productId)}${qs ? `?${qs}` : ""}`,
+    { method: "GET" }
+  );
+}
+
+async createProductReview(data: {
+  product_id: string;
+  rating: number;
+  comment: string;
+}) {
+  return this.makeRequest("/user/reviews/product", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+async updateProductReview(review_id: string, data: {
+  rating?: number;
+  comment?: string;
+}) {
+  return this.makeRequest(`/user/reviews/${review_id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
 
   logout() {
     this.clearTokens();

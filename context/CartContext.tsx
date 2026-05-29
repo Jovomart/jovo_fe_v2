@@ -1,7 +1,4 @@
 "use client";
-// NOTE: CartProvider must be rendered INSIDE AuthProvider in your layout.
-// e.g. <AuthProvider><CartProvider>{children}</CartProvider></AuthProvider>
-
 import {
   createContext,
   useContext,
@@ -15,58 +12,46 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import ApiService from "@/services/apiService";
 
-// ─── Types — match the backend cart API response shape ────────────────────────
-
 export interface CartItem {
-  product_id: string;       // UUID string from backend
+  product_id: string;
   name: string;
   price: number;
+  original_price?: number;
+  discount_percentage?: number;
+  is_on_sale?: boolean;
   image_url: string;
   quantity: number;
-  subtotal: number;         // price × quantity, computed by backend
+  subtotal: number;
   stock_available: number;
   is_in_stock: boolean;
 }
 
 export interface CartData {
   items: CartItem[];
-  total_items: number;      // sum of all quantities
-  total_price: number;      // sum of all subtotals
+  total_items: number;
+  total_price: number;
 }
 
-// ─── Delivery info type (used by checkout page) ───────────────────────────────
-export interface DeliveryInfo {
-  fullName: string;
-  phone: string;
-  email: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  notes?: string;
-}
-
-// ─── Context shape ────────────────────────────────────────────────────────────
 interface CartContextType {
   cartData: CartData | null;
   items: CartItem[];
   itemCount: number;
   subtotal: number;
   loading: boolean;
-  operationLoading: boolean; // true while an add/remove/update call is in flight
+  operationLoading: boolean;
   error: string | null;
-  recentlyAdded: string | null; // product_id of the most recently added item
+  recentlyAdded: string | null;
   addToCart: (product_id: string, qty?: number) => Promise<void>;
   removeFromCart: (product_id: string) => Promise<void>;
   updateQuantity: (product_id: string, qty: number) => Promise<void>;
   clearCart: () => Promise<void>;
   validateCart: () => Promise<any>;
+  syncCartPrices: () => Promise<boolean>;
   isInCart: (product_id: string) => boolean;
   getItemQuantity: (product_id: string) => number;
   refetchCart: () => Promise<void>;
 }
 
-// ─── Defaults (used before context is available — should never happen in practice) ──
 const defaultValues: CartContextType = {
   cartData: null,
   items: [],
@@ -81,6 +66,7 @@ const defaultValues: CartContextType = {
   updateQuantity: async () => {},
   clearCart: async () => {},
   validateCart: async () => null,
+  syncCartPrices: async () => false,
   isInCart: () => false,
   getItemQuantity: () => 0,
   refetchCart: async () => {},
@@ -88,24 +74,48 @@ const defaultValues: CartContextType = {
 
 export const CartContext = createContext<CartContextType>(defaultValues);
 
-// ─── Guest session ID helpers ─────────────────────────────────────────────────
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
   let sid = localStorage.getItem("guest_session_id");
   if (!sid) {
-    sid =
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `guest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    sid = typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `guest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     localStorage.setItem("guest_session_id", sid);
   }
   return sid;
 }
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
+// Fetch current product prices from shop-homepage
+async function fetchCurrentProductPrices(): Promise<Map<string, { price: number; original_price: number; discount_percentage: number; is_on_sale: boolean; name: string; image_url: string }>> {
+  const priceMap = new Map();
+  try {
+    const homepageData = await ApiService.getShopHomepage(20, false);
+    const categoriesData = homepageData?.data || homepageData;
+    const categories = Array.isArray(categoriesData) 
+      ? categoriesData 
+      : (categoriesData?.categories || []);
+    
+    for (const category of categories) {
+      const products = category?.products || [];
+      for (const product of products) {
+        priceMap.set(product.id, {
+          price: product.current_price,
+          original_price: product.product_original_price,
+          discount_percentage: product.discount_percentage,
+          is_on_sale: product.is_on_sale,
+          name: product.product_name,
+          image_url: product.product_images?.[0] || "",
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch current prices:", err);
+  }
+  return priceMap;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  // Wait for auth to resolve before fetching cart so we don't do a
-  // spurious guest fetch for an already-logged-in user on page load.
   const { user, loading: authLoading } = useAuth();
 
   const [cartData, setCartData] = useState<CartData | null>(null);
@@ -114,16 +124,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
 
-  // FIX: Use ref to prevent multiple fetch calls
   const hasFetchedRef = useRef(false);
 
-  // ── Fetch cart from backend ──────────────────────────────────────────────
   const fetchCart = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Authenticated users: backend identifies cart by their JWT.
-      // Guest users: we pass the session_id query param.
       const sessionId = user ? undefined : getOrCreateSessionId();
       const res = await ApiService.getCart(sessionId);
       const payload: CartData = res?.data ?? {
@@ -133,95 +139,141 @@ export function CartProvider({ children }: { children: ReactNode }) {
       };
       setCartData(payload);
     } catch (err: any) {
-      // A failed cart fetch is non-fatal — show empty cart, log the error.
       console.error("CartContext: failed to fetch cart", err);
       setError(err?.message ?? "Failed to load cart");
       setCartData({ items: [], total_items: 0, total_price: 0 });
     } finally {
       setLoading(false);
     }
-  }, [user]); // re-create when user changes so auth state is fresh
+  }, [user]);
 
-  // ── Fetch cart once auth has resolved ──────────────────────────────────
-useEffect(() => {
-  if (authLoading) return;
-  if (!hasFetchedRef.current) {
-    hasFetchedRef.current = true;
-    const timer = setTimeout(() => fetchCart(), 0);
-    return () => clearTimeout(timer);
-  }
-}, [fetchCart, authLoading]);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      const timer = setTimeout(() => fetchCart(), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [fetchCart, authLoading]);
 
-  // ── Clear recentlyAdded badge after 3 s ──────────────────────────────────
   useEffect(() => {
     if (!recentlyAdded) return;
     const t = setTimeout(() => setRecentlyAdded(null), 3000);
     return () => clearTimeout(t);
   }, [recentlyAdded]);
 
-  // ─── Cart mutations ────────────────────────────────────────────────────────
-
-  const addToCart = useCallback(
-    async (product_id: string, qty = 1) => {
-      setOperationLoading(true);
-      setError(null);
-      try {
-        const sessionId = user ? undefined : getOrCreateSessionId();
-        await ApiService.addToCart(product_id, qty, sessionId);
-        setRecentlyAdded(product_id);
-        await fetchCart();
-      } catch (err: any) {
-        const msg = err?.message ?? "Failed to add item to cart";
-        setError(msg);
-        throw new Error(msg); // re-throw so the caller (product page) can react
-      } finally {
-        setOperationLoading(false);
+  // Sync cart prices and update frontend directly
+  const syncCartPrices = useCallback(async (): Promise<boolean> => {
+    if (!cartData?.items.length) return false;
+    
+    setOperationLoading(true);
+    let hasUpdates = false;
+    
+    try {
+      // Fetch all current product prices at once
+      const currentPrices = await fetchCurrentProductPrices();
+      const sessionId = user ? undefined : getOrCreateSessionId();
+      
+      // Create updated items array
+      const updatedItems = [...cartData.items];
+      
+      for (let i = 0; i < updatedItems.length; i++) {
+        const item = updatedItems[i];
+        const currentPriceData = currentPrices.get(item.product_id);
+        
+        if (currentPriceData && currentPriceData.price !== item.price) {
+          console.log(`Price changed for ${item.product_id}: ${item.price} -> ${currentPriceData.price}`);
+          hasUpdates = true;
+          
+          // Update the item with new price data
+          updatedItems[i] = {
+            ...item,
+            price: currentPriceData.price,
+            original_price: currentPriceData.original_price,
+            discount_percentage: currentPriceData.discount_percentage,
+            is_on_sale: currentPriceData.is_on_sale,
+            subtotal: currentPriceData.price * item.quantity,
+            name: currentPriceData.name || item.name,
+            image_url: currentPriceData.image_url || item.image_url,
+          };
+          
+          // Also update on backend
+          try {
+            await ApiService.updateCartItem(item.product_id, item.quantity, sessionId);
+          } catch (err) {
+            console.error(`Failed to update backend for ${item.product_id}:`, err);
+          }
+        }
       }
-    },
-    [user, fetchCart],
-  );
-
-  const removeFromCart = useCallback(
-    async (product_id: string) => {
-      setOperationLoading(true);
-      setError(null);
-      try {
-        const sessionId = user ? undefined : getOrCreateSessionId();
-        await ApiService.removeCartItem(product_id, sessionId);
-        await fetchCart();
-      } catch (err: any) {
-        const msg = err?.message ?? "Failed to remove item";
-        setError(msg);
-        throw new Error(msg);
-      } finally {
-        setOperationLoading(false);
+      
+      // Update local state with new prices
+      if (hasUpdates) {
+        const newTotalPrice = updatedItems.reduce((sum, item) => sum + item.subtotal, 0);
+        const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+        
+        setCartData({
+          items: updatedItems,
+          total_items: newTotalItems,
+          total_price: newTotalPrice,
+        });
       }
-    },
-    [user, fetchCart],
-  );
+    } catch (err) {
+      console.error("Failed to sync cart prices:", err);
+    } finally {
+      setOperationLoading(false);
+    }
+    
+    return hasUpdates;
+  }, [cartData?.items, user]);
 
-  /**
-   * Update an item's quantity.
-   * Passing qty = 0 removes the item (the backend supports this).
-   */
-  const updateQuantity = useCallback(
-    async (product_id: string, qty: number) => {
-      setOperationLoading(true);
-      setError(null);
-      try {
-        const sessionId = user ? undefined : getOrCreateSessionId();
-        await ApiService.updateCartItem(product_id, qty, sessionId);
-        await fetchCart();
-      } catch (err: any) {
-        const msg = err?.message ?? "Failed to update quantity";
-        setError(msg);
-        throw new Error(msg);
-      } finally {
-        setOperationLoading(false);
-      }
-    },
-    [user, fetchCart],
-  );
+  const addToCart = useCallback(async (product_id: string, qty = 1) => {
+    setOperationLoading(true);
+    setError(null);
+    try {
+      const sessionId = user ? undefined : getOrCreateSessionId();
+      await ApiService.addToCart(product_id, qty, sessionId);
+      setRecentlyAdded(product_id);
+      await fetchCart();
+    } catch (err: any) {
+      const msg = err?.message ?? "Failed to add item to cart";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setOperationLoading(false);
+    }
+  }, [user, fetchCart]);
+
+  const removeFromCart = useCallback(async (product_id: string) => {
+    setOperationLoading(true);
+    setError(null);
+    try {
+      const sessionId = user ? undefined : getOrCreateSessionId();
+      await ApiService.removeCartItem(product_id, sessionId);
+      await fetchCart();
+    } catch (err: any) {
+      const msg = err?.message ?? "Failed to remove item";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setOperationLoading(false);
+    }
+  }, [user, fetchCart]);
+
+  const updateQuantity = useCallback(async (product_id: string, qty: number) => {
+    setOperationLoading(true);
+    setError(null);
+    try {
+      const sessionId = user ? undefined : getOrCreateSessionId();
+      await ApiService.updateCartItem(product_id, qty, sessionId);
+      await fetchCart();
+    } catch (err: any) {
+      const msg = err?.message ?? "Failed to update quantity";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setOperationLoading(false);
+    }
+  }, [user, fetchCart]);
 
   const clearCart = useCallback(async () => {
     setOperationLoading(true);
@@ -244,45 +296,36 @@ useEffect(() => {
     return ApiService.validateCart(sessionId);
   }, [user]);
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  // FIX: Use useMemo to memoize items and derived values to prevent unnecessary re-renders
   const items = useMemo(() => cartData?.items ?? [], [cartData?.items]);
   const itemCount = useMemo(() => cartData?.total_items ?? 0, [cartData?.total_items]);
   const subtotal = useMemo(() => cartData?.total_price ?? 0, [cartData?.total_price]);
 
-  // FIX: Memoize isInCart and getItemQuantity with useCallback using stable dependencies
-  const isInCart = useCallback(
-    (product_id: string) => items.some((i) => i.product_id === product_id),
-    [items],
-  );
+  const isInCart = useCallback((product_id: string) => 
+    items.some((i) => i.product_id === product_id), [items]);
 
-  const getItemQuantity = useCallback(
-    (product_id: string) =>
-      items.find((i) => i.product_id === product_id)?.quantity ?? 0,
-    [items],
-  );
+  const getItemQuantity = useCallback((product_id: string) =>
+    items.find((i) => i.product_id === product_id)?.quantity ?? 0, [items]);
 
   return (
-    <CartContext.Provider
-      value={{
-        cartData,
-        items,
-        itemCount,
-        subtotal,
-        loading,
-        operationLoading,
-        error,
-        recentlyAdded,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        validateCart,
-        isInCart,
-        getItemQuantity,
-        refetchCart: fetchCart,
-      }}
-    >
+    <CartContext.Provider value={{
+      cartData,
+      items,
+      itemCount,
+      subtotal,
+      loading,
+      operationLoading,
+      error,
+      recentlyAdded,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      validateCart,
+      syncCartPrices,
+      isInCart,
+      getItemQuantity,
+      refetchCart: fetchCart,
+    }}>
       {children}
     </CartContext.Provider>
   );
