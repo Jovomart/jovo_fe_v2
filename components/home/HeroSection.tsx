@@ -277,7 +277,7 @@ const HeroSection = () => {
     };
   }, [next]);
 
-  // Handle desktop video playback
+  // Handle desktop video playback 
   useEffect(() => {
     const videos = desktopVideoRefs.current;
     videos.forEach((video, idx) => {
