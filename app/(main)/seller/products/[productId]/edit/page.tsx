@@ -15,6 +15,9 @@ import {
   FiSave,
   FiImage,
   FiWifiOff,
+  FiUpload,
+  FiTrash2,
+  FiLoader,
 } from "react-icons/fi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -313,6 +316,167 @@ const Section = ({
   </div>
 );
 
+// ─── Image Upload Component ───────────────────────────────────────────────────
+
+const ImageUploader = ({
+  images,
+  onImagesChange,
+  label,
+  required,
+  error,
+}: {
+  images: string[];
+  onImagesChange: (urls: string[]) => void;
+  label: string;
+  required?: boolean;
+  error?: string;
+}) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const invalidFiles = files.filter(f => !f.type.startsWith('image/'));
+    if (invalidFiles.length > 0) {
+      alert("Please select only image files (JPEG, PNG, WebP)");
+      return;
+    }
+
+    const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      alert("Some files exceed 10MB limit. Please choose smaller images.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const interval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      const result = await apiService.uploadFiles(files, "product_images");
+      
+      clearInterval(interval);
+      setUploadProgress(100);
+
+      const newImageUrls = result.urls || [];
+      onImagesChange([...images, ...newImageUrls]);
+      
+      console.log("Images uploaded successfully:", newImageUrls);
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      alert(error.message || "Failed to upload images. Please try again.");
+    } finally {
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 500);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    onImagesChange(images.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">
+        {label}
+        {required && <span className="text-orange-500 ml-0.5">*</span>}
+      </label>
+      
+      {uploading && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span className="flex items-center gap-2">
+              <FiLoader size={14} className="animate-spin" />
+              Uploading images...
+            </span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%`, background: "linear-gradient(90deg, #F97316, #EA580C)" }}
+            />
+          </div>
+        </div>
+      )}
+      
+      <div className="flex gap-2 mb-3">
+        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+          uploading ? "border-gray-200 bg-gray-50 opacity-50" : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+        }`}>
+          <FiUpload size={16} className="text-gray-400" />
+          <span className="text-sm font-medium text-gray-600">
+            {uploading ? "Uploading..." : "Click to Upload Images"}
+          </span>
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFileUpload}
+            disabled={uploading}
+          />
+        </label>
+      </div>
+      
+      {error && (
+        <p className="text-[11px] text-red-500 mb-3 font-semibold flex items-center gap-1">
+          <FiAlertCircle size={10} /> {error}
+        </p>
+      )}
+      
+      {images.length === 0 ? (
+        <div className="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+          <FiImage size={24} className="text-slate-300 mx-auto mb-2" />
+          <p className="text-sm text-slate-400 font-medium">
+            No images yet — click above to upload
+          </p>
+          <p className="text-xs text-slate-300 mt-1">
+            JPEG, PNG, WebP up to 10MB each
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {images.map((url, i) => (
+            <div key={i} className="relative group aspect-square">
+              <Image
+                src={url}
+                alt={`Product image ${i + 1}`}
+                width={200}
+                height={200}
+                className="w-full h-full object-cover rounded-xl border border-slate-200"
+                onError={(e) =>
+                  ((e.target as HTMLImageElement).src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23F1F5F9'/%3E%3C/svg%3E")
+                }
+              />
+              {i === 0 && (
+                <span className="absolute top-1 left-1 text-[9px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-md">
+                  Main
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+              >
+                <FiTrash2 size={10} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const EditProductPage = () => {
@@ -320,9 +484,6 @@ const EditProductPage = () => {
   const params = useParams();
   const pathname = usePathname();
 
-  // Try every common dynamic-segment name Next.js projects use.
-  // If none match (wrong folder name in /app), fall back to parsing
-  // the URL pathname directly — e.g. /seller/products/abc123/edit → "abc123"
   const productId = (() => {
     const raw =
       params?.id ??
@@ -361,12 +522,8 @@ const EditProductPage = () => {
   const [apiError, setApiError] = useState("");
   const [toastMsg, setToastMsg] = useState("");
   const [willReset, setWillReset] = useState(false);
-
-  const [imgInput, setImgInput] = useState("");
-  const [vidInput, setVidInput] = useState("");
   const [tagInput, setTagInput] = useState("");
 
-  // FIX: Use ref to prevent multiple load calls
   const hasLoadedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -377,8 +534,6 @@ const EditProductPage = () => {
 
   // ── Load product ────────────────────────────────────────────────────────────
   const loadProduct = useCallback(async () => {
-    // Guard: productId missing — happens when useParams hasn't resolved yet
-    // or the route param key doesn't match. Show error instead of infinite skeleton.
     if (!productId) {
       setLoadError("No product ID found in the URL. Please go back and try again.");
       setLoading(false);
@@ -388,8 +543,6 @@ const EditProductPage = () => {
     setLoading(true);
     setLoadError("");
 
-    // Safety timeout: if the API hangs for more than 15 s, surface an error
-    // rather than leaving the user staring at a skeleton forever.
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setLoadError("Request timed out. Check your connection and try again.");
@@ -401,7 +554,6 @@ const EditProductPage = () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       const p = res?.data ?? res;
 
-      // Guard: API returned an empty / unexpected response
       if (!p || typeof p !== "object") {
         setLoadError("Product not found or you don't have permission to edit it.");
         return;
@@ -427,7 +579,6 @@ const EditProductPage = () => {
       });
     } catch (err: any) {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      // Network errors, 401, 404, etc.
       const status = err?.response?.status;
       const msg =
         status === 404
@@ -437,24 +588,20 @@ const EditProductPage = () => {
           : err?.message ?? "Failed to load product. Please try again.";
       setLoadError(msg);
     } finally {
-      // Always clear loading — even if clearTimeout already ran above
       setLoading(false);
     }
   }, [productId]);
 
-  // FIX: Use ref to ensure loadProduct is only called once on mount
   useEffect(() => {
     if (!hasLoadedRef.current && productId) {
       hasLoadedRef.current = true;
       loadProduct();
     }
-    // Cleanup timeout on unmount
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [loadProduct, productId]);
 
-  // Fields that trigger re-review
   const CRITICAL_FIELDS: (keyof EditForm)[] = [
     "product_original_price",
     "product_condition",
@@ -465,22 +612,6 @@ const EditProductPage = () => {
   const handleChange = <K extends keyof EditForm>(key: K, value: EditForm[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     if (CRITICAL_FIELDS.includes(key)) setWillReset(true);
-  };
-
-  const addImage = () => {
-    const url = imgInput.trim();
-    if (url && !form.product_images.includes(url)) {
-      handleChange("product_images", [...form.product_images, url]);
-      setImgInput("");
-    }
-  };
-
-  const addVideo = () => {
-    const url = vidInput.trim();
-    if (url && !form.product_videos.includes(url)) {
-      setForm((f) => ({ ...f, product_videos: [...f.product_videos, url] }));
-      setVidInput("");
-    }
   };
 
   const addTag = () => {
@@ -545,7 +676,6 @@ const EditProductPage = () => {
     }
   };
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -822,72 +952,14 @@ const EditProductPage = () => {
             </Section>
 
             {/* ── Images ─────────────────────────────────────────────────── */}
-            {/* FIX: Replace img with Image in the images section */}
             <Section title="Product Images" icon="🖼️">
-              <div className="flex gap-2 mb-4">
-                <input
-                  className={`${inputCls} flex-1`}
-                  placeholder="Paste image URL"
-                  value={imgInput}
-                  onChange={(e) => setImgInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addImage()}
-                />
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="px-4 py-2.5 rounded-xl bg-orange-500 text-white font-bold text-sm hover:bg-orange-600 transition flex items-center gap-1.5"
-                >
-                  <FiPlus size={14} /> Add
-                </button>
-              </div>
-              {(errors as any).product_images && (
-                <p className="text-[11px] text-red-500 mb-3 font-semibold flex items-center gap-1">
-                  <FiAlertCircle size={10} /> {(errors as any).product_images}
-                </p>
-              )}
-              {form.product_images.length === 0 ? (
-                <div className="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl">
-                  <FiImage size={24} className="text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400 font-medium">
-                    No images — paste a URL above
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                  {form.product_images.map((url, i) => (
-                    <div key={i} className="relative group aspect-square">
-                      <Image
-                        src={url}
-                        alt={`img-${i}`}
-                        width={200}
-                        height={200}
-                        className="w-full h-full object-cover rounded-xl border border-slate-200"
-                        onError={(e) =>
-                          ((e.target as HTMLImageElement).src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23F1F5F9'/%3E%3C/svg%3E")
-                        }
-                      />
-                      {i === 0 && (
-                        <span className="absolute top-1 left-1 text-[9px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-md">
-                          Main
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleChange(
-                            "product_images",
-                            form.product_images.filter((_, idx) => idx !== i)
-                          )
-                        }
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <FiX size={10} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ImageUploader
+                images={form.product_images}
+                onImagesChange={(urls) => handleChange("product_images", urls)}
+                label="Product Images"
+                required
+                error={(errors as any).product_images}
+              />
             </Section>
 
             {/* ── Tags & SEO ──────────────────────────────────────────────── */}

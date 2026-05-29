@@ -274,9 +274,8 @@ const popularRoutes: PopularRoute[] = [
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1562774053-701939374585?w=700&q=80";
 
-/* ─────────────────────────────────────────────────────────────
-   ADAPTER — maps raw API shape → typed Location
-───────────────────────────────────────────────────────────── */
+  // Update only the adaptGuide function in your main site's CampusGuidePage.tsx
+
 const adaptGuide = (g: Record<string, any>): Location => {
   const parseFacilities = (facilities: any): string[] => {
     if (!facilities) return [];
@@ -305,8 +304,12 @@ const adaptGuide = (g: Record<string, any>): Location => {
     shortName: String(g.short_name ?? g.name ?? ""),
     zone: String(g.location ?? g.zone ?? ""),
     description: String(g.about ?? g.description ?? ""),
+    // FIX: Also check for image_url (for backward compatibility with existing records)
     image: String(
-      (Array.isArray(g.images) && g.images[0]) || g.image || FALLBACK_IMAGE,
+      (Array.isArray(g.images) && g.images[0]) || 
+      g.image || 
+      g.image_url ||  // <-- ADD THIS LINE for backward compatibility
+      FALLBACK_IMAGE,
     ),
     direction: String(g.directions ?? g.direction ?? ""),
     landmark: String(g.landmarks ?? g.landmark ?? ""),
@@ -324,7 +327,6 @@ const adaptGuide = (g: Record<string, any>): Location => {
     badge: g.badge ?? null,
   };
 };
-
 /* ─────────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────────── */

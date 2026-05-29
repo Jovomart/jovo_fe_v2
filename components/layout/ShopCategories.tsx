@@ -30,8 +30,34 @@ interface CategoryCarouselProps {
   products: Product[];
 }
 
-// Placeholder image
+// Placeholder image (valid data URL)
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3Crect x='140' y='250' width='120' height='15' rx='5' fill='%23d1d5db'/%3E%3Crect x='160' y='275' width='80' height='10' rx='5' fill='%23d1d5db'/%3E%3C/svg%3E";
+
+// Helper function to validate image URL
+const getValidImageUrl = (url: string | undefined): string => {
+  if (!url) return PLACEHOLDER_IMAGE;
+  
+  // Check if it's a valid URL format
+  try {
+    // If it's already a data URL, return it
+    if (url.startsWith('data:')) return url;
+    
+    // Check if it's a valid http/https URL
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      // Skip known bad domains
+      if (url.includes('api.yourstore.com')) return PLACEHOLDER_IMAGE;
+      return url;
+    }
+    
+    // Check if it's a relative path that starts with /
+    if (url.startsWith('/')) return url;
+    
+    // Invalid URL format
+    return PLACEHOLDER_IMAGE;
+  } catch {
+    return PLACEHOLDER_IMAGE;
+  }
+};
 
 // ─── Single Category Grid View ─────────────────────────────────────────────────
 
@@ -46,12 +72,6 @@ const CategoryGrid = ({
 
   const handleImageError = (productId: string) => {
     setImgErrors(prev => ({ ...prev, [productId]: true }));
-  };
-
-  const isValidImageUrl = (url: string) => {
-    if (!url) return false;
-    if (url.includes('api.yourstore.com')) return false;
-    return true;
   };
 
   if (!products || products.length === 0) return null;
@@ -111,9 +131,11 @@ const CategoryGrid = ({
                 )
               : 0;
 
-            const imageUrl = imgErrors[product.id] || !isValidImageUrl(product.product_images?.[0])
-              ? PLACEHOLDER_IMAGE
-              : product.product_images[0];
+            // Use placeholder if image has error, otherwise validate the URL
+            const rawImageUrl = product.product_images?.[0];
+            const imageUrl = imgErrors[product.id] 
+              ? PLACEHOLDER_IMAGE 
+              : getValidImageUrl(rawImageUrl);
 
             return (
               <Link
@@ -128,7 +150,7 @@ const CategoryGrid = ({
                     fill
                     className="object-cover group-hover:scale-105 transition duration-300"
                     onError={() => handleImageError(product.id)}
-                    unoptimized={imageUrl.includes('data:image')}
+                    unoptimized={imageUrl.startsWith('data:') || imageUrl.startsWith('blob:')}
                   />
                   
                   {discount > 0 && (

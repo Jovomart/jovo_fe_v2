@@ -73,8 +73,29 @@ interface Review {
   helpful_count: number;
 }
 
-// Placeholder image
+// Placeholder image (valid data URL)
 const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3Crect x='140' y='250' width='120' height='15' rx='5' fill='%23d1d5db'/%3E%3Crect x='160' y='275' width='80' height='10' rx='5' fill='%23d1d5db'/%3E%3C/svg%3E";
+
+// Helper function to validate image URL
+const getValidImageUrl = (url: string | undefined): string => {
+  if (!url) return PLACEHOLDER_IMAGE;
+  
+  // If it's already a data URL, return it
+  if (url.startsWith('data:')) return url;
+  
+  // Check if it's a valid http/https URL
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Skip known bad domains
+    if (url.includes('api.yourstore.com')) return PLACEHOLDER_IMAGE;
+    return url;
+  }
+  
+  // Check if it's a relative path that starts with /
+  if (url.startsWith('/')) return url;
+  
+  // Invalid URL format - return placeholder
+  return PLACEHOLDER_IMAGE;
+};
 
 // ─────────────────────────────────────────────────────────────
 // STARS COMPONENT
@@ -130,15 +151,9 @@ const ProductDetails = () => {
   // Image error handling
   const [imgError, setImgError] = useState(false);
 
-  const isValidImageUrl = (url: string) => {
-    if (!url) return false;
-    if (url.includes('api.yourstore.com')) return false;
-    return true;
-  };
-
-  const imageUrl = imgError || !isValidImageUrl(product?.product_images?.[0])
-    ? PLACEHOLDER_IMAGE
-    : product?.product_images[0];
+  // Get validated image URL
+  const rawImageUrl = product?.product_images?.[0];
+  const imageUrl = imgError ? PLACEHOLDER_IMAGE : getValidImageUrl(rawImageUrl);
 
   const theme = getCategoryTheme(product?.category_id || "");
 
@@ -305,7 +320,7 @@ const ProductDetails = () => {
     oldPrice: product.product_original_price > product.current_price ? product.product_original_price : null,
     rating: product.average_rating,
     reviews: product.review_count,
-    image: product.product_images?.[0] || PLACEHOLDER_IMAGE,
+    image: getValidImageUrl(product.product_images?.[0]),
     brand: product.brand || undefined,
   } : null;
 
@@ -470,7 +485,7 @@ const ProductDetails = () => {
                     className="object-contain"
                     onError={() => setImgError(true)}
                     priority
-                    unoptimized={imageUrl.includes('data:image')}
+                    unoptimized={imageUrl.startsWith('data:')}
                   />
                 </div>
               </div>
@@ -867,7 +882,7 @@ const ProductDetails = () => {
                   ? Math.round(((item.product_original_price - item.current_price) / item.product_original_price) * 100)
                   : 0;
                 
-                const imgSrc = item.product_images?.[0] || PLACEHOLDER_IMAGE;
+                const imgSrc = getValidImageUrl(item.product_images?.[0]);
                 
                 return (
                   <Link
@@ -882,7 +897,11 @@ const ProductDetails = () => {
                         alt={item.product_name}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        unoptimized={imgSrc.includes('data:image')}
+                        unoptimized={imgSrc.startsWith('data:')}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = PLACEHOLDER_IMAGE;
+                        }}
                       />
                       {d > 0 && (
                         <div className="absolute top-2 left-2 bg-[#B42225] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">

@@ -20,6 +20,8 @@ import {
   FiRefreshCw,
   FiLoader,
   FiSliders,
+  FiUpload,
+  FiTrash2,
 } from "react-icons/fi";
 import { MdOutlineInventory2 } from "react-icons/md";
 
@@ -41,6 +43,17 @@ interface SubcategoryField {
   required: boolean;
   type: "text" | "select" | "number";
   options?: string[];
+}
+
+interface UploadedFile {
+  filename: string;
+  url: string;
+  public_id: string;
+  format: string;
+  bytes: number;
+  width: number;
+  height: number;
+  resource_type: string;
 }
 
 interface ProductForm {
@@ -233,6 +246,265 @@ const Field = ({
     )}
   </div>
 );
+
+// Image Upload Component
+const ImageUploader = ({
+  images,
+  onImagesChange,
+  label,
+  required,
+  error,
+}: {
+  images: string[];
+  onImagesChange: (urls: string[]) => void;
+  label: string;
+  required?: boolean;
+  error?: string;
+}) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate file types (images only)
+    const invalidFiles = files.filter(f => !f.type.startsWith('image/'));
+    if (invalidFiles.length > 0) {
+      alert("Please select only image files (JPEG, PNG, WebP)");
+      return;
+    }
+
+    // Validate file sizes (max 10MB each)
+    const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      alert("Some files exceed 10MB limit. Please choose smaller images.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const interval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      const result = await apiService.uploadFiles(files, "product_images");
+      
+      clearInterval(interval);
+      setUploadProgress(100);
+
+      const newImageUrls = result.urls || [];
+      onImagesChange([...images, ...newImageUrls]);
+      
+      console.log("Images uploaded successfully:", newImageUrls);
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      alert(error.message || "Failed to upload images. Please try again.");
+    } finally {
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 500);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    onImagesChange(images.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">
+        {label}
+        {required && <span className="text-orange-500 ml-0.5">*</span>}
+      </label>
+      
+      {uploading && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span className="flex items-center gap-2">
+              <FiLoader size={14} className="animate-spin" />
+              Uploading images...
+            </span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%`, background: "linear-gradient(90deg, #F97316, #EA580C)" }}
+            />
+          </div>
+        </div>
+      )}
+      
+      <div className="flex gap-2 mb-3">
+        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+          uploading ? "border-gray-200 bg-gray-50 opacity-50" : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+        }`}>
+          <FiUpload size={16} className="text-gray-400" />
+          <span className="text-sm font-medium text-gray-600">
+            {uploading ? "Uploading..." : "Click to Upload Images"}
+          </span>
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFileUpload}
+            disabled={uploading}
+          />
+        </label>
+      </div>
+      
+      {error && (
+        <p className="text-[11px] text-red-500 mb-3 font-semibold flex items-center gap-1">
+          <FiAlertCircle size={10} /> {error}
+        </p>
+      )}
+      
+      {images.length === 0 ? (
+        <div className="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+          <FiImage size={24} className="text-slate-300 mx-auto mb-2" />
+          <p className="text-sm text-slate-400 font-medium">
+            No images yet — click above to upload
+          </p>
+          <p className="text-xs text-slate-300 mt-1">
+            JPEG, PNG, WebP up to 10MB each
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {images.map((url, i) => (
+            <div key={i} className="relative group aspect-square">
+              <Image
+                src={url}
+                alt={`Product image ${i + 1}`}
+                width={200}
+                height={200}
+                className="w-full h-full object-cover rounded-xl border border-slate-200"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23F1F5F9'/%3E%3C/svg%3E";
+                }}
+              />
+              {i === 0 && (
+                <span className="absolute top-1 left-1 text-[9px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-md">
+                  Main
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+              >
+                <FiTrash2 size={10} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Video Upload Component
+const VideoUploader = ({
+  videos,
+  onVideosChange,
+}: {
+  videos: string[];
+  onVideosChange: (urls: string[]) => void;
+}) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate file types (videos only)
+    const invalidFiles = files.filter(f => !f.type.startsWith('video/'));
+    if (invalidFiles.length > 0) {
+      alert("Please select only video files (MP4, MOV, WebM)");
+      return;
+    }
+
+    // Validate file sizes (max 50MB each)
+    const oversizedFiles = files.filter(f => f.size > 50 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      alert("Some files exceed 50MB limit. Please choose smaller videos.");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const result = await apiService.uploadFiles(files, "product_videos");
+      const newVideoUrls = result.urls || [];
+      onVideosChange([...videos, ...newVideoUrls]);
+      console.log("Videos uploaded successfully:", newVideoUrls);
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      alert(error.message || "Failed to upload videos. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    onVideosChange(videos.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">
+        Product Videos (Optional)
+      </label>
+      
+      <div className="flex gap-2 mb-3">
+        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+          uploading ? "border-gray-200 bg-gray-50 opacity-50" : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+        }`}>
+          <FiUpload size={16} className="text-gray-400" />
+          <span className="text-sm font-medium text-gray-600">
+            {uploading ? "Uploading..." : "Click to Upload Videos"}
+          </span>
+          <input
+            type="file"
+            multiple
+            accept="video/mp4,video/quicktime,video/webm"
+            className="hidden"
+            onChange={handleFileUpload}
+            disabled={uploading}
+          />
+        </label>
+      </div>
+      
+      {videos.length > 0 && (
+        <div className="space-y-2">
+          {videos.map((url, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100"
+            >
+              <span className="text-xs font-bold text-slate-500 flex-1 truncate">
+                {url}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeVideo(i)}
+                className="text-red-400 hover:text-red-600 transition"
+              >
+                <FiX size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const StepCategory = ({
   form,
@@ -640,143 +912,22 @@ const StepPricing = ({ form, setForm, errors }: any) => {
   );
 };
 
-// FIX: Replace img with Image from next/image
-const StepMedia = ({ form, setForm, errors }: any) => {
-  const [imgInput, setImgInput] = useState("");
-  const [vidInput, setVidInput] = useState("");
+const StepMedia = ({ form, setForm, errors }: any) => (
+  <div className="space-y-6">
+    <ImageUploader
+      images={form.product_images}
+      onImagesChange={(urls) => setForm({ ...form, product_images: urls })}
+      label="Product Images"
+      required
+      error={errors.product_images}
+    />
 
-  const addImage = () => {
-    const url = imgInput.trim();
-    if (url && !form.product_images.includes(url)) {
-      setForm({ ...form, product_images: [...form.product_images, url] });
-      setImgInput("");
-    }
-  };
-
-  const addVideo = () => {
-    const url = vidInput.trim();
-    if (url && !form.product_videos.includes(url)) {
-      setForm({ ...form, product_videos: [...form.product_videos, url] });
-      setVidInput("");
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <Field
-        label="Product Images"
-        required
-        error={errors.product_images}
-        hint="Paste image URLs. Add at least 1 image."
-      >
-        <div className="flex gap-2 mb-3">
-          <input
-            className={`${inputCls} flex-1`}
-            placeholder="https://res.cloudinary.com/…/image.jpg"
-            value={imgInput}
-            onChange={(e) => setImgInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addImage()}
-          />
-          <button
-            type="button"
-            onClick={addImage}
-            className="px-4 py-2.5 rounded-xl bg-orange-500 text-white font-bold text-sm hover:bg-orange-600 transition flex items-center gap-1.5"
-          >
-            <FiPlus size={14} /> Add
-          </button>
-        </div>
-        {form.product_images.length > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-            {form.product_images.map((url: string, i: number) => (
-              <div key={i} className="relative group aspect-square">
-                <Image
-                  src={url}
-                  alt={`Product image ${i + 1}`}
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover rounded-xl border border-slate-200"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23F1F5F9'/%3E%3C/svg%3E";
-                  }}
-                />
-                {i === 0 && (
-                  <span className="absolute top-1 left-1 text-[9px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-md">
-                    Main
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      product_images: form.product_images.filter(
-                        (_: any, idx: number) => idx !== i
-                      ),
-                    })
-                  }
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                >
-                  <FiX size={10} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </Field>
-
-      <Field
-        label="Product Videos (Optional)"
-        hint="Paste video URLs — Cloudinary, YouTube, or direct links."
-      >
-        <div className="flex gap-2 mb-3">
-          <input
-            className={`${inputCls} flex-1`}
-            placeholder="https://…/video.mp4"
-            value={vidInput}
-            onChange={(e) => setVidInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addVideo()}
-          />
-          <button
-            type="button"
-            onClick={addVideo}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition flex items-center gap-1.5"
-          >
-            <FiPlus size={14} /> Add
-          </button>
-        </div>
-        {form.product_videos.length > 0 && (
-          <div className="space-y-2">
-            {form.product_videos.map((url: string, i: number) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100"
-              >
-                <span className="text-xs font-bold text-slate-500 flex-1 truncate">
-                  {url}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      product_videos: form.product_videos.filter(
-                        (_: any, idx: number) => idx !== i
-                      ),
-                    })
-                  }
-                  className="text-red-400 hover:text-red-600 transition"
-                >
-                  <FiX size={13} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </Field>
-    </div>
-  );
-};
+    <VideoUploader
+      videos={form.product_videos}
+      onVideosChange={(urls) => setForm({ ...form, product_videos: urls })}
+    />
+  </div>
+);
 
 const StepSEO = ({ form, setForm }: any) => {
   const [tagInput, setTagInput] = useState("");
@@ -912,7 +1063,6 @@ const AddProductPage = () => {
   const [apiError, setApiError] = useState("");
   const [toastMsg, setToastMsg] = useState("");
 
-  // FIX: Use ref to prevent multiple fetch calls
   const hasFetchedCategoriesRef = useRef(false);
 
   const showToast = (msg: string) => {
@@ -948,7 +1098,6 @@ const AddProductPage = () => {
     }
   }, []);
 
-  // FIX: Use ref to ensure fetchCategories is only called once on mount
   useEffect(() => {
     if (!hasFetchedCategoriesRef.current) {
       hasFetchedCategoriesRef.current = true;
