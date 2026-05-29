@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import Image from "next/image";
 import { AuthContext } from "@/context/AuthContext";
@@ -247,8 +247,6 @@ const slides: Slide[] = [
 ];
 
 const HeroSection = () => {
-  const router = useRouter();
-  const navigate = (p: string) => router.push(p);
   const { isSeller } = useContext(AuthContext);
   const [current, setCurrent] = useState<number>(0);
   const [muted, setMuted] = useState<boolean>(true);
@@ -332,9 +330,8 @@ const HeroSection = () => {
   const handleCategoryClick = (cat: Category) => {
     if (cat.name === "All Categories") {
       setShowAllCategoriesModal(true);
-    } else {
-      navigate(cat.path);
     }
+    // For other categories, the Link component handles navigation
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -417,9 +414,16 @@ const HeroSection = () => {
               </p>
               <div className="space-y-0.5">
                 {categories.map((cat, i) => (
-                  <button
+                  <Link
                     key={cat.name}
-                    onClick={() => handleCategoryClick(cat)}
+                    href={cat.path}
+                    prefetch={true}
+                    onClick={(e) => {
+                      if (cat.name === "All Categories") {
+                        e.preventDefault();
+                        setShowAllCategoriesModal(true);
+                      }
+                    }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left group transition-all duration-150 hover:bg-white/10 cursor-pointer"
                   >
                     <div
@@ -435,7 +439,7 @@ const HeroSection = () => {
                       size={11}
                       className="ml-auto text-white/0 group-hover:text-white/50 transition-all group-hover:translate-x-0.5"
                     />
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -472,8 +476,9 @@ const HeroSection = () => {
                 {slide.sub}
               </p>
               <div className="hero-cta flex items-center gap-3">
-                <button
-                  onClick={() => navigate(slide.ctaPath)}
+                <Link
+                  href={slide.ctaPath}
+                  prefetch={true}
                   className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.03] active:scale-95 cursor-pointer"
                   style={{
                     background: `linear-gradient(135deg, ${slide.accent}, ${slide.accent}cc)`,
@@ -481,13 +486,14 @@ const HeroSection = () => {
                   }}
                 >
                   {slide.cta} <FiArrowRight size={15} />
-                </button>
-                <button
-                  onClick={() => router.push("/flash-sales")}
+                </Link>
+                <Link
+                  href="/flash-sales"
+                  prefetch={true}
                   className="flex items-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm text-white/70 hover:text-white border border-white/15 hover:border-white/30 hover:bg-white/8 transition-all cursor-pointer"
                 >
                   Flash Sales
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -632,16 +638,17 @@ const HeroSection = () => {
                 {slide.headline}
               </h2>
               <p className="hero-sub text-white/50 text-xs mb-3">{slide.sub}</p>
-              <button
-                onClick={() => navigate(slide.ctaPath)}
-                className="hero-cta flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs text-white"
+              <Link
+                href={slide.ctaPath}
+                prefetch={true}
+                className="hero-cta inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs text-white"
                 style={{
                   background: `linear-gradient(135deg, ${slide.accent}, ${slide.accent}bb)`,
                   boxShadow: `0 4px 16px ${slide.accent}44`,
                 }}
               >
                 {slide.cta} <FiArrowRight size={13} />
-              </button>
+              </Link>
             </div>
             <div className="hero-dots absolute bottom-4 right-4 z-10 flex gap-1">
               {slides.map((_, i) => (
@@ -667,9 +674,16 @@ const HeroSection = () => {
               style={{ scrollbarWidth: "none" }}
             >
               {categories.map((cat) => (
-                <button
+                <Link
                   key={cat.name}
-                  onClick={() => handleCategoryClick(cat)}
+                  href={cat.path}
+                  prefetch={true}
+                  onClick={(e) => {
+                    if (cat.name === "All Categories") {
+                      e.preventDefault();
+                      setShowAllCategoriesModal(true);
+                    }
+                  }}
                   className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer"
                 >
                   <div
@@ -694,7 +708,7 @@ const HeroSection = () => {
                   <span className="text-[10px] font-semibold text-gray-600 text-center leading-tight w-14">
                     {cat.name}
                   </span>
-                </button>
+                </Link>
               ))}
             </div>
           </div>
@@ -768,10 +782,9 @@ const HeroSection = () => {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() =>
-                    navigate(isSeller ? "/seller/dashboard" : "/become-seller")
-                  }
+                <Link
+                  href={isSeller ? "/seller/dashboard" : "/become-seller"}
+                  prefetch={true}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-black text-[11px] text-white shrink-0 transition-all active:scale-95 cursor-pointer"
                   style={{
                     background: "linear-gradient(135deg,#B42225,#FF8C00)",
@@ -780,7 +793,7 @@ const HeroSection = () => {
                 >
                   {isSeller ? "Go to Dashboard" : "Start Now"}{" "}
                   <FiArrowRight size={11} />
-                </button>
+                </Link>
               </div>
               <div className="flex items-center gap-2">
                 {[" Easy Listing", "Weekly Payouts", "Instant Reach"].map(
@@ -843,12 +856,11 @@ const HeroSection = () => {
                 {categories
                   .filter((cat) => cat.name !== "All Categories")
                   .map((cat) => (
-                    <button
+                    <Link
                       key={cat.name}
-                      onClick={() => {
-                        setShowAllCategoriesModal(false);
-                        navigate(cat.path);
-                      }}
+                      href={cat.path}
+                      prefetch={true}
+                      onClick={() => setShowAllCategoriesModal(false)}
                       className="group p-4 rounded-2xl text-left transition-all hover:scale-105 cursor-pointer"
                       style={{
                         background: "linear-gradient(135deg,#F9FAFB,#F3F4F6)",
@@ -870,15 +882,14 @@ const HeroSection = () => {
                       <p className="text-gray-400 text-[10px]">
                         Shop {cat.name.toLowerCase()}
                       </p>
-                    </button>
+                    </Link>
                   ))}
                 {additionalCategories.map((cat) => (
-                  <button
+                  <Link
                     key={cat.name}
-                    onClick={() => {
-                      setShowAllCategoriesModal(false);
-                      navigate(cat.path);
-                    }}
+                    href={cat.path}
+                    prefetch={true}
+                    onClick={() => setShowAllCategoriesModal(false)}
                     className="group p-4 rounded-2xl text-left transition-all hover:scale-105 cursor-pointer"
                     style={{
                       background: "linear-gradient(135deg,#F9FAFB,#F3F4F6)",
@@ -897,7 +908,7 @@ const HeroSection = () => {
                     <p className="text-gray-400 text-[10px]">
                       {cat.description}
                     </p>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>

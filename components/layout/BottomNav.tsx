@@ -2,9 +2,10 @@
 // src/components/BottomNavbar.jsx
 // Home | News | [Cart FAB] | Guide | Help
 
-import { usePathname, useRouter } from "next/navigation"
-import { FiHome, FiBookOpen, FiHelpCircle, FiRadio, FiShoppingCart } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { FiHome, FiBookOpen, FiHelpCircle, FiRadio } from "react-icons/fi";
+import { motion } from "framer-motion";
 import { useContext } from "react"
 import { AuthContext } from "@/context/AuthContext"
 
@@ -14,49 +15,49 @@ const NAV_ITEMS_RIGHT = [
 ];
 
 // ─── Nav Item ─────────────────────────────────────────────────────────────
-const NavItem = ({ icon: Icon, label, path, active, onClick, badge }: { 
+const NavItem = ({ icon: Icon, label, path, active, badge }: { 
   icon: any; 
   label: string; 
   path: string; 
   active: boolean; 
-  onClick: () => void; 
   badge?: string | number;
 }) => (
-  <motion.button
-    whileTap={{ scale: 0.95 }}
-    onClick={onClick}
-    className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2"
-  >
-    <div className="relative">
-      <Icon
-        size={22}
-        className={`transition-all duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
-      />
-      {badge && (
-        <span className="absolute -top-2 -right-2.5 bg-[#B42225] text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-4 text-center leading-none">
-          {badge}
-        </span>
-      )}
-    </div>
-
-    <span
-      className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
+  <Link href={path} prefetch={true} className="flex-1">
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      className="relative flex flex-col items-center justify-center gap-0.5 w-full py-2"
     >
-      {label}
-    </span>
+      <div className="relative">
+        <Icon
+          size={22}
+          className={`transition-all duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
+        />
+        {badge && (
+          <span className="absolute -top-2 -right-2.5 bg-[#B42225] text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-4 text-center leading-none">
+            {badge}
+          </span>
+        )}
+      </div>
 
-    {/* Active indicator */}
-    {active && (
-      <motion.div
-        layoutId="activeIndicator"
-        className="absolute -top-1 w-6 h-0.5 bg-gradient-to-r from-[#B42225] to-[#FF8C00] rounded-full"
-        initial={{ opacity: 0, width: 0 }}
-        animate={{ opacity: 1, width: 24 }}
-        exit={{ opacity: 0, width: 0 }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      />
-    )}
-  </motion.button>
+      <span
+        className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
+      >
+        {label}
+      </span>
+
+      {/* Active indicator */}
+      {active && (
+        <motion.div
+          layoutId="activeIndicator"
+          className="absolute -top-1 w-6 h-0.5 bg-gradient-to-r from-[#B42225] to-[#FF8C00] rounded-full"
+          initial={{ opacity: 0, width: 0 }}
+          animate={{ opacity: 1, width: 24 }}
+          exit={{ opacity: 0, width: 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        />
+      )}
+    </motion.button>
+  </Link>
 );
 
 // ─── Custom Cart Icon ────────────────────────────────────────────────
@@ -87,8 +88,6 @@ const CartIcon = () => (
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 export default function BottomNavbar() {
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
   const pathname = usePathname()
   const { sellerMode } = useContext(AuthContext);
   const isActive = (p: string) => pathname === p;
@@ -133,7 +132,6 @@ export default function BottomNavbar() {
                   label={label}
                   path={path}
                   active={isActive(path)}
-                  onClick={() => navigate(path)}
                 />
               ))}
             </div>
@@ -142,35 +140,36 @@ export default function BottomNavbar() {
             <div className="w-16 relative">
               {/* FAB Container - positions the button relative to this center space */}
               <div className="absolute left-1/2 -translate-x-1/2 -top-14">
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  whileHover={{ scale: 1.03 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 500, 
-                    damping: 30,
-                  }}
-                  onClick={() => router.push("/cart")}
-                  aria-label="Shopping Cart"
-                  className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg origin-center"
-                  style={{
-                    background: "linear-gradient(135deg, #B42225 0%, #c4391c 45%, #FF8C00 100%)",
-                    boxShadow: "0 4px 15px rgba(180,34,37,0.4), 0 2px 5px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  {/* Outer ring */}
-                  <div className="absolute inset-0 rounded-full border-2 border-white/30" />
-                  
-                  {/* Inner glow */}
-                  <div 
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: "radial-gradient(circle, rgba(255,140,0,0.3) 0%, transparent 70%)",
+                <Link href="/cart" prefetch={true}>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 500, 
+                      damping: 30,
                     }}
-                  />
-                  
-                  <CartIcon />
-                </motion.button>
+                    aria-label="Shopping Cart"
+                    className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg origin-center"
+                    style={{
+                      background: "linear-gradient(135deg, #B42225 0%, #c4391c 45%, #FF8C00 100%)",
+                      boxShadow: "0 4px 15px rgba(180,34,37,0.4), 0 2px 5px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    {/* Outer ring */}
+                    <div className="absolute inset-0 rounded-full border-2 border-white/30" />
+                    
+                    {/* Inner glow */}
+                    <div 
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: "radial-gradient(circle, rgba(255,140,0,0.3) 0%, transparent 70%)",
+                      }}
+                    />
+                    
+                    <CartIcon />
+                  </motion.button>
+                </Link>
                 
                 {/* Small label below FAB */}
                 <div className="absolute left-1/2 -translate-x-1/2 text-[8px] font-bold tracking-wider text-[#B42225] whitespace-nowrap mt-1">
@@ -188,7 +187,6 @@ export default function BottomNavbar() {
                   label={label}
                   path={path}
                   active={isActive(path)}
-                  onClick={() => navigate(path)}
                 />
               ))}
             </div>

@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import {
@@ -160,47 +159,51 @@ const SearchDropdown = ({ query, onSelect }: { query: string; onSelect: (product
           <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">Browse Categories</p>
           <div className="grid grid-cols-4 gap-2">
             {categories.map(({ name, icon, to, color }) => (
-              <button
+              <Link
                 key={name}
-                onMouseDown={() => onSelect(null, null, to)}
+                href={to}
+                prefetch={true}
                 className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center"
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>{icon}</div>
                 <span className="text-[10px] text-gray-600 font-medium leading-tight">{name}</span>
-              </button>
+              </Link>
             ))}
           </div>
           <div className="border-t border-gray-100 mt-3 pt-3">
             <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">More</p>
             <div className="grid grid-cols-4 gap-2">
               {moreCategories.map(({ name, icon, to, color }) => (
-                <button
+                <Link
                   key={name}
-                  onMouseDown={() => onSelect(null, null, to)}
+                  href={to}
+                  prefetch={true}
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center"
                 >
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>{icon}</div>
                   <span className="text-[10px] text-gray-600 font-medium leading-tight">{name}</span>
-                </button>
+                </Link>
               ))}
-              <button
-                onMouseDown={() => onSelect(null, null, "/services")}
+              <Link
+                href="/services"
+                prefetch={true}
                 className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-100 text-orange-600">
                   <FaConciergeBell size={15} />
                 </div>
                 <span className="text-[10px] text-gray-600 font-medium leading-tight">Services</span>
-              </button>
-              <button
-                onMouseDown={() => onSelect(null, null, "/logistics")}
+              </Link>
+              <Link
+                href="/logistics"
+                prefetch={true}
                 className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-green-100 text-green-600">
                   <MdOutlineDeliveryDining size={17} />
                 </div>
                 <span className="text-[10px] text-gray-600 font-medium leading-tight">Logistics</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -210,7 +213,7 @@ const SearchDropdown = ({ query, onSelect }: { query: string; onSelect: (product
 };
 
 // ─────────────────────────────────────────────────────────────
-// CART BUTTON — FIXED: setState wrapped in setTimeout
+// CART BUTTON
 // ─────────────────────────────────────────────────────────────
 function CartButton({ onClick }: { onClick: () => void }) {
   const { itemCount, recentlyAdded } = useCart();
@@ -218,7 +221,6 @@ function CartButton({ onClick }: { onClick: () => void }) {
   const pulseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pulseSetRef = useRef(false);
 
-  // FIX: Wrap setPulse in setTimeout to avoid direct setState in effect
   useEffect(() => {
     if (recentlyAdded !== null && !pulseSetRef.current) {
       pulseSetRef.current = true;
@@ -300,7 +302,6 @@ export default function Navbar() {
 
   const { user, logout, isSeller, isServiceProvider, enterSellerMode } =
     useContext(AuthContext) as any;
-  const router = useRouter();
 
   const displayName = user?.full_name || user?.username || user?.name || "Account";
   const initials =
@@ -312,7 +313,6 @@ export default function Navbar() {
   const isSellerVerified = mounted && !!isSeller;
   const isServiceProviderVerified = mounted && !!isServiceProvider;
 
-  // FIX: Mount effect with setTimeout to avoid direct setState warning
   useEffect(() => { 
     if (!mountedRef.current) {
       mountedRef.current = true;
@@ -350,10 +350,10 @@ export default function Navbar() {
     setMobileDropOpen(false);
     setDesktopQuery("");
     setMobileQuery("");
-    if (product) router.push(`/product/${product.id}`);
-    else if (categoryPath) router.push(categoryPath);
+    if (product) window.location.href = `/product/${product.id}`;
+    else if (categoryPath) window.location.href = categoryPath;
     else if (rawQuery)
-      router.push(`/shop?search=${encodeURIComponent(rawQuery.trim())}`);
+      window.location.href = `/shop?search=${encodeURIComponent(rawQuery.trim())}`;
   };
 
   const commitSearch = (q: string) => {
@@ -365,8 +365,8 @@ export default function Navbar() {
         p.name?.toLowerCase().includes(q.trim().toLowerCase()) ||
         p.category?.toLowerCase().includes(q.trim().toLowerCase()),
     );
-    if (matches.length === 1) router.push(`/product/${matches[0].id}`);
-    else router.push(`/shop?search=${encodeURIComponent(q.trim())}`);
+    if (matches.length === 1) window.location.href = `/product/${matches[0].id}`;
+    else window.location.href = `/shop?search=${encodeURIComponent(q.trim())}`;
     setDesktopQuery("");
     setMobileQuery("");
   };
@@ -375,18 +375,17 @@ export default function Navbar() {
     setAccountOpen(false);
     setMobileOpen(false);
     await logout();
-    router.push("/");
+    window.location.href = "/";
   };
 
   const handleEnterSellerMode = async () => {
     setAccountOpen(false);
     setMobileOpen(false);
     await enterSellerMode();
-    router.push("/seller/dashboard");
+    window.location.href = "/seller/dashboard";
   };
 
-  const goTo = (path: string) => {
-    router.push(path);
+  const closeMobileMenu = () => {
     setMobileOpen(false);
     setAccountOpen(false);
   };
@@ -410,15 +409,16 @@ export default function Navbar() {
             <FiMenu size={22} />
           </button>
 
-          <Image
-            src="/images/Jovo_official_logo.png"
-            alt="Jovo"
-            onClick={() => router.push(isLoggedIn ? "/shop" : "/")}
-            width={220}
-            height={48}
-            className="cursor-pointer shrink-0 md:w-55 md:h-12 w-28 h-10 object-cover"
-            priority
-          />
+          <Link href={isLoggedIn ? "/shop" : "/"} prefetch={true}>
+            <Image
+              src="/images/Jovo_official_logo.png"
+              alt="Jovo"
+              width={220}
+              height={48}
+              className="cursor-pointer shrink-0 md:w-55 md:h-12 w-28 h-10 object-cover"
+              priority
+            />
+          </Link>
 
           {/* Desktop search */}
           <div className="hidden md:flex flex-1 max-w-3xl mx-4 relative" ref={desktopSearchRef}>
@@ -530,7 +530,7 @@ export default function Navbar() {
                     </div>
                     <div className="py-1.5">
                       {!isSellerVerified && (
-                        <button onClick={() => goTo("/seller/application-status")} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                        <button onClick={() => window.location.href = "/seller/application-status"} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
                           <FiClock size={15} className="text-gray-400 group-hover:text-blue-600" />
                           <span className="flex-1 text-left">Seller Status</span>
                           <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-blue-600" />
@@ -544,14 +544,14 @@ export default function Navbar() {
                         </button>
                       )}
                       {!isServiceProviderVerified && (
-                        <button onClick={() => goTo("/become-service-provider")} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group">
+                        <button onClick={() => window.location.href = "/become-service-provider"} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group">
                           <FiBriefcase size={15} className="text-gray-400 group-hover:text-purple-600" />
                           <span className="flex-1 text-left">Become Service Provider</span>
                           <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-purple-600" />
                         </button>
                       )}
                       {isServiceProviderVerified && (
-                        <button onClick={() => goTo("/services/dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group">
+                        <button onClick={() => window.location.href = "/services/dashboard"} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors group">
                           <FiBriefcase size={15} className="text-gray-400 group-hover:text-purple-600" />
                           <span className="flex-1 text-left">Service Dashboard</span>
                           <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-purple-600" />
@@ -565,7 +565,7 @@ export default function Navbar() {
                       ].map(({ icon, label, to }) => (
                         <button
                           key={label}
-                          onClick={() => goTo(to)}
+                          onClick={() => window.location.href = to}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#B42225] transition-colors group"
                         >
                           <span className="text-gray-400 group-hover:text-[#B42225] transition-colors">{icon}</span>
@@ -586,18 +586,18 @@ export default function Navbar() {
                 ) : (
                   <div className="p-4 space-y-2">
                     <p className="text-xs text-gray-400 text-center mb-3 font-medium uppercase tracking-wide">Your Account</p>
-                    <button onClick={() => goTo("/login")} className="w-full flex items-center justify-center gap-2 bg-[#B42225] hover:bg-[#9e1e20] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                    <Link href="/login" prefetch={true} className="w-full flex items-center justify-center gap-2 bg-[#B42225] hover:bg-[#9e1e20] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
                       <FiLogIn size={15} /> Sign In
-                    </button>
-                    <button onClick={() => goTo("/register")} className="w-full border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition-colors">
+                    </Link>
+                    <Link href="/register" prefetch={true} className="w-full flex border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition-colors text-center">
                       Create Account
-                    </button>
+                    </Link>
                   </div>
                 )}
               </div>
             </div>
 
-            <CartButton onClick={() => router.push("/cart")} />
+            <CartButton onClick={() => window.location.href = "/cart"} />
           </div>
         </div>
 
@@ -641,7 +641,7 @@ export default function Navbar() {
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-[60] flex transition-all duration-300 ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
         <div
-          onClick={() => setMobileOpen(false)}
+          onClick={closeMobileMenu}
           className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
         />
         <div
@@ -688,7 +688,7 @@ export default function Navbar() {
               </div>
             </div>
             <button
-              onClick={() => setMobileOpen(false)}
+              onClick={closeMobileMenu}
               className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition text-white"
             >
               <FiX size={18} />
@@ -697,8 +697,22 @@ export default function Navbar() {
 
           {mounted && !isLoggedIn && (
             <div className="px-4 py-3 flex gap-2 border-b border-gray-100">
-              <button onClick={() => goTo("/login")} className="flex-1 bg-[#B42225] text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-[#9e1e20] transition">Sign In</button>
-              <button onClick={() => goTo("/register")} className="flex-1 border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition">Register</button>
+              <Link 
+                href="/login" 
+                prefetch={true} 
+                onClick={closeMobileMenu}
+                className="flex-1 bg-[#B42225] text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-[#9e1e20] transition text-center"
+              >
+                Sign In
+              </Link>
+              <Link 
+                href="/register" 
+                prefetch={true} 
+                onClick={closeMobileMenu}
+                className="flex-1 border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition text-center"
+              >
+                Register
+              </Link>
             </div>
           )}
 
@@ -712,13 +726,15 @@ export default function Navbar() {
                     { icon: <FiHeart size={18} />, label: "Wishlist", to: "/wishlist" },
                     { icon: <FiUser size={18} />, label: "Profile", to: "/profile" },
                   ].map(({ icon, label, to }) => (
-                    <button
+                    <Link
                       key={label}
-                      onClick={() => goTo(to)}
-                      className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl bg-gray-50 hover:bg-[#B42225]/5 hover:text-[#B42225] transition text-gray-600 text-xs font-medium"
+                      href={to}
+                      prefetch={true}
+                      onClick={closeMobileMenu}
+                      className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl bg-gray-50 hover:bg-[#B42225]/5 hover:text-[#B42225] transition text-gray-600 text-xs font-medium text-center"
                     >
                       {icon}{label}
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -728,11 +744,17 @@ export default function Navbar() {
               <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">Shop by Category</p>
               <div className="space-y-0.5">
                 {categories.map(({ name, icon, to, color }) => (
-                  <button key={name} onClick={() => goTo(to)} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left">
+                  <Link 
+                    key={name} 
+                    href={to} 
+                    prefetch={true} 
+                    onClick={closeMobileMenu}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left"
+                  >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
                     <span className="text-sm font-medium text-gray-700 group-hover:text-[#B42225] transition-colors flex-1">{name}</span>
                     <FiChevronRight size={14} className="text-gray-300 group-hover:text-[#B42225] transition-colors" />
-                  </button>
+                  </Link>
                 ))}
                 <button onClick={() => setMoreOpen((o) => !o)} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100 text-gray-500">
@@ -744,11 +766,17 @@ export default function Navbar() {
                 {moreOpen && (
                   <div className="ml-3 pl-3 border-l-2 border-gray-100 space-y-0.5">
                     {moreCategories.map(({ name, icon, to, color }) => (
-                      <button key={name} onClick={() => goTo(to)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition group text-left">
+                      <Link 
+                        key={name} 
+                        href={to} 
+                        prefetch={true} 
+                        onClick={closeMobileMenu}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition group text-left"
+                      >
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
                         <span className="text-sm font-medium text-gray-600 group-hover:text-[#B42225] transition-colors flex-1">{name}</span>
                         <FiChevronRight size={13} className="text-gray-300 group-hover:text-[#B42225] transition-colors" />
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -767,19 +795,37 @@ export default function Navbar() {
                   : [{ label: "Become a Service Provider", to: "/become-service-provider" }]),
                 { label: "Help Center", to: "/help" },
               ].map(({ label, to, action }: any) => (
-                <button
-                  key={label}
-                  onClick={() => (action ? action() : goTo(to))}
-                  className={`w-full text-left px-3 py-2.5 text-sm rounded-xl transition ${
-                    label === "Switch to Seller"
-                      ? "text-green-600 font-semibold"
-                      : label === "Service Dashboard"
-                        ? "text-purple-600 font-semibold"
-                        : "text-gray-600 hover:text-[#B42225] hover:bg-gray-50"
-                  }`}
-                >
-                  {label}
-                </button>
+                action ? (
+                  <button
+                    key={label}
+                    onClick={() => { action(); closeMobileMenu(); }}
+                    className={`w-full text-left px-3 py-2.5 text-sm rounded-xl transition ${
+                      label === "Switch to Seller"
+                        ? "text-green-600 font-semibold"
+                        : label === "Service Dashboard"
+                          ? "text-purple-600 font-semibold"
+                          : "text-gray-600 hover:text-[#B42225] hover:bg-gray-50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ) : (
+                  <Link
+                    key={label}
+                    href={to}
+                    prefetch={true}
+                    onClick={closeMobileMenu}
+                    className={`w-full block text-left px-3 py-2.5 text-sm rounded-xl transition ${
+                      label === "Switch to Seller"
+                        ? "text-green-600 font-semibold"
+                        : label === "Service Dashboard"
+                          ? "text-purple-600 font-semibold"
+                          : "text-gray-600 hover:text-[#B42225] hover:bg-gray-50"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                )
               ))}
             </div>
           </div>
@@ -787,7 +833,7 @@ export default function Navbar() {
           {mounted && isLoggedIn && (
             <div className="px-4 py-4 border-t border-gray-100 bg-gray-50/50">
               <button
-                onClick={handleLogout}
+                onClick={() => { handleLogout(); closeMobileMenu(); }}
                 className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white py-3 rounded-xl text-sm font-semibold transition-all duration-200"
               >
                 <FiLogOut size={16} /> Logout
