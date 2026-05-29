@@ -125,7 +125,7 @@ class ApiService {
       "/cart/remove",
       "/cart/update",
       "/cart/validate",
-      "/marketspace", // ✅ Fixed: was "/api/v1/marketspace"
+      "/marketspace",
     ];
 
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
@@ -136,9 +136,14 @@ class ApiService {
     const effectivelyPublic = isPublic || isOptionalCartEndpoint;
 
     const config: RequestInit & { headers: any } = {
-      headers: { "Content-Type": "application/json", ...options.headers },
+      headers: { ...options.headers },
       ...options,
     };
+
+    // Don't set Content-Type for FormData - let browser set it
+    if (!(options.body instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
 
     if (!effectivelyPublic) {
       const token = await this.getValidAccessToken();
@@ -161,7 +166,7 @@ class ApiService {
 
       if (!response.ok && response.status !== 401) {
         console.error(`API Error [${response.status}] ${endpoint}:`, data);
-        if (options.body) {
+        if (options.body && !(options.body instanceof FormData)) {
           console.error("Request body:", options.body);
         }
       }
@@ -415,7 +420,7 @@ class ApiService {
       include_empty: String(includeEmpty),
     });
     return this.makeRequest(
-      `/marketspace/shop-homepage?${params.toString()}`, // ✅ Fixed: removed /api/v1 prefix
+      `/marketspace/shop-homepage?${params.toString()}`,
       { method: "GET" },
     );
   }
@@ -448,7 +453,7 @@ class ApiService {
     if (params?.offset != null) q.append("offset", String(params.offset));
     const qs = q.toString();
     return this.makeRequest(
-      `/marketspace/category/${encodeURIComponent(categoryId)}${qs ? `?${qs}` : ""}`, // ✅ Fixed: removed /api/v1 prefix
+      `/marketspace/category/${encodeURIComponent(categoryId)}${qs ? `?${qs}` : ""}`,
       { method: "GET" },
     );
   }
@@ -1020,46 +1025,168 @@ class ApiService {
     );
   }
 
-// ─── PRODUCT REVIEWS ─────────────────────────────────────────────────────────
+  // ─── PRODUCT REVIEWS ─────────────────────────────────────────────────────────
 
-async getProductReviews(productId: string, params?: {
-  rating?: number | null;
-  is_verified?: boolean | null;
-  page?: number;
-  per_page?: number;
-}) {
-  const q = new URLSearchParams();
-  if (params?.rating != null) q.append("rating", String(params.rating));
-  if (params?.is_verified != null) q.append("is_verified", String(params.is_verified));
-  if (params?.page != null) q.append("page", String(params.page));
-  if (params?.per_page != null) q.append("per_page", String(params.per_page));
-  const qs = q.toString();
-  return this.makeRequest(
-    `/reviews/product/${encodeURIComponent(productId)}${qs ? `?${qs}` : ""}`,
-    { method: "GET" }
-  );
-}
+  async getProductReviews(productId: string, params?: {
+    rating?: number | null;
+    is_verified?: boolean | null;
+    page?: number;
+    per_page?: number;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.rating != null) q.append("rating", String(params.rating));
+    if (params?.is_verified != null) q.append("is_verified", String(params.is_verified));
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.per_page != null) q.append("per_page", String(params.per_page));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/reviews/product/${encodeURIComponent(productId)}${qs ? `?${qs}` : ""}`,
+      { method: "GET" }
+    );
+  }
 
-async createProductReview(data: {
-  product_id: string;
-  rating: number;
-  comment: string;
-}) {
-  return this.makeRequest("/user/reviews/product", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
+  async createProductReview(data: {
+    product_id: string;
+    rating: number;
+    comment: string;
+  }) {
+    return this.makeRequest("/user/reviews/product", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 
-async updateProductReview(review_id: string, data: {
-  rating?: number;
-  comment?: string;
-}) {
-  return this.makeRequest(`/user/reviews/${review_id}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
+  async updateProductReview(review_id: string, data: {
+    rating?: number;
+    comment?: string;
+  }) {
+    return this.makeRequest(`/user/reviews/${review_id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // ─── FILE UPLOADS ──────────────────────────────────────────────────────────
+
+  /**
+   * Upload files to Cloudinary with auto-database updates
+   * @param files - Array of File objects to upload
+   * @param uploadType - Type of upload (determines folder and permissions)
+   * @param entityId - Optional entity ID (product_id, school_id, etc.) for auto-update
+   * @returns Upload result with URLs and file metadata
+   */
+  async uploadFiles(
+    files: File[],
+    uploadType:
+      | "user_profile_image"
+      | "user_cover_image"
+      | "seller_business_image"
+      | "provider_logo"
+      | "provider_cover"
+      | "provider_post_images"
+      | "product_images"
+      | "product_videos"
+      | "school_logo"
+      | "campus_guide_image"
+      | "category_image"
+      | "category_icon"
+      | "seller_document",
+    entityId?: string
+  ): Promise<{
+    urls: string[];
+    files: Array<{
+      filename: string;
+      url: string;
+      public_id: string;
+      format: string;
+      bytes: number;
+      width: number;
+      height: number;
+      resource_type: string;
+    }>;
+    upload_type: string;
+    folder_path: string;
+    count: number;
+    primary_url: string;
+    database_updated: boolean;
+  }> {
+    const formData = new FormData();
+    
+    // Append each file to the form data
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    
+    // Append upload type
+    formData.append("upload_type", uploadType);
+    
+    // Append entity ID if provided
+    if (entityId) {
+      formData.append("entity_id", entityId);
+    }
+    
+    // Make the request - don't set Content-Type header, let browser set it with boundary
+    const response = await this.makeRequest("/upload/files", {
+      method: "POST",
+      body: formData,
+    });
+    
+    return response?.data || response;
+  }
+
+  // Convenience methods for specific upload types
+
+  async uploadUserProfileImage(file: File) {
+    return this.uploadFiles([file], "user_profile_image");
+  }
+
+  async uploadUserCoverImage(file: File) {
+    return this.uploadFiles([file], "user_cover_image");
+  }
+
+  async uploadSellerBusinessImage(file: File, sellerId?: string) {
+    return this.uploadFiles([file], "seller_business_image", sellerId);
+  }
+
+  async uploadProviderLogo(file: File, providerId?: string) {
+    return this.uploadFiles([file], "provider_logo", providerId);
+  }
+
+  async uploadProviderCover(file: File, providerId?: string) {
+    return this.uploadFiles([file], "provider_cover", providerId);
+  }
+
+  async uploadProviderPostImages(files: File[], providerId?: string) {
+    return this.uploadFiles(files, "provider_post_images", providerId);
+  }
+
+  async uploadProductImages(files: File[], productId: string) {
+    return this.uploadFiles(files, "product_images", productId);
+  }
+
+  async uploadProductVideos(files: File[], productId: string) {
+    return this.uploadFiles(files, "product_videos", productId);
+  }
+
+  async uploadSchoolLogo(file: File, schoolId: string) {
+    return this.uploadFiles([file], "school_logo", schoolId);
+  }
+
+  async uploadCampusGuideImage(file: File, campusGuideId: string) {
+    return this.uploadFiles([file], "campus_guide_image", campusGuideId);
+  }
+
+  async uploadCategoryImage(file: File, categoryId: string) {
+    return this.uploadFiles([file], "category_image", categoryId);
+  }
+
+  async uploadCategoryIcon(file: File, categoryId: string) {
+    return this.uploadFiles([file], "category_icon", categoryId);
+  }
+
+  async uploadSellerDocument(files: File[], sellerId?: string) {
+    return this.uploadFiles(files, "seller_document", sellerId);
+  }
 
   logout() {
     this.clearTokens();
