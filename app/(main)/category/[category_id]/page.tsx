@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
@@ -356,13 +357,17 @@ const ProductCard = ({
         style={{ aspectRatio: "1/1" }}
         onClick={() => router.push(`/product/${product.id}`)}
       >
-        <img
-          src={imageUrl}
-          alt={product.product_name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={() => setImgError(true)}
-          loading="lazy"
-        />
+        <div className="relative w-full h-full">
+          <Image
+            src={imageUrl}
+            alt={product.product_name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setImgError(true)}
+            loading="lazy"
+            unoptimized={imageUrl.includes('data:image')}
+          />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Discount badge */}
@@ -951,7 +956,11 @@ export default function CategoryPage() {
                 </div>
                 <div>
                   <p className="text-gray-700 font-semibold text-sm">Failed to load products</p>
-                  <p className="text-gray-400 text-xs mt-1 max-w-xs">{error}</p>
+                  <p className="text-gray-400 text-xs mt-1 max-w-xs">
+                    {error.includes("avg(reviewrating)") 
+                      ? "Database error: Please contact support. The product listing is temporarily unavailable."
+                      : error}
+                  </p>
                 </div>
                 <button
                   onClick={() => fetchProducts(true)}

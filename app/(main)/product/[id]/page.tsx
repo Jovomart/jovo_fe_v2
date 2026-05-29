@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -154,7 +155,6 @@ const ProductDetails = () => {
       // APPROACH 1: Try to get product from shop-homepage data first
       try {
         const homepageData = await apiService.getShopHomepage(20, false);
-        
         const categoriesData = homepageData?.data || homepageData;
         const categories = Array.isArray(categoriesData) 
           ? categoriesData 
@@ -245,7 +245,10 @@ const ProductDetails = () => {
   }, [productId]);
 
   useEffect(() => {
-    fetchProductDetails();
+    const timer = setTimeout(() => {
+      fetchProductDetails();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchProductDetails]);
 
   // Submit review
@@ -333,6 +336,15 @@ const ProductDetails = () => {
     }
   };
 
+  const handleWishlistToggle = () => {
+    if (!wishlistProduct) return;
+    if (wishlisted) {
+      removeFromWishlist(wishlistProduct.id);
+    } else {
+      addToWishlist(wishlistProduct);
+    }
+  };
+
   const handleBuyNow = async () => {
     if (cartLoading) return;
     setCartLoading(true);
@@ -343,15 +355,6 @@ const ProductDetails = () => {
     } catch (err: any) {
       setCartError(err?.message ?? "Failed to add to cart. Please try again.");
       setCartLoading(false);
-    }
-  };
-
-  const handleWishlistToggle = () => {
-    if (!wishlistProduct) return;
-    if (wishlisted) {
-      removeFromWishlist(wishlistProduct.id);
-    } else {
-      addToWishlist(wishlistProduct);
     }
   };
 
@@ -459,13 +462,17 @@ const ProductDetails = () => {
                   </div>
                 </div>
                 
-                <img 
-                  src={imageUrl} 
-                  alt={product.product_name} 
-                  className="w-full h-full object-contain"
-                  onError={() => setImgError(true)}
-                  loading="eager"
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={imageUrl}
+                    alt={product.product_name}
+                    fill
+                    className="object-contain"
+                    onError={() => setImgError(true)}
+                    priority
+                    unoptimized={imageUrl.includes('data:image')}
+                  />
+                </div>
               </div>
 
               {/* Product Info */}
@@ -870,11 +877,12 @@ const ProductDetails = () => {
                     style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
                   >
                     <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-                      <img 
-                        src={imgSrc} 
-                        alt={item.product_name} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
+                      <Image
+                        src={imgSrc}
+                        alt={item.product_name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        unoptimized={imgSrc.includes('data:image')}
                       />
                       {d > 0 && (
                         <div className="absolute top-2 left-2 bg-[#B42225] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">

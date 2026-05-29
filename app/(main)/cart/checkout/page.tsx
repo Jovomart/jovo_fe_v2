@@ -831,7 +831,7 @@ export default function Checkout() {
     if (typeof window === "undefined") return;
     
     if ((window as any).PaystackPop) {
-      setPaystackLoaded(true);
+      setTimeout(() => setPaystackLoaded(true), 0);
       return;
     }
     
@@ -839,7 +839,7 @@ export default function Checkout() {
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
     script.onload = () => {
-      setPaystackLoaded(true);
+      setTimeout(() => setPaystackLoaded(true), 0);
     };
     script.onerror = () => {
       console.error("Failed to load Paystack script");
@@ -876,8 +876,6 @@ export default function Checkout() {
   useEffect(() => {
     if (checkingAuth || paymentDone || cartRedirectDoneRef.current) return;
     if (!user) return;
-    
-    // Wait for cart to load
     if (cartLoading) return;
     
     console.log("Cart items on checkout:", items.length);
@@ -886,7 +884,9 @@ export default function Checkout() {
     if (items.length === 0) {
       console.log("Cart is empty, redirecting to shop...");
       cartRedirectDoneRef.current = true;
-      setCheckoutError("Your cart is empty. Redirecting you to shop...");
+      setTimeout(() => {
+        setCheckoutError("Your cart is empty. Redirecting you to shop...");
+      }, 0);
       setTimeout(() => {
         router.push("/shop");
       }, 2000);
@@ -942,9 +942,11 @@ export default function Checkout() {
 
     const schoolId = user?.school_id || user?.schoolId;
     if (!schoolId) {
-      setPickupStationsError(
-        "No school linked to your account. Please update your profile to select a pickup station.",
-      );
+      setTimeout(() => {
+        setPickupStationsError(
+          "No school linked to your account. Please update your profile to select a pickup station.",
+        );
+      }, 0);
       return;
     }
 
@@ -961,7 +963,9 @@ export default function Checkout() {
           (Array.isArray(res) ? res : []);
         setPickupStations(stations.filter((s) => s.is_active !== false));
       } catch (err: any) {
-        setPickupStationsError(err?.message ?? "Failed to load pickup stations");
+        setTimeout(() => {
+          setPickupStationsError(err?.message ?? "Failed to load pickup stations");
+        }, 0);
       } finally {
         setPickupStationsLoading(false);
       }
@@ -985,7 +989,6 @@ export default function Checkout() {
   };
 
   const handlePay = async () => {
-    // FIRST: Check frontend cart
     if (!items || items.length === 0) {
       setCheckoutError("Your cart is empty. Please add items before checkout.");
       setTimeout(() => {
@@ -1012,7 +1015,6 @@ export default function Checkout() {
     setValidatingCart(true);
 
     try {
-      // STEP 1: Validate the cart with backend
       console.log("Validating cart with backend...");
       let validationResult;
       try {
@@ -1025,8 +1027,6 @@ export default function Checkout() {
       }
       
       const validationData = validationResult?.data || validationResult;
-      
-      // Check if backend cart is empty
       const backendItems = validationData?.items || validationData?.data?.items || [];
       if (backendItems.length === 0) {
         console.error("Backend cart is empty but frontend has items");
@@ -1034,7 +1034,6 @@ export default function Checkout() {
         throw new Error("Cart session expired. Please refresh the page and try again.");
       }
       
-      // Check if cart is valid
       if (validationData?.valid === false || validationData?.data?.valid === false) {
         const errors = validationData?.errors || validationData?.data?.errors || [];
         const errorMsg = errors.length > 0 
@@ -1046,7 +1045,6 @@ export default function Checkout() {
       console.log("Cart validation passed. Backend items:", backendItems.length);
       setValidatingCart(false);
       
-      // STEP 2: Prepare delivery details
       let deliveryStreetAddress: string;
       let deliveryCity: string;
       let deliveryState: string;
@@ -1076,7 +1074,6 @@ export default function Checkout() {
         deliveryNotes = info.notes || undefined;
       }
 
-      // STEP 3: Call checkout
       const checkoutParams = {
         delivery_street_address: deliveryStreetAddress,
         delivery_city: deliveryCity,
@@ -1099,7 +1096,6 @@ export default function Checkout() {
         throw new Error("No payment URL returned. Please try again.");
       }
 
-      // STEP 4: Initialize Paystack
       const urlParts = payment_url.split("/");
       const accessCode = urlParts[urlParts.length - 1];
       
@@ -1181,7 +1177,6 @@ export default function Checkout() {
     router.push(`/orders?ref=${successOrderId}`);
   };
 
-  // Show loading while checking auth or cart
   if (checkingAuth || authLoading || (cartLoading && !paymentDone)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

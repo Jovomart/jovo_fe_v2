@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FiArrowRight, FiGrid, FiRefreshCw, FiAlertCircle, FiHeart } from "react-icons/fi";
 import { getCategoryTheme } from "@/categoryConfig";
 import apiService from "@/services/apiService";
@@ -58,7 +58,7 @@ const CategoryGrid = ({
 
   return (
     <div className="w-full mt-5 overflow-hidden" style={{ background: theme.bgColor }}>
-      {/* ── Header (UNTouched - kept exactly as original) ── */}
+      {/* ── Header ── */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
         style={{ background: theme.gradient }}
@@ -97,7 +97,7 @@ const CategoryGrid = ({
         </Link>
       </div>
 
-      {/* ── Responsive Grid Products (Changed from carousel to grid) ── */}
+      {/* ── Responsive Grid Products ── */}
       <div className="px-4 md:px-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
           {products.map((product) => {
@@ -121,13 +121,14 @@ const CategoryGrid = ({
                 href={`/product/${product.id}`}
                 className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer block"
               >
-                <div className="relative aspect-square overflow-hidden rounded-t-xl bg-gray-50">
-                  <img
+                <div className="relative aspect-square overflow-hidden rounded-t-xl bg-gray-100">
+                  <Image
                     src={imageUrl}
                     alt={product.product_name}
-                    className="w-fit h-full object-cover group-hover:scale-105 transition duration-300"
+                    fill
+                    className="object-cover group-hover:scale-105 transition duration-300"
                     onError={() => handleImageError(product.id)}
-                    loading="lazy"
+                    unoptimized={imageUrl.includes('data:image')}
                   />
                   
                   {discount > 0 && (
@@ -335,10 +336,13 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
     } finally {
       setLoading(false);
     }
-  }, [limitPerCategory, retryCount]);
+  }, [limitPerCategory]);
 
   useEffect(() => {
-    fetchShopHomepage();
+    const timer = setTimeout(() => {
+      fetchShopHomepage();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchShopHomepage]);
 
   // ── Loading ──────────────────────────────────────────────────────────────
