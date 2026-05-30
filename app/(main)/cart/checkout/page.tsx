@@ -974,14 +974,15 @@ export default function Checkout() {
     fetch();
   }, [selectedDelivery, user]);
 
-  useEffect(() => {
+   // Find this useEffect (around line 935) and add selectedDeliveryId to dependencies:
+useEffect(() => {
   if (prevDeliveryIdRef.current !== selectedDeliveryId) {
     setSelectedStation(null);
     setPickupStations([]);
     setPickupStationsError(null);
     prevDeliveryIdRef.current = selectedDeliveryId;
   }
-}, [selectedDeliveryId]); // ✅ Add selectedDeliveryId here
+}, [selectedDeliveryId]); // ✅ Fixed - added selectedDeliveryId
 
   const handleStationSelect = (station: PickupStation) => {
     setSelectedStation(station.id ? station : null);

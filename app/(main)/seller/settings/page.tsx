@@ -269,7 +269,7 @@ const SellerSettingsPage = () => {
     } finally {
       setLoadingProfile(false);
     }
-  }, []); // intentionally no deps — we always fetch fresh from API
+  }, [user]); // ✅ Added user to dependencies
 
   // ── Load seller info ───────────────────────────────────────────────────────
   // getApplicationStatus() returns the seller application/approval record which

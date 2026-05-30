@@ -1,10 +1,10 @@
-// app/services/page.tsx
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Footer from "@/components/layout/Footer";
+import { AuthContext } from "@/context/AuthContext";
 import {
   FiSearch,
   FiX,
@@ -421,11 +421,10 @@ const LoginRequiredPopup = ({
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    if (!isOpen) {
-      setCountdown(5);
-      return;
-    }
-
+    if (!isOpen) return;
+    
+    setCountdown(5);
+    
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -498,6 +497,7 @@ const LoginRequiredPopup = ({
 export default function ServicesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useContext(AuthContext) as any;
 
   const [search, setSearch] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
@@ -561,13 +561,15 @@ export default function ServicesPage() {
     }
   }, []);
 
-  /* check provider status */
+  /* check provider status using AuthContext */
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    if (authLoading) return;
+    
+    if (!user) {
       setIsProvider(false);
       return;
     }
+    
     apiService
       .getServiceProviderDetails()
       .then((res) => {
@@ -606,19 +608,20 @@ export default function ServicesPage() {
         setIsProvider(isActive || statusActive || pendingButVerified);
       })
       .catch(() => setIsProvider(false));
-  }, []);
+  }, [user, authLoading]);
 
   // Load categories on mount
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
-  /* sync category from URL */
+  /* sync category from URL without causing setState warning */
   useEffect(() => {
     const catId = searchParams?.get("category");
-    if (catId) setActiveCategoryId(catId);
-    else setActiveCategoryId(null);
-  }, [searchParams]);
+    if (catId !== activeCategoryId) {
+      setActiveCategoryId(catId || null);
+    }
+  }, [searchParams, activeCategoryId]);
 
   /* fetch providers */
   const fetchProviders = useCallback(
