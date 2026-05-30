@@ -1,3 +1,4 @@
+// app/services/page.tsx
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -21,6 +22,8 @@ import {
   FiAlertCircle,
   FiRefreshCw,
   FiLoader,
+  FiUpload,
+  FiImage,
 } from "react-icons/fi";
 import {
   FaWhatsapp,
@@ -419,7 +422,7 @@ const LoginRequiredPopup = ({
 
   useEffect(() => {
     if (!isOpen) {
-      setCountdown(5); // eslint-disable-line react-hooks/set-state-in-effect
+      setCountdown(5);
       return;
     }
 
@@ -514,24 +517,17 @@ export default function ServicesPage() {
   const [isProvider, setIsProvider] = useState<boolean | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(false);
-
-  // New state for login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Update the fetchCategories function to properly extract categories from the response:
-
   const fetchCategories = useCallback(async () => {
     try {
       const response = await apiService.getPublicCategories("SERVICE");
-
-      // Log the full response to see what we're getting
       console.log("Full API Response:", response);
 
       let cats: CategoryFromAPI[] = [];
 
-      // Try different response structures
       if (Array.isArray(response)) {
         cats = response;
       } else if (response?.data && Array.isArray(response.data)) {
@@ -548,7 +544,6 @@ export default function ServicesPage() {
       ) {
         cats = response.data.categories;
       } else if (typeof response === "object") {
-        // Try to find any array property in the response
         for (const key in response) {
           if (Array.isArray(response[key])) {
             cats = response[key];
@@ -570,7 +565,6 @@ export default function ServicesPage() {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsProvider(false);
       return;
     }
@@ -616,14 +610,13 @@ export default function ServicesPage() {
 
   // Load categories on mount
   useEffect(() => {
-    fetchCategories(); // eslint-disable-line react-hooks/set-state-in-effect
+    fetchCategories();
   }, [fetchCategories]);
 
   /* sync category from URL */
   useEffect(() => {
     const catId = searchParams?.get("category");
-    if (catId)
-      setActiveCategoryId(catId); // eslint-disable-line react-hooks/set-state-in-effect
+    if (catId) setActiveCategoryId(catId);
     else setActiveCategoryId(null);
   }, [searchParams]);
 
@@ -644,7 +637,6 @@ export default function ServicesPage() {
             offset: currentOffset,
           };
 
-        // Send category filter to API if selected
         if (activeCategoryId) {
           params.category_id = activeCategoryId;
         }
@@ -670,13 +662,11 @@ export default function ServicesPage() {
         const hasMoreData = items.length === PAGE_LIMIT;
         setHasMore(hasMoreData);
 
-        // Build category map from fetched categories
         const catMap: Record<string, CategoryFromAPI> = {};
         categories.forEach((cat) => {
           catMap[cat.id] = cat;
         });
 
-        // Map providers with category info
         let mappedProviders: DisplayProvider[] = items.map((provider) => {
           const categoryId = provider.category_id || provider.category || "";
           const category = catMap[categoryId];
@@ -715,7 +705,6 @@ export default function ServicesPage() {
           };
         });
 
-        // Apply client-side sorting
         if (sortBy === "top_rated") {
           mappedProviders.sort((a, b) => b.rating - a.rating);
         } else if (sortBy === "most_reviewed") {
@@ -757,7 +746,6 @@ export default function ServicesPage() {
     };
   }, [activeCategoryId, sortBy, search, fetchProviders]);
 
-  // Filter providers client-side for available now
   const displayedProviders = showAvailable
     ? providers.filter((p) => p.available)
     : providers;
@@ -774,19 +762,15 @@ export default function ServicesPage() {
     backgroundSize: "28px 28px",
   };
 
-  // Handle Apply as Provider button click
   const handleApplyClick = () => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      // Show popup if not logged in
       setShowLoginPopup(true);
     } else {
-      // Redirect to apply page if logged in
       router.push("/services/apply");
     }
   };
 
-  // Handle redirect to login
   const handleRedirectToLogin = () => {
     setShowLoginPopup(false);
     router.push("/login");
