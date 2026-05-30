@@ -22,8 +22,6 @@ import {
   FiAlertCircle,
   FiRefreshCw,
   FiLoader,
-  FiUpload,
-  FiImage,
 } from "react-icons/fi";
 import {
   FaWhatsapp,
@@ -35,7 +33,6 @@ import {
   FaTshirt,
   FaBolt,
   FaWrench,
-  FaLightbulb,
   FaChalkboardTeacher,
   FaCamera,
   FaTools,
@@ -46,31 +43,15 @@ import apiService from "@/services/apiService";
 const getIconForCategory = (categoryName: string): React.ReactNode => {
   const name = categoryName.toLowerCase();
   if (name.includes("clean")) return <FaBroom size={14} />;
-  if (
-    name.includes("salon") ||
-    name.includes("barber") ||
-    name.includes("hair")
-  )
+  if (name.includes("salon") || name.includes("barber") || name.includes("hair"))
     return <FaCut size={14} />;
   if (name.includes("laundry") || name.includes("wash"))
     return <FaTshirt size={14} />;
-  if (
-    name.includes("electrical") ||
-    name.includes("electrician") ||
-    name.includes("electric")
-  )
+  if (name.includes("electrical") || name.includes("electrician") || name.includes("electric"))
     return <FaBolt size={14} />;
-  if (
-    name.includes("repair") ||
-    name.includes("fix") ||
-    name.includes("handyman")
-  )
+  if (name.includes("repair") || name.includes("fix") || name.includes("handyman"))
     return <FaWrench size={14} />;
-  if (
-    name.includes("tutor") ||
-    name.includes("teach") ||
-    name.includes("education")
-  )
+  if (name.includes("tutor") || name.includes("teach") || name.includes("education"))
     return <FaChalkboardTeacher size={14} />;
   if (name.includes("photo") || name.includes("camera"))
     return <FaCamera size={14} />;
@@ -94,7 +75,6 @@ const getGradientForCategory = (categoryName: string): string => {
 
 const PAGE_LIMIT = 12;
 
-/* ─── API response interfaces ────────────────────────────── */
 interface CategoryFromAPI {
   id: string;
   name: string;
@@ -157,20 +137,16 @@ function formatPrice(type = "fixed", price = 0): string {
   return price > 0 ? `${prefix}₦${price.toLocaleString()}` : "Price on request";
 }
 
-/* ─── stars ────────────────────────────────────────────────────── */
 const Stars = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((s) => {
-      if (rating >= s)
-        return <FaStar key={s} size={11} className="text-yellow-400" />;
-      if (rating >= s - 0.5)
-        return <FaStarHalfAlt key={s} size={11} className="text-yellow-400" />;
+      if (rating >= s) return <FaStar key={s} size={11} className="text-yellow-400" />;
+      if (rating >= s - 0.5) return <FaStarHalfAlt key={s} size={11} className="text-yellow-400" />;
       return <FaRegStar key={s} size={11} className="text-gray-300" />;
     })}
   </div>
 );
 
-/* ─── provider card ────────────────────────────────────────────── */
 const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
   const icon = getIconForCategory(provider.categoryName);
   const gradient = getGradientForCategory(provider.categoryName);
@@ -208,10 +184,7 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
 
       <div className="p-4 md:p-5 flex flex-col flex-1 gap-3">
         <div>
-          <h3
-            className="font-black text-gray-900 text-sm md:text-base leading-tight"
-            style={{ fontFamily: "'Georgia',serif" }}
-          >
+          <h3 className="font-black text-gray-900 text-sm md:text-base leading-tight">
             {provider.name}
           </h3>
           {provider.providerName !== provider.name && (
@@ -220,8 +193,7 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
             </p>
           )}
           <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-            <FiMapPin size={10} className="text-[#B42225] shrink-0" />{" "}
-            {provider.location}
+            <FiMapPin size={10} className="text-[#B42225] shrink-0" /> {provider.location}
           </p>
         </div>
 
@@ -229,9 +201,7 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
           <Stars rating={provider.rating} />
           {provider.rating > 0 ? (
             <>
-              <span className="text-xs font-black text-gray-800">
-                {provider.rating.toFixed(1)}
-              </span>
+              <span className="text-xs font-black text-gray-800">{provider.rating.toFixed(1)}</span>
               <span className="text-xs text-gray-400">
                 ({provider.reviews} review{provider.reviews !== 1 ? "s" : ""})
               </span>
@@ -244,10 +214,7 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
         {provider.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {provider.tags.slice(0, 4).map((t) => (
-              <span
-                key={t}
-                className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"
-              >
+              <span key={t} className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                 {t}
               </span>
             ))}
@@ -255,14 +222,10 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
         )}
 
         {provider.description && (
-          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-            {provider.description}
-          </p>
+          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{provider.description}</p>
         )}
 
-        <p className="text-sm font-black text-[#B42225]">
-          {provider.priceLabel}
-        </p>
+        <p className="text-sm font-black text-[#B42225]">{provider.priceLabel}</p>
 
         <div className="flex gap-2 mt-auto pt-2 border-t border-gray-100">
           {provider.whatsapp ? (
@@ -294,12 +257,8 @@ const ProviderCard = ({ provider }: { provider: DisplayProvider }) => {
   );
 };
 
-/* ─── skeleton card ────────────────────────────────────────────── */
 const SkeletonCard = () => (
-  <div
-    className="bg-white rounded-3xl overflow-hidden animate-pulse"
-    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
-  >
+  <div className="bg-white rounded-3xl overflow-hidden animate-pulse" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
     <div className="bg-gray-200" style={{ aspectRatio: "16/9" }} />
     <div className="p-5 space-y-3">
       <div className="h-4 bg-gray-200 rounded-full w-3/4" />
@@ -315,14 +274,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-/* ─── provider CTA banner ──────────────────────────────────────── */
-function ProviderCTABanner({
-  isProvider,
-  onApplyClick,
-}: {
-  isProvider: boolean | null;
-  onApplyClick: () => void;
-}) {
+function ProviderCTABanner({ isProvider, onApplyClick }: { isProvider: boolean | null; onApplyClick: () => void }) {
   if (isProvider === null) return null;
 
   if (isProvider) {
@@ -332,8 +284,7 @@ function ProviderCTABanner({
           href="/services/dashboard"
           className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:opacity-90 group"
           style={{
-            background:
-              "linear-gradient(135deg,rgba(180,34,37,0.08),rgba(255,140,0,0.08))",
+            background: "linear-gradient(135deg,rgba(180,34,37,0.08),rgba(255,140,0,0.08))",
             border: "1px solid rgba(180,34,37,0.2)",
           }}
         >
@@ -344,17 +295,10 @@ function ProviderCTABanner({
             <FiSettings size={16} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-gray-800">
-              You&apos;re a Service Provider
-            </p>
-            <p className="text-xs text-gray-500">
-              Manage your profile, service, and availability
-            </p>
+            <p className="text-sm font-black text-gray-800">You&apos;re a Service Provider</p>
+            <p className="text-xs text-gray-500">Manage your profile, service, and availability</p>
           </div>
-          <FiArrowRight
-            size={16}
-            className="text-[#B42225] shrink-0 transition-transform group-hover:translate-x-1"
-          />
+          <FiArrowRight size={16} className="text-[#B42225] shrink-0 transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
     );
@@ -364,41 +308,28 @@ function ProviderCTABanner({
     <div className="max-w-6xl mx-auto px-4 md:px-8 pt-5">
       <div
         className="relative overflow-hidden rounded-2xl p-5 md:p-6"
-        style={{
-          background: "linear-gradient(135deg,#0f0f0f,#1a0a00)",
-          border: "1px solid rgba(255,140,0,0.2)",
-        }}
+        style={{ background: "linear-gradient(135deg,#0f0f0f,#1a0a00)", border: "1px solid rgba(255,140,0,0.2)" }}
       >
         <div
           className="absolute right-0 top-0 w-40 h-full opacity-20 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse at right,#FF8C00,transparent 70%)",
-          }}
+          style={{ background: "radial-gradient(ellipse at right,#FF8C00,transparent 70%)" }}
         />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
             <p className="text-[10px] font-black text-[#FF8C00] uppercase tracking-widest mb-1 flex items-center gap-1.5">
               <FiTool size={10} /> For Providers
             </p>
-            <h3
-              className="text-white font-black text-base md:text-lg leading-tight mb-1"
-              style={{ fontFamily: "'Georgia',serif" }}
-            >
+            <h3 className="text-white font-black text-base md:text-lg leading-tight mb-1">
               Got a skill? Start earning today.
             </h3>
             <p className="text-white/40 text-xs leading-relaxed">
-              Join providers on JOVO — apply in 2 minutes and go live on the
-              marketplace.
+              Join providers on JOVO — apply in 2 minutes and go live on the marketplace.
             </p>
           </div>
           <button
             onClick={onApplyClick}
             className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-black text-white whitespace-nowrap transition-all hover:opacity-90 shrink-0"
-            style={{
-              background: "linear-gradient(135deg,#B42225,#FF8C00)",
-              boxShadow: "0 6px 20px rgba(180,34,37,0.35)",
-            }}
+            style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 6px 20px rgba(180,34,37,0.35)" }}
           >
             Apply as Provider <FiArrowRight size={14} />
           </button>
@@ -423,6 +354,7 @@ const LoginRequiredPopup = ({
   useEffect(() => {
     if (!isOpen) return;
     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCountdown(5);
     
     const timer = setInterval(() => {
@@ -520,12 +452,11 @@ export default function ServicesPage() {
   const [showLoginPopup, setShowLoginPopup] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const categoriesLoadedRef = useRef(false);
 
   const fetchCategories = useCallback(async () => {
     try {
       const response = await apiService.getPublicCategories("SERVICE");
-      console.log("Full API Response:", response);
-
       let cats: CategoryFromAPI[] = [];
 
       if (Array.isArray(response)) {
@@ -538,22 +469,10 @@ export default function ServicesPage() {
         cats = response.items;
       } else if (response?.results && Array.isArray(response.results)) {
         cats = response.results;
-      } else if (
-        response?.data?.categories &&
-        Array.isArray(response.data.categories)
-      ) {
+      } else if (response?.data?.categories && Array.isArray(response.data.categories)) {
         cats = response.data.categories;
-      } else if (typeof response === "object") {
-        for (const key in response) {
-          if (Array.isArray(response[key])) {
-            cats = response[key];
-            console.log(`Found categories in response.${key}`);
-            break;
-          }
-        }
       }
 
-      console.log("Extracted categories:", cats);
       setCategories(cats);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
@@ -565,20 +484,22 @@ export default function ServicesPage() {
   useEffect(() => {
     if (authLoading) return;
     
-    if (!user) {
-      setIsProvider(false);
-      return;
-    }
-    
-    apiService
-      .getServiceProviderDetails()
-      .then((res) => {
+    const checkProviderStatus = async () => {
+      if (!user) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsProvider(false);
+        return;
+      }
+      
+      try {
+        const res = await apiService.getServiceProviderDetails();
         const p = res?.data || res;
         if (!p?.id) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setIsProvider(false);
           return;
         }
-        const isActive = p.is_active === true;
+        const isActiveStatus = p.is_active === true;
         const rawStatus = (
           p.provider_status ||
           p.status ||
@@ -605,20 +526,31 @@ export default function ServicesPage() {
             "review",
             "",
           ].includes(rawStatus) && p.is_phone_verified === true;
-        setIsProvider(isActive || statusActive || pendingButVerified);
-      })
-      .catch(() => setIsProvider(false));
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsProvider(isActiveStatus || statusActive || pendingButVerified);
+      } catch {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsProvider(false);
+      }
+    };
+    
+    checkProviderStatus();
   }, [user, authLoading]);
 
   // Load categories on mount
   useEffect(() => {
-    fetchCategories();
+    if (!categoriesLoadedRef.current) {
+      categoriesLoadedRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchCategories();
+    }
   }, [fetchCategories]);
 
-  /* sync category from URL without causing setState warning */
+  /* sync category from URL */
   useEffect(() => {
     const catId = searchParams?.get("category");
     if (catId !== activeCategoryId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveCategoryId(catId || null);
     }
   }, [searchParams, activeCategoryId]);
@@ -633,12 +565,11 @@ export default function ServicesPage() {
       }
 
       try {
-        const params: Parameters<typeof apiService.getMarketplaceServices>[0] =
-          {
-            sort_by: sortBy,
-            limit: PAGE_LIMIT,
-            offset: currentOffset,
-          };
+        const params: any = {
+          sort_by: sortBy,
+          limit: PAGE_LIMIT,
+          offset: currentOffset,
+        };
 
         if (activeCategoryId) {
           params.category_id = activeCategoryId;
