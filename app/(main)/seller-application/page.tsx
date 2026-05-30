@@ -15,12 +15,14 @@ import {
   FiCheckCircle,
   FiClock,
   FiRefreshCw,
+  FiLoader,
 } from "react-icons/fi";
 import { FaStore, FaRocket } from "react-icons/fa";
-import { MdStorefront } from "react-icons/md";
+import { MdStorefront, MdBadge, MdDirectionsCar, MdSchool } from "react-icons/md";
 import apiService from "@/services/apiService";
 
-// Types
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface FormData {
   business_name: string;
   short_business_description: string;
@@ -29,6 +31,8 @@ interface FormData {
   seller_document_file: File | null;
   seller_document_preview: string;
   seller_document_name: string;
+  // After Cloudinary upload this holds the CDN URL; submission uses this
+  seller_document_url: string;
 }
 
 interface Errors {
@@ -39,8 +43,34 @@ interface Errors {
   seller_document_file?: string;
 }
 
-// Only PASSPORT
-const DOCUMENT_TYPES = [{ value: "PASSPORT", label: "International Passport" }];
+// ─── Document types ───────────────────────────────────────────────────────────
+
+const DOCUMENT_TYPES = [
+  {
+    value: "PASSPORT",
+    label: "Passport",
+    icon: <FiFileText size={20} />,
+    hint: "International passport biodata page",
+  },
+  {
+    value: "ID_CARD",
+    label: "ID Card",
+    icon: <MdBadge size={20} />,
+    hint: "National identity card (front & back)",
+  },
+  {
+    value: "DRIVING_LICENSE",
+    label: "Driving Licence",
+    icon: <MdDirectionsCar size={20} />,
+    hint: "Valid driver's licence",
+  },
+  {
+    value: "SCHOOL_ID_CARD",
+    label: "School ID Card",
+    icon: <MdSchool size={20} />,
+    hint: "Current student ID card",
+  },
+];
 
 const STEPS = [
   { id: 1, label: "Business Info", icon: <MdStorefront size={16} /> },
@@ -48,16 +78,7 @@ const STEPS = [
   { id: 3, label: "Review", icon: <FiCheck size={16} /> },
 ];
 
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const FieldError = ({ msg }: { msg?: string }) =>
   msg ? (
@@ -96,7 +117,8 @@ const inputCls = (error?: string) =>
       : "border-gray-200 focus:border-[#B42225] focus:ring-2 focus:ring-[#B42225]/10"
   }`;
 
-/* ── Status Screen ─────────────────────────────────────────── */
+// ─── Status Screen ────────────────────────────────────────────────────────────
+
 const StatusScreen = ({
   status,
   rejectionReason,
@@ -171,9 +193,7 @@ const StatusScreen = ({
       {rejectionReason && (
         <div className="bg-red-100 border border-red-200 rounded-2xl px-4 py-3 mb-5 text-left max-w-sm mx-auto">
           <p className="text-xs font-black text-red-700 mb-1">Reason:</p>
-          <p className="text-xs text-red-600 leading-relaxed">
-            {rejectionReason}
-          </p>
+          <p className="text-xs text-red-600 leading-relaxed">{rejectionReason}</p>
         </div>
       )}
 
@@ -219,7 +239,8 @@ const StatusScreen = ({
   );
 };
 
-/* ── Main ──────────────────────────────────────────────────── */
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const SellerApplication = () => {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -230,6 +251,11 @@ const SellerApplication = () => {
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  // Upload state — separate from form submission loading
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
+
   const [form, setForm] = useState<FormData>({
     business_name: "",
     short_business_description: "",
@@ -238,6 +264,7 @@ const SellerApplication = () => {
     seller_document_file: null,
     seller_document_preview: "",
     seller_document_name: "",
+    seller_document_url: "",   // populated after Cloudinary upload
   });
   const [errors, setErrors] = useState<Errors>({});
 
@@ -246,9 +273,16 @@ const SellerApplication = () => {
     setErrors((p) => ({ ...p, [key]: "" }));
   };
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ── File selection → immediately upload to Cloudinary ──────────────────────
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Reset previous upload state
+    setUploadError("");
+    setErrors((p) => ({ ...p, seller_document_file: "" }));
+
+    // Client-side validation
     const allowed = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
     if (!allowed.includes(file.type)) {
       setErrors((p) => ({
@@ -264,17 +298,65 @@ const SellerApplication = () => {
       }));
       return;
     }
+
+    // Local preview (images only)
     const preview = file.type.startsWith("image/")
       ? URL.createObjectURL(file)
       : "";
+
     setForm((p) => ({
       ...p,
       seller_document_file: file,
       seller_document_preview: preview,
       seller_document_name: file.name,
+      seller_document_url: "",   // clear any previous URL while re-uploading
     }));
-    setErrors((p) => ({ ...p, seller_document_file: "" }));
+
+    // Upload to Cloudinary via ApiService
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Fake progress ticks while waiting (real progress isn't available via fetch)
+      const ticker = setInterval(() => {
+        setUploadProgress((p) => Math.min(p + 8, 88));
+      }, 200);
+
+      const result = await apiService.uploadFiles([file], "seller_document");
+
+      clearInterval(ticker);
+      setUploadProgress(100);
+
+      const uploadedUrl = result?.primary_url || result?.urls?.[0];
+      if (!uploadedUrl) throw new Error("No URL returned from upload.");
+
+      // Swap the blob preview for the real CDN URL
+      if (preview) URL.revokeObjectURL(preview);
+      setForm((p) => ({
+        ...p,
+        seller_document_preview: file.type.startsWith("image/") ? uploadedUrl : "",
+        seller_document_url: uploadedUrl,
+      }));
+    } catch (err: any) {
+      setUploadError(err.message || "Upload failed. Please try again.");
+      // Reset file selection so user can retry
+      setForm((p) => ({
+        ...p,
+        seller_document_file: null,
+        seller_document_preview: "",
+        seller_document_name: "",
+        seller_document_url: "",
+      }));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } finally {
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 400);
+    }
   };
+
+  // ── Validation ─────────────────────────────────────────────────────────────
 
   const validateStep1 = (): boolean => {
     const e: Errors = {};
@@ -298,6 +380,8 @@ const SellerApplication = () => {
       e.seller_document_type = "Document type is required.";
     if (!form.seller_document_file)
       e.seller_document_file = "Please upload your document.";
+    else if (!form.seller_document_url)
+      e.seller_document_file = "Document is still uploading. Please wait.";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -314,17 +398,18 @@ const SellerApplication = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  // Document is already on Cloudinary — just send the URL + metadata
+
   const handleSubmit = async () => {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const base64Doc = await fileToBase64(form.seller_document_file!);
-
       await apiService.applyAsSeller({
         business_name: form.business_name.trim(),
         short_business_description: form.short_business_description.trim(),
         business_address: form.business_address.trim(),
-        seller_document: base64Doc,
+        seller_document: form.seller_document_url,   // CDN URL, not base64
         seller_document_type: form.seller_document_type,
       });
 
@@ -347,25 +432,36 @@ const SellerApplication = () => {
       seller_document_file: null,
       seller_document_preview: "",
       seller_document_name: "",
+      seller_document_url: "",
     });
     setErrors({});
     setSubmitError("");
+    setUploadError("");
   };
+
+  // ── Selected document type label (for review step) ─────────────────────────
+  const selectedDocType = DOCUMENT_TYPES.find(
+    (d) => d.value === form.seller_document_type
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <>
       <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .fade-up { animation: fadeUp 0.35s ease forwards; }
       `}</style>
 
       <div className="min-h-screen" style={{ background: "#F4F5F9" }}>
-        {/* Top bar */}
+
+        {/* ── Top bar ── */}
         <div
           className="sticky top-0 z-30 border-b border-white/10"
-          style={{
-            background: "linear-gradient(135deg,#0a0a0a,#1a0505,#B42225)",
-          }}
+          style={{ background: "linear-gradient(135deg,#0a0a0a,#1a0505,#B42225)" }}
         >
           <div className="max-w-3xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
             <Link
@@ -390,7 +486,8 @@ const SellerApplication = () => {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 md:px-6 py-8">
-          {/* Heading */}
+
+          {/* ── Heading ── */}
           <div className="mb-8">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-orange-600 mb-3"
@@ -408,8 +505,7 @@ const SellerApplication = () => {
               Become a Seller on Jovo
             </h1>
             <p className="text-sm text-gray-400 mt-1.5">
-              Fill in your business details and we'll review your application
-              within 24–48 hours.
+              Fill in your business details and we'll review your application within 24–48 hours.
             </p>
           </div>
 
@@ -423,7 +519,7 @@ const SellerApplication = () => {
             </div>
           ) : (
             <>
-              {/* Step progress */}
+              {/* ── Step progress ── */}
               <div
                 className="bg-white rounded-3xl p-5 mb-6"
                 style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
@@ -438,27 +534,15 @@ const SellerApplication = () => {
                     }}
                   />
                   {STEPS.map((s) => (
-                    <div
-                      key={s.id}
-                      className="relative z-10 flex flex-col items-center gap-1.5"
-                    >
+                    <div key={s.id} className="relative z-10 flex flex-col items-center gap-1.5">
                       <div
                         className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all duration-300"
                         style={
                           step > s.id
-                            ? {
-                                background: "#059669",
-                                color: "#fff",
-                                boxShadow: "0 4px 12px rgba(5,150,105,0.3)",
-                              }
+                            ? { background: "#059669", color: "#fff", boxShadow: "0 4px 12px rgba(5,150,105,0.3)" }
                             : step === s.id
-                              ? {
-                                  background:
-                                    "linear-gradient(135deg,#B42225,#FF6B00)",
-                                  color: "#fff",
-                                  boxShadow: "0 4px 16px rgba(180,34,37,0.35)",
-                                }
-                              : { background: "#F3F4F6", color: "#9CA3AF" }
+                            ? { background: "linear-gradient(135deg,#B42225,#FF6B00)", color: "#fff", boxShadow: "0 4px 16px rgba(180,34,37,0.35)" }
+                            : { background: "#F3F4F6", color: "#9CA3AF" }
                         }
                       >
                         {step > s.id ? <FiCheck size={16} /> : s.icon}
@@ -466,12 +550,7 @@ const SellerApplication = () => {
                       <span
                         className="text-[10px] font-bold whitespace-nowrap"
                         style={{
-                          color:
-                            step === s.id
-                              ? "#B42225"
-                              : step > s.id
-                                ? "#059669"
-                                : "#9CA3AF",
+                          color: step === s.id ? "#B42225" : step > s.id ? "#059669" : "#9CA3AF",
                         }}
                       >
                         {s.label}
@@ -481,7 +560,7 @@ const SellerApplication = () => {
                 </div>
               </div>
 
-              {/* ── STEP 1 — Business Info ── */}
+              {/* ══ STEP 1 — Business Info ══ */}
               {step === 1 && (
                 <div className="fade-up space-y-5">
                   <div
@@ -491,19 +570,13 @@ const SellerApplication = () => {
                     <div className="flex items-center gap-3 mb-6 pb-5 border-b border-gray-50">
                       <div
                         className="w-10 h-10 rounded-2xl flex items-center justify-center text-white"
-                        style={{
-                          background: "linear-gradient(135deg,#B42225,#FF6B00)",
-                        }}
+                        style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)" }}
                       >
                         <MdStorefront size={18} />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-gray-900">
-                          Business Information
-                        </h2>
-                        <p className="text-xs text-gray-400">
-                          Tell us about your business
-                        </p>
+                        <h2 className="text-base font-black text-gray-900">Business Information</h2>
+                        <p className="text-xs text-gray-400">Tell us about your business</p>
                       </div>
                     </div>
 
@@ -517,9 +590,7 @@ const SellerApplication = () => {
                         <input
                           type="text"
                           value={form.business_name}
-                          onChange={(e) =>
-                            setFormField("business_name", e.target.value)
-                          }
+                          onChange={(e) => setFormField("business_name", e.target.value)}
                           placeholder="e.g. Chidi's Gadget Hub"
                           className={inputCls(errors.business_name)}
                           maxLength={80}
@@ -535,17 +606,11 @@ const SellerApplication = () => {
                         <textarea
                           value={form.short_business_description}
                           onChange={(e) =>
-                            setFormField(
-                              "short_business_description",
-                              e.target.value,
-                            )
+                            setFormField("short_business_description", e.target.value)
                           }
                           placeholder="e.g. We sell quality phone accessories and gadgets at affordable prices to FUTO students..."
                           rows={4}
-                          className={
-                            inputCls(errors.short_business_description) +
-                            " resize-none"
-                          }
+                          className={inputCls(errors.short_business_description) + " resize-none"}
                           maxLength={300}
                         />
                         <p className="text-[10px] text-gray-300 text-right -mt-1">
@@ -562,9 +627,7 @@ const SellerApplication = () => {
                         <input
                           type="text"
                           value={form.business_address}
-                          onChange={(e) =>
-                            setFormField("business_address", e.target.value)
-                          }
+                          onChange={(e) => setFormField("business_address", e.target.value)}
                           placeholder="e.g. Beside FUTO Main Gate, Owerri, Imo State"
                           className={inputCls(errors.business_address)}
                         />
@@ -587,7 +650,7 @@ const SellerApplication = () => {
                 </div>
               )}
 
-              {/* ── STEP 2 — Identity Verification ── */}
+              {/* ══ STEP 2 — Identity Verification ══ */}
               {step === 2 && (
                 <div className="fade-up space-y-5">
                   <div
@@ -597,16 +660,12 @@ const SellerApplication = () => {
                     <div className="flex items-center gap-3 mb-6 pb-5 border-b border-gray-50">
                       <div
                         className="w-10 h-10 rounded-2xl flex items-center justify-center text-white"
-                        style={{
-                          background: "linear-gradient(135deg,#2563EB,#7C3AED)",
-                        }}
+                        style={{ background: "linear-gradient(135deg,#2563EB,#7C3AED)" }}
                       >
                         <FiShield size={18} />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-gray-900">
-                          Identity Verification
-                        </h2>
+                        <h2 className="text-base font-black text-gray-900">Identity Verification</h2>
                         <p className="text-xs text-gray-400">
                           We need to verify your identity to protect all users
                         </p>
@@ -614,59 +673,54 @@ const SellerApplication = () => {
                     </div>
 
                     <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-100 mb-6">
-                      <FiShield
-                        size={16}
-                        className="text-blue-500 mt-0.5 shrink-0"
-                      />
+                      <FiShield size={16} className="text-blue-500 mt-0.5 shrink-0" />
                       <p className="text-xs text-blue-700 leading-relaxed">
-                        Your documents are encrypted and stored securely.
-                        They're used solely for identity verification and never
-                        shared with third parties.
+                        Your documents are encrypted and stored securely. They're used solely for
+                        identity verification and never shared with third parties.
                       </p>
                     </div>
 
-                    <div className="space-y-5">
-                      {/* Document Type */}
+                    <div className="space-y-6">
+
+                      {/* ── Document Type ── */}
                       <InputField
                         label="Document Type"
                         required
                         error={errors.seller_document_type}
                       >
-                        <div className="grid sm:grid-cols-1 gap-3 mt-1 max-w-xs">
-                          {DOCUMENT_TYPES.map(({ value, label }) => {
-                            const selected =
-                              form.seller_document_type === value;
+                        <div className="grid grid-cols-2 gap-3 mt-1">
+                          {DOCUMENT_TYPES.map(({ value, label, icon, hint }) => {
+                            const selected = form.seller_document_type === value;
                             return (
                               <button
                                 key={value}
                                 type="button"
-                                onClick={() =>
-                                  setFormField("seller_document_type", value)
-                                }
-                                className={`flex items-center justify-between gap-2 p-4 rounded-2xl border-2 text-left transition-all ${
+                                onClick={() => setFormField("seller_document_type", value)}
+                                className={`flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
                                   selected
                                     ? "border-[#B42225] bg-[#B42225]/4"
                                     : "border-gray-200 bg-gray-50 hover:border-gray-300"
                                 }`}
                               >
-                                <div className="flex items-center gap-3">
-                                  <FiFileText
-                                    size={20}
-                                    style={{
-                                      color: selected ? "#B42225" : "#9CA3AF",
-                                    }}
-                                  />
-                                  <span
-                                    className="text-sm font-bold"
-                                    style={{
-                                      color: selected ? "#B42225" : "#6B7280",
-                                    }}
+                                <span
+                                  className="mt-0.5 shrink-0"
+                                  style={{ color: selected ? "#B42225" : "#9CA3AF" }}
+                                >
+                                  {icon}
+                                </span>
+                                <div className="min-w-0">
+                                  <p
+                                    className="text-sm font-bold leading-tight"
+                                    style={{ color: selected ? "#B42225" : "#6B7280" }}
                                   >
                                     {label}
-                                  </span>
+                                  </p>
+                                  <p className="text-[10px] text-gray-400 mt-0.5 leading-snug">
+                                    {hint}
+                                  </p>
                                 </div>
                                 {selected && (
-                                  <div className="w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center">
+                                  <div className="w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center shrink-0 ml-auto mt-0.5">
                                     <FiCheck size={11} className="text-white" />
                                   </div>
                                 )}
@@ -676,20 +730,55 @@ const SellerApplication = () => {
                         </div>
                       </InputField>
 
+                      {/* ── File Upload ── */}
                       <InputField
                         label="Upload Document"
                         required
                         error={errors.seller_document_file}
                         hint="JPG, PNG, or PDF · Max 5MB · Ensure document is clear and readable."
                       >
+                        {/* Upload error banner */}
+                        {uploadError && (
+                          <div className="flex items-center gap-2 rounded-xl px-3 py-2 bg-red-50 border border-red-200 mb-2">
+                            <FiAlertCircle size={12} className="text-red-400 shrink-0" />
+                            <p className="text-xs text-red-600">{uploadError}</p>
+                          </div>
+                        )}
+
+                        {/* Upload progress bar */}
+                        {uploading && (
+                          <div className="mb-3">
+                            <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                              <span className="flex items-center gap-1.5">
+                                <FiLoader size={12} className="animate-spin" />
+                                Uploading securely…
+                              </span>
+                              <span>{uploadProgress}%</span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${uploadProgress}%`,
+                                  background: "linear-gradient(90deg,#B42225,#FF6B00)",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         <div
-                          onClick={() => fileInputRef.current?.click()}
-                          className={`relative mt-1 border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-[#B42225]/40 hover:bg-[#B42225]/2 ${
+                          onClick={() => !uploading && fileInputRef.current?.click()}
+                          className={`relative mt-1 border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
+                            uploading
+                              ? "cursor-wait opacity-70"
+                              : "cursor-pointer hover:border-[#B42225]/40 hover:bg-[#B42225]/2"
+                          } ${
                             errors.seller_document_file
                               ? "border-red-300 bg-red-50"
-                              : form.seller_document_file
-                                ? "border-green-300 bg-green-50"
-                                : "border-gray-200 bg-gray-50"
+                              : form.seller_document_url
+                              ? "border-green-300 bg-green-50"
+                              : "border-gray-200 bg-gray-50"
                           }`}
                         >
                           <input
@@ -698,8 +787,10 @@ const SellerApplication = () => {
                             accept=".jpg,.jpeg,.png,.pdf"
                             onChange={handleFile}
                             className="hidden"
+                            disabled={uploading}
                           />
-                          {form.seller_document_file ? (
+
+                          {form.seller_document_file && !uploading ? (
                             <div className="space-y-3">
                               {form.seller_document_preview ? (
                                 <Image
@@ -711,14 +802,12 @@ const SellerApplication = () => {
                                 />
                               ) : (
                                 <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto">
-                                  <FiFileText
-                                    size={28}
-                                    className="text-green-600"
-                                  />
+                                  <FiFileText size={28} className="text-green-600" />
                                 </div>
                               )}
                               <p className="text-sm font-bold text-green-700 flex items-center justify-center gap-1.5">
-                                <FiCheck size={14} /> File uploaded
+                                <FiCheck size={14} />
+                                {form.seller_document_url ? "Uploaded successfully" : "File selected"}
                               </p>
                               <p className="text-[11px] text-gray-400 truncate max-w-xs mx-auto">
                                 {form.seller_document_name}
@@ -730,11 +819,22 @@ const SellerApplication = () => {
                                   setFormField("seller_document_file", null);
                                   setFormField("seller_document_preview", "");
                                   setFormField("seller_document_name", "");
+                                  setFormField("seller_document_url", "");
+                                  setUploadError("");
+                                  if (fileInputRef.current) fileInputRef.current.value = "";
                                 }}
                                 className="text-xs text-gray-400 hover:text-red-500 underline transition-colors"
                               >
                                 Remove & re-upload
                               </button>
+                            </div>
+                          ) : uploading ? (
+                            <div className="space-y-2 py-2">
+                              <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto">
+                                <FiLoader size={22} className="text-[#B42225] animate-spin" />
+                              </div>
+                              <p className="text-sm font-bold text-gray-600">Uploading…</p>
+                              <p className="text-[11px] text-gray-400">{form.seller_document_name}</p>
                             </div>
                           ) : (
                             <div className="space-y-2">
@@ -744,9 +844,7 @@ const SellerApplication = () => {
                               <p className="text-sm font-bold text-gray-600">
                                 Click to upload document
                               </p>
-                              <p className="text-[11px] text-gray-400">
-                                or drag and drop here
-                              </p>
+                              <p className="text-[11px] text-gray-400">or drag and drop here</p>
                             </div>
                           )}
                         </div>
@@ -763,19 +861,24 @@ const SellerApplication = () => {
                     </button>
                     <button
                       onClick={nextStep}
-                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95"
+                      disabled={uploading}
+                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-60 disabled:scale-100"
                       style={{
                         background: "linear-gradient(135deg,#B42225,#FF6B00)",
                         boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
                       }}
                     >
-                      Review Application <FiArrowRight size={15} />
+                      {uploading ? (
+                        <><FiLoader size={14} className="animate-spin" /> Uploading…</>
+                      ) : (
+                        <>Review Application <FiArrowRight size={15} /></>
+                      )}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP 3 — Review ── */}
+              {/* ══ STEP 3 — Review ══ */}
               {step === 3 && (
                 <div className="fade-up space-y-5">
                   <div
@@ -785,9 +888,7 @@ const SellerApplication = () => {
                     <div className="flex items-center gap-3 mb-6 pb-5 border-b border-gray-50">
                       <div
                         className="w-10 h-10 rounded-2xl flex items-center justify-center text-white"
-                        style={{
-                          background: "linear-gradient(135deg,#059669,#10B981)",
-                        }}
+                        style={{ background: "linear-gradient(135deg,#059669,#10B981)" }}
                       >
                         <FiCheck size={18} />
                       </div>
@@ -795,13 +896,12 @@ const SellerApplication = () => {
                         <h2 className="text-base font-black text-gray-900">
                           Review Your Application
                         </h2>
-                        <p className="text-xs text-gray-400">
-                          Check everything before submitting
-                        </p>
+                        <p className="text-xs text-gray-400">Check everything before submitting</p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
+
                       {/* Business Info review */}
                       <div className="rounded-2xl bg-gray-50 p-5 space-y-3">
                         <div className="flex items-center justify-between mb-1">
@@ -820,17 +920,13 @@ const SellerApplication = () => {
                             <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
                               Business Name
                             </p>
-                            <p className="font-bold text-gray-800">
-                              {form.business_name}
-                            </p>
+                            <p className="font-bold text-gray-800">{form.business_name}</p>
                           </div>
                           <div>
                             <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
                               Address
                             </p>
-                            <p className="font-bold text-gray-800">
-                              {form.business_address}
-                            </p>
+                            <p className="font-bold text-gray-800">{form.business_address}</p>
                           </div>
                           <div className="sm:col-span-2">
                             <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
@@ -872,7 +968,7 @@ const SellerApplication = () => {
                           )}
                           <div>
                             <p className="text-sm font-bold text-gray-800">
-                              International Passport
+                              {selectedDocType?.label ?? form.seller_document_type}
                             </p>
                             <p className="text-[11px] text-gray-400 mt-0.5 truncate max-w-xs">
                               {form.seller_document_name}
@@ -887,25 +983,16 @@ const SellerApplication = () => {
 
                     <div className="mt-5 p-4 rounded-2xl bg-amber-50 border border-amber-100">
                       <p className="text-xs text-amber-700 leading-relaxed">
-                        By submitting, you confirm all information is accurate
-                        and agree to Jovo's{" "}
-                        <Link href="/terms" className="font-bold underline">
-                          Terms
-                        </Link>{" "}
+                        By submitting, you confirm all information is accurate and agree to Jovo's{" "}
+                        <Link href="/terms" className="font-bold underline">Terms</Link>{" "}
                         and{" "}
-                        <Link href="/privacy" className="font-bold underline">
-                          Privacy Policy
-                        </Link>
-                        .
+                        <Link href="/privacy" className="font-bold underline">Privacy Policy</Link>.
                       </p>
                     </div>
 
                     {submitError && (
                       <div className="mt-4 flex items-start gap-2.5 p-4 rounded-2xl bg-red-50 border border-red-200">
-                        <FiAlertCircle
-                          size={16}
-                          className="text-red-500 mt-0.5 shrink-0"
-                        />
+                        <FiAlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
                         <p className="text-sm text-red-700">{submitError}</p>
                       </div>
                     )}
@@ -930,28 +1017,13 @@ const SellerApplication = () => {
                     >
                       {submitting ? (
                         <>
-                          <svg
-                            className="animate-spin"
-                            width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                          >
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              strokeDasharray="30 70"
-                            />
+                          <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" />
                           </svg>{" "}
                           Submitting…
                         </>
                       ) : (
-                        <>
-                          <FaRocket size={14} /> Submit Application
-                        </>
+                        <><FaRocket size={14} /> Submit Application</>
                       )}
                     </button>
                   </div>
@@ -966,6 +1038,3 @@ const SellerApplication = () => {
 };
 
 export default SellerApplication;
-
-
-

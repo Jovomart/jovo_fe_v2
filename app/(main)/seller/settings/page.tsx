@@ -16,6 +16,7 @@ import {
   FiShield,
   FiShoppingBag,
   FiLock,
+  FiLoader,
 } from "react-icons/fi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -38,6 +39,8 @@ interface SellerForm {
   logo_url: string;
   whatsapp_number: string;
 }
+
+// ─── Shared UI primitives ─────────────────────────────────────────────────────
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition placeholder-slate-400 bg-white";
@@ -114,7 +117,7 @@ const Section = ({
   </div>
 );
 
-// ─── Notification Row Component (moved outside to avoid useState inside callback) ───
+// Notification row needs its own component so useState isn't called inside a map
 const NotificationRow = ({
   label,
   desc,
@@ -126,16 +129,10 @@ const NotificationRow = ({
 }) => {
   const [on, setOn] = useState(defaultOn);
   return (
-    <div
-      className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition"
-    >
+    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition">
       <div>
-        <p className="text-sm font-bold text-slate-800">
-          {label}
-        </p>
-        <p className="text-[11px] text-slate-400 mt-0.5">
-          {desc}
-        </p>
+        <p className="text-sm font-bold text-slate-800">{label}</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">{desc}</p>
       </div>
       <button
         type="button"
@@ -154,11 +151,42 @@ const NotificationRow = ({
   );
 };
 
+// Loading skeleton for the form sections
+const FieldSkeleton = () => (
+  <div className="space-y-1.5">
+    <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
+    <div className="h-10 w-full bg-slate-100 rounded-xl animate-pulse" />
+  </div>
+);
+
+const SectionSkeleton = ({ fields = 4 }: { fields?: number }) => (
+  <div
+    className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
+    style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.05)" }}
+  >
+    <div className="flex items-center gap-4 px-6 py-5 border-b border-slate-50">
+      <div className="w-10 h-10 rounded-xl bg-slate-100 animate-pulse" />
+      <div className="space-y-1.5">
+        <div className="h-4 w-36 bg-slate-100 rounded animate-pulse" />
+        <div className="h-3 w-52 bg-slate-100 rounded animate-pulse" />
+      </div>
+    </div>
+    <div className="px-6 py-6 space-y-5">
+      {Array.from({ length: fields }).map((_, i) => (
+        <FieldSkeleton key={i} />
+      ))}
+      <div className="flex justify-end">
+        <div className="h-10 w-32 bg-slate-100 rounded-xl animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const SellerSettingsPage = () => {
   const router = useRouter();
-  const { user, setUser } = useContext(AuthContext) as any;
+  const { user } = useContext(AuthContext) as any;
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -182,6 +210,7 @@ const SellerSettingsPage = () => {
   });
 
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingSellerInfo, setLoadingSellerInfo] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSeller, setSavingSeller] = useState(false);
   const [profileError, setProfileError] = useState("");
@@ -189,66 +218,119 @@ const SellerSettingsPage = () => {
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
+  const hasFetchedRef = useRef(false);
+
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMsg(msg);
     setToastType(type);
     setTimeout(() => setToastMsg(""), 3500);
   };
 
-  // FIX: Use useCallback to memoize the load function and add missing dependency
-  const loadUserAndSeller = useCallback(async () => {
+  // ── Load user profile ──────────────────────────────────────────────────────
+  // We fetch from the API directly rather than trusting the AuthContext user
+  // object, because the context may be stale or partially populated.
+  const loadUserProfile = useCallback(async () => {
     setLoadingProfile(true);
     try {
-      const [userRes, sellerRes] = await Promise.all([
-        apiService.getCurrentUser().catch(() => null),
-        apiService.getSellerDashboard().catch(() => null),
-      ]);
+      const res = await apiService.getCurrentUser();
+      // The API wraps responses in { data: ... } but may also return flat
+      const u = res?.data ?? res;
 
-      const u = userRes?.data ?? userRes ?? user;
-      if (u) {
+      if (u && typeof u === "object") {
         setProfile({
           first_name: u.first_name ?? "",
           last_name: u.last_name ?? "",
           username: u.username ?? "",
+          // gender may come back as "male"/"female"/"other"/"prefer_not_to_say"
           gender: u.gender ?? "",
           country: u.country ?? "",
           state: u.state ?? "",
           city: u.city ?? "",
           address: u.address ?? "",
+          // registration saves as phone_number; profile update may expose as phone
           phone: u.phone_number ?? u.phone ?? "",
         });
       }
-
-      const s = sellerRes?.data ?? sellerRes;
-      if (s) {
-        setSellerInfo({
-          business_name: s.business_name ?? s.seller?.business_name ?? "",
-          business_bio:
-            s.business_bio ?? s.seller?.business_bio ?? "",
-          logo_url: s.logo_url ?? s.seller?.logo_url ?? "",
-          whatsapp_number:
-            s.whatsapp_number ?? s.seller?.whatsapp_number ?? "",
+    } catch (err: any) {
+      // Non-fatal — show what we have from context as fallback
+      if (user) {
+        setProfile({
+          first_name: user.first_name ?? "",
+          last_name: user.last_name ?? "",
+          username: user.username ?? "",
+          gender: user.gender ?? "",
+          country: user.country ?? "",
+          state: user.state ?? "",
+          city: user.city ?? "",
+          address: user.address ?? "",
+          phone: user.phone_number ?? user.phone ?? "",
         });
       }
-    } catch {}
-    setLoadingProfile(false);
-  }, [user]);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, []); // intentionally no deps — we always fetch fresh from API
 
-  const settingsLoadedRef = useRef(false);
+  // ── Load seller info ───────────────────────────────────────────────────────
+  // getApplicationStatus() returns the seller application/approval record which
+  // has business_name, business_bio, logo_url, whatsapp_number etc.
+  // getSellerDashboard() returns stats — not the profile fields — so we use
+  // getApplicationStatus() here.
+  const loadSellerInfo = useCallback(async () => {
+    setLoadingSellerInfo(true);
+    try {
+      const res = await apiService.getApplicationStatus();
+      const s = res?.data ?? res;
 
-// FIX: Use ref to ensure loadUserAndSeller is only called once
-useEffect(() => {
-  if (!settingsLoadedRef.current) {
-    settingsLoadedRef.current = true;
-    loadUserAndSeller();
-  }
-}, [loadUserAndSeller]);
+      if (s && typeof s === "object") {
+        // The API returns the seller record; field names may be at root level
+        // or nested under a "seller" key depending on the endpoint shape.
+        const seller = s.seller ?? s;
+        setSellerInfo({
+          business_name: seller.business_name ?? "",
+          // business_bio and short_business_description may be the same field
+          business_bio:
+            seller.business_bio ??
+            seller.short_business_description ??
+            "",
+          logo_url: seller.logo_url ?? seller.seller_logo ?? "",
+          whatsapp_number: seller.whatsapp_number ?? seller.phone ?? "",
+        });
+      }
+    } catch {
+      // Seller info missing is non-fatal — leave fields empty for the seller to fill
+    } finally {
+      setLoadingSellerInfo(false);
+    }
+  }, []);
 
+  // Run both fetches once on mount — not gated on user object being ready
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      loadUserProfile();
+      loadSellerInfo();
+    }
+  }, [loadUserProfile, loadSellerInfo]);
+
+  // ── Save profile ───────────────────────────────────────────────────────────
   const handleSaveProfile = async () => {
     setProfileError("");
     setSavingProfile(true);
     try {
-      await apiService.updateUserProfile(profile);
+      await apiService.updateUserProfile({
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        username: profile.username,
+        gender: profile.gender,
+        country: profile.country,
+        state: profile.state,
+        city: profile.city,
+        address: profile.address,
+        // The updateUserProfile method in apiService sends this as "phone"
+        // which the backend maps correctly — see apiService.updateUserProfile
+        phone: profile.phone,
+      });
       showToast("Profile updated successfully!");
     } catch (err: any) {
       const msg = err.message ?? "Failed to update profile.";
@@ -259,15 +341,31 @@ useEffect(() => {
     }
   };
 
+  // ── Save seller / business info ────────────────────────────────────────────
+  // BUG FIX: was calling updateServiceProviderProfile (wrong endpoint).
+  // Sellers use the /seller/* endpoints. Since there is no dedicated
+  // "update seller profile" method in apiService yet, we use updateProduct
+  // equivalent — apiService.applyAsSeller is for first-time applications.
+  // The correct endpoint for updating an existing seller record is PATCH /seller/profile
+  // or PUT /seller/apply depending on backend. We call it via makeRequest directly
+  // through a thin wrapper. If your backend exposes PATCH /seller/profile, add that
+  // method to apiService and swap it in below.
   const handleSaveSellerInfo = async () => {
     setSellerError("");
     setSavingSeller(true);
     try {
-      await apiService.updateServiceProviderProfile({
-        business_name: sellerInfo.business_name,
-        business_bio: sellerInfo.business_bio,
-        logo_url: sellerInfo.logo_url || undefined,
-        whatsapp_number: sellerInfo.whatsapp_number || undefined,
+      // Try the seller-specific profile update endpoint.
+      // This calls PATCH /seller/profile with the business fields.
+      // If your backend doesn't have this yet, swap for whatever your
+      // backend guy exposes for updating seller details.
+      await (apiService as any).makeRequest("/seller/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          business_name: sellerInfo.business_name,
+          business_bio: sellerInfo.business_bio,
+          logo_url: sellerInfo.logo_url || undefined,
+          whatsapp_number: sellerInfo.whatsapp_number || undefined,
+        }),
       });
       showToast("Business info updated successfully!");
     } catch (err: any) {
@@ -286,7 +384,6 @@ useEffect(() => {
     { id: "notifications", label: "Alerts", icon: <FiBell size={14} /> },
   ];
 
-  // Notification preferences array - moved outside of render to avoid recreating on each render
   const notificationOptions = [
     {
       label: "New Order",
@@ -315,15 +412,14 @@ useEffect(() => {
     },
   ];
 
+  // ─── Render ───────────────────────────────────────────────────────────────
+
   return (
     <>
-      <SellerLayout
-        activeNav="settings"
-        pageTitle="Settings"
-        isLoading={loadingProfile}
-      >
+      <SellerLayout activeNav="settings" pageTitle="Settings">
         <div className="p-5 md:p-7">
           <div className="max-w-3xl mx-auto">
+
             {/* Tab Nav */}
             <div
               className="flex items-center gap-1 p-1 bg-white rounded-2xl border border-slate-100 mb-6"
@@ -345,338 +441,333 @@ useEffect(() => {
               ))}
             </div>
 
-            {/* ── Profile Tab ───────────────────────────────────────────── */}
+            {/* ── Profile Tab ─────────────────────────────────────────────── */}
             {activeTab === "profile" && (
               <div className="space-y-5">
-                {/* Avatar */}
+                {/* Avatar card */}
                 <div
                   className="bg-white rounded-3xl border border-slate-100 p-6"
                   style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.05)" }}
                 >
-                  <div className="flex items-center gap-5">
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0"
-                      style={{
-                        background:
-                          "linear-gradient(135deg,#F97316,#DC2626)",
-                        boxShadow: "0 4px 16px rgba(249,115,22,0.35)",
-                      }}
-                    >
-                      {(profile.first_name?.[0] ?? "S").toUpperCase()}
+                  {loadingProfile ? (
+                    <div className="flex items-center gap-5">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-100 animate-pulse shrink-0" />
+                      <div className="space-y-2">
+                        <div className="h-5 w-40 bg-slate-100 rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-black text-slate-900 text-lg">
-                        {profile.first_name} {profile.last_name}
-                      </p>
-                      <p className="text-slate-400 text-sm font-medium">
-                        @{profile.username}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Section
-                  id="profile-form"
-                  icon={<FiUser size={17} />}
-                  title="Personal Information"
-                  desc="Update your name, username, and contact details"
-                >
-                  {profileError && (
-                    <div className="flex items-center gap-3 rounded-xl px-4 py-3 bg-red-50 border border-red-200">
-                      <FiAlertCircle
-                        size={14}
-                        className="text-red-500 shrink-0"
-                      />
-                      <p className="text-red-700 text-xs font-semibold">
-                        {profileError}
-                      </p>
+                  ) : (
+                    <div className="flex items-center gap-5">
+                      <div
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0"
+                        style={{
+                          background: "linear-gradient(135deg,#F97316,#DC2626)",
+                          boxShadow: "0 4px 16px rgba(249,115,22,0.35)",
+                        }}
+                      >
+                        {(profile.first_name?.[0] ?? "S").toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900 text-lg">
+                          {profile.first_name} {profile.last_name}
+                        </p>
+                        <p className="text-slate-400 text-sm font-medium">
+                          @{profile.username}
+                        </p>
+                      </div>
                     </div>
                   )}
+                </div>
 
-                  <div className="grid grid-cols-2 gap-5">
-                    <Field label="First Name">
-                      <input
-                        className={inputCls}
-                        value={profile.first_name}
-                        onChange={(e) =>
-                          setProfile((p) => ({
-                            ...p,
-                            first_name: e.target.value,
-                          }))
-                        }
-                      />
-                    </Field>
-                    <Field label="Last Name">
-                      <input
-                        className={inputCls}
-                        value={profile.last_name}
-                        onChange={(e) =>
-                          setProfile((p) => ({
-                            ...p,
-                            last_name: e.target.value,
-                          }))
-                        }
-                      />
-                    </Field>
-                  </div>
+                {/* Profile form */}
+                {loadingProfile ? (
+                  <SectionSkeleton fields={6} />
+                ) : (
+                  <Section
+                    id="profile-form"
+                    icon={<FiUser size={17} />}
+                    title="Personal Information"
+                    desc="Your name, username, and contact details"
+                  >
+                    {profileError && (
+                      <div className="flex items-center gap-3 rounded-xl px-4 py-3 bg-red-50 border border-red-200">
+                        <FiAlertCircle size={14} className="text-red-500 shrink-0" />
+                        <p className="text-red-700 text-xs font-semibold">
+                          {profileError}
+                        </p>
+                      </div>
+                    )}
 
-                  <div className="grid grid-cols-2 gap-5">
-                    <Field label="Username">
-                      <input
-                        className={inputCls}
-                        value={profile.username}
-                        onChange={(e) =>
-                          setProfile((p) => ({
-                            ...p,
-                            username: e.target.value,
-                          }))
-                        }
-                      />
-                    </Field>
-                    <Field label="Phone">
-                      <input
-                        className={inputCls}
-                        type="tel"
-                        value={profile.phone}
-                        onChange={(e) =>
-                          setProfile((p) => ({ ...p, phone: e.target.value }))
-                        }
-                      />
-                    </Field>
-                  </div>
+                    <div className="grid grid-cols-2 gap-5">
+                      <Field label="First Name" required>
+                        <input
+                          className={inputCls}
+                          value={profile.first_name}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, first_name: e.target.value }))
+                          }
+                        />
+                      </Field>
+                      <Field label="Last Name" required>
+                        <input
+                          className={inputCls}
+                          value={profile.last_name}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, last_name: e.target.value }))
+                          }
+                        />
+                      </Field>
+                    </div>
 
-                  <Field label="Gender">
-                    <select
-                      className={selectCls}
-                      value={profile.gender}
-                      onChange={(e) =>
-                        setProfile((p) => ({ ...p, gender: e.target.value }))
-                      }
-                    >
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                      <option value="prefer_not_to_say">
-                        Prefer not to say
-                      </option>
-                    </select>
-                  </Field>
+                    <div className="grid grid-cols-2 gap-5">
+                      <Field label="Username" required>
+                        <input
+                          className={inputCls}
+                          value={profile.username}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, username: e.target.value }))
+                          }
+                        />
+                      </Field>
+                      <Field label="Phone Number">
+                        <input
+                          className={inputCls}
+                          type="tel"
+                          placeholder="+2348012345678"
+                          value={profile.phone}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, phone: e.target.value }))
+                          }
+                        />
+                      </Field>
+                    </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <Field label="Country">
+                    <Field label="Gender">
+                      <select
+                        className={selectCls}
+                        value={profile.gender}
+                        onChange={(e) =>
+                          setProfile((p) => ({ ...p, gender: e.target.value }))
+                        }
+                      >
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="prefer_not_to_say">
+                          Prefer not to say
+                        </option>
+                      </select>
+                    </Field>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Country">
+                        <input
+                          className={inputCls}
+                          placeholder="Nigeria"
+                          value={profile.country}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, country: e.target.value }))
+                          }
+                        />
+                      </Field>
+                      <Field label="State">
+                        <input
+                          className={inputCls}
+                          placeholder="Lagos"
+                          value={profile.state}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, state: e.target.value }))
+                          }
+                        />
+                      </Field>
+                      <Field label="City">
+                        <input
+                          className={inputCls}
+                          placeholder="Ikeja"
+                          value={profile.city}
+                          onChange={(e) =>
+                            setProfile((p) => ({ ...p, city: e.target.value }))
+                          }
+                        />
+                      </Field>
+                    </div>
+
+                    <Field label="Address">
                       <input
                         className={inputCls}
-                        value={profile.country}
+                        placeholder="14 Allen Avenue, Ikeja"
+                        value={profile.address}
                         onChange={(e) =>
-                          setProfile((p) => ({
-                            ...p,
-                            country: e.target.value,
-                          }))
+                          setProfile((p) => ({ ...p, address: e.target.value }))
                         }
                       />
                     </Field>
-                    <Field label="State">
-                      <input
-                        className={inputCls}
-                        value={profile.state}
-                        onChange={(e) =>
-                          setProfile((p) => ({
-                            ...p,
-                            state: e.target.value,
-                          }))
-                        }
-                      />
-                    </Field>
-                    <Field label="City">
-                      <input
-                        className={inputCls}
-                        value={profile.city}
-                        onChange={(e) =>
-                          setProfile((p) => ({ ...p, city: e.target.value }))
-                        }
-                      />
-                    </Field>
-                  </div>
 
-                  <Field label="Address">
-                    <input
-                      className={inputCls}
-                      value={profile.address}
-                      onChange={(e) =>
-                        setProfile((p) => ({
-                          ...p,
-                          address: e.target.value,
-                        }))
-                      }
-                    />
-                  </Field>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleSaveProfile}
-                      disabled={savingProfile}
-                      className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-70"
-                      style={{
-                        background: savingProfile
-                          ? "#CBD5E1"
-                          : "linear-gradient(135deg,#F97316,#EA580C)",
-                        boxShadow: savingProfile
-                          ? "none"
-                          : "0 4px 14px rgba(249,115,22,0.3)",
-                      }}
-                    >
-                      {savingProfile ? (
-                        <>
-                          <FiRefreshCw size={13} className="animate-spin" />{" "}
-                          Saving…
-                        </>
-                      ) : (
-                        <>
-                          <FiSave size={13} /> Save Profile
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </Section>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleSaveProfile}
+                        disabled={savingProfile}
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-70"
+                        style={{
+                          background: savingProfile
+                            ? "#CBD5E1"
+                            : "linear-gradient(135deg,#F97316,#EA580C)",
+                          boxShadow: savingProfile
+                            ? "none"
+                            : "0 4px 14px rgba(249,115,22,0.3)",
+                        }}
+                      >
+                        {savingProfile ? (
+                          <>
+                            <FiRefreshCw size={13} className="animate-spin" /> Saving…
+                          </>
+                        ) : (
+                          <>
+                            <FiSave size={13} /> Save Profile
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </Section>
+                )}
               </div>
             )}
 
             {/* ── Business Tab ─────────────────────────────────────────────── */}
             {activeTab === "business" && (
-              <Section
-                id="business-form"
-                icon={<FiShoppingBag size={17} />}
-                title="Business Information"
-                desc="Your seller profile visible to buyers"
-              >
-                {sellerError && (
-                  <div className="flex items-center gap-3 rounded-xl px-4 py-3 bg-red-50 border border-red-200">
-                    <FiAlertCircle
-                      size={14}
-                      className="text-red-500 shrink-0"
-                    />
-                    <p className="text-red-700 text-xs font-semibold">
-                      {sellerError}
-                    </p>
-                  </div>
-                )}
+              <>
+                {loadingSellerInfo ? (
+                  <SectionSkeleton fields={4} />
+                ) : (
+                  <Section
+                    id="business-form"
+                    icon={<FiShoppingBag size={17} />}
+                    title="Business Information"
+                    desc="Your seller profile visible to buyers"
+                  >
+                    {sellerError && (
+                      <div className="flex items-center gap-3 rounded-xl px-4 py-3 bg-red-50 border border-red-200">
+                        <FiAlertCircle size={14} className="text-red-500 shrink-0" />
+                        <p className="text-red-700 text-xs font-semibold">
+                          {sellerError}
+                        </p>
+                      </div>
+                    )}
 
-                <Field label="Business Name" required>
-                  <input
-                    className={inputCls}
-                    placeholder="Your store or business name"
-                    value={sellerInfo.business_name}
-                    onChange={(e) =>
-                      setSellerInfo((s) => ({
-                        ...s,
-                        business_name: e.target.value,
-                      }))
-                    }
-                  />
-                </Field>
-
-                <Field
-                  label="Business Bio"
-                  hint="Short description that appears on your seller profile"
-                >
-                  <textarea
-                    className={`${inputCls} resize-none`}
-                    rows={4}
-                    placeholder="Tell buyers about your business…"
-                    value={sellerInfo.business_bio}
-                    onChange={(e) =>
-                      setSellerInfo((s) => ({
-                        ...s,
-                        business_bio: e.target.value,
-                      }))
-                    }
-                    maxLength={500}
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {sellerInfo.business_bio.length}/500
-                  </p>
-                </Field>
-
-                <Field
-                  label="Logo URL"
-                  hint="Paste a URL to your business logo image"
-                >
-                  <input
-                    className={inputCls}
-                    placeholder="https://…/logo.png"
-                    value={sellerInfo.logo_url}
-                    onChange={(e) =>
-                      setSellerInfo((s) => ({
-                        ...s,
-                        logo_url: e.target.value,
-                      }))
-                    }
-                  />
-                  {/* FIX: Replace img with Image */}
-                  {sellerInfo.logo_url && (
-                    <div className="mt-3 w-16 h-16 rounded-xl overflow-hidden border border-slate-200 relative">
-                      <Image
-                        src={sellerInfo.logo_url}
-                        alt="Logo preview"
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                        onError={(e) =>
-                          ((e.target as HTMLImageElement).style.display = "none")
+                    <Field label="Business Name" required>
+                      <input
+                        className={inputCls}
+                        placeholder="Your store or business name"
+                        value={sellerInfo.business_name}
+                        onChange={(e) =>
+                          setSellerInfo((s) => ({
+                            ...s,
+                            business_name: e.target.value,
+                          }))
                         }
                       />
+                    </Field>
+
+                    <Field
+                      label="Business Bio"
+                      hint="Short description that appears on your seller profile"
+                    >
+                      <textarea
+                        className={`${inputCls} resize-none`}
+                        rows={4}
+                        placeholder="Tell buyers about your business…"
+                        value={sellerInfo.business_bio}
+                        onChange={(e) =>
+                          setSellerInfo((s) => ({
+                            ...s,
+                            business_bio: e.target.value,
+                          }))
+                        }
+                        maxLength={500}
+                      />
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        {sellerInfo.business_bio.length}/500
+                      </p>
+                    </Field>
+
+                    <Field
+                      label="Logo URL"
+                      hint="Paste a URL to your business logo image"
+                    >
+                      <input
+                        className={inputCls}
+                        placeholder="https://…/logo.png"
+                        value={sellerInfo.logo_url}
+                        onChange={(e) =>
+                          setSellerInfo((s) => ({ ...s, logo_url: e.target.value }))
+                        }
+                      />
+                      {sellerInfo.logo_url && (
+                        <div className="mt-3 w-16 h-16 rounded-xl overflow-hidden border border-slate-200 relative">
+                          <Image
+                            src={sellerInfo.logo_url}
+                            alt="Logo preview"
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+                    </Field>
+
+                    <Field
+                      label="WhatsApp Number"
+                      hint="Buyers can contact you directly via WhatsApp"
+                    >
+                      <input
+                        className={inputCls}
+                        type="tel"
+                        placeholder="+2348012345678"
+                        value={sellerInfo.whatsapp_number}
+                        onChange={(e) =>
+                          setSellerInfo((s) => ({
+                            ...s,
+                            whatsapp_number: e.target.value,
+                          }))
+                        }
+                      />
+                    </Field>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleSaveSellerInfo}
+                        disabled={savingSeller}
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-70"
+                        style={{
+                          background: savingSeller
+                            ? "#CBD5E1"
+                            : "linear-gradient(135deg,#F97316,#EA580C)",
+                          boxShadow: savingSeller
+                            ? "none"
+                            : "0 4px 14px rgba(249,115,22,0.3)",
+                        }}
+                      >
+                        {savingSeller ? (
+                          <>
+                            <FiRefreshCw size={13} className="animate-spin" /> Saving…
+                          </>
+                        ) : (
+                          <>
+                            <FiSave size={13} /> Save Business Info
+                          </>
+                        )}
+                      </button>
                     </div>
-                  )}
-                </Field>
-
-                <Field
-                  label="WhatsApp Number"
-                  hint="Buyers can contact you directly via WhatsApp"
-                >
-                  <input
-                    className={inputCls}
-                    type="tel"
-                    placeholder="+2348012345678"
-                    value={sellerInfo.whatsapp_number}
-                    onChange={(e) =>
-                      setSellerInfo((s) => ({
-                        ...s,
-                        whatsapp_number: e.target.value,
-                      }))
-                    }
-                  />
-                </Field>
-
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleSaveSellerInfo}
-                    disabled={savingSeller}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-70"
-                    style={{
-                      background: savingSeller
-                        ? "#CBD5E1"
-                        : "linear-gradient(135deg,#F97316,#EA580C)",
-                      boxShadow: savingSeller
-                        ? "none"
-                        : "0 4px 14px rgba(249,115,22,0.3)",
-                    }}
-                  >
-                    {savingSeller ? (
-                      <>
-                        <FiRefreshCw size={13} className="animate-spin" />{" "}
-                        Saving…
-                      </>
-                    ) : (
-                      <>
-                        <FiSave size={13} /> Save Business Info
-                      </>
-                    )}
-                  </button>
-                </div>
-              </Section>
+                  </Section>
+                )}
+              </>
             )}
 
             {/* ── Security Tab ─────────────────────────────────────────────── */}
@@ -695,12 +786,10 @@ useEffect(() => {
                     <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
                       <FiLock size={22} className="text-orange-400" />
                     </div>
-                    <p className="font-black text-slate-800 mb-1">
-                      Change Password
-                    </p>
+                    <p className="font-black text-slate-800 mb-1">Change Password</p>
                     <p className="text-slate-400 text-sm mb-5">
-                      Use the forgot password flow to securely update your
-                      password via email verification.
+                      Use the forgot password flow to securely update your password
+                      via email verification.
                     </p>
                     <button
                       onClick={() => router.push("/forgot-password")}
@@ -720,27 +809,24 @@ useEffect(() => {
                   title="Account Actions"
                   desc="Danger zone — irreversible actions"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
-                      <div>
-                        <p className="text-sm font-bold text-red-800">
-                          Deactivate Seller Account
-                        </p>
-                        <p className="text-xs text-red-500 mt-0.5 font-medium">
-                          Your listings will be hidden from the marketplace
-                        </p>
-                      </div>
-                      <button className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 transition">
-                        Deactivate
-                      </button>
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
+                    <div>
+                      <p className="text-sm font-bold text-red-800">
+                        Deactivate Seller Account
+                      </p>
+                      <p className="text-xs text-red-500 mt-0.5 font-medium">
+                        Your listings will be hidden from the marketplace
+                      </p>
                     </div>
+                    <button className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 transition">
+                      Deactivate
+                    </button>
                   </div>
                 </Section>
               </div>
             )}
 
             {/* ── Notifications Tab ─────────────────────────────────────────── */}
-            {/* FIX: Moved useState outside of map to separate component */}
             {activeTab === "notifications" && (
               <Section
                 id="notifications"

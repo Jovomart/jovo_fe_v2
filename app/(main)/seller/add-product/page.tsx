@@ -8,7 +8,6 @@ import SellerLayout from "@/components/layout/SellerLayout";
 import {
   FiAlertCircle,
   FiCheck,
-  FiChevronRight,
   FiChevronLeft,
   FiPlus,
   FiX,
@@ -22,8 +21,11 @@ import {
   FiSliders,
   FiUpload,
   FiTrash2,
+  FiChevronDown,
 } from "react-icons/fi";
 import { MdOutlineInventory2 } from "react-icons/md";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type ProductCondition = "Like New" | "Good" | "Fair" | "Poor";
 
@@ -43,17 +45,6 @@ interface SubcategoryField {
   required: boolean;
   type: "text" | "select" | "number";
   options?: string[];
-}
-
-interface UploadedFile {
-  filename: string;
-  url: string;
-  public_id: string;
-  format: string;
-  bytes: number;
-  width: number;
-  height: number;
-  resource_type: string;
 }
 
 interface ProductForm {
@@ -100,16 +91,7 @@ const INITIAL_FORM: ProductForm = {
 
 const CONDITIONS: ProductCondition[] = ["Like New", "Good", "Fair", "Poor"];
 
-type StepId = "category" | "specs" | "details" | "pricing" | "media" | "seo";
-
-const ALL_STEPS: { id: StepId; label: string; icon: React.ReactNode }[] = [
-  { id: "category", label: "Category", icon: <FiTag size={15} /> },
-  { id: "specs", label: "Specs", icon: <FiSliders size={15} /> },
-  { id: "details", label: "Details", icon: <FiPackage size={15} /> },
-  { id: "pricing", label: "Pricing", icon: <FiDollarSign size={15} /> },
-  { id: "media", label: "Media", icon: <FiImage size={15} /> },
-  { id: "seo", label: "SEO & Tags", icon: <FiInfo size={15} /> },
-];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function extractArray(res: any): any[] {
   const data = res?.data ?? res;
@@ -121,78 +103,45 @@ function extractArray(res: any): any[] {
 }
 
 function extractSubcategoryFields(subcategoryData: any): SubcategoryField[] {
-  console.log("Full subcategory data:", JSON.stringify(subcategoryData, null, 2));
-
   let schema = null;
 
-  if (subcategoryData?.effective_attribute_schema) {
+  if (subcategoryData?.effective_attribute_schema)
     schema = subcategoryData.effective_attribute_schema;
-    console.log("Found effective_attribute_schema");
-  } else if (subcategoryData?.attribute_schema) {
+  else if (subcategoryData?.attribute_schema)
     schema = subcategoryData.attribute_schema;
-    console.log("Found attribute_schema");
-  } else if (subcategoryData?.data?.effective_attribute_schema) {
+  else if (subcategoryData?.data?.effective_attribute_schema)
     schema = subcategoryData.data.effective_attribute_schema;
-    console.log("Found data.effective_attribute_schema");
-  } else if (subcategoryData?.data?.attribute_schema) {
+  else if (subcategoryData?.data?.attribute_schema)
     schema = subcategoryData.data.attribute_schema;
-    console.log("Found data.attribute_schema");
-  }
 
-  if (!schema) {
-    console.log("No schema found in response");
-    return [];
-  }
-
-  console.log("Schema:", schema);
+  if (!schema) return [];
 
   const fields: SubcategoryField[] = [];
 
   if (Array.isArray(schema)) {
-    console.log("Schema is an ARRAY — extracting key from each item");
     for (const item of schema) {
       const key =
-        item.key ||
-        item.name ||
-        item.field_name ||
-        item.field_key ||
-        item.attribute_key;
-
-      if (!key || typeof key !== "string") {
-        console.warn("Skipping schema item — no usable key found:", item);
-        continue;
-      }
-
+        item.key || item.name || item.field_name || item.field_key || item.attribute_key;
+      if (!key || typeof key !== "string") continue;
       fields.push({
         key,
         label:
           item.label ||
-          key.replace(/_/g, " ").replace(/\b\w/g, (c: string) =>
-            c.toUpperCase()
-          ),
+          key.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
         required: item.required === true,
         type:
-          item.type === "select"
-            ? "select"
-            : item.type === "number"
-            ? "number"
-            : "text",
+          item.type === "select" ? "select" : item.type === "number" ? "number" : "text",
         options: item.options || [],
       });
-
-      console.log(`Added field from array item: key="${key}"`);
     }
   } else if (typeof schema === "object") {
-    console.log("Schema is an OBJECT — using Object.entries()");
     for (const [key, config] of Object.entries(schema)) {
       const fieldConfig = config as any;
       fields.push({
         key,
         label:
           fieldConfig.label ||
-          key.replace(/_/g, " ").replace(/\b\w/g, (c: string) =>
-            c.toUpperCase()
-          ),
+          key.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
         required: fieldConfig.required === true,
         type:
           fieldConfig.type === "select"
@@ -202,17 +151,13 @@ function extractSubcategoryFields(subcategoryData: any): SubcategoryField[] {
             : "text",
         options: fieldConfig.options || [],
       });
-
-      console.log(`Added field from object key: key="${key}"`);
     }
   }
 
-  console.log(
-    "Final extracted fields:",
-    fields.map((f) => ({ key: f.key, label: f.label }))
-  );
   return fields;
 }
+
+// ─── Shared UI primitives ─────────────────────────────────────────────────────
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition placeholder-slate-400 bg-white";
@@ -247,7 +192,80 @@ const Field = ({
   </div>
 );
 
-// Image Upload Component
+/** Collapsible card section used throughout the form */
+const FormSection = ({
+  id,
+  icon,
+  title,
+  badge,
+  defaultOpen = true,
+  children,
+}: {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  badge?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div
+      id={id}
+      className="bg-white rounded-2xl border border-slate-100 overflow-hidden"
+      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-3 px-6 py-4 text-left hover:bg-slate-50/60 transition"
+        style={{ borderBottom: open ? "1px solid #F1F5F9" : "none" }}
+      >
+        <span className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+          {icon}
+        </span>
+        <span className="font-black text-slate-900 flex-1">{title}</span>
+        {badge && (
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-orange-100 text-orange-600">
+            {badge}
+          </span>
+        )}
+        <FiChevronDown
+          size={15}
+          className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && <div className="px-6 py-5 space-y-5">{children}</div>}
+    </div>
+  );
+};
+
+// ─── Toggle switch ────────────────────────────────────────────────────────────
+
+const Toggle = ({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onChange}
+    className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
+      checked ? "bg-orange-500" : "bg-slate-300"
+    }`}
+  >
+    <span
+      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+        checked ? "translate-x-4" : ""
+      }`}
+    />
+  </button>
+);
+
+// ─── Image Uploader ───────────────────────────────────────────────────────────
+
 const ImageUploader = ({
   images,
   onImagesChange,
@@ -266,43 +284,44 @@ const ImageUploader = ({
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    // Reset input so the same file can be re-selected after removal
+    e.target.value = "";
     if (files.length === 0) return;
 
-    // Validate file types (images only)
-    const invalidFiles = files.filter(f => !f.type.startsWith('image/'));
-    if (invalidFiles.length > 0) {
+    const invalid = files.filter((f) => !f.type.startsWith("image/"));
+    if (invalid.length > 0) {
       alert("Please select only image files (JPEG, PNG, WebP)");
       return;
     }
-
-    // Validate file sizes (max 10MB each)
-    const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      alert("Some files exceed 10MB limit. Please choose smaller images.");
+    const oversized = files.filter((f) => f.size > 10 * 1024 * 1024);
+    if (oversized.length > 0) {
+      alert("Some files exceed 10 MB. Please choose smaller images.");
       return;
     }
 
     setUploading(true);
     setUploadProgress(0);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
     try {
-      const interval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
+      intervalId = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
       const result = await apiService.uploadFiles(files, "product_images");
-      
-      clearInterval(interval);
+
+      clearInterval(intervalId);
+      intervalId = null;
       setUploadProgress(100);
 
-      const newImageUrls = result.urls || [];
-      onImagesChange([...images, ...newImageUrls]);
-      
-      console.log("Images uploaded successfully:", newImageUrls);
-    } catch (error: any) {
-      console.error("Upload failed:", error);
-      alert(error.message || "Failed to upload images. Please try again.");
+      const newUrls: string[] = result.urls ?? [];
+      onImagesChange([...images, ...newUrls]);
+    } catch (err: any) {
+      if (intervalId) clearInterval(intervalId);
+      console.error("Upload failed:", err);
+      alert(err?.message ?? "Failed to upload images. Please try again.");
     } finally {
+      // Small delay so the 100% flash is visible
       setTimeout(() => {
         setUploading(false);
         setUploadProgress(0);
@@ -320,59 +339,61 @@ const ImageUploader = ({
         {label}
         {required && <span className="text-orange-500 ml-0.5">*</span>}
       </label>
-      
+
       {uploading && (
         <div className="mb-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
             <span className="flex items-center gap-2">
-              <FiLoader size={14} className="animate-spin" />
-              Uploading images...
+              <FiLoader size={13} className="animate-spin text-orange-500" />
+              Uploading…
             </span>
             <span>{uploadProgress}%</span>
           </div>
-          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div 
+          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
               className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${uploadProgress}%`, background: "linear-gradient(90deg, #F97316, #EA580C)" }}
+              style={{
+                width: `${uploadProgress}%`,
+                background: "linear-gradient(90deg,#F97316,#EA580C)",
+              }}
             />
           </div>
         </div>
       )}
-      
-      <div className="flex gap-2 mb-3">
-        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
-          uploading ? "border-gray-200 bg-gray-50 opacity-50" : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-        }`}>
-          <FiUpload size={16} className="text-gray-400" />
-          <span className="text-sm font-medium text-gray-600">
-            {uploading ? "Uploading..." : "Click to Upload Images"}
-          </span>
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={handleFileUpload}
-            disabled={uploading}
-          />
-        </label>
-      </div>
-      
+
+      {/* Drop zone / upload button */}
+      <label
+        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed transition-all cursor-pointer mb-3 ${
+          uploading
+            ? "border-slate-200 bg-slate-50 opacity-60 pointer-events-none"
+            : "border-slate-200 hover:border-orange-400 hover:bg-orange-50"
+        }`}
+      >
+        <FiUpload size={15} className="text-slate-400" />
+        <span className="text-sm font-semibold text-slate-600">
+          {uploading ? "Uploading…" : "Click to upload images"}
+        </span>
+        <span className="text-xs text-slate-400">JPEG · PNG · WebP · max 10 MB</span>
+        <input
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFileUpload}
+          disabled={uploading}
+        />
+      </label>
+
       {error && (
         <p className="text-[11px] text-red-500 mb-3 font-semibold flex items-center gap-1">
           <FiAlertCircle size={10} /> {error}
         </p>
       )}
-      
+
       {images.length === 0 ? (
-        <div className="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl">
-          <FiImage size={24} className="text-slate-300 mx-auto mb-2" />
-          <p className="text-sm text-slate-400 font-medium">
-            No images yet — click above to upload
-          </p>
-          <p className="text-xs text-slate-300 mt-1">
-            JPEG, PNG, WebP up to 10MB each
-          </p>
+        <div className="py-8 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+          <FiImage size={22} className="text-slate-300 mx-auto mb-2" />
+          <p className="text-sm text-slate-400">No images yet</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
@@ -409,7 +430,8 @@ const ImageUploader = ({
   );
 };
 
-// Video Upload Component
+// ─── Video Uploader ───────────────────────────────────────────────────────────
+
 const VideoUploader = ({
   videos,
   onVideosChange,
@@ -421,66 +443,61 @@ const VideoUploader = ({
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = "";
     if (files.length === 0) return;
 
-    // Validate file types (videos only)
-    const invalidFiles = files.filter(f => !f.type.startsWith('video/'));
-    if (invalidFiles.length > 0) {
+    const invalid = files.filter((f) => !f.type.startsWith("video/"));
+    if (invalid.length > 0) {
       alert("Please select only video files (MP4, MOV, WebM)");
       return;
     }
-
-    // Validate file sizes (max 50MB each)
-    const oversizedFiles = files.filter(f => f.size > 50 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      alert("Some files exceed 50MB limit. Please choose smaller videos.");
+    const oversized = files.filter((f) => f.size > 50 * 1024 * 1024);
+    if (oversized.length > 0) {
+      alert("Some videos exceed 50 MB limit.");
       return;
     }
 
     setUploading(true);
-
     try {
       const result = await apiService.uploadFiles(files, "product_videos");
-      const newVideoUrls = result.urls || [];
-      onVideosChange([...videos, ...newVideoUrls]);
-      console.log("Videos uploaded successfully:", newVideoUrls);
-    } catch (error: any) {
-      console.error("Upload failed:", error);
-      alert(error.message || "Failed to upload videos. Please try again.");
+      const newUrls: string[] = result.urls ?? [];
+      onVideosChange([...videos, ...newUrls]);
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to upload videos. Please try again.");
     } finally {
       setUploading(false);
     }
   };
 
-  const removeVideo = (index: number) => {
-    onVideosChange(videos.filter((_, i) => i !== index));
-  };
-
   return (
     <div>
       <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">
-        Product Videos (Optional)
+        Product Videos{" "}
+        <span className="normal-case font-medium text-slate-400">(optional)</span>
       </label>
-      
-      <div className="flex gap-2 mb-3">
-        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
-          uploading ? "border-gray-200 bg-gray-50 opacity-50" : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-        }`}>
-          <FiUpload size={16} className="text-gray-400" />
-          <span className="text-sm font-medium text-gray-600">
-            {uploading ? "Uploading..." : "Click to Upload Videos"}
-          </span>
-          <input
-            type="file"
-            multiple
-            accept="video/mp4,video/quicktime,video/webm"
-            className="hidden"
-            onChange={handleFileUpload}
-            disabled={uploading}
-          />
-        </label>
-      </div>
-      
+
+      <label
+        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed transition-all cursor-pointer mb-3 ${
+          uploading
+            ? "border-slate-200 bg-slate-50 opacity-60 pointer-events-none"
+            : "border-slate-200 hover:border-orange-400 hover:bg-orange-50"
+        }`}
+      >
+        <FiUpload size={15} className="text-slate-400" />
+        <span className="text-sm font-semibold text-slate-600">
+          {uploading ? "Uploading…" : "Click to upload videos"}
+        </span>
+        <span className="text-xs text-slate-400">MP4 · MOV · WebM · max 50 MB</span>
+        <input
+          type="file"
+          multiple
+          accept="video/mp4,video/quicktime,video/webm"
+          className="hidden"
+          onChange={handleFileUpload}
+          disabled={uploading}
+        />
+      </label>
+
       {videos.length > 0 && (
         <div className="space-y-2">
           {videos.map((url, i) => (
@@ -488,12 +505,12 @@ const VideoUploader = ({
               key={i}
               className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100"
             >
-              <span className="text-xs font-bold text-slate-500 flex-1 truncate">
+              <span className="text-xs font-medium text-slate-500 flex-1 truncate">
                 {url}
               </span>
               <button
                 type="button"
-                onClick={() => removeVideo(i)}
+                onClick={() => onVideosChange(videos.filter((_, j) => j !== i))}
                 className="text-red-400 hover:text-red-600 transition"
               >
                 <FiX size={13} />
@@ -506,590 +523,110 @@ const VideoUploader = ({
   );
 };
 
-const StepCategory = ({
-  form,
-  onCategorySelect,
-  onSubcategorySelect,
-  categories,
-  subcategories,
-  categoriesLoading,
-  subcategoriesLoading,
-  errors,
-}: any) => {
-  if (categoriesLoading)
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <FiLoader size={32} className="text-orange-500 animate-spin mb-3" />
-        <p className="text-slate-500 text-sm">Loading categories…</p>
-      </div>
-    );
+// ─── Sticky sidebar progress tracker ─────────────────────────────────────────
 
-  if (!categories.length)
-    return (
-      <div className="text-center py-12">
-        <FiAlertCircle size={32} className="text-red-400 mx-auto mb-3" />
-        <p className="text-slate-600 font-medium">No categories available</p>
-        <p className="text-slate-400 text-sm mt-1">Please contact support</p>
-      </div>
-    );
+const SECTIONS = [
+  { id: "sec-category", label: "Category" },
+  { id: "sec-details", label: "Details" },
+  { id: "sec-condition", label: "Condition" },
+  { id: "sec-pricing", label: "Pricing" },
+  { id: "sec-media", label: "Photos & Video" },
+  { id: "sec-seo", label: "SEO & Tags" },
+];
 
-  return (
-    <div className="space-y-6">
-      <Field label="Category" required error={errors.category_id}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {categories.map((cat: any) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => onCategorySelect(cat.id)}
-              className={`px-4 py-3 rounded-xl border text-sm font-bold text-left transition-all ${
-                form.category_id === cat.id
-                  ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-200"
-                  : "border-slate-200 text-slate-600 hover:border-orange-300 hover:bg-orange-50"
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      </Field>
-
-      {form.category_id && subcategories.length > 0 && (
-        <div className="space-y-3">
-          {subcategoriesLoading ? (
-            <div className="flex items-center gap-2 py-4 text-slate-400 text-sm">
-              <FiLoader size={16} className="animate-spin text-orange-400" />
-              Loading subcategories…
-            </div>
-          ) : (
-            <Field label="Subcategory" required error={errors.subcategory_id}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {subcategories.map((sub: any) => (
-                  <button
-                    key={sub.id}
-                    type="button"
-                    onClick={() => onSubcategorySelect(sub.id)}
-                    className={`px-4 py-3 rounded-xl border text-sm font-bold text-left transition-all ${
-                      form.subcategory_id === sub.id
-                        ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-200"
-                        : "border-slate-200 text-slate-600 hover:border-orange-300 hover:bg-orange-50"
-                    }`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
-              </div>
-            </Field>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const StepSpecs = ({
-  form,
-  setForm,
-  fields,
-  errors,
-  loading,
-}: any) => {
-  const update = (key: string, value: string) => {
-    console.log(`Updating spec: key="${key}" value="${value}"`);
-    setForm({
-      ...form,
-      specifications: { ...form.specifications, [key]: value },
-    });
+const SidebarNav = ({ activeSection }: { activeSection: string }) => {
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <FiLoader size={32} className="text-orange-500 animate-spin mb-3" />
-        <p className="text-slate-500 text-sm">Loading specification fields…</p>
-      </div>
-    );
-  }
-
-  if (fields.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <FiCheck size={48} className="text-emerald-500 mx-auto mb-4" />
-        <p className="text-slate-600 font-medium">
-          No additional specifications required
-        </p>
-        <p className="text-slate-400 text-sm mt-1">
-          You can continue to the next step
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-5">
-      <div className="rounded-xl p-4 bg-orange-50 border border-orange-100 flex items-start gap-3">
-        <FiInfo size={15} className="text-orange-500 mt-0.5 shrink-0" />
-        <p className="text-sm text-orange-700 font-medium leading-relaxed">
-          This subcategory requires additional specifications. Please fill in
-          all required fields below before listing.
-        </p>
-      </div>
-
-      {fields.map((field: any) => (
-        <Field
-          key={field.key}
-          label={field.label}
-          required={field.required}
-          error={errors[`spec_${field.key}`]}
+    <div
+      className="hidden lg:flex flex-col gap-1 sticky top-24 w-44 shrink-0"
+    >
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-2">
+        Sections
+      </p>
+      {SECTIONS.map((s) => (
+        <button
+          key={s.id}
+          type="button"
+          onClick={() => scrollTo(s.id)}
+          className={`text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+            activeSection === s.id
+              ? "bg-orange-500 text-white shadow-sm shadow-orange-200"
+              : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+          }`}
         >
-          {field.type === "select" && field.options?.length ? (
-            <select
-              className={inputCls}
-              value={form.specifications[field.key] || ""}
-              onChange={(e) => update(field.key, e.target.value)}
-            >
-              <option value="">Select {field.label}…</option>
-              {field.options.map((o: string) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type={field.type === "number" ? "number" : "text"}
-              className={inputCls}
-              placeholder={`Enter ${field.label}`}
-              value={form.specifications[field.key] || ""}
-              onChange={(e) => update(field.key, e.target.value)}
-            />
-          )}
-        </Field>
+          {s.label}
+        </button>
       ))}
     </div>
   );
 };
 
-const StepDetails = ({ form, setForm, errors }: any) => (
-  <div className="space-y-5">
-    <Field label="Product Name" required error={errors.product_name}>
-      <input
-        className={inputCls}
-        placeholder="e.g. iPhone 13 Pro Max 256GB"
-        value={form.product_name}
-        onChange={(e) => setForm({ ...form, product_name: e.target.value })}
-        maxLength={120}
-      />
-      <p className="text-[11px] text-slate-400 mt-1">
-        {form.product_name.length}/120
-      </p>
-    </Field>
-
-    <Field label="Description" required error={errors.product_description}>
-      <textarea
-        className={`${inputCls} resize-none`}
-        rows={5}
-        placeholder="Describe your product in detail — condition, features, what's included…"
-        value={form.product_description}
-        onChange={(e) =>
-          setForm({ ...form, product_description: e.target.value })
-        }
-        maxLength={2000}
-      />
-      <p className="text-[11px] text-slate-400 mt-1">
-        {form.product_description.length}/2000
-      </p>
-    </Field>
-
-    <Field label="Condition" required error={errors.product_condition}>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {CONDITIONS.map((c) => {
-          const colors: Record<string, string> = {
-            "Like New": "#059669",
-            Good: "#2563EB",
-            Fair: "#D97706",
-            Poor: "#DC2626",
-          };
-          const active = form.product_condition === c;
-          return (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setForm({ ...form, product_condition: c })}
-              className={`py-3 rounded-xl border text-sm font-bold transition ${
-                active
-                  ? "text-white shadow-lg"
-                  : "border-slate-200 text-slate-600 hover:border-orange-300"
-              }`}
-              style={
-                active
-                  ? {
-                      background: colors[c],
-                      borderColor: colors[c],
-                      boxShadow: `0 4px 14px ${colors[c]}40`,
-                    }
-                  : {}
-              }
-            >
-              {c}
-            </button>
-          );
-        })}
-      </div>
-    </Field>
-
-    <div className="grid grid-cols-2 gap-5">
-      <Field label="Brand">
-        <input
-          className={inputCls}
-          placeholder="e.g. Apple, Samsung"
-          value={form.brand}
-          onChange={(e) => setForm({ ...form, brand: e.target.value })}
-        />
-      </Field>
-      <Field label="Model">
-        <input
-          className={inputCls}
-          placeholder="e.g. Pro Max, Galaxy S24"
-          value={form.model}
-          onChange={(e) => setForm({ ...form, model: e.target.value })}
-        />
-      </Field>
-    </div>
-
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-      <button
-        type="button"
-        onClick={() => setForm({ ...form, is_digital: !form.is_digital })}
-        className={`relative w-10 h-6 rounded-full transition-colors ${
-          form.is_digital ? "bg-orange-500" : "bg-slate-300"
-        }`}
-      >
-        <span
-          className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-            form.is_digital ? "translate-x-4" : ""
-          }`}
-        />
-      </button>
-      <div>
-        <p className="text-sm font-bold text-slate-700">Digital Product</p>
-        <p className="text-[11px] text-slate-400">
-          Enable if this is a downloadable or digital item
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
-const StepPricing = ({ form, setForm, errors }: any) => {
-  const original = Number(form.product_original_price) || 0;
-  const discounted = Number(form.product_discount_price) || 0;
-  const savings =
-    form.is_on_sale && discounted > 0 && original > discounted
-      ? Math.round(((original - discounted) / original) * 100)
-      : 0;
-
-  return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-5">
-        <Field
-          label="Original Price (₦)"
-          required
-          error={errors.product_original_price}
-        >
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
-              ₦
-            </span>
-            <input
-              className={`${inputCls} pl-8`}
-              type="number"
-              min="0"
-              step="100"
-              placeholder="0.00"
-              value={form.product_original_price}
-              onChange={(e) =>
-                setForm({ ...form, product_original_price: e.target.value })
-              }
-            />
-          </div>
-        </Field>
-
-        <Field
-          label="Stock Quantity"
-          required
-          error={errors.stock_quantity}
-          hint="Set to 0 to mark as out of stock"
-        >
-          <input
-            className={inputCls}
-            type="number"
-            min="0"
-            step="1"
-            placeholder="1"
-            value={form.stock_quantity}
-            onChange={(e) =>
-              setForm({ ...form, stock_quantity: e.target.value })
-            }
-          />
-        </Field>
-      </div>
-
-      <div
-        className="rounded-2xl border p-5 transition"
-        style={{
-          background: form.is_on_sale ? "#FFF7ED" : "#F8FAFC",
-          borderColor: form.is_on_sale ? "#FED7AA" : "#E2E8F0",
-        }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-sm font-black text-slate-800">Put on Sale</p>
-            <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-              Set a discounted sale price
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() =>
-              setForm({
-                ...form,
-                is_on_sale: !form.is_on_sale,
-                product_discount_price: "",
-              })
-            }
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              form.is_on_sale ? "bg-orange-500" : "bg-slate-300"
-            }`}
-          >
-            <span
-              className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                form.is_on_sale ? "translate-x-6" : ""
-              }`}
-            />
-          </button>
-        </div>
-
-        {form.is_on_sale && (
-          <div className="space-y-4">
-            <Field
-              label="Sale Price (₦)"
-              required
-              error={errors.product_discount_price}
-            >
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
-                  ₦
-                </span>
-                <input
-                  className={`${inputCls} pl-8`}
-                  type="number"
-                  min="0"
-                  step="100"
-                  placeholder="0.00"
-                  value={form.product_discount_price}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      product_discount_price: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </Field>
-            {savings > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100">
-                <FiCheck size={12} className="text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700">
-                  {savings}% discount
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const StepMedia = ({ form, setForm, errors }: any) => (
-  <div className="space-y-6">
-    <ImageUploader
-      images={form.product_images}
-      onImagesChange={(urls) => setForm({ ...form, product_images: urls })}
-      label="Product Images"
-      required
-      error={errors.product_images}
-    />
-
-    <VideoUploader
-      videos={form.product_videos}
-      onVideosChange={(urls) => setForm({ ...form, product_videos: urls })}
-    />
-  </div>
-);
-
-const StepSEO = ({ form, setForm }: any) => {
-  const [tagInput, setTagInput] = useState("");
-
-  const addTag = () => {
-    const tag = tagInput
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-");
-    if (tag && !form.tags.includes(tag) && form.tags.length < 10) {
-      setForm({ ...form, tags: [...form.tags, tag] });
-      setTagInput("");
-    }
-  };
-
-  return (
-    <div className="space-y-5">
-      <Field label="Tags" hint="Up to 10 tags. Press Enter or click Add.">
-        <div className="flex gap-2 mb-3">
-          <input
-            className={`${inputCls} flex-1`}
-            placeholder="e.g. electronics, smartphone, apple"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addTag();
-              }
-            }}
-          />
-          <button
-            type="button"
-            onClick={addTag}
-            disabled={form.tags.length >= 10}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition flex items-center gap-1.5 disabled:opacity-50"
-          >
-            <FiPlus size={14} /> Add
-          </button>
-        </div>
-        {form.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {form.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-100 text-xs font-bold text-orange-700"
-              >
-                #{tag}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      tags: form.tags.filter((t: string) => t !== tag),
-                    })
-                  }
-                  className="text-orange-400 hover:text-orange-700 transition"
-                >
-                  <FiX size={10} />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </Field>
-
-      <Field label="SEO Title" hint="Leave blank to use product name.">
-        <input
-          className={inputCls}
-          placeholder="Optimized title for search engines"
-          value={form.seo_title}
-          onChange={(e) => setForm({ ...form, seo_title: e.target.value })}
-          maxLength={120}
-        />
-      </Field>
-
-      <Field label="SEO Description" hint="Max 160 chars.">
-        <textarea
-          className={`${inputCls} resize-none`}
-          rows={3}
-          placeholder="Short description that appears in search engine results"
-          value={form.seo_description}
-          onChange={(e) =>
-            setForm({ ...form, seo_description: e.target.value })
-          }
-          maxLength={160}
-        />
-        <p className="text-[11px] text-slate-400 mt-1">
-          {form.seo_description.length}/160
-        </p>
-      </Field>
-
-      <div
-        className="rounded-2xl p-5 border"
-        style={{ background: "#F8FAFC", borderColor: "#E2E8F0" }}
-      >
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
-          Listing Preview
-        </p>
-        <div className="space-y-1">
-          <p className="text-blue-600 text-sm font-semibold leading-tight">
-            {form.seo_title || form.product_name || "Your Product Title"}
-          </p>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            {form.seo_description ||
-              form.product_description?.slice(0, 120) ||
-              "Your product description will appear here…"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const AddProductPage = () => {
   const router = useRouter();
 
-  const [step, setStep] = useState(1);
   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
-
-  const [subcategoryFields, setSubcategoryFields] = useState<
-    SubcategoryField[]
-  >([]);
+  const [subcategoryFields, setSubcategoryFields] = useState<SubcategoryField[]>([]);
   const [schemaLoading, setSchemaLoading] = useState(false);
 
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
   const [toastMsg, setToastMsg] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [activeSection, setActiveSection] = useState("sec-category");
 
-  const hasFetchedCategoriesRef = useRef(false);
+  const hasFetchedRef = useRef(false);
+
+  // ── Intersection observer for sidebar highlight ──────────────────────────
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+            break;
+          }
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px" },
+    );
+
+    SECTIONS.forEach((s) => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(""), 3000);
+    setTimeout(() => setToastMsg(""), 3500);
   };
 
-  const visibleSteps =
-    subcategoryFields.length > 0
-      ? ALL_STEPS
-      : ALL_STEPS.filter((s) => s.id !== "specs");
-
-  const currentStepDef = visibleSteps[step - 1];
-  const isLastStep = step === visibleSteps.length;
-
+  // ── Fetch categories ─────────────────────────────────────────────────────
   const fetchCategories = useCallback(async () => {
     setCategoriesLoading(true);
     try {
       const res = await apiService.getPublicCategories("PRODUCT");
       const all = extractArray(res);
-      const parents = all
-        .filter((c: any) => !c.parent_id)
-        .map((c: any) => ({ id: c.id, name: c.name }));
+      const parents = all.filter((c: any) => !c.parent_id);
       setCategories(
-        parents.length > 0
-          ? parents
-          : all.map((c: any) => ({ id: c.id, name: c.name }))
+        (parents.length > 0 ? parents : all).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+        })),
       );
     } catch {
       setApiError("Failed to load categories. Please refresh the page.");
@@ -1099,19 +636,20 @@ const AddProductPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!hasFetchedCategoriesRef.current) {
-      hasFetchedCategoriesRef.current = true;
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       fetchCategories();
     }
   }, [fetchCategories]);
 
+  // ── Fetch subcategories ──────────────────────────────────────────────────
   const fetchSubcategories = useCallback(async (categoryId: string) => {
     setSubcategories([]);
     setSubcategoriesLoading(true);
     try {
       const res = await apiService.getAllSubcategories(categoryId);
       setSubcategories(
-        extractArray(res).map((s: any) => ({ id: s.id, name: s.name }))
+        extractArray(res).map((s: any) => ({ id: s.id, name: s.name })),
       );
     } catch {
       setSubcategories([]);
@@ -1120,33 +658,22 @@ const AddProductPage = () => {
     }
   }, []);
 
+  // ── Fetch subcategory spec schema ────────────────────────────────────────
   const fetchSubcategorySchema = useCallback(async (subcategoryId: string) => {
     setSchemaLoading(true);
     setSubcategoryFields([]);
     try {
       const res = await apiService.getSubcategoryById(subcategoryId, true);
-      console.log("Subcategory API response:", res);
-
       const responseData = res?.data ?? res;
       const fields = extractSubcategoryFields(responseData);
-
-      console.log("Extracted fields count:", fields.length);
-      console.log("Field keys:", fields.map((f) => f.key));
-
       setSubcategoryFields(fields);
 
       const newSpecs: Record<string, string> = {};
-      fields.forEach((field) => {
-        if (field.key && typeof field.key === "string" && field.key !== "") {
-          newSpecs[field.key] = "";
-          console.log(`Initialized spec key: "${field.key}"`);
-        }
+      fields.forEach((f) => {
+        if (f.key) newSpecs[f.key] = "";
       });
-
-      console.log("Initialized specification keys:", Object.keys(newSpecs));
       setForm((prev) => ({ ...prev, specifications: newSpecs }));
-    } catch (err) {
-      console.error("Failed to fetch subcategory schema:", err);
+    } catch {
       setSubcategoryFields([]);
     } finally {
       setSchemaLoading(false);
@@ -1161,11 +688,11 @@ const AddProductPage = () => {
         subcategory_id: "",
         specifications: {},
       }));
-      setErrors({});
+      setErrors((e) => ({ ...e, category_id: "" }));
       setSubcategoryFields([]);
       fetchSubcategories(categoryId);
     },
-    [fetchSubcategories]
+    [fetchSubcategories],
   );
 
   const handleSubcategorySelect = useCallback(
@@ -1175,75 +702,61 @@ const AddProductPage = () => {
         subcategory_id: subcategoryId,
         specifications: {},
       }));
-      setErrors((prev) => ({ ...prev, subcategory_id: undefined }));
       await fetchSubcategorySchema(subcategoryId);
     },
-    [fetchSubcategorySchema]
+    [fetchSubcategorySchema],
   );
 
-  const validateStep = (currentStep: number): boolean => {
-    const newErrors: Record<string, string | undefined> = {};
-    const stepId = visibleSteps[currentStep - 1]?.id;
-
-    if (stepId === "category") {
-      if (!form.category_id) newErrors.category_id = "Please select a category";
+  // ── Tag helpers ──────────────────────────────────────────────────────────
+  const addTag = () => {
+    const tag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
+    if (tag && !form.tags.includes(tag) && form.tags.length < 10) {
+      setForm((f) => ({ ...f, tags: [...f.tags, tag] }));
+      setTagInput("");
     }
+  };
 
-    if (stepId === "specs") {
-      subcategoryFields.forEach((field) => {
-        if (field.required && !form.specifications[field.key]?.trim())
-          newErrors[`spec_${field.key}`] = `${field.label} is required`;
+  // ── Validation ───────────────────────────────────────────────────────────
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    if (!form.category_id) e.category_id = "Please select a category";
+    if (!form.product_name.trim()) e.product_name = "Product name is required";
+    if (!form.product_description.trim())
+      e.product_description = "Description is required";
+    if (!form.product_condition) e.product_condition = "Please select a condition";
+    if (!form.product_original_price || Number(form.product_original_price) <= 0)
+      e.product_original_price = "Price must be greater than 0";
+    if (
+      form.is_on_sale &&
+      (!form.product_discount_price ||
+        Number(form.product_discount_price) >= Number(form.product_original_price))
+    )
+      e.product_discount_price = "Sale price must be less than original price";
+    if (form.product_images.length === 0)
+      e.product_images = "At least one image is required";
+    subcategoryFields.forEach((field) => {
+      if (field.required && !form.specifications[field.key]?.trim())
+        e[`spec_${field.key}`] = `${field.label} is required`;
+    });
+    setErrors(e);
+    if (Object.keys(e).length > 0) {
+      // Scroll to first error section
+      const firstErrSection = SECTIONS.find((s) => {
+        const el = document.getElementById(s.id);
+        return el?.querySelector("[data-error]");
       });
+      if (firstErrSection) {
+        document
+          .getElementById(firstErrSection.id)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
-
-    if (stepId === "details") {
-      if (!form.product_name.trim())
-        newErrors.product_name = "Product name is required";
-      if (!form.product_description.trim())
-        newErrors.product_description = "Description is required";
-      if (!form.product_condition)
-        newErrors.product_condition = "Please select a condition";
-    }
-
-    if (stepId === "pricing") {
-      if (
-        !form.product_original_price ||
-        Number(form.product_original_price) <= 0
-      )
-        newErrors.product_original_price = "Price must be greater than 0";
-      if (
-        form.is_on_sale &&
-        (!form.product_discount_price ||
-          Number(form.product_discount_price) >=
-            Number(form.product_original_price))
-      )
-        newErrors.product_discount_price =
-          "Sale price must be less than original price";
-    }
-
-    if (stepId === "media") {
-      if (form.product_images.length === 0)
-        newErrors.product_images = "At least one image is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(e).length === 0;
   };
 
-  const nextStep = () => {
-    if (validateStep(step)) {
-      if (step < visibleSteps.length) setStep((s) => s + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep((s) => s - 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
+  // ── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!validateStep(step)) return;
+    if (!validate()) return;
 
     setSubmitting(true);
     setApiError("");
@@ -1258,106 +771,57 @@ const AddProductPage = () => {
         product_images: form.product_images,
       };
 
-      if (form.subcategory_id) {
-        payload.subcategory_id = form.subcategory_id;
-      }
-
-      if (form.is_on_sale) {
-        payload.is_on_sale = form.is_on_sale;
-      }
-
-      if (
-        form.product_discount_price &&
-        Number(form.product_discount_price) > 0
-      ) {
+      if (form.subcategory_id) payload.subcategory_id = form.subcategory_id;
+      if (form.is_on_sale) payload.is_on_sale = true;
+      if (form.product_discount_price && Number(form.product_discount_price) > 0)
         payload.product_discount_price = Number(form.product_discount_price);
-      }
-
-      if (form.stock_quantity && Number(form.stock_quantity) >= 0) {
+      if (form.stock_quantity && Number(form.stock_quantity) >= 0)
         payload.stock_quantity = Number(form.stock_quantity);
-      }
-
       if (form.brand) payload.brand = form.brand;
       if (form.model) payload.model = form.model;
-      if (form.is_digital) payload.is_digital = form.is_digital;
-      if (form.product_videos.length)
-        payload.product_videos = form.product_videos;
+      if (form.is_digital) payload.is_digital = true;
+      if (form.product_videos.length) payload.product_videos = form.product_videos;
       if (form.tags.length) payload.tags = form.tags;
       if (form.seo_title) payload.seo_title = form.seo_title;
       if (form.seo_description) payload.seo_description = form.seo_description;
 
-      console.log("Current specifications:", form.specifications);
-      console.log("Specification keys:", Object.keys(form.specifications));
-
       const specsToSend: Record<string, string> = {};
-      for (const [key, value] of Object.entries(form.specifications)) {
-        if (value && typeof value === "string" && value.trim()) {
-          specsToSend[key] = value.trim();
-          console.log(`Added to specifications: ${key} = ${value}`);
-        }
+      for (const [k, v] of Object.entries(form.specifications)) {
+        if (v && typeof v === "string" && v.trim()) specsToSend[k] = v.trim();
       }
-
-      if (Object.keys(specsToSend).length > 0) {
-        payload.attributes = specsToSend;
-      }
-
-      console.log("Final payload:", JSON.stringify(payload, null, 2));
+      if (Object.keys(specsToSend).length > 0) payload.attributes = specsToSend;
 
       await apiService.createProduct(payload);
-      showToast("Product listed successfully! Pending admin review.");
-      setTimeout(() => router.push("/seller/products"), 1500);
+      showToast("Product listed! Pending admin review.");
+      setTimeout(() => router.push("/seller/products"), 1600);
     } catch (err: any) {
-      console.error("Full error object:", err);
-      const message: string =
-        err.message ?? "Failed to create product. Please try again.";
-      setApiError(message);
+      setApiError(err.message ?? "Failed to create product. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const renderStepContent = () => {
-    switch (currentStepDef?.id) {
-      case "category":
-        return (
-          <StepCategory
-            form={form}
-            onCategorySelect={handleCategorySelect}
-            onSubcategorySelect={handleSubcategorySelect}
-            categories={categories}
-            subcategories={subcategories}
-            categoriesLoading={categoriesLoading}
-            subcategoriesLoading={subcategoriesLoading}
-            errors={errors}
-          />
-        );
-      case "specs":
-        return (
-          <StepSpecs
-            form={form}
-            setForm={setForm}
-            fields={subcategoryFields}
-            errors={errors}
-            loading={schemaLoading}
-          />
-        );
-      case "details":
-        return <StepDetails form={form} setForm={setForm} errors={errors} />;
-      case "pricing":
-        return <StepPricing form={form} setForm={setForm} errors={errors} />;
-      case "media":
-        return <StepMedia form={form} setForm={setForm} errors={errors} />;
-      case "seo":
-        return <StepSEO form={form} setForm={setForm} />;
-      default:
-        return null;
-    }
+  // ── Condition colours ────────────────────────────────────────────────────
+  const conditionColors: Record<string, string> = {
+    "Like New": "#059669",
+    Good: "#2563EB",
+    Fair: "#D97706",
+    Poor: "#DC2626",
   };
 
-  const isContinueDisabled =
-    (currentStepDef?.id === "category" && subcategoriesLoading) ||
-    (currentStepDef?.id === "specs" && schemaLoading);
+  const saleSavings =
+    form.is_on_sale &&
+    Number(form.product_discount_price) > 0 &&
+    Number(form.product_original_price) > Number(form.product_discount_price)
+      ? Math.round(
+          ((Number(form.product_original_price) -
+            Number(form.product_discount_price)) /
+            Number(form.product_original_price)) *
+            100,
+        )
+      : 0;
 
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <>
       <SellerLayout
@@ -1373,144 +837,575 @@ const AddProductPage = () => {
         }
       >
         <div className="p-5 md:p-7">
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center gap-2">
-              {visibleSteps.map((s, i) => (
-                <div key={s.id} className="flex items-center flex-1">
-                  <button
-                    type="button"
-                    onClick={() => i + 1 < step && setStep(i + 1)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition flex-1 justify-center ${
-                      step === i + 1
-                        ? "bg-orange-500 text-white shadow-lg shadow-orange-200"
-                        : step > i + 1
-                        ? "bg-emerald-50 text-emerald-700 cursor-pointer"
-                        : "bg-slate-50 text-slate-400 cursor-default"
-                    }`}
-                  >
-                    {step > i + 1 ? <FiCheck size={12} /> : s.icon}
-                    <span className="hidden sm:inline">{s.label}</span>
-                  </button>
-                  {i < visibleSteps.length - 1 && (
-                    <div
-                      className={`w-3 h-0.5 shrink-0 ${
-                        step > i + 1 ? "bg-emerald-300" : "bg-slate-200"
-                      }`}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+          <div className="flex gap-8 max-w-5xl mx-auto">
+            {/* ── Sidebar ─────────────────────────────────────────────────── */}
+            <SidebarNav activeSection={activeSection} />
 
-            <div
-              className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
-              style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-            >
-              <div
-                className="px-7 py-5"
-                style={{ borderBottom: "1px solid #F8FAFC" }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(135deg,#FFF7ED,#FEF3C7)",
-                    }}
-                  >
-                    <span className="text-orange-500">
-                      {currentStepDef?.icon}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Step {step} of {visibleSteps.length}
-                    </p>
-                    <p className="text-lg font-black text-slate-900">
-                      {currentStepDef?.label}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-7 py-6">{renderStepContent()}</div>
-
+            {/* ── Main form ───────────────────────────────────────────────── */}
+            <div className="flex-1 min-w-0 space-y-4 pb-10">
+              {/* Global API error */}
               {apiError && (
-                <div className="mx-7 mb-4 flex items-center gap-3 rounded-xl px-4 py-3.5 bg-red-50 border border-red-200">
-                  <FiAlertCircle size={15} className="text-red-500 shrink-0" />
+                <div className="flex items-start gap-3 rounded-2xl px-5 py-4 bg-red-50 border border-red-200">
+                  <FiAlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
                   <p className="text-red-700 text-sm font-semibold whitespace-pre-wrap">
                     {apiError}
                   </p>
                 </div>
               )}
 
-              <div
-                className="flex items-center justify-between px-7 py-5"
-                style={{ borderTop: "1px solid #F8FAFC" }}
+              {/* ── 1. Category ─────────────────────────────────────────── */}
+              <FormSection
+                id="sec-category"
+                icon={<FiTag size={15} />}
+                title="Category"
+                badge="Required"
               >
+                {categoriesLoading ? (
+                  <div className="flex items-center gap-2 py-6 text-slate-400 text-sm">
+                    <FiLoader size={16} className="animate-spin text-orange-400" />
+                    Loading categories…
+                  </div>
+                ) : (
+                  <>
+                    <Field label="Category" required error={errors.category_id}>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                        {categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat.id)}
+                            className={`px-4 py-2.5 rounded-xl border text-sm font-bold text-left transition-all ${
+                              form.category_id === cat.id
+                                ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200"
+                                : "border-slate-200 text-slate-600 hover:border-orange-300 hover:bg-orange-50"
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                    {form.category_id && (
+                      <>
+                        {subcategoriesLoading ? (
+                          <div className="flex items-center gap-2 text-slate-400 text-sm">
+                            <FiLoader size={14} className="animate-spin text-orange-400" />
+                            Loading subcategories…
+                          </div>
+                        ) : subcategories.length > 0 ? (
+                          <Field label="Subcategory" error={errors.subcategory_id}>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                              {subcategories.map((sub) => (
+                                <button
+                                  key={sub.id}
+                                  type="button"
+                                  onClick={() => handleSubcategorySelect(sub.id)}
+                                  className={`px-4 py-2.5 rounded-xl border text-sm font-bold text-left transition-all ${
+                                    form.subcategory_id === sub.id
+                                      ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200"
+                                      : "border-slate-200 text-slate-600 hover:border-orange-300 hover:bg-orange-50"
+                                  }`}
+                                >
+                                  {sub.name}
+                                </button>
+                              ))}
+                            </div>
+                          </Field>
+                        ) : null}
+
+                        {/* Dynamic spec fields from subcategory schema */}
+                        {schemaLoading && (
+                          <div className="flex items-center gap-2 text-slate-400 text-sm">
+                            <FiLoader size={14} className="animate-spin text-orange-400" />
+                            Loading spec fields…
+                          </div>
+                        )}
+
+                        {!schemaLoading && subcategoryFields.length > 0 && (
+                          <div className="space-y-4 pt-2 border-t border-slate-100">
+                            <div className="flex items-start gap-2 py-3 px-4 rounded-xl bg-orange-50 border border-orange-100">
+                              <FiInfo size={14} className="text-orange-500 mt-0.5 shrink-0" />
+                              <p className="text-xs text-orange-700 font-medium">
+                                Fill in the additional specs below for this subcategory.
+                              </p>
+                            </div>
+                            {subcategoryFields.map((field) => (
+                              <Field
+                                key={field.key}
+                                label={field.label}
+                                required={field.required}
+                                error={errors[`spec_${field.key}`]}
+                              >
+                                {field.type === "select" && field.options?.length ? (
+                                  <select
+                                    className={inputCls}
+                                    value={form.specifications[field.key] || ""}
+                                    onChange={(e) =>
+                                      setForm((f) => ({
+                                        ...f,
+                                        specifications: {
+                                          ...f.specifications,
+                                          [field.key]: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                  >
+                                    <option value="">Select {field.label}…</option>
+                                    {field.options.map((o) => (
+                                      <option key={o} value={o}>
+                                        {o}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input
+                                    type={field.type === "number" ? "number" : "text"}
+                                    className={inputCls}
+                                    placeholder={`Enter ${field.label}`}
+                                    value={form.specifications[field.key] || ""}
+                                    onChange={(e) =>
+                                      setForm((f) => ({
+                                        ...f,
+                                        specifications: {
+                                          ...f.specifications,
+                                          [field.key]: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                  />
+                                )}
+                              </Field>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+              </FormSection>
+
+              {/* ── 2. Product Details ───────────────────────────────────── */}
+              <FormSection
+                id="sec-details"
+                icon={<FiPackage size={15} />}
+                title="Product Details"
+                badge="Required"
+              >
+                <Field label="Product Name" required error={errors.product_name}>
+                  <input
+                    className={inputCls}
+                    placeholder="e.g. iPhone 13 Pro Max 256GB"
+                    value={form.product_name}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, product_name: e.target.value }))
+                    }
+                    maxLength={120}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {form.product_name.length}/120
+                  </p>
+                </Field>
+
+                <Field
+                  label="Description"
+                  required
+                  error={errors.product_description}
+                  hint="Be specific — mention what's included, any defects, and key features."
+                >
+                  <textarea
+                    className={`${inputCls} resize-none`}
+                    rows={5}
+                    placeholder="Describe your product in detail — condition, features, what's included…"
+                    value={form.product_description}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, product_description: e.target.value }))
+                    }
+                    maxLength={2000}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {form.product_description.length}/2000
+                  </p>
+                </Field>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Brand">
+                    <input
+                      className={inputCls}
+                      placeholder="e.g. Apple, Samsung"
+                      value={form.brand}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, brand: e.target.value }))
+                      }
+                    />
+                  </Field>
+                  <Field label="Model">
+                    <input
+                      className={inputCls}
+                      placeholder="e.g. Pro Max, Galaxy S24"
+                      value={form.model}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, model: e.target.value }))
+                      }
+                    />
+                  </Field>
+                </div>
+
+                {/* Digital toggle */}
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <Toggle
+                    checked={form.is_digital}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, is_digital: !f.is_digital }))
+                    }
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-slate-700">Digital Product</p>
+                    <p className="text-[11px] text-slate-400">
+                      Enable if this is a downloadable or digital item
+                    </p>
+                  </div>
+                </div>
+              </FormSection>
+
+              {/* ── 3. Condition ─────────────────────────────────────────── */}
+              <FormSection
+                id="sec-condition"
+                icon={<FiSliders size={15} />}
+                title="Item Condition"
+                badge="Required"
+              >
+                <Field label="Condition" required error={errors.product_condition}>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {CONDITIONS.map((c) => {
+                      const active = form.product_condition === c;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() =>
+                            setForm((f) => ({ ...f, product_condition: c }))
+                          }
+                          className={`py-3 rounded-xl border text-sm font-bold transition ${
+                            active
+                              ? "text-white shadow-lg"
+                              : "border-slate-200 text-slate-600 hover:border-orange-300"
+                          }`}
+                          style={
+                            active
+                              ? {
+                                  background: conditionColors[c],
+                                  borderColor: conditionColors[c],
+                                  boxShadow: `0 4px 14px ${conditionColors[c]}40`,
+                                }
+                              : {}
+                          }
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Condition hints */}
+                  {form.product_condition && (
+                    <div className="mt-3 text-xs text-slate-500 font-medium px-1">
+                      {form.product_condition === "Like New" &&
+                        "Barely used, no visible signs of wear. May or may not have original packaging."}
+                      {form.product_condition === "Good" &&
+                        "Some light scratches or signs of use, but fully functional."}
+                      {form.product_condition === "Fair" &&
+                        "Noticeable wear or cosmetic issues but works fine."}
+                      {form.product_condition === "Poor" &&
+                        "Heavy wear, damage, or may need repairs. Clearly describe all issues."}
+                    </div>
+                  )}
+                </Field>
+              </FormSection>
+
+              {/* ── 4. Pricing & Stock ───────────────────────────────────── */}
+              <FormSection
+                id="sec-pricing"
+                icon={<FiDollarSign size={15} />}
+                title="Pricing & Stock"
+                badge="Required"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <Field
+                    label="Price (₦)"
+                    required
+                    error={errors.product_original_price}
+                  >
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
+                        ₦
+                      </span>
+                      <input
+                        className={`${inputCls} pl-8`}
+                        type="number"
+                        min="0"
+                        step="100"
+                        placeholder="0.00"
+                        value={form.product_original_price}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            product_original_price: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </Field>
+
+                  <Field
+                    label="Stock Quantity"
+                    required
+                    hint="Set to 0 to mark as out of stock"
+                  >
+                    <input
+                      className={inputCls}
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="1"
+                      value={form.stock_quantity}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, stock_quantity: e.target.value }))
+                      }
+                    />
+                  </Field>
+                </div>
+
+                {/* Sale toggle card */}
+                <div
+                  className="rounded-2xl border p-4 transition"
+                  style={{
+                    background: form.is_on_sale ? "#FFF7ED" : "#F8FAFC",
+                    borderColor: form.is_on_sale ? "#FED7AA" : "#E2E8F0",
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-0">
+                    <div>
+                      <p className="text-sm font-black text-slate-800">Put on Sale</p>
+                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                        Offer a discounted price to attract buyers
+                      </p>
+                    </div>
+                    <Toggle
+                      checked={form.is_on_sale}
+                      onChange={() =>
+                        setForm((f) => ({
+                          ...f,
+                          is_on_sale: !f.is_on_sale,
+                          product_discount_price: "",
+                        }))
+                      }
+                    />
+                  </div>
+
+                  {form.is_on_sale && (
+                    <div className="mt-4 space-y-3">
+                      <Field
+                        label="Sale Price (₦)"
+                        required
+                        error={errors.product_discount_price}
+                      >
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
+                            ₦
+                          </span>
+                          <input
+                            className={`${inputCls} pl-8`}
+                            type="number"
+                            min="0"
+                            step="100"
+                            placeholder="0.00"
+                            value={form.product_discount_price}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                product_discount_price: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </Field>
+                      {saleSavings > 0 && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100">
+                          <FiCheck size={11} className="text-emerald-600" />
+                          <span className="text-xs font-bold text-emerald-700">
+                            {saleSavings}% discount
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </FormSection>
+
+              {/* ── 5. Photos & Video ────────────────────────────────────── */}
+              <FormSection
+                id="sec-media"
+                icon={<FiImage size={15} />}
+                title="Photos & Video"
+                badge="Required"
+              >
+                <ImageUploader
+                  images={form.product_images}
+                  onImagesChange={(urls) =>
+                    setForm((f) => ({ ...f, product_images: urls }))
+                  }
+                  label="Product Images"
+                  required
+                  error={errors.product_images}
+                />
+                <VideoUploader
+                  videos={form.product_videos}
+                  onVideosChange={(urls) =>
+                    setForm((f) => ({ ...f, product_videos: urls }))
+                  }
+                />
+              </FormSection>
+
+              {/* ── 6. SEO & Tags ────────────────────────────────────────── */}
+              <FormSection
+                id="sec-seo"
+                icon={<FiInfo size={15} />}
+                title="SEO & Tags"
+                defaultOpen={false}
+              >
+                <Field label="Tags" hint="Up to 10 tags. Press Enter or click Add.">
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      className={`${inputCls} flex-1`}
+                      placeholder="e.g. electronics, smartphone, apple"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={addTag}
+                      disabled={form.tags.length >= 10}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <FiPlus size={14} /> Add
+                    </button>
+                  </div>
+                  {form.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {form.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-100 text-xs font-bold text-orange-700"
+                        >
+                          #{tag}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((f) => ({
+                                ...f,
+                                tags: f.tags.filter((t) => t !== tag),
+                              }))
+                            }
+                            className="text-orange-400 hover:text-orange-700 transition"
+                          >
+                            <FiX size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Field>
+
+                <Field label="SEO Title" hint="Leave blank to use product name.">
+                  <input
+                    className={inputCls}
+                    placeholder="Optimised title for search engines"
+                    value={form.seo_title}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, seo_title: e.target.value }))
+                    }
+                    maxLength={120}
+                  />
+                </Field>
+
+                <Field label="SEO Description" hint="Max 160 characters.">
+                  <textarea
+                    className={`${inputCls} resize-none`}
+                    rows={3}
+                    placeholder="Short description that appears in search engine results"
+                    value={form.seo_description}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, seo_description: e.target.value }))
+                    }
+                    maxLength={160}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {form.seo_description.length}/160
+                  </p>
+                </Field>
+
+                {/* Live preview */}
+                <div className="rounded-xl p-4 bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                    Search preview
+                  </p>
+                  <p className="text-blue-600 text-sm font-semibold leading-tight mb-0.5">
+                    {form.seo_title || form.product_name || "Your Product Title"}
+                  </p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    {form.seo_description ||
+                      form.product_description?.slice(0, 120) ||
+                      "Your product description will appear here…"}
+                  </p>
+                </div>
+              </FormSection>
+
+              {/* ── Submit bar ───────────────────────────────────────────── */}
+              <div
+                className="sticky bottom-5 z-10 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 px-5 py-4 flex items-center justify-between gap-4"
+                style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.10)" }}
+              >
+                <div className="text-xs text-slate-500 font-medium hidden sm:block">
+                  Review your listing before submitting — it goes live after admin
+                  approval.
+                </div>
                 <button
                   type="button"
-                  onClick={prevStep}
-                  disabled={step === 1}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="flex items-center gap-2 px-7 py-2.5 rounded-xl text-sm font-bold text-white transition shrink-0 disabled:opacity-70"
+                  style={{
+                    background: submitting
+                      ? "#CBD5E1"
+                      : "linear-gradient(135deg,#F97316,#EA580C)",
+                    boxShadow: submitting
+                      ? "none"
+                      : "0 4px 14px rgba(249,115,22,0.3)",
+                  }}
                 >
-                  <FiChevronLeft size={14} /> Back
+                  {submitting ? (
+                    <>
+                      <FiRefreshCw size={14} className="animate-spin" /> Submitting…
+                    </>
+                  ) : (
+                    <>
+                      <MdOutlineInventory2 size={16} /> List Product
+                    </>
+                  )}
                 </button>
-
-                {!isLastStep ? (
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    disabled={isContinueDisabled}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{
-                      background: "linear-gradient(135deg,#F97316,#EA580C)",
-                      boxShadow: "0 4px 14px rgba(249,115,22,0.3)",
-                    }}
-                  >
-                    {isContinueDisabled ? (
-                      <>
-                        <FiLoader size={14} className="animate-spin" />{" "}
-                        Loading…
-                      </>
-                    ) : (
-                      <>
-                        Continue <FiChevronRight size={14} />
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="flex items-center gap-2 px-7 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-70"
-                    style={{
-                      background: submitting
-                        ? "#CBD5E1"
-                        : "linear-gradient(135deg,#F97316,#EA580C)",
-                      boxShadow: submitting
-                        ? "none"
-                        : "0 4px 14px rgba(249,115,22,0.3)",
-                    }}
-                  >
-                    {submitting ? (
-                      <>
-                        <FiRefreshCw size={14} className="animate-spin" />{" "}
-                        Submitting…
-                      </>
-                    ) : (
-                      <>
-                        <MdOutlineInventory2 size={16} /> List Product
-                      </>
-                    )}
-                  </button>
-                )}
               </div>
             </div>
           </div>
         </div>
       </SellerLayout>
 
+      {/* Toast */}
       {toastMsg && (
         <div
           className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"

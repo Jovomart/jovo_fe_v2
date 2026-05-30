@@ -98,7 +98,7 @@ class ApiService {
 
   async makeRequest(
     endpoint: string,
-    options: RequestInit & { headers?: any } = {},
+    options: RequestInit & { headers?: Record<string, string> } = {},
   ): Promise<any> {
     if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
     const url = `${this.baseURL}${endpoint}`;
@@ -130,28 +130,50 @@ class ApiService {
 
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
     const isOptionalCartEndpoint =
-      (endpoint === "/cart" || endpoint.startsWith("/cart?")) ||
-      (endpoint === "/cart/add" || endpoint.startsWith("/cart/add?"));
+      endpoint === "/cart" ||
+      endpoint.startsWith("/cart?") ||
+      endpoint === "/cart/add" ||
+      endpoint.startsWith("/cart/add?");
 
     const effectivelyPublic = isPublic || isOptionalCartEndpoint;
+    const isFormData = options.body instanceof FormData;
 
-    const config: RequestInit & { headers: any } = {
-      headers: { ...options.headers },
-      ...options,
+    // ─── FIX: Build headers cleanly without mutation or overwrite bugs ───────
+    // We deliberately do NOT spread `...options` into config because that would
+    // overwrite our carefully-built headers object with options.headers.
+    // Instead we extract body/method/etc. explicitly.
+    const headers: Record<string, string> = {};
+
+    // Only set Content-Type for JSON — for FormData the browser must set it
+    // (it needs to include the multipart boundary, which only the browser knows)
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    // Attach auth token
+    const token = await this.getValidAccessToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    // Merge any extra headers passed in (but never override Content-Type for FormData)
+    if (options.headers) {
+      for (const [k, v] of Object.entries(options.headers)) {
+        if (isFormData && k.toLowerCase() === "content-type") continue;
+        headers[k] = v;
+      }
+    }
+
+    const config: RequestInit = {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body,
+      signal: options.signal,
+      credentials: options.credentials,
+      cache: options.cache,
+      mode: options.mode,
+      redirect: options.redirect,
     };
-
-    // Don't set Content-Type for FormData - let browser set it
-    if (!(options.body instanceof FormData)) {
-      config.headers["Content-Type"] = "application/json";
-    }
-
-    if (!effectivelyPublic) {
-      const token = await this.getValidAccessToken();
-      if (token) config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      const token = await this.getValidAccessToken();
-      if (token) config.headers.Authorization = `Bearer ${token}`;
-    }
 
     try {
       const response = await fetch(url, config);
@@ -161,19 +183,22 @@ class ApiService {
       try {
         data = JSON.parse(text);
       } catch {
-        data = { message: text || `Request failed with status ${response.status}` };
+        data = {
+          message: text || `Request failed with status ${response.status}`,
+        };
       }
 
       if (!response.ok && response.status !== 401) {
         console.error(`API Error [${response.status}] ${endpoint}:`, data);
-        if (options.body && !(options.body instanceof FormData)) {
+        if (options.body && !isFormData) {
           console.error("Request body:", options.body);
         }
       }
 
       if (response.status === 401) {
         if (!effectivelyPublic) {
-          const isServiceProviderEndpoint = endpoint.includes("/service-provider/");
+          const isServiceProviderEndpoint =
+            endpoint.includes("/service-provider/");
           if (!isServiceProviderEndpoint) {
             this.clearTokens();
           }
@@ -482,11 +507,7 @@ class ApiService {
     return this.makeRequest(`/cart${qs}`, { method: "GET" });
   }
 
-  async addToCart(
-    product_id: string,
-    quantity: number,
-    session_id?: string,
-  ) {
+  async addToCart(product_id: string, quantity: number, session_id?: string) {
     const qs = session_id
       ? `?session_id=${encodeURIComponent(session_id)}`
       : "";
@@ -557,8 +578,7 @@ class ApiService {
     q.append("delivery_state", params.delivery_state);
     q.append("delivery_country", params.delivery_country);
     q.append("delivery_option_id", params.delivery_option_id);
-    if (params.delivery_notes)
-      q.append("delivery_notes", params.delivery_notes);
+    if (params.delivery_notes) q.append("delivery_notes", params.delivery_notes);
     if (params.user_latitude != null)
       q.append("user_latitude", String(params.user_latitude));
     if (params.user_longitude != null)
@@ -589,13 +609,11 @@ class ApiService {
   }) {
     const q = new URLSearchParams();
     if (params?.order_status) q.append("order_status", params.order_status);
-    if (params?.payment_status)
-      q.append("payment_status", params.payment_status);
+    if (params?.payment_status) q.append("payment_status", params.payment_status);
     if (params?.start_date) q.append("start_date", params.start_date);
     if (params?.end_date) q.append("end_date", params.end_date);
     if (params?.page != null) q.append("page", String(params.page));
-    if (params?.per_page != null)
-      q.append("per_page", String(params.per_page));
+    if (params?.per_page != null) q.append("per_page", String(params.per_page));
     const qs = q.toString();
     return this.makeRequest(`/user/orders${qs ? `?${qs}` : ""}`, {
       method: "GET",
@@ -645,12 +663,9 @@ class ApiService {
   }) {
     const q = new URLSearchParams();
     if (params?.page != null) q.append("page", String(params.page));
-    if (params?.page_size != null)
-      q.append("page_size", String(params.page_size));
-    if (params?.is_active != null)
-      q.append("is_active", String(params.is_active));
-    if (params?.approval_status)
-      q.append("approval_status", params.approval_status);
+    if (params?.page_size != null) q.append("page_size", String(params.page_size));
+    if (params?.is_active != null) q.append("is_active", String(params.is_active));
+    if (params?.approval_status) q.append("approval_status", params.approval_status);
     const qs = q.toString();
     return this.makeRequest(
       `/seller/products/my-products${qs ? `?${qs}` : ""}`,
@@ -659,9 +674,7 @@ class ApiService {
   }
 
   async getMyProductById(product_id: string) {
-    return this.makeRequest(`/seller/products/${product_id}`, {
-      method: "GET",
-    });
+    return this.makeRequest(`/seller/products/${product_id}`, { method: "GET" });
   }
 
   async createProduct(data: {
@@ -742,14 +755,12 @@ class ApiService {
   }) {
     const q = new URLSearchParams();
     if (params?.order_status) q.append("order_status", params.order_status);
-    if (params?.payment_status)
-      q.append("payment_status", params.payment_status);
+    if (params?.payment_status) q.append("payment_status", params.payment_status);
     if (params?.item_status) q.append("item_status", params.item_status);
     if (params?.start_date) q.append("start_date", params.start_date);
     if (params?.end_date) q.append("end_date", params.end_date);
     if (params?.page != null) q.append("page", String(params.page));
-    if (params?.per_page != null)
-      q.append("per_page", String(params.per_page));
+    if (params?.per_page != null) q.append("per_page", String(params.per_page));
     const qs = q.toString();
     return this.makeRequest(`/seller/orders${qs ? `?${qs}` : ""}`, {
       method: "GET",
@@ -769,17 +780,15 @@ class ApiService {
     return this.makeRequest("/seller/wallet", { method: "GET" });
   }
 
-  async getSellerWalletTransactions(params?: {
-    skip?: number;
-    limit?: number;
-  }) {
+  async getSellerWalletTransactions(params?: { skip?: number; limit?: number }) {
     const q = new URLSearchParams();
     if (params?.skip != null) q.append("skip", String(params.skip));
     if (params?.limit != null) q.append("limit", String(params.limit));
     const qs = q.toString();
-    return this.makeRequest(`/seller/wallet/transactions${qs ? `?${qs}` : ""}`, {
-      method: "GET",
-    });
+    return this.makeRequest(
+      `/seller/wallet/transactions${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
   }
 
   // ─── SERVICE PROVIDER ──────────────────────────────────────────────────────
@@ -796,10 +805,7 @@ class ApiService {
     });
   }
 
-  async verifyServiceProviderOTP(
-    service_provider_id: string,
-    otp_code: string,
-  ) {
+  async verifyServiceProviderOTP(service_provider_id: string, otp_code: string) {
     return this.makeRequest("/service-provider/verify-otp", {
       method: "POST",
       body: JSON.stringify({ service_provider_id, otp_code }),
@@ -837,10 +843,7 @@ class ApiService {
     price_type: "fixed" | "starting_at" | "negotiable";
     starting_price: number;
     location: string;
-    availability_schedule: Record<
-      string,
-      Array<{ start: string; end: string }>
-    >;
+    availability_schedule: Record<string, Array<{ start: string; end: string }>>;
     booking_mode: "request" | "instant";
   }) {
     return this.makeRequest("/service-provider/services", {
@@ -860,19 +863,14 @@ class ApiService {
     offset?: number;
   }) {
     const queryParams = new URLSearchParams();
-    if (params?.category_id)
-      queryParams.append("category_id", params.category_id);
-    if (params?.min_price)
-      queryParams.append("min_price", params.min_price.toString());
-    if (params?.max_price)
-      queryParams.append("max_price", params.max_price.toString());
+    if (params?.category_id) queryParams.append("category_id", params.category_id);
+    if (params?.min_price) queryParams.append("min_price", params.min_price.toString());
+    if (params?.max_price) queryParams.append("max_price", params.max_price.toString());
     if (params?.location) queryParams.append("location", params.location);
     if (params?.available_now) queryParams.append("available_now", "true");
     if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
-    if (params?.limit != null)
-      queryParams.append("limit", params.limit.toString());
-    if (params?.offset != null)
-      queryParams.append("offset", params.offset.toString());
+    if (params?.limit != null) queryParams.append("limit", params.limit.toString());
+    if (params?.offset != null) queryParams.append("offset", params.offset.toString());
     const qs = queryParams.toString();
     return this.makeRequest(
       `/service-provider/services/marketplace${qs ? `?${qs}` : ""}`,
@@ -900,10 +898,7 @@ class ApiService {
       price_type?: "fixed" | "starting_at" | "negotiable";
       starting_price?: number;
       location?: string;
-      availability_schedule?: Record<
-        string,
-        Array<{ start: string; end: string }>
-      >;
+      availability_schedule?: Record<string, Array<{ start: string; end: string }>>;
       booking_mode?: "request" | "instant";
       is_active?: boolean;
     },
@@ -935,8 +930,7 @@ class ApiService {
     if (params?.school_id) q.append("school_id", params.school_id);
     if (params?.category) q.append("category", params.category);
     if (params?.search) q.append("search", params.search);
-    if (params?.must_know != null)
-      q.append("must_know", String(params.must_know));
+    if (params?.must_know != null) q.append("must_know", String(params.must_know));
     if (params?.sort_by) q.append("sort_by", params.sort_by);
     if (params?.page) q.append("page", String(params.page));
     if (params?.limit) q.append("limit", String(params.limit));
@@ -1025,23 +1019,27 @@ class ApiService {
     );
   }
 
-  // ─── PRODUCT REVIEWS ─────────────────────────────────────────────────────────
+  // ─── PRODUCT REVIEWS ───────────────────────────────────────────────────────
 
-  async getProductReviews(productId: string, params?: {
-    rating?: number | null;
-    is_verified?: boolean | null;
-    page?: number;
-    per_page?: number;
-  }) {
+  async getProductReviews(
+    productId: string,
+    params?: {
+      rating?: number | null;
+      is_verified?: boolean | null;
+      page?: number;
+      per_page?: number;
+    },
+  ) {
     const q = new URLSearchParams();
     if (params?.rating != null) q.append("rating", String(params.rating));
-    if (params?.is_verified != null) q.append("is_verified", String(params.is_verified));
+    if (params?.is_verified != null)
+      q.append("is_verified", String(params.is_verified));
     if (params?.page != null) q.append("page", String(params.page));
     if (params?.per_page != null) q.append("per_page", String(params.per_page));
     const qs = q.toString();
     return this.makeRequest(
       `/reviews/product/${encodeURIComponent(productId)}${qs ? `?${qs}` : ""}`,
-      { method: "GET" }
+      { method: "GET" },
     );
   }
 
@@ -1056,10 +1054,10 @@ class ApiService {
     });
   }
 
-  async updateProductReview(review_id: string, data: {
-    rating?: number;
-    comment?: string;
-  }) {
+  async updateProductReview(
+    review_id: string,
+    data: { rating?: number; comment?: string },
+  ) {
     return this.makeRequest(`/user/reviews/${review_id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -1069,11 +1067,12 @@ class ApiService {
   // ─── FILE UPLOADS ──────────────────────────────────────────────────────────
 
   /**
-   * Upload files to Cloudinary with auto-database updates
-   * @param files - Array of File objects to upload
-   * @param uploadType - Type of upload (determines folder and permissions)
-   * @param entityId - Optional entity ID (product_id, school_id, etc.) for auto-update
-   * @returns Upload result with URLs and file metadata
+   * Upload files to Cloudinary via the backend.
+   *
+   * KEY FIX: We build FormData and pass it directly as the body. makeRequest
+   * now correctly omits Content-Type for FormData so the browser sets the
+   * multipart/form-data boundary automatically — without it Cloudinary rejects
+   * the request with a parse error.
    */
   async uploadFiles(
     files: File[],
@@ -1091,7 +1090,7 @@ class ApiService {
       | "category_image"
       | "category_icon"
       | "seller_document",
-    entityId?: string
+    entityId?: string,
   ): Promise<{
     urls: string[];
     files: Array<{
@@ -1111,30 +1110,28 @@ class ApiService {
     database_updated: boolean;
   }> {
     const formData = new FormData();
-    
-    // Append each file to the form data
+
     files.forEach((file) => {
       formData.append("files", file);
     });
-    
-    // Append upload type
+
     formData.append("upload_type", uploadType);
-    
-    // Append entity ID if provided
+
     if (entityId) {
       formData.append("entity_id", entityId);
     }
-    
-    // Make the request - don't set Content-Type header, let browser set it with boundary
+
+    // Pass FormData directly — makeRequest will detect instanceof FormData
+    // and skip setting Content-Type, letting the browser set it with boundary.
     const response = await this.makeRequest("/upload/files", {
       method: "POST",
       body: formData,
     });
-    
-    return response?.data || response;
+
+    return response?.data ?? response;
   }
 
-  // Convenience methods for specific upload types
+  // Convenience upload methods
 
   async uploadUserProfileImage(file: File) {
     return this.uploadFiles([file], "user_profile_image");
