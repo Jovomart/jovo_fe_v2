@@ -1,4 +1,5 @@
 class ApiService {
+  [x: string]: any;
   baseURL: string;
 
   constructor() {
@@ -138,25 +139,17 @@ class ApiService {
     const effectivelyPublic = isPublic || isOptionalCartEndpoint;
     const isFormData = options.body instanceof FormData;
 
-    // ─── FIX: Build headers cleanly without mutation or overwrite bugs ───────
-    // We deliberately do NOT spread `...options` into config because that would
-    // overwrite our carefully-built headers object with options.headers.
-    // Instead we extract body/method/etc. explicitly.
     const headers: Record<string, string> = {};
 
-    // Only set Content-Type for JSON — for FormData the browser must set it
-    // (it needs to include the multipart boundary, which only the browser knows)
     if (!isFormData) {
       headers["Content-Type"] = "application/json";
     }
 
-    // Attach auth token
     const token = await this.getValidAccessToken();
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    // Merge any extra headers passed in (but never override Content-Type for FormData)
     if (options.headers) {
       for (const [k, v] of Object.entries(options.headers)) {
         if (isFormData && k.toLowerCase() === "content-type") continue;
@@ -707,6 +700,7 @@ class ApiService {
     return response;
   }
 
+  // ── FIX: added product_images and product_videos to updateProduct signature ──
   async updateProduct(
     product_id: string,
     data: {
@@ -727,6 +721,7 @@ class ApiService {
       seo_title?: string;
       seo_description?: string;
       tags?: string[];
+      product_images?: string[];  // ← added
       product_videos?: string[];
     },
   ) {
@@ -739,6 +734,24 @@ class ApiService {
   async deleteProduct(product_id: string) {
     return this.makeRequest(`/seller/products/${product_id}`, {
       method: "DELETE",
+    });
+  }
+
+  // ─── SELLER FLASH SALE ─────────────────────────────────────────────────────
+
+  async getActiveFlashSaleCampaign(): Promise<any> {
+    return this.makeRequest("/marketspace/flash-sales", { method: "GET" });
+  }
+
+  async applyProductToFlashSale(data: {
+    product_id: string;
+    flash_sale_id: string;
+    flash_price: number;
+    flash_stock: number;
+  }) {
+    return this.makeRequest("/seller/products/flash-sale/apply", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
@@ -1066,14 +1079,6 @@ class ApiService {
 
   // ─── FILE UPLOADS ──────────────────────────────────────────────────────────
 
-  /**
-   * Upload files to Cloudinary via the backend.
-   *
-   * KEY FIX: We build FormData and pass it directly as the body. makeRequest
-   * now correctly omits Content-Type for FormData so the browser sets the
-   * multipart/form-data boundary automatically — without it Cloudinary rejects
-   * the request with a parse error.
-   */
   async uploadFiles(
     files: File[],
     uploadType:
@@ -1117,12 +1122,10 @@ class ApiService {
 
     formData.append("upload_type", uploadType);
 
-    if (entityId) {
-      formData.append("entity_id", entityId);
+    if (entityId && entityId.trim()) {
+      formData.append("entity_id", entityId.trim());
     }
 
-    // Pass FormData directly — makeRequest will detect instanceof FormData
-    // and skip setting Content-Type, letting the browser set it with boundary.
     const response = await this.makeRequest("/upload/files", {
       method: "POST",
       body: formData,
@@ -1131,58 +1134,12 @@ class ApiService {
     return response?.data ?? response;
   }
 
-  // Convenience upload methods
-
-  async uploadUserProfileImage(file: File) {
-    return this.uploadFiles([file], "user_profile_image");
-  }
-
-  async uploadUserCoverImage(file: File) {
-    return this.uploadFiles([file], "user_cover_image");
-  }
-
-  async uploadSellerBusinessImage(file: File, sellerId?: string) {
-    return this.uploadFiles([file], "seller_business_image", sellerId);
-  }
-
-  async uploadProviderLogo(file: File, providerId?: string) {
-    return this.uploadFiles([file], "provider_logo", providerId);
-  }
-
-  async uploadProviderCover(file: File, providerId?: string) {
-    return this.uploadFiles([file], "provider_cover", providerId);
-  }
-
-  async uploadProviderPostImages(files: File[], providerId?: string) {
-    return this.uploadFiles(files, "provider_post_images", providerId);
-  }
-
-  async uploadProductImages(files: File[], productId: string) {
+  async uploadProductImages(files: File[], productId?: string) {
     return this.uploadFiles(files, "product_images", productId);
   }
 
-  async uploadProductVideos(files: File[], productId: string) {
+  async uploadProductVideos(files: File[], productId?: string) {
     return this.uploadFiles(files, "product_videos", productId);
-  }
-
-  async uploadSchoolLogo(file: File, schoolId: string) {
-    return this.uploadFiles([file], "school_logo", schoolId);
-  }
-
-  async uploadCampusGuideImage(file: File, campusGuideId: string) {
-    return this.uploadFiles([file], "campus_guide_image", campusGuideId);
-  }
-
-  async uploadCategoryImage(file: File, categoryId: string) {
-    return this.uploadFiles([file], "category_image", categoryId);
-  }
-
-  async uploadCategoryIcon(file: File, categoryId: string) {
-    return this.uploadFiles([file], "category_icon", categoryId);
-  }
-
-  async uploadSellerDocument(files: File[], sellerId?: string) {
-    return this.uploadFiles(files, "seller_document", sellerId);
   }
 
   logout() {

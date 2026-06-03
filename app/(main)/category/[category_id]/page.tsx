@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   FiHeart, FiShoppingBag, FiArrowLeft, FiSearch,
@@ -315,7 +315,6 @@ const ProductCard = ({
   wishlisted: boolean;
   onWishlist: (id: string) => void;
 }) => {
-  const router = useRouter();
   const [imgError, setImgError] = useState(false);
   
   const discount = product.discount_percentage
@@ -355,19 +354,20 @@ const ProductCard = ({
       <div
         className="relative overflow-hidden bg-gray-100"
         style={{ aspectRatio: "1/1" }}
-        onClick={() => router.push(`/product/${product.id}`)}
       >
-        <div className="relative w-full h-full">
-          <Image
-            src={imageUrl}
-            alt={product.product_name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={() => setImgError(true)}
-            loading="lazy"
-            unoptimized={imageUrl.includes('data:image')}
-          />
-        </div>
+        <Link href={`/product/${product.id}`}>
+          <div className="relative w-full h-full">
+            <Image
+              src={imageUrl}
+              alt={product.product_name}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={() => setImgError(true)}
+              loading="lazy"
+              unoptimized={imageUrl.includes('data:image')}
+            />
+          </div>
+        </Link>
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Discount badge */}
@@ -410,13 +410,13 @@ const ProductCard = ({
 
         {/* View Product hover CTA */}
         <div className="absolute bottom-0 left-0 right-0 p-2.5 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button
+          <Link
+            href={`/product/${product.id}`}
             className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold text-white shadow-lg"
             style={{ background: theme.gradient }}
-            onClick={(e) => { e.stopPropagation(); router.push(`/product/${product.id}`); }}
           >
             <FiShoppingBag size={12} /> View Product
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -723,7 +723,8 @@ export default function CategoryPage() {
                   backdropFilter: "blur(8px)",
                 }}
               >
-                <FiGrid className="text-white" size={26} />
+                {/* Use theme icon instead of hardcoded FiGrid */}
+                {theme.icon}
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">

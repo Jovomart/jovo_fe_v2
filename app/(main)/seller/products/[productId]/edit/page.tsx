@@ -56,7 +56,6 @@ const shimmerStyle: React.CSSProperties = {
   borderRadius: "0.5rem",
 };
 
-/** A single shimmer bar */
 const Bone = ({
   h = 14,
   w = "100%",
@@ -70,17 +69,10 @@ const Bone = ({
 }) => (
   <div
     className={className}
-    style={{
-      ...shimmerStyle,
-      height: h,
-      width: w,
-      borderRadius: radius,
-      flexShrink: 0,
-    }}
+    style={{ ...shimmerStyle, height: h, width: w, borderRadius: radius, flexShrink: 0 }}
   />
 );
 
-/** Skeleton for a labelled input field */
 const FieldSkeleton = ({ wide = false }: { wide?: boolean }) => (
   <div className="space-y-2">
     <Bone h={10} w={wide ? "45%" : "30%"} />
@@ -88,7 +80,6 @@ const FieldSkeleton = ({ wide = false }: { wide?: boolean }) => (
   </div>
 );
 
-/** Skeleton for a textarea */
 const TextareaSkeleton = ({ rows = 4 }: { rows?: number }) => (
   <div className="space-y-2">
     <Bone h={10} w="35%" />
@@ -96,13 +87,11 @@ const TextareaSkeleton = ({ rows = 4 }: { rows?: number }) => (
   </div>
 );
 
-/** One skeleton section card that mirrors the real Section component */
 const SectionSkeleton = ({ children }: { children: React.ReactNode }) => (
   <div
     className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
     style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.05)" }}
   >
-    {/* header */}
     <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-50">
       <Bone h={28} w={28} radius={8} />
       <Bone h={14} w={120} />
@@ -111,20 +100,16 @@ const SectionSkeleton = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-/** Full page skeleton that mirrors every section */
 const LoadingSkeleton = () => (
   <>
-    {/* Inject the keyframe once */}
     <style>{`
       @keyframes skeletonShimmer {
         0%   { background-position: 200% 0; }
         100% { background-position: -200% 0; }
       }
     `}</style>
-
     <div className="p-5 md:p-7">
       <div className="max-w-2xl mx-auto space-y-5">
-        {/* Basic Info */}
         <SectionSkeleton>
           <TextareaSkeleton rows={1} />
           <TextareaSkeleton rows={5} />
@@ -133,41 +118,28 @@ const LoadingSkeleton = () => (
             <FieldSkeleton />
           </div>
         </SectionSkeleton>
-
-        {/* Condition */}
         <SectionSkeleton>
           <div className="space-y-2">
             <Bone h={10} w="30%" />
             <div className="grid grid-cols-4 gap-3">
-              {[...Array(4)].map((_, i) => (
-                <Bone key={i} h={44} radius={12} />
-              ))}
+              {[...Array(4)].map((_, i) => <Bone key={i} h={44} radius={12} />)}
             </div>
           </div>
         </SectionSkeleton>
-
-        {/* Pricing & Stock */}
         <SectionSkeleton>
           <div className="grid grid-cols-2 gap-5">
             <FieldSkeleton />
             <FieldSkeleton />
           </div>
-          {/* Sale toggle card */}
-          <div
-            className="rounded-2xl border border-slate-100 p-4 bg-slate-50 space-y-3"
-          >
+          <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50 space-y-3">
             <div className="flex items-center justify-between">
               <Bone h={12} w={70} />
               <Bone h={24} w={44} radius={99} />
             </div>
           </div>
-          {/* Status toggles */}
           <div className="grid grid-cols-2 gap-3">
             {[...Array(2)].map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100"
-              >
+              <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <Bone h={24} w={40} radius={99} />
                 <div className="space-y-1.5 flex-1">
                   <Bone h={10} w="60%" />
@@ -177,28 +149,20 @@ const LoadingSkeleton = () => (
             ))}
           </div>
         </SectionSkeleton>
-
-        {/* Images */}
         <SectionSkeleton>
           <div className="flex gap-2">
             <Bone h={42} radius={12} className="flex-1" />
             <Bone h={42} w={80} radius={12} />
           </div>
           <div className="grid grid-cols-5 gap-3">
-            {[...Array(5)].map((_, i) => (
-              <Bone key={i} h={72} radius={12} />
-            ))}
+            {[...Array(5)].map((_, i) => <Bone key={i} h={72} radius={12} />)}
           </div>
         </SectionSkeleton>
-
-        {/* Tags & SEO */}
         <SectionSkeleton>
           <FieldSkeleton />
           <FieldSkeleton />
           <TextareaSkeleton rows={3} />
         </SectionSkeleton>
-
-        {/* Action buttons */}
         <div className="flex gap-3 pb-8">
           <Bone h={48} w={100} radius={12} />
           <Bone h={48} radius={12} className="flex-1" />
@@ -227,11 +191,9 @@ const LoadError = ({
             <FiWifiOff size={28} className="text-red-400" />
           </div>
           <div>
-            <p className="text-lg font-black text-slate-900 mb-1.5">
-              Couldn't load product
-            </p>
+            <p className="text-lg font-black text-slate-900 mb-1.5">Couldn't load product</p>
             <p className="text-sm text-slate-500 font-medium max-w-sm">
-              {message || "Something went wrong while fetching this product. Check your connection and try again."}
+              {message || "Something went wrong. Check your connection and try again."}
             </p>
           </div>
           <div className="flex gap-3">
@@ -244,10 +206,7 @@ const LoadError = ({
             <button
               onClick={onRetry}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition"
-              style={{
-                background: "linear-gradient(135deg,#F97316,#EA580C)",
-                boxShadow: "0 4px 14px rgba(249,115,22,0.3)",
-              }}
+              style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
             >
               <FiRefreshCw size={13} /> Try Again
             </button>
@@ -279,9 +238,7 @@ const Field = ({
       {required && <span className="text-orange-500 ml-0.5">*</span>}
     </label>
     {children}
-    {hint && !error && (
-      <p className="text-[11px] text-slate-400 mt-1 font-medium">{hint}</p>
-    )}
+    {hint && !error && <p className="text-[11px] text-slate-400 mt-1 font-medium">{hint}</p>}
     {error && (
       <p className="text-[11px] text-red-500 mt-1 font-semibold flex items-center gap-1">
         <FiAlertCircle size={10} /> {error}
@@ -305,10 +262,7 @@ const Section = ({
     className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
     style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.05)" }}
   >
-    <div
-      className="flex items-center gap-3 px-6 py-4"
-      style={{ borderBottom: "1px solid #F8FAFC" }}
-    >
+    <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: "1px solid #F8FAFC" }}>
       <span className="text-xl">{icon}</span>
       <p className="font-black text-slate-900">{title}</p>
     </div>
@@ -317,6 +271,7 @@ const Section = ({
 );
 
 // ─── Image Upload Component ───────────────────────────────────────────────────
+// FIX: accepts productId so uploads are sent with entity_id, preventing 403.
 
 const ImageUploader = ({
   images,
@@ -324,27 +279,29 @@ const ImageUploader = ({
   label,
   required,
   error,
+  productId,
 }: {
   images: string[];
   onImagesChange: (urls: string[]) => void;
   label: string;
   required?: boolean;
   error?: string;
+  productId: string; // ← required so entity_id is always sent
 }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = "";
     if (files.length === 0) return;
 
-    const invalidFiles = files.filter(f => !f.type.startsWith('image/'));
+    const invalidFiles = files.filter((f) => !f.type.startsWith("image/"));
     if (invalidFiles.length > 0) {
       alert("Please select only image files (JPEG, PNG, WebP)");
       return;
     }
-
-    const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
+    const oversizedFiles = files.filter((f) => f.size > 10 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       alert("Some files exceed 10MB limit. Please choose smaller images.");
       return;
@@ -355,21 +312,20 @@ const ImageUploader = ({
 
     try {
       const interval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
+        setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const result = await apiService.uploadFiles(files, "product_images");
-      
+      // FIX: pass productId as entityId so backend authorises the upload
+      const result = await apiService.uploadFiles(files, "product_images", productId);
+
       clearInterval(interval);
       setUploadProgress(100);
 
-      const newImageUrls = result.urls || [];
+      const newImageUrls = result.urls ?? [];
       onImagesChange([...images, ...newImageUrls]);
-      
-      console.log("Images uploaded successfully:", newImageUrls);
-    } catch (error: any) {
-      console.error("Upload failed:", error);
-      alert(error.message || "Failed to upload images. Please try again.");
+    } catch (err: any) {
+      console.error("Upload failed:", err);
+      alert(err.message || "Failed to upload images. Please try again.");
     } finally {
       setTimeout(() => {
         setUploading(false);
@@ -388,32 +344,36 @@ const ImageUploader = ({
         {label}
         {required && <span className="text-orange-500 ml-0.5">*</span>}
       </label>
-      
+
       {uploading && (
         <div className="mb-3">
           <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
             <span className="flex items-center gap-2">
               <FiLoader size={14} className="animate-spin" />
-              Uploading images...
+              Uploading images…
             </span>
             <span>{uploadProgress}%</span>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full rounded-full transition-all duration-300"
               style={{ width: `${uploadProgress}%`, background: "linear-gradient(90deg, #F97316, #EA580C)" }}
             />
           </div>
         </div>
       )}
-      
+
       <div className="flex gap-2 mb-3">
-        <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
-          uploading ? "border-gray-200 bg-gray-50 opacity-50" : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-        }`}>
+        <label
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+            uploading
+              ? "border-gray-200 bg-gray-50 opacity-50 pointer-events-none"
+              : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+          }`}
+        >
           <FiUpload size={16} className="text-gray-400" />
           <span className="text-sm font-medium text-gray-600">
-            {uploading ? "Uploading..." : "Click to Upload Images"}
+            {uploading ? "Uploading…" : "Click to Upload Images"}
           </span>
           <input
             type="file"
@@ -425,22 +385,18 @@ const ImageUploader = ({
           />
         </label>
       </div>
-      
+
       {error && (
         <p className="text-[11px] text-red-500 mb-3 font-semibold flex items-center gap-1">
           <FiAlertCircle size={10} /> {error}
         </p>
       )}
-      
+
       {images.length === 0 ? (
         <div className="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl">
           <FiImage size={24} className="text-slate-300 mx-auto mb-2" />
-          <p className="text-sm text-slate-400 font-medium">
-            No images yet — click above to upload
-          </p>
-          <p className="text-xs text-slate-300 mt-1">
-            JPEG, PNG, WebP up to 10MB each
-          </p>
+          <p className="text-sm text-slate-400 font-medium">No images yet — click above to upload</p>
+          <p className="text-xs text-slate-300 mt-1">JPEG, PNG, WebP up to 10MB each</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
@@ -661,6 +617,7 @@ const EditProductPage = () => {
         seo_title: form.seo_title || undefined,
         seo_description: form.seo_description || undefined,
         tags: form.tags,
+        product_images: form.product_images,  // ← now included in PATCH
         product_videos: form.product_videos,
       });
       showToast(
@@ -744,20 +701,16 @@ const EditProductPage = () => {
               </div>
             )}
 
-            {/* ── Basic Info ─────────────────────────────────────────────── */}
+            {/* ── Basic Info ── */}
             <Section title="Basic Info" icon="📋">
               <Field label="Product Name" required error={errors.product_name}>
                 <input
                   className={inputCls}
                   value={form.product_name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, product_name: e.target.value }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, product_name: e.target.value }))}
                   maxLength={120}
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {form.product_name.length}/120
-                </p>
+                <p className="text-[11px] text-slate-400 mt-1">{form.product_name.length}/120</p>
               </Field>
 
               <Field label="Description" required error={errors.product_description}>
@@ -768,9 +721,7 @@ const EditProductPage = () => {
                   onChange={(e) => handleChange("product_description", e.target.value)}
                   maxLength={2000}
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {form.product_description.length}/2000
-                </p>
+                <p className="text-[11px] text-slate-400 mt-1">{form.product_description.length}/2000</p>
               </Field>
 
               <div className="grid grid-cols-2 gap-5">
@@ -791,7 +742,7 @@ const EditProductPage = () => {
               </div>
             </Section>
 
-            {/* ── Condition ──────────────────────────────────────────────── */}
+            {/* ── Condition ── */}
             <Section title="Condition" icon="✨">
               <Field label="Item Condition" required error={errors.product_condition}>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -809,17 +760,11 @@ const EditProductPage = () => {
                         type="button"
                         onClick={() => handleChange("product_condition", c)}
                         className={`py-3 rounded-xl border text-sm font-bold transition ${
-                          active
-                            ? "text-white shadow-lg"
-                            : "border-slate-200 text-slate-600 hover:border-orange-300"
+                          active ? "text-white shadow-lg" : "border-slate-200 text-slate-600 hover:border-orange-300"
                         }`}
                         style={
                           active
-                            ? {
-                                background: colors[c],
-                                borderColor: colors[c],
-                                boxShadow: `0 4px 14px ${colors[c]}40`,
-                              }
+                            ? { background: colors[c], borderColor: colors[c], boxShadow: `0 4px 14px ${colors[c]}40` }
                             : {}
                         }
                       >
@@ -831,22 +776,18 @@ const EditProductPage = () => {
               </Field>
             </Section>
 
-            {/* ── Pricing & Stock ────────────────────────────────────────── */}
+            {/* ── Pricing & Stock ── */}
             <Section title="Pricing & Stock" icon="💰">
               <div className="grid grid-cols-2 gap-5">
                 <Field label="Price (₦)" required error={errors.product_original_price}>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
-                      ₦
-                    </span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">₦</span>
                     <input
                       className={`${inputCls} pl-8`}
                       type="number"
                       min="0"
                       value={form.product_original_price}
-                      onChange={(e) =>
-                        handleChange("product_original_price", e.target.value)
-                      }
+                      onChange={(e) => handleChange("product_original_price", e.target.value)}
                     />
                   </div>
                 </Field>
@@ -857,9 +798,7 @@ const EditProductPage = () => {
                     type="number"
                     min="0"
                     value={form.stock_quantity}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, stock_quantity: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, stock_quantity: e.target.value }))}
                   />
                 </Field>
               </div>
@@ -891,20 +830,13 @@ const EditProductPage = () => {
                 {form.is_on_sale && (
                   <Field label="Sale Price (₦)" error={errors.product_discount_price}>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">
-                        ₦
-                      </span>
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">₦</span>
                       <input
                         className={`${inputCls} pl-8`}
                         type="number"
                         min="0"
                         value={form.product_discount_price}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            product_discount_price: e.target.value,
-                          }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, product_discount_price: e.target.value }))}
                       />
                     </div>
                   </Field>
@@ -914,21 +846,10 @@ const EditProductPage = () => {
               {/* Toggles */}
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  {
-                    key: "is_active" as keyof EditForm,
-                    label: "Active Listing",
-                    desc: "Visible on marketplace",
-                  },
-                  {
-                    key: "is_in_stock" as keyof EditForm,
-                    label: "In Stock",
-                    desc: "Available for purchase",
-                  },
+                  { key: "is_active" as keyof EditForm, label: "Active Listing", desc: "Visible on marketplace" },
+                  { key: "is_in_stock" as keyof EditForm, label: "In Stock", desc: "Available for purchase" },
                 ].map(({ key, label, desc }) => (
-                  <div
-                    key={key}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100"
-                  >
+                  <div key={key} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
                     <button
                       type="button"
                       onClick={() => setForm((f) => ({ ...f, [key]: !f[key] }))}
@@ -951,7 +872,7 @@ const EditProductPage = () => {
               </div>
             </Section>
 
-            {/* ── Images ─────────────────────────────────────────────────── */}
+            {/* ── Images ── */}
             <Section title="Product Images" icon="🖼️">
               <ImageUploader
                 images={form.product_images}
@@ -959,10 +880,11 @@ const EditProductPage = () => {
                 label="Product Images"
                 required
                 error={(errors as any).product_images}
+                productId={productId}
               />
             </Section>
 
-            {/* ── Tags & SEO ──────────────────────────────────────────────── */}
+            {/* ── Tags & SEO ── */}
             <Section title="Tags & SEO" icon="🏷️">
               <Field label="Tags">
                 <div className="flex gap-2 mb-3">
@@ -996,12 +918,7 @@ const EditProductPage = () => {
                         #{tag}
                         <button
                           type="button"
-                          onClick={() =>
-                            setForm((f) => ({
-                              ...f,
-                              tags: f.tags.filter((t) => t !== tag),
-                            }))
-                          }
+                          onClick={() => setForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }))}
                           className="text-orange-400 hover:text-orange-700"
                         >
                           <FiX size={10} />
@@ -1016,9 +933,7 @@ const EditProductPage = () => {
                 <input
                   className={inputCls}
                   value={form.seo_title}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, seo_title: e.target.value }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, seo_title: e.target.value }))}
                   maxLength={120}
                 />
               </Field>
@@ -1028,14 +943,10 @@ const EditProductPage = () => {
                   className={`${inputCls} resize-none`}
                   rows={3}
                   value={form.seo_description}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, seo_description: e.target.value }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, seo_description: e.target.value }))}
                   maxLength={160}
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {form.seo_description.length}/160
-                </p>
+                <p className="text-[11px] text-slate-400 mt-1">{form.seo_description.length}/160</p>
               </Field>
             </Section>
 
@@ -1054,20 +965,14 @@ const EditProductPage = () => {
                 disabled={submitting}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition disabled:opacity-70"
                 style={{
-                  background: submitting
-                    ? "#CBD5E1"
-                    : "linear-gradient(135deg,#F97316,#EA580C)",
+                  background: submitting ? "#CBD5E1" : "linear-gradient(135deg,#F97316,#EA580C)",
                   boxShadow: submitting ? "none" : "0 4px 14px rgba(249,115,22,0.3)",
                 }}
               >
                 {submitting ? (
-                  <>
-                    <FiRefreshCw size={14} className="animate-spin" /> Saving…
-                  </>
+                  <><FiRefreshCw size={14} className="animate-spin" /> Saving…</>
                 ) : (
-                  <>
-                    <FiSave size={14} /> Save Changes
-                  </>
+                  <><FiSave size={14} /> Save Changes</>
                 )}
               </button>
             </div>
@@ -1075,7 +980,6 @@ const EditProductPage = () => {
         </div>
       </SellerLayout>
 
-      {/* Toast */}
       {toastMsg && (
         <div
           className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"

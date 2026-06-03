@@ -78,7 +78,7 @@ const CategoryGrid = ({
 
   return (
     <div className="w-full mt-5 overflow-hidden" style={{ background: theme.bgColor }}>
-      {/* ── Header ── */}
+      {/* ── Header with Theme Icon ── */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
         style={{ background: theme.gradient }}
@@ -97,7 +97,8 @@ const CategoryGrid = ({
 
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
-            <FiGrid size={16} className={theme.iconColor} />
+            {/* Use theme icon instead of hardcoded FiGrid */}
+            {theme.icon}
           </div>
           <div>
             <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
@@ -365,7 +366,7 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
       fetchShopHomepage();
     }, 0);
     return () => clearTimeout(timer);
-  }, [fetchShopHomepage]);
+  }, [fetchShopHomepage, retryCount]);
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
