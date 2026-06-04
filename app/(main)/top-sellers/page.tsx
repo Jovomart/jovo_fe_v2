@@ -242,7 +242,7 @@ const TopSellersPage = () => {
       await fetchTopSellers();
     };
     loadTopSellers();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   }, [fetchTopSellers]);
 
   const handleWishlist = (id: string) => {

@@ -260,7 +260,7 @@ const LimitedStockDealsPage = () => {
       await fetchLimited();
     };
     loadLimited();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   }, [fetchLimited]);
 
   const handleWishlist = (id: string) => {

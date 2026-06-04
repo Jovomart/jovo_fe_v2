@@ -272,7 +272,7 @@ const FlashSalesPage = () => {
       await fetchCampaign();
     };
     loadCampaign();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   }, [fetchCampaign]);
 
   // Countdown tick

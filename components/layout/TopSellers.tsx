@@ -83,7 +83,7 @@ const TopSellers = () => {
       await fetchTopSellers();
     };
     loadTopSellers();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
   }, [fetchTopSellers]);
 
   // Auto-scroll
