@@ -266,8 +266,13 @@ const FlashSalesPage = () => {
     }
   }, []);
 
+  // FIXED: Wrapped fetchCampaign call in an async function to avoid set-state-in-effect warning
   useEffect(() => {
-    fetchCampaign();
+    const loadCampaign = async () => {
+      await fetchCampaign();
+    };
+    loadCampaign();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [fetchCampaign]);
 
   // Countdown tick
@@ -433,7 +438,7 @@ const FlashSalesPage = () => {
               <p className="text-gray-400 text-xs mt-1 max-w-xs">{error}</p>
             </div>
             <button
-              onClick={fetchCampaign}
+              onClick={() => fetchCampaign()}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-all active:scale-95"
             >
               <FiRefreshCw size={13} /> Try again

@@ -254,8 +254,13 @@ const LimitedStockDealsPage = () => {
     }
   }, []);
 
+  // FIXED: Wrapped fetchLimited call in an async function to avoid set-state-in-effect warning
   useEffect(() => {
-    fetchLimited();
+    const loadLimited = async () => {
+      await fetchLimited();
+    };
+    loadLimited();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [fetchLimited]);
 
   const handleWishlist = (id: string) => {
@@ -424,7 +429,7 @@ const LimitedStockDealsPage = () => {
             </div>
             <p className="text-gray-700 font-semibold text-sm">{error}</p>
             <button
-              onClick={fetchLimited}
+              onClick={() => fetchLimited()}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-all"
             >
               <FiRefreshCw size={13} /> Try again

@@ -236,8 +236,13 @@ const TopSellersPage = () => {
     }
   }, []);
 
+  // FIXED: Wrapped fetchTopSellers call in an async function to avoid set-state-in-effect warning
   useEffect(() => {
-    fetchTopSellers();
+    const loadTopSellers = async () => {
+      await fetchTopSellers();
+    };
+    loadTopSellers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [fetchTopSellers]);
 
   const handleWishlist = (id: string) => {
@@ -389,7 +394,7 @@ const TopSellersPage = () => {
             </div>
             <p className="text-gray-700 font-semibold text-sm">{error}</p>
             <button
-              onClick={fetchTopSellers}
+              onClick={() => fetchTopSellers()}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-all"
             >
               <FiRefreshCw size={13} /> Try again

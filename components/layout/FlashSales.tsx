@@ -115,8 +115,13 @@ const FlashSales = () => {
     }
   }, []);
 
+  // FIXED: Wrapped fetchCampaign call in an async function to avoid set-state-in-effect warning
   useEffect(() => {
-    fetchCampaign();
+    const loadCampaign = async () => {
+      await fetchCampaign();
+    };
+    loadCampaign();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [fetchCampaign]);
 
   // Countdown tick

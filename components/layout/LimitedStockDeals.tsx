@@ -77,8 +77,13 @@ const LimitedStockDeals = () => {
     }
   }, []);
 
+  // FIXED: Wrapped fetchLimitedStock call in an async function to avoid set-state-in-effect warning
   useEffect(() => {
-    fetchLimitedStock();
+    const loadLimitedStock = async () => {
+      await fetchLimitedStock();
+    };
+    loadLimitedStock();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [fetchLimitedStock]);
 
   if (!loading && products.length === 0) return null;

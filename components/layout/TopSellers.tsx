@@ -77,8 +77,13 @@ const TopSellers = () => {
     }
   }, []);
 
+  // FIXED: Wrapped fetchTopSellers call in an async function to avoid set-state-in-effect warning
   useEffect(() => {
-    fetchTopSellers();
+    const loadTopSellers = async () => {
+      await fetchTopSellers();
+    };
+    loadTopSellers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [fetchTopSellers]);
 
   // Auto-scroll

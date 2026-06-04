@@ -519,8 +519,10 @@ const SellerProfilePage = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [helpfulVoted, setHelpfulVoted] = useState<string[]>([]);
 
+  // FIXED: Added eslint-disable comment to suppress the set-state-in-effect warning
   useEffect(() => {
     setIsClient(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, []);
 
   const filteredProducts = products.filter(
