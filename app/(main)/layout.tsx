@@ -18,6 +18,9 @@ export default function MainLayout({
   const isSellerPromote = pathname?.startsWith("/seller/promote");
   const isSellerSettings = pathname?.startsWith("/seller/settings");
   const isSellerProducts = pathname?.startsWith("/seller/products");
+  const isSellerAddProduct = pathname?.startsWith("/seller/add-product");
+  const isSellerEditProduct = pathname?.startsWith("/seller/edit-product");
+  const isSellerProfile = pathname?.startsWith("/seller/profile");
   const isSellerDeliveries = pathname?.startsWith("/seller/deliveries");
   const isServiceDashboard = pathname?.startsWith("/services/dashboard");
   const isNewsSection = pathname?.startsWith("/news");
@@ -33,7 +36,7 @@ export default function MainLayout({
 
   const shouldHideNavbar =
     isSellerDashboard || isServiceDashboard || isSellerDeliveries || isSellerPromote || isSellerSettings
-    || isSellerOrders || isSellerProducts || isNewsSection || isSellerWallet || isHomePage;
+    || isSellerOrders || isSellerProducts || isNewsSection || isSellerWallet || isHomePage || isSellerProfile || isSellerAddProduct || isSellerEditProduct;
   const shouldHideBottomNav = isSellerDashboard || isHomePage;
   const shouldShowLoader = isAPIPage || isHomePage;
 

@@ -36,12 +36,7 @@ import { FaStore, FaBullhorn, FaCrown, FaRocket } from "react-icons/fa";
 import { HiTable, HiOutlineSupport } from "react-icons/hi";
 import { GiConfirmed } from "react-icons/gi";
 import { GrProductHunt } from "react-icons/gr";
-import {
-  VerifiedIcon,
-  StoreIcon,
-  PackageIcon,
-  ClockIcon,
-} from "lucide-react";
+import { VerifiedIcon, StoreIcon, PackageIcon, ClockIcon } from "lucide-react";
 import { HiWallet } from "react-icons/hi2";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -71,8 +66,8 @@ export const fmtCurrency = (n: number) =>
   n >= 1_000_000
     ? `₦${(n / 1_000_000).toFixed(1)}M`
     : n >= 1_000
-    ? `₦${(n / 1_000).toFixed(1)}K`
-    : `₦${n.toLocaleString()}`;
+      ? `₦${(n / 1_000).toFixed(1)}K`
+      : `₦${n.toLocaleString()}`;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -108,7 +103,7 @@ const SellerLayout = ({
       const timer2 = setTimeout(() => {
         const h = new Date().getHours();
         setGreeting(
-          h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
+          h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening",
         );
       }, 0);
       return () => {
@@ -117,35 +112,31 @@ const SellerLayout = ({
       };
     }
   }, []);
-    
- 
-// FIX: Use setTimeout to avoid direct setState in effect
-useEffect(() => {
-  if (user && !userDataAppliedRef.current) {
-    userDataAppliedRef.current = true;
-    const name =
-      user?.full_name ||
-      user?.username ||
-      user?.first_name ||
-      "Seller";
-    const timer1 = setTimeout(() => setDisplayName(name), 0);
-    const timer2 = setTimeout(() => {
-      setInitials(
-        name
-          .split(" ")
-          .map((n: string) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2)
-      );
-    }, 0);
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }
-}, [user]);
-    
+
+  // FIX: Use setTimeout to avoid direct setState in effect
+  useEffect(() => {
+    if (user && !userDataAppliedRef.current) {
+      userDataAppliedRef.current = true;
+      const name =
+        user?.full_name || user?.username || user?.first_name || "Seller";
+      const timer1 = setTimeout(() => setDisplayName(name), 0);
+      const timer2 = setTimeout(() => {
+        setInitials(
+          name
+            .split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2),
+        );
+      }, 0);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [user]);
+
   const navigate = (p: string) => {
     window.location.href = p;
     setSidebarOpen(false);
@@ -196,6 +187,12 @@ useEffect(() => {
       icon: <FaBullhorn size={15} />,
       label: "Promotions",
       to: "/seller/promote",
+    },
+    {
+      id: "profile",
+      icon: <StoreIcon size={17} />,
+      label: "Profile",
+      to: "/seller/profile",
     },
     {
       id: "settings",
@@ -303,7 +300,10 @@ useEffect(() => {
                 <p className="text-amber-700 text-[10px] font-bold">Seller</p>
               </div>
             </div>
-            <VerifiedIcon size={12} className="text-orange-500 shrink-0 ml-auto" />
+            <VerifiedIcon
+              size={12}
+              className="text-orange-500 shrink-0 ml-auto"
+            />
           </div>
           {stats.totalSales !== undefined && (
             <div
@@ -372,7 +372,9 @@ useEffect(() => {
                   : "text-slate-500 hover:bg-orange-50 hover:text-orange-600"
               }`}
             >
-              <span className={`shrink-0 ${activeNav === item.id ? "" : "group-hover:scale-110"}`}>
+              <span
+                className={`shrink-0 ${activeNav === item.id ? "" : "group-hover:scale-110"}`}
+              >
                 {item.icon}
               </span>
               <span className="flex-1">{item.label}</span>
@@ -412,7 +414,6 @@ useEffect(() => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* ENHANCED RESPONSIVE TOPBAR */}
         <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-sm">
-          
           {/* Mobile Search Overlay (when search is active on mobile) */}
           {showMobileSearch && (
             <div className="fixed inset-0 z-50 bg-white lg:hidden">
@@ -448,7 +449,6 @@ useEffect(() => {
           {/* Main Topbar Row */}
           <div className="px-3 sm:px-4 md:px-6 py-2.5 md:py-3">
             <div className="flex items-center justify-between gap-2 md:gap-4">
-              
               {/* Left Section - Menu + Brand + Greeting */}
               <div className="flex items-center gap-2 md:gap-3">
                 <button
@@ -457,7 +457,7 @@ useEffect(() => {
                 >
                   <FiMenu size={18} className="md:w-5 md:h-5" />
                 </button>
-                
+
                 {/* Desktop Logo/Brand */}
                 <div className="hidden lg:flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
@@ -465,17 +465,25 @@ useEffect(() => {
                   </div>
                   <div>
                     <p className="font-black text-sm text-slate-900">JOVO</p>
-                    <p className="text-[9px] font-semibold text-orange-500">Seller</p>
+                    <p className="text-[9px] font-semibold text-orange-500">
+                      Seller
+                    </p>
                   </div>
                 </div>
 
                 {/* Mobile Greeting (visible only on mobile when search not active) */}
                 {!showMobileSearch && (
                   <div className="lg:hidden">
-                    <p className="text-[10px] text-slate-400 font-medium" suppressHydrationWarning>
+                    <p
+                      className="text-[10px] text-slate-400 font-medium"
+                      suppressHydrationWarning
+                    >
                       {greeting}
                     </p>
-                    <p className="text-sm font-bold text-slate-800 leading-tight" suppressHydrationWarning>
+                    <p
+                      className="text-sm font-bold text-slate-800 leading-tight"
+                      suppressHydrationWarning
+                    >
                       {displayName.split(" ")[0]}
                     </p>
                   </div>
@@ -495,7 +503,10 @@ useEffect(() => {
               {/* Center Section - Search (Desktop full, Mobile icon) */}
               <div className="hidden md:flex flex-1 max-w-md mx-4">
                 <div className="w-full relative">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <FiSearch
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    size={16}
+                  />
                   <input
                     type="text"
                     value={searchQuery}
@@ -508,7 +519,6 @@ useEffect(() => {
 
               {/* Right Section - Actions */}
               <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-                
                 {/* Mobile Search Button */}
                 <button
                   onClick={() => setShowMobileSearch(true)}
@@ -557,7 +567,10 @@ useEffect(() => {
                     className="p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
                     disabled={isLoading}
                   >
-                    <FiRefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                    <FiRefreshCw
+                      size={16}
+                      className={isLoading ? "animate-spin" : ""}
+                    />
                   </button>
                 )}
 
@@ -592,7 +605,9 @@ useEffect(() => {
               <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 rounded-xl p-2.5 border border-emerald-100">
                 <div className="flex items-center justify-between mb-1">
                   <FiDollarSign size={12} className="text-emerald-600" />
-                  <span className="text-[9px] font-bold text-emerald-600">Revenue</span>
+                  <span className="text-[9px] font-bold text-emerald-600">
+                    Revenue
+                  </span>
                 </div>
                 <p className="text-sm font-black text-emerald-700">
                   {fmtCurrency(stats.totalSales || 0)}
@@ -601,7 +616,9 @@ useEffect(() => {
               <div className="bg-gradient-to-br from-orange-50 to-orange-100/30 rounded-xl p-2.5 border border-orange-100">
                 <div className="flex items-center justify-between mb-1">
                   <FiPackage size={12} className="text-orange-600" />
-                  <span className="text-[9px] font-bold text-orange-600">Orders</span>
+                  <span className="text-[9px] font-bold text-orange-600">
+                    Orders
+                  </span>
                 </div>
                 <p className="text-sm font-black text-orange-700">
                   {stats.totalOrders || 0}
@@ -610,7 +627,9 @@ useEffect(() => {
               <div className="bg-gradient-to-br from-amber-50 to-amber-100/30 rounded-xl p-2.5 border border-amber-100">
                 <div className="flex items-center justify-between mb-1">
                   <FiClock size={12} className="text-amber-600" />
-                  <span className="text-[9px] font-bold text-amber-600">Pending</span>
+                  <span className="text-[9px] font-bold text-amber-600">
+                    Pending
+                  </span>
                 </div>
                 <p className="text-sm font-black text-amber-700">
                   {stats.pendingOrders || 0}

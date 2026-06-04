@@ -18,6 +18,9 @@ import {
   FiUpload,
   FiTrash2,
   FiLoader,
+  FiZap,
+  FiClock,
+  FiInfo,
 } from "react-icons/fi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -41,10 +44,32 @@ interface EditForm {
   seo_description: string;
 }
 
+interface FlashSaleCampaign {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+}
+
+interface FlashSaleApply {
+  enabled: boolean;
+  flash_sale_id: string;
+  flash_price: string;
+  flash_stock: string;
+}
+
 const CONDITIONS = ["Like New", "Good", "Fair", "Poor"] as const;
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition placeholder-slate-400 bg-white";
+
+const INITIAL_FLASH_SALE: FlashSaleApply = {
+  enabled: false,
+  flash_sale_id: "",
+  flash_price: "",
+  flash_stock: "",
+};
 
 // ─── Shimmer Skeleton primitives ──────────────────────────────────────────────
 
@@ -131,31 +156,12 @@ const LoadingSkeleton = () => (
             <FieldSkeleton />
             <FieldSkeleton />
           </div>
-          <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50 space-y-3">
-            <div className="flex items-center justify-between">
-              <Bone h={12} w={70} />
-              <Bone h={24} w={44} radius={99} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                <Bone h={24} w={40} radius={99} />
-                <div className="space-y-1.5 flex-1">
-                  <Bone h={10} w="60%" />
-                  <Bone h={8} w="80%" />
-                </div>
-              </div>
-            ))}
-          </div>
         </SectionSkeleton>
         <SectionSkeleton>
-          <div className="flex gap-2">
-            <Bone h={42} radius={12} className="flex-1" />
-            <Bone h={42} w={80} radius={12} />
-          </div>
           <div className="grid grid-cols-5 gap-3">
-            {[...Array(5)].map((_, i) => <Bone key={i} h={72} radius={12} />)}
+            {[...Array(5)].map((_, i) => (
+              <Bone key={i} h={72} radius={12} />
+            ))}
           </div>
         </SectionSkeleton>
         <SectionSkeleton>
@@ -270,8 +276,21 @@ const Section = ({
   </div>
 );
 
+// ─── Toggle ───────────────────────────────────────────────────────────────────
+
+const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+  <button
+    type="button"
+    onClick={onChange}
+    className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${checked ? "bg-orange-500" : "bg-slate-300"}`}
+  >
+    <span
+      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : ""}`}
+    />
+  </button>
+);
+
 // ─── Image Upload Component ───────────────────────────────────────────────────
-// FIX: accepts productId so uploads are sent with entity_id, preventing 403.
 
 const ImageUploader = ({
   images,
@@ -286,10 +305,11 @@ const ImageUploader = ({
   label: string;
   required?: boolean;
   error?: string;
-  productId: string; // ← required so entity_id is always sent
+  productId: string;
 }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -315,27 +335,34 @@ const ImageUploader = ({
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      // FIX: pass productId as entityId so backend authorises the upload
       const result = await apiService.uploadFiles(files, "product_images", productId);
-
       clearInterval(interval);
       setUploadProgress(100);
-
       const newImageUrls = result.urls ?? [];
       onImagesChange([...images, ...newImageUrls]);
     } catch (err: any) {
-      console.error("Upload failed:", err);
       alert(err.message || "Failed to upload images. Please try again.");
     } finally {
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      }, 500);
+      setTimeout(() => { setUploading(false); setUploadProgress(0); }, 500);
     }
   };
 
-  const removeImage = (index: number) => {
-    onImagesChange(images.filter((_, i) => i !== index));
+  // Delete a single image from Cloudinary then remove from local state
+  const removeImage = async (index: number) => {
+    const url = images[index];
+    setDeletingUrl(url);
+    try {
+      // Only call delete API for real Cloudinary URLs (not placeholders)
+      if (url && url.startsWith("http") && !url.includes("placehold.co")) {
+        await apiService.deleteProductImages([url], productId);
+      }
+    } catch (err: any) {
+      // Non-fatal: even if Cloudinary delete fails, remove from local state
+      console.warn("Cloudinary delete failed (non-fatal):", err.message);
+    } finally {
+      setDeletingUrl(null);
+      onImagesChange(images.filter((_, i) => i !== index));
+    }
   };
 
   return (
@@ -363,28 +390,26 @@ const ImageUploader = ({
         </div>
       )}
 
-      <div className="flex gap-2 mb-3">
-        <label
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
-            uploading
-              ? "border-gray-200 bg-gray-50 opacity-50 pointer-events-none"
-              : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-          }`}
-        >
-          <FiUpload size={16} className="text-gray-400" />
-          <span className="text-sm font-medium text-gray-600">
-            {uploading ? "Uploading…" : "Click to Upload Images"}
-          </span>
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={handleFileUpload}
-            disabled={uploading}
-          />
-        </label>
-      </div>
+      <label
+        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer mb-3 ${
+          uploading
+            ? "border-gray-200 bg-gray-50 opacity-50 pointer-events-none"
+            : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+        }`}
+      >
+        <FiUpload size={16} className="text-gray-400" />
+        <span className="text-sm font-medium text-gray-600">
+          {uploading ? "Uploading…" : "Click to Upload Images"}
+        </span>
+        <input
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFileUpload}
+          disabled={uploading}
+        />
+      </label>
 
       {error && (
         <p className="text-[11px] text-red-500 mb-3 font-semibold flex items-center gap-1">
@@ -421,12 +446,135 @@ const ImageUploader = ({
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                disabled={deletingUrl === url}
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition disabled:opacity-60"
               >
-                <FiTrash2 size={10} />
+                {deletingUrl === url ? (
+                  <FiLoader size={8} className="animate-spin" />
+                ) : (
+                  <FiTrash2 size={10} />
+                )}
               </button>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Flash Sale Section ───────────────────────────────────────────────────────
+
+const FlashSaleSection = ({
+  flashSale,
+  onFlashSaleChange,
+  campaigns,
+  loadingCampaigns,
+}: {
+  flashSale: FlashSaleApply;
+  onFlashSaleChange: (data: FlashSaleApply) => void;
+  campaigns: FlashSaleCampaign[];
+  loadingCampaigns: boolean;
+}) => {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-black text-slate-800 flex items-center gap-2">
+            <FiZap size={14} className="text-orange-500" />
+            Apply to Flash Sale Campaign
+          </p>
+          <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+            Submit this product for platform-wide flash sales
+          </p>
+        </div>
+        <Toggle
+          checked={flashSale.enabled}
+          onChange={() =>
+            onFlashSaleChange({
+              ...flashSale,
+              enabled: !flashSale.enabled,
+              flash_sale_id: "",
+              flash_price: "",
+              flash_stock: "",
+            })
+          }
+        />
+      </div>
+
+      {flashSale.enabled && (
+        <div className="space-y-4 border-l-2 border-orange-200 pl-4">
+          {loadingCampaigns ? (
+            <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+              <FiLoader size={14} className="animate-spin text-orange-400" />
+              Loading active campaigns…
+            </div>
+          ) : campaigns.length === 0 ? (
+            <div className="rounded-xl bg-slate-50 p-4 text-center">
+              <FiClock size={18} className="text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No active flash sales available</p>
+              <p className="text-xs text-slate-400 mt-1">Check back later</p>
+            </div>
+          ) : (
+            <>
+              <Field label="Select Campaign" required>
+                <select
+                  className={inputCls}
+                  value={flashSale.flash_sale_id}
+                  onChange={(e) => onFlashSaleChange({ ...flashSale, flash_sale_id: e.target.value })}
+                >
+                  <option value="">Select a flash sale campaign</option>
+                  {campaigns.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} — {formatDate(c.start_date)} to {formatDate(c.end_date)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Flash Sale Price (₦)" required>
+                  <input
+                    className={inputCls}
+                    type="number"
+                    min="0"
+                    step="100"
+                    placeholder="Discounted price"
+                    value={flashSale.flash_price}
+                    onChange={(e) => onFlashSaleChange({ ...flashSale, flash_price: e.target.value })}
+                  />
+                </Field>
+                <Field label="Flash Sale Stock" required hint="Limited quantity for flash sale">
+                  <input
+                    className={inputCls}
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Units to allocate"
+                    value={flashSale.flash_stock}
+                    onChange={(e) => onFlashSaleChange({ ...flashSale, flash_stock: e.target.value })}
+                  />
+                </Field>
+              </div>
+
+              <div className="flex items-start gap-2 py-2 px-3 rounded-xl bg-amber-50 border border-amber-100">
+                <FiInfo size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-700 font-medium">
+                  Admin approval is required before the flash sale price activates. Applying doesn't guarantee acceptance.
+                </p>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -471,20 +619,28 @@ const EditProductPage = () => {
     seo_description: "",
   });
 
+  const [flashSale, setFlashSale] = useState<FlashSaleApply>(INITIAL_FLASH_SALE);
+  const [flashSaleCampaigns, setFlashSaleCampaigns] = useState<FlashSaleCampaign[]>([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [applyingFlashSale, setApplyingFlashSale] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof EditForm, string>>>({});
   const [apiError, setApiError] = useState("");
   const [toastMsg, setToastMsg] = useState("");
+  const [toastIsError, setToastIsError] = useState(false);
   const [willReset, setWillReset] = useState(false);
   const [tagInput, setTagInput] = useState("");
 
   const hasLoadedRef = useRef(false);
+  const hasFetchedCampaignsRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, isError = false) => {
     setToastMsg(msg);
+    setToastIsError(isError);
     setTimeout(() => setToastMsg(""), 3500);
   };
 
@@ -548,6 +704,34 @@ const EditProductPage = () => {
     }
   }, [productId]);
 
+  // ── Load flash sale campaigns ─────────────────────────────────────────────
+  const fetchFlashSaleCampaigns = useCallback(async () => {
+    setLoadingCampaigns(true);
+    try {
+      const response = await apiService.getActiveFlashSaleCampaign();
+      const data = response?.data ?? response;
+      let campaigns: FlashSaleCampaign[] = [];
+      if (Array.isArray(data)) campaigns = data;
+      else if (data?.campaign && typeof data.campaign === "object") campaigns = [data.campaign];
+      else if (data?.id) campaigns = [data];
+      else if (Array.isArray(data?.campaigns)) campaigns = data.campaigns;
+      else if (data?.data && Array.isArray(data.data)) campaigns = data.data;
+      setFlashSaleCampaigns(
+        campaigns.map((c: any) => ({
+          id: c.id,
+          name: c.name || c.campaign_name || "Flash Sale",
+          start_date: c.start_date,
+          end_date: c.end_date,
+          status: c.status || "active",
+        })),
+      );
+    } catch {
+      setFlashSaleCampaigns([]);
+    } finally {
+      setLoadingCampaigns(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!hasLoadedRef.current && productId) {
       hasLoadedRef.current = true;
@@ -557,6 +741,13 @@ const EditProductPage = () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [loadProduct, productId]);
+
+  useEffect(() => {
+    if (!hasFetchedCampaignsRef.current) {
+      hasFetchedCampaignsRef.current = true;
+      fetchFlashSaleCampaigns();
+    }
+  }, [fetchFlashSaleCampaigns]);
 
   const CRITICAL_FIELDS: (keyof EditForm)[] = [
     "product_original_price",
@@ -597,6 +788,29 @@ const EditProductPage = () => {
     return Object.keys(e).length === 0;
   };
 
+  const handleApplyFlashSale = async () => {
+    if (!flashSale.enabled) return;
+    if (!flashSale.flash_sale_id || !flashSale.flash_price || !flashSale.flash_stock) {
+      showToast("Please fill in all flash sale fields.", true);
+      return;
+    }
+    setApplyingFlashSale(true);
+    try {
+      await apiService.applyProductToFlashSale({
+        product_id: productId,
+        flash_sale_id: flashSale.flash_sale_id,
+        flash_price: Number(flashSale.flash_price),
+        flash_stock: Number(flashSale.flash_stock),
+      });
+      showToast("Flash sale application submitted for admin review!");
+      setFlashSale(INITIAL_FLASH_SALE);
+    } catch (err: any) {
+      showToast(err.message || "Failed to apply for flash sale", true);
+    } finally {
+      setApplyingFlashSale(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validate()) return;
     setSubmitting(true);
@@ -617,9 +831,15 @@ const EditProductPage = () => {
         seo_title: form.seo_title || undefined,
         seo_description: form.seo_description || undefined,
         tags: form.tags,
-        product_images: form.product_images,  // ← now included in PATCH
+        product_images: form.product_images,
         product_videos: form.product_videos,
       });
+
+      // Also apply flash sale if enabled
+      if (flashSale.enabled && flashSale.flash_sale_id) {
+        await handleApplyFlashSale();
+      }
+
       showToast(
         willReset
           ? "Product updated. Sent for re-review due to critical changes."
@@ -639,7 +859,6 @@ const EditProductPage = () => {
     };
   }, []);
 
-  // ── Render: loading ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <SellerLayout activeNav="products" pageTitle="Edit Product">
@@ -648,7 +867,6 @@ const EditProductPage = () => {
     );
   }
 
-  // ── Render: fetch error ─────────────────────────────────────────────────────
   if (loadError) {
     return (
       <SellerLayout activeNav="products" pageTitle="Edit Product">
@@ -661,7 +879,6 @@ const EditProductPage = () => {
     );
   }
 
-  // ── Render: form ────────────────────────────────────────────────────────────
   return (
     <>
       <SellerLayout
@@ -686,14 +903,12 @@ const EditProductPage = () => {
                   <p className="text-amber-800 text-sm font-black">Pending Re-Review</p>
                   <p className="text-amber-700 text-xs font-medium mt-0.5">
                     You've changed a critical field (price, condition, images, or description).
-                    Saving will reset the product to <strong>pending review</strong> until an
-                    admin re-approves.
+                    Saving will reset the product to <strong>pending review</strong> until an admin re-approves.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* API Error */}
             {apiError && (
               <div className="flex items-center gap-3 rounded-2xl px-5 py-4 bg-red-50 border border-red-200">
                 <FiAlertCircle size={16} className="text-red-500 shrink-0" />
@@ -803,7 +1018,6 @@ const EditProductPage = () => {
                 </Field>
               </div>
 
-              {/* Sale */}
               <div
                 className="rounded-2xl border p-4 transition"
                 style={{
@@ -813,19 +1027,10 @@ const EditProductPage = () => {
               >
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-bold text-slate-800">On Sale</p>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, is_on_sale: !f.is_on_sale }))}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${
-                      form.is_on_sale ? "bg-orange-500" : "bg-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                        form.is_on_sale ? "translate-x-5" : ""
-                      }`}
-                    />
-                  </button>
+                  <Toggle
+                    checked={form.is_on_sale}
+                    onChange={() => setForm((f) => ({ ...f, is_on_sale: !f.is_on_sale }))}
+                  />
                 </div>
                 {form.is_on_sale && (
                   <Field label="Sale Price (₦)" error={errors.product_discount_price}>
@@ -843,26 +1048,16 @@ const EditProductPage = () => {
                 )}
               </div>
 
-              {/* Toggles */}
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { key: "is_active" as keyof EditForm, label: "Active Listing", desc: "Visible on marketplace" },
                   { key: "is_in_stock" as keyof EditForm, label: "In Stock", desc: "Available for purchase" },
                 ].map(({ key, label, desc }) => (
                   <div key={key} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => setForm((f) => ({ ...f, [key]: !f[key] }))}
-                      className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
-                        form[key] ? "bg-orange-500" : "bg-slate-300"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                          form[key] ? "translate-x-4" : ""
-                        }`}
-                      />
-                    </button>
+                    <Toggle
+                      checked={form[key] as boolean}
+                      onChange={() => setForm((f) => ({ ...f, [key]: !f[key] }))}
+                    />
                     <div>
                       <p className="text-xs font-bold text-slate-700">{label}</p>
                       <p className="text-[10px] text-slate-400">{desc}</p>
@@ -884,6 +1079,31 @@ const EditProductPage = () => {
               />
             </Section>
 
+            {/* ── Flash Sale ── */}
+            <Section title="Flash Sale" icon="⚡">
+              <FlashSaleSection
+                flashSale={flashSale}
+                onFlashSaleChange={setFlashSale}
+                campaigns={flashSaleCampaigns}
+                loadingCampaigns={loadingCampaigns}
+              />
+              {flashSale.enabled && flashSale.flash_sale_id && flashSale.flash_price && flashSale.flash_stock && (
+                <button
+                  type="button"
+                  onClick={handleApplyFlashSale}
+                  disabled={applyingFlashSale}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.25)" }}
+                >
+                  {applyingFlashSale ? (
+                    <><FiLoader size={13} className="animate-spin" /> Applying…</>
+                  ) : (
+                    <><FiZap size={13} /> Apply for Flash Sale Now</>
+                  )}
+                </button>
+              )}
+            </Section>
+
             {/* ── Tags & SEO ── */}
             <Section title="Tags & SEO" icon="🏷️">
               <Field label="Tags">
@@ -894,10 +1114,7 @@ const EditProductPage = () => {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTag();
-                      }
+                      if (e.key === "Enter") { e.preventDefault(); addTag(); }
                     }}
                   />
                   <button
@@ -983,9 +1200,10 @@ const EditProductPage = () => {
       {toastMsg && (
         <div
           className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"
-          style={{ background: "linear-gradient(135deg,#059669,#047857)" }}
+          style={{ background: toastIsError ? "linear-gradient(135deg,#DC2626,#B91C1C)" : "linear-gradient(135deg,#059669,#047857)" }}
         >
-          <FiCheck size={15} /> {toastMsg}
+          {toastIsError ? <FiAlertCircle size={15} /> : <FiCheck size={15} />}
+          {toastMsg}
         </div>
       )}
     </>

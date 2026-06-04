@@ -476,6 +476,64 @@ class ApiService {
     );
   }
 
+  // ─── NEW: TRENDING PRODUCTS ────────────────────────────────────────────────
+  // Ranked by 24h weighted engagement velocity: Score = (Views × 1) + (Cart Adds × 5)
+
+  async getTrendingProducts(params?: {
+    limit?: number;  // 1–50, default 10
+    hours?: number;  // 1–720, default 24
+  }) {
+    const q = new URLSearchParams();
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    if (params?.hours != null) q.append("hours", String(params.hours));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/marketspace/trending${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  // ─── NEW: FLASH SALES ─────────────────────────────────────────────────────
+  // Active platform-wide flash sale campaign with dynamic price overrides & countdowns
+
+  async getActiveFlashSaleCampaign(): Promise<any> {
+    return this.makeRequest("/marketspace/flash-sales", { method: "GET" });
+  }
+
+  // ─── NEW: TOP SELLERS ─────────────────────────────────────────────────────
+  // Ranked by rolling checkout volume
+
+  async getTopSellingProducts(params?: {
+    limit?: number;  // 1–50, default 10
+    days?: number;   // 1–30, default 7
+  }) {
+    const q = new URLSearchParams();
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    if (params?.days != null) q.append("days", String(params.days));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/marketspace/top-sellers${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  // ─── NEW: LIMITED STOCK ───────────────────────────────────────────────────
+  // Products with remaining stock below specified threshold
+
+  async getLimitedStockProducts(params?: {
+    threshold?: number;  // 1–10000, default 100
+    limit?: number;      // 1–100, default 20
+  }) {
+    const q = new URLSearchParams();
+    if (params?.threshold != null) q.append("threshold", String(params.threshold));
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/marketspace/limited-stock${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
   // ─── DELIVERY ──────────────────────────────────────────────────────────────
 
   async getAvailableDeliveryOptions(cartTotal = 0, totalWeight = 0) {
@@ -700,7 +758,6 @@ class ApiService {
     return response;
   }
 
-  // ── FIX: added product_images and product_videos to updateProduct signature ──
   async updateProduct(
     product_id: string,
     data: {
@@ -721,7 +778,7 @@ class ApiService {
       seo_title?: string;
       seo_description?: string;
       tags?: string[];
-      product_images?: string[];  // ← added
+      product_images?: string[];
       product_videos?: string[];
     },
   ) {
@@ -738,10 +795,6 @@ class ApiService {
   }
 
   // ─── SELLER FLASH SALE ─────────────────────────────────────────────────────
-
-  async getActiveFlashSaleCampaign(): Promise<any> {
-    return this.makeRequest("/marketspace/flash-sales", { method: "GET" });
-  }
 
   async applyProductToFlashSale(data: {
     product_id: string;
@@ -1141,6 +1194,95 @@ class ApiService {
   async uploadProductVideos(files: File[], productId?: string) {
     return this.uploadFiles(files, "product_videos", productId);
   }
+
+  // ─── ADD THIS METHOD TO THE ApiService CLASS ─────────────────────────────────
+// Place it right after the uploadProductVideos method (before the logout method)
+
+  /**
+   * Delete files from Cloudinary and synchronize with the database.
+   *
+   * @param urls        Full Cloudinary URLs to delete (required).
+   * @param uploadType  The upload_type that was used when the files were uploaded
+   *                    (e.g. "product_images", "product_videos"). Required so the
+   *                    backend knows which DB field to update.
+   * @param entityId    The entity that owns these files (e.g. product ID). Pass
+   *                    this whenever the upload_type is entity-scoped so the
+   *                    backend can sync the correct row.
+   */
+  async deleteFiles(
+    urls: string[],
+    uploadType: string,
+    entityId?: string,
+  ): Promise<{
+    status_code: number;
+    message: string;
+    data: Record<string, any>;
+  }> {
+    if (!urls || urls.length === 0) {
+      throw new Error("At least one URL is required to delete files.");
+    }
+
+    const body: Record<string, any> = { urls, upload_type: uploadType };
+    if (entityId && entityId.trim()) {
+      body.entity_id = entityId.trim();
+    }
+
+    return this.makeRequest("/upload/files", {
+      method: "DELETE",
+      body: JSON.stringify(body),
+    });
+  }
+
+  /**
+   * Convenience wrapper — delete a subset of a product's images from Cloudinary
+   * and sync the change back to the product record automatically.
+   */
+  async deleteProductImages(urls: string[], productId: string) {
+    return this.deleteFiles(urls, "product_images", productId);
+  }
+
+  /**
+   * Convenience wrapper — delete a subset of a product's videos from Cloudinary
+   * and sync the change back to the product record automatically.
+   */
+  async deleteProductVideos(urls: string[], productId: string) {
+    return this.deleteFiles(urls, "product_videos", productId);
+  }
+
+// ─── HOW TO INTEGRATE INTO THE FULL apiService.ts ────────────────────────────
+//
+// In your existing apiService.ts, find the uploadProductVideos method:
+//
+//   async uploadProductVideos(files: File[], productId?: string) {
+//     return this.uploadFiles(files, "product_videos", productId);
+//   }
+//
+// Paste the three methods above (deleteFiles, deleteProductImages, deleteProductVideos)
+// IMMEDIATELY after uploadProductVideos, before the logout() method.
+//
+// That's it. The new methods use the existing makeRequest infrastructure
+// (auth, error handling, token refresh) — no other changes needed.
+//
+// ─── USAGE EXAMPLES ──────────────────────────────────────────────────────────
+//
+// Delete a single image and sync DB:
+//   await apiService.deleteProductImages(["https://res.cloudinary.com/..."], productId);
+//
+// Delete multiple images:
+//   await apiService.deleteProductImages(urlsArray, productId);
+//
+// Delete a video:
+//   await apiService.deleteProductVideos(["https://res.cloudinary.com/..."], productId);
+//
+// Generic delete (for future upload_types):
+//   await apiService.deleteFiles(urls, "seller_document", entityId);
+//
+// ─── ERROR HANDLING ───────────────────────────────────────────────────────────
+//
+// The endpoint returns 403 if the user doesn't own the files.
+// makeRequest already throws with the server's error message, so wrap
+// in try/catch as needed. In ImageUploader we treat delete errors as
+// non-fatal (warn + continue removing from local state).
 
   logout() {
     this.clearTokens();

@@ -1,40 +1,71 @@
 "use client";
 import Link from "next/link";
-// src/pages/TopSellersPage.jsx
-import { products } from "@/data/products";
-import { useState, useMemo } from "react";
+import Image from "next/image";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useWishlist } from "@/context/WishlistContext";
 import {
-  FiHeart,
-  FiShoppingBag,
-  FiArrowLeft,
-  FiZap,
-  FiAward,
-  FiTrendingUp,
+  FiHeart, FiShoppingBag, FiArrowLeft, FiZap, FiAward,
+  FiTrendingUp, FiRefreshCw, FiAlertCircle,
 } from "react-icons/fi";
 import { FaHeart, FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
-import Image from "next/image";
+import apiService from "@/services/apiService";
 
-// ─── Product Card ──────────────────────────────────────────────────────────
-const getStableSoldCount = (seed = "", min = 100, range = 900) => {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) % 100000;
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface TopProduct {
+  id: string;
+  product_name: string;
+  product_images: string[];
+  product_original_price: number;
+  current_price: number;
+  discount_percentage: number;
+  is_in_stock: boolean;
+  sold_count: number;
+  brand: string | null;
+  average_rating: number;
+}
+
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3C/svg%3E";
+
+const getValidImageUrl = (url: string | undefined): string => {
+  if (!url) return PLACEHOLDER_IMAGE;
+  if (url.startsWith("data:") || url.startsWith("/")) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    if (url.includes("api.yourstore.com")) return PLACEHOLDER_IMAGE;
+    return url;
   }
-  return (min + (hash % range)).toLocaleString();
+  return PLACEHOLDER_IMAGE;
 };
 
-const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : null;
-  const soldCount = useMemo(
-    () => getStableSoldCount(product.id || product.name || `rank-${rank}`),
-    [product.id, product.name, rank],
-  );
+// ─── Product Card ─────────────────────────────────────────────────────────────
 
-  const rankConfig = {
+const ProductCard = ({
+  product,
+  rank,
+  wishlisted,
+  onWishlist,
+}: {
+  product: TopProduct;
+  rank: number;
+  wishlisted: boolean;
+  onWishlist: (id: string) => void;
+}) => {
+  const [imgError, setImgError] = useState(false);
+
+  const discount =
+    product.discount_percentage > 0
+      ? Math.round(product.discount_percentage)
+      : product.product_original_price > product.current_price
+      ? Math.round(
+          ((product.product_original_price - product.current_price) /
+            product.product_original_price) *
+            100,
+        )
+      : null;
+
+  const rankConfig: Record<number, { icon: React.ReactNode; bg: string; label: string }> = {
     1: {
       icon: <FaCrown size={11} />,
       bg: "linear-gradient(135deg,#FFD700,#FFA500)",
@@ -53,28 +84,30 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
   };
   const rankStyle = rankConfig[rank];
 
+  const imgUrl = imgError
+    ? PLACEHOLDER_IMAGE
+    : getValidImageUrl(product.product_images?.[0]);
+
   return (
     <div
       className="group relative bg-white rounded-3xl overflow-hidden transition-all duration-400 hover:-translate-y-2"
       style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}
     >
-      {/* Image */}
       <Link
         href={`/product/${product.id}`}
         className="relative overflow-hidden block"
         style={{ aspectRatio: "1/1" }}
       >
         <Image
-          src={product.image}
-          alt={product.name}
-          sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
+          src={imgUrl}
+          alt={product.product_name}
           fill
-          className="object-cover transition-transform duration-600 group-hover:scale-108"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={() => setImgError(true)}
+          unoptimized={imgUrl.startsWith("data:")}
         />
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Rank badge */}
         {rankStyle && (
           <div
             className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-white text-[10px] font-black shadow-lg"
@@ -84,7 +117,6 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
           </div>
         )}
 
-        {/* Discount badge */}
         {discount && (
           <div
             className="absolute top-3 right-10 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
@@ -94,7 +126,6 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
           </div>
         )}
 
-        {/* Wishlist */}
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -110,128 +141,149 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
           )}
         </button>
 
-        {/* Slide-up add to cart */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // Add to cart logic here
-            }}
+          <Link
+            href={`/product/${product.id}`}
             className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-orange-600 hover:text-white transition-colors duration-200"
           >
-            <FiShoppingBag size={13} /> Add to Cart
-          </button>
+            <FiShoppingBag size={13} /> View Product
+          </Link>
         </div>
       </Link>
 
-      {/* Info */}
       <div className="p-3.5">
         <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
-          {product.name}
+          {product.product_name}
         </h3>
         <div className="mt-2 flex items-end gap-2">
           <span className="text-sm md:text-base font-black text-orange-600">
-            ₦{product.price.toLocaleString()}
+            ₦{product.current_price.toLocaleString()}
           </span>
-          {product.oldPrice && (
+          {product.product_original_price > product.current_price && (
             <span className="text-[11px] text-gray-400 line-through">
-              ₦{product.oldPrice.toLocaleString()}
+              ₦{product.product_original_price.toLocaleString()}
             </span>
           )}
         </div>
-
-        {/* Sold count */}
-        <div className="mt-2 flex items-center gap-1.5">
-          <FiTrendingUp size={11} className="text-orange-500" />
-          <span className="text-[10px] text-gray-400 font-medium">
-            {soldCount} sold this week
-          </span>
-        </div>
+        {product.sold_count > 0 && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <FiTrendingUp size={11} className="text-orange-500" />
+            <span className="text-[10px] text-gray-400 font-medium">
+              {product.sold_count.toLocaleString()} sold this week
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// ─── Suggested Card ────────────────────────────────────────────────────────
-const SuggestedCard = ({ product }) => {
-  return (
-    <Link
-      href={`/product/${product.id}`}
-      className="group bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 block"
-      style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
-    >
-      <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-        <Image
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          width={200}
-          height={200}
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-      <div className="p-3">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">
-          {product.name}
-        </h3>
-        <p className="text-orange-600 font-black mt-1.5 text-sm md:text-base">
-          ₦{product.price.toLocaleString()}
-        </p>
-      </div>
-    </Link>
-  );
-};
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-// ─── Main Page ─────────────────────────────────────────────────────────────
+const SkeletonGrid = () => (
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+    {Array.from({ length: 10 }).map((_, i) => (
+      <div key={i} className="h-72 bg-gray-100 rounded-3xl animate-pulse" />
+    ))}
+  </div>
+);
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 const TopSellersPage = () => {
   const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
-  const topProducts = useMemo(
-    () => products.filter((p) => p.category === "top-sellers"),
-    [],
-  );
-  const suggestedProducts = useMemo(
-    () => products.filter((p) => p.category !== "top-sellers").slice(0, 8),
-    [],
-  );
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTopSellers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiService.getTopSellingProducts({ limit: 50, days: 7 });
+      const raw = data?.data ?? data;
+      const list = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.products)
+        ? raw.products
+        : Array.isArray(raw?.items)
+        ? raw.items
+        : [];
+
+      const normalised: TopProduct[] = list.map((p: any) => ({
+        id: String(p.id ?? p.product_id ?? ""),
+        product_name: p.product_name ?? p.name ?? "",
+        product_images: Array.isArray(p.product_images)
+          ? p.product_images
+          : p.image
+          ? [p.image]
+          : [],
+        product_original_price: p.product_original_price ?? p.original_price ?? 0,
+        current_price: p.current_price ?? p.price ?? 0,
+        discount_percentage: p.discount_percentage ?? 0,
+        is_in_stock: p.is_in_stock ?? true,
+        sold_count: p.sold_count ?? p.checkout_count ?? 0,
+        brand: p.brand ?? null,
+        average_rating: p.average_rating ?? 0,
+      }));
+
+      setTopProducts(normalised);
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to load top sellers.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTopSellers();
+  }, [fetchTopSellers]);
+
+  const handleWishlist = (id: string) => {
+    const product = topProducts.find((p) => p.id === id);
+    if (!product) return;
+    const wishlistItem = {
+      id: parseInt(product.id, 10) || 0,
+      name: product.product_name,
+      price: product.current_price,
+      oldPrice:
+        product.product_original_price > product.current_price
+          ? product.product_original_price
+          : null,
+      rating: product.average_rating,
+      reviews: 0,
+      image: getValidImageUrl(product.product_images?.[0]),
+      brand: product.brand ?? undefined,
+    };
+    if (isWishlisted(wishlistItem.id)) removeFromWishlist(wishlistItem.id);
+    else addToWishlist(wishlistItem);
+  };
 
   return (
     <div className="min-h-screen" style={{ background: "#F3F4F8" }}>
-      {/* ══════════ HERO ══════════ */}
+      {/* HERO */}
       <div
         className="relative overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg, #0f0f0f 0%, #1c0a00 40%, #7c2d12 75%, #ea580c 100%)",
+            "linear-gradient(135deg,#0f0f0f 0%,#1c0a00 40%,#7c2d12 75%,#ea580c 100%)",
           minHeight: "320px",
         }}
       >
-        {/* Glow orbs */}
         <div
           className="absolute -top-16 -left-16 w-80 h-80 rounded-full opacity-20 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle,#fb923c,transparent 70%)",
-          }}
+          style={{ background: "radial-gradient(circle,#fb923c,transparent 70%)" }}
         />
         <div
           className="absolute -bottom-10 right-10 w-72 h-72 rounded-full opacity-15 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle,#ea580c,transparent 70%)",
-          }}
+          style={{ background: "radial-gradient(circle,#ea580c,transparent 70%)" }}
         />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 rounded-full opacity-5 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle,#FFA500,transparent 60%)",
-          }}
-        />
-
-        {/* Diagonal lines texture */}
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
-            backgroundImage: `repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(255,255,255,1) 18px, rgba(255,255,255,1) 19px)`,
+            backgroundImage:
+              "repeating-linear-gradient(-45deg,transparent,transparent 18px,rgba(255,255,255,1) 18px,rgba(255,255,255,1) 19px)",
           }}
         />
 
@@ -244,7 +296,6 @@ const TopSellersPage = () => {
           </Link>
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            {/* Title */}
             <div>
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1.5 mb-4">
                 <FiTrendingUp size={12} className="text-orange-400" />
@@ -258,17 +309,14 @@ const TopSellersPage = () => {
                 <div>
                   <h1
                     className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{
-                      fontFamily: "'Georgia', serif",
-                      textShadow: "0 4px 30px rgba(234,88,12,0.4)",
-                    }}
+                    style={{ fontFamily: "'Georgia',serif", textShadow: "0 4px 30px rgba(234,88,12,0.4)" }}
                   >
                     TOP
                   </h1>
                   <h1
                     className="text-4xl md:text-6xl font-black leading-none tracking-tight"
                     style={{
-                      fontFamily: "'Georgia', serif",
+                      fontFamily: "'Georgia',serif",
                       background: "linear-gradient(90deg,#fb923c,#fde68a)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
@@ -280,29 +328,15 @@ const TopSellersPage = () => {
               </div>
 
               <p className="mt-3 text-white/50 text-sm md:text-base max-w-sm">
-                The products everyone's buying. Tried, loved, and trusted by
-                thousands.
+                The products everyone's buying. Tried, loved, and trusted by thousands.
               </p>
             </div>
 
-            {/* Stats pills */}
             <div className="flex flex-wrap gap-3">
               {[
-                {
-                  icon: <FiAward size={14} />,
-                  label: "Best Rated",
-                  val: "4.8★",
-                },
-                {
-                  icon: <FiShoppingBag size={14} />,
-                  label: "Items Sold",
-                  val: "12K+",
-                },
-                {
-                  icon: <FiTrendingUp size={14} />,
-                  label: "This Week",
-                  val: "+38%",
-                },
+                { icon: <FiAward size={14} />, label: "Best Rated", val: "4.8★" },
+                { icon: <FiShoppingBag size={14} />, label: "Items Sold", val: "12K+" },
+                { icon: <FiTrendingUp size={14} />, label: "This Week", val: "+38%" },
               ].map(({ icon, label, val }) => (
                 <div
                   key={label}
@@ -315,9 +349,7 @@ const TopSellersPage = () => {
                 >
                   <span className="text-orange-300">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">
-                      {val}
-                    </p>
+                    <p className="text-white font-black text-sm leading-none">{val}</p>
                     <p className="text-white/50 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -326,20 +358,12 @@ const TopSellersPage = () => {
           </div>
         </div>
 
-        {/* Wave */}
-        <svg
-          className="absolute bottom-0 left-0 w-full"
-          viewBox="0 0 1440 40"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z"
-            fill="#F3F4F8"
-          />
+        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
+          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#F3F4F8" />
         </svg>
       </div>
 
-      {/* ══════════ PRODUCTS ══════════ */}
+      {/* PRODUCTS */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-6">
         <div className="flex items-center gap-3 mb-6">
           <div
@@ -349,37 +373,49 @@ const TopSellersPage = () => {
           <h2 className="text-xl md:text-2xl font-black text-gray-900">
             Best Selling Products
           </h2>
-          <span className="hidden md:inline text-sm text-gray-400 font-medium">
-            ({topProducts.length} items)
-          </span>
+          {!loading && !error && (
+            <span className="hidden md:inline text-sm text-gray-400 font-medium">
+              ({topProducts.length} items)
+            </span>
+          )}
         </div>
 
-        {topProducts.length > 0 ? (
+        {loading ? (
+          <SkeletonGrid />
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+              <FiAlertCircle size={22} className="text-red-400" />
+            </div>
+            <p className="text-gray-700 font-semibold text-sm">{error}</p>
+            <button
+              onClick={fetchTopSellers}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-all"
+            >
+              <FiRefreshCw size={13} /> Try again
+            </button>
+          </div>
+        ) : topProducts.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <FaTrophy size={48} className="mx-auto mb-4 opacity-20" />
+            <p className="font-semibold">No top sellers yet.</p>
+          </div>
+        ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {topProducts.map((product, i) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 rank={i + 1}
-                wishlisted={isWishlisted(product.id)}
-                onWishlist={(id) => {
-                  const product = products.find((p) => p.id === id);
-                  if (!product) return;
-                  if (isWishlisted(id)) removeFromWishlist(id);
-                  else addToWishlist(product);
-                }}
+                wishlisted={isWishlisted(parseInt(product.id, 10) || 0)}
+                onWishlist={handleWishlist}
               />
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 text-gray-400">
-            <FaTrophy size={48} className="mx-auto mb-4 opacity-20" />
-            <p className="font-semibold">No top sellers yet.</p>
           </div>
         )}
       </div>
 
-      {/* ══════════ BANNER ══════════ */}
+      {/* BANNER */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <div
           className="relative overflow-hidden rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-4"
@@ -388,13 +424,6 @@ const TopSellersPage = () => {
               "linear-gradient(120deg,#0f0f0f 0%,#7c2d12 55%,#ea580c 100%)",
           }}
         >
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage: `radial-gradient(circle at 25% 50%, white 1px, transparent 1px)`,
-              backgroundSize: "32px 32px",
-            }}
-          />
           <div className="relative z-10">
             <p className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-1">
               Sell more
@@ -412,24 +441,6 @@ const TopSellersPage = () => {
           >
             Start Selling →
           </Link>
-        </div>
-      </div>
-
-      {/* ══════════ SUGGESTED ══════════ */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-1 h-7 rounded-full"
-            style={{ background: "linear-gradient(180deg,#fb923c,#ea580c)" }}
-          />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">
-            You May Also Like
-          </h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {suggestedProducts.map((product) => (
-            <SuggestedCard key={product.id} product={product} />
-          ))}
         </div>
       </div>
 

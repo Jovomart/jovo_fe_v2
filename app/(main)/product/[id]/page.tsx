@@ -20,6 +20,7 @@ import {
 import {
   FaHeart,
   FaStar,
+  FaStore,
   FaStarHalfAlt,
   FaRegStar,
   FaWhatsapp,
@@ -63,6 +64,20 @@ interface Product {
   category_name?: string;
 }
 
+interface SellerProfile {
+  id: string;
+  business_name: string;
+  business_bio?: string;
+  short_business_description?: string;
+  logo_url?: string;
+  whatsapp_number?: string;
+  total_sales?: number;
+  total_products?: number;
+  average_rating?: number;
+  review_count?: number;
+  verified?: boolean;
+}
+
 interface Review {
   id: number;
   user_name?: string;
@@ -79,21 +94,12 @@ const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 // Helper function to validate image URL
 const getValidImageUrl = (url: string | undefined): string => {
   if (!url) return PLACEHOLDER_IMAGE;
-  
-  // If it's already a data URL, return it
   if (url.startsWith('data:')) return url;
-  
-  // Check if it's a valid http/https URL
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    // Skip known bad domains
     if (url.includes('api.yourstore.com')) return PLACEHOLDER_IMAGE;
     return url;
   }
-  
-  // Check if it's a relative path that starts with /
   if (url.startsWith('/')) return url;
-  
-  // Invalid URL format - return placeholder
   return PLACEHOLDER_IMAGE;
 };
 
@@ -112,6 +118,258 @@ const RenderStars = ({ rating, size = 14, color = "#F59E0B" }: { rating: number;
 );
 
 // ─────────────────────────────────────────────────────────────
+// SELLER CARD COMPONENT
+// ─────────────────────────────────────────────────────────────
+
+const SellerCard = ({
+  product,
+  sellerProfile,
+  sellerProducts,
+  isLoadingSeller,
+}: {
+  product: {
+    seller_id: string;
+    business_name: string;
+    sold_count: number;
+    average_rating: number;
+    review_count: number;
+    product_images?: string[];
+  };
+  sellerProfile: SellerProfile | null;
+  sellerProducts: Array<{
+    id: string;
+    product_name: string;
+    current_price: number;
+    product_images: string[];
+  }>;
+  isLoadingSeller: boolean;
+}) => {
+  // Use seller profile data if available, otherwise fall back to product data
+  const businessName = sellerProfile?.business_name || product.business_name || "Jovo Seller";
+  const businessBio = sellerProfile?.business_bio || sellerProfile?.short_business_description || "Verified merchant on Jovo Marketplace";
+  const logoUrl = sellerProfile?.logo_url;
+  const whatsappNumber = sellerProfile?.whatsapp_number;
+  const isVerified = sellerProfile?.verified !== false;
+  
+  const initials = businessName
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  // Use profile data for stats, fallback to product data
+  const soldCount = sellerProfile?.total_sales || product.sold_count || 0;
+  const rating = sellerProfile?.average_rating || product.average_rating || 0;
+  const reviewCount = sellerProfile?.review_count || product.review_count || 0;
+
+  if (isLoadingSeller) {
+    return (
+      <div
+        className="bg-white rounded-3xl overflow-hidden animate-pulse"
+        style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.07)" }}
+      >
+        <div className="h-20 bg-gray-200" />
+        <div className="px-5 pb-5">
+          <div className="flex items-end justify-between -mt-8 mb-3">
+            <div className="w-16 h-16 rounded-2xl bg-gray-200 border-4 border-white" />
+            <div className="w-20 h-5 bg-gray-200 rounded" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-6 bg-gray-200 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="bg-white rounded-3xl overflow-hidden"
+      style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.07)" }}
+    >
+      {/* Header gradient band */}
+      <div
+        className="h-20 relative"
+        style={{
+          background: "linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#B42225 100%)",
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "radial-gradient(circle,#fff 1px,transparent 1px)",
+            backgroundSize: "18px 18px",
+          }}
+        />
+      </div>
+
+      <div className="px-5 pb-5">
+        {/* Avatar overlapping the band */}
+        <div className="flex items-end justify-between -mt-8 mb-3">
+          <div className="relative">
+            {logoUrl ? (
+              <div className="w-16 h-16 rounded-2xl border-4 border-white overflow-hidden shadow-lg bg-white">
+                <Image
+                  src={getValidImageUrl(logoUrl)}
+                  alt={businessName}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const fallback = document.createElement("div");
+                      fallback.className = "w-full h-full flex items-center justify-center text-white text-lg font-black";
+                      fallback.style.background = "linear-gradient(135deg,#B42225,#FF4500)";
+                      fallback.textContent = initials;
+                      parent.appendChild(fallback);
+                      target.remove();
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div
+                className="w-16 h-16 rounded-2xl border-4 border-white flex items-center justify-center text-white text-lg font-black shadow-lg"
+                style={{ background: "linear-gradient(135deg,#B42225,#FF4500)" }}
+              >
+                {initials}
+              </div>
+            )}
+          </div>
+          <Link
+            href={`/seller/${product.seller_id}`}
+            className="text-[11px] font-bold text-[#B42225] hover:underline flex items-center gap-1 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full"
+          >
+            View Store <FiChevronRight size={11} />
+          </Link>
+        </div>
+
+        {/* Seller Info */}
+        <div className="mb-4">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <p className="text-base font-black text-gray-900">
+              {businessName}
+            </p>
+            {isVerified && <MdVerified size={16} className="text-[#B42225]" />}
+          </div>
+          <p className="text-xs text-gray-500 line-clamp-2">{businessBio}</p>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[
+            { label: "Items Sold", value: typeof soldCount === 'number' ? soldCount.toLocaleString() : "0" },
+            { label: "Rating", value: typeof rating === 'number' ? rating.toFixed(1) : "0.0" },
+            { label: "Reviews", value: typeof reviewCount === 'number' ? reviewCount.toLocaleString() : "0" },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="flex flex-col items-center py-2.5 rounded-xl bg-gray-50 border border-gray-100"
+            >
+              <p className="text-base font-black text-gray-900">{value}</p>
+              <p className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Contact & Trust badges */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {whatsappNumber && (
+            <a
+              href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-green-50 text-green-700 border border-green-100 flex items-center gap-1"
+            >
+              💬 WhatsApp
+            </a>
+          )}
+          {["Fast Responder", "Verified ID", "Quality Assured"].map((badge) => (
+            <span
+              key={badge}
+              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-green-50 text-green-700 border border-green-100"
+            >
+              ✓ {badge}
+            </span>
+          ))}
+        </div>
+
+        {/* More from this seller */}
+        {sellerProducts.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                More from this seller
+              </p>
+              <span className="text-[9px] text-gray-300">{sellerProducts.length} items</span>
+            </div>
+            <div className="space-y-2">
+              {sellerProducts.map((p) => {
+                const imgSrc = p.product_images?.[0] ? getValidImageUrl(p.product_images[0]) : null;
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/product/${p.id}`}
+                    className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-gray-50 transition group"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 relative">
+                      {imgSrc && imgSrc !== PLACEHOLDER_IMAGE ? (
+                        <Image
+                          src={imgSrc}
+                          alt={p.product_name}
+                          fill
+                          className="object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <FiPackage size={14} className="text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 truncate group-hover:text-[#B42225] transition-colors">
+                        {p.product_name}
+                      </p>
+                      <p className="text-[11px] font-black text-[#B42225]">
+                        ₦{p.current_price.toLocaleString()}
+                      </p>
+                    </div>
+                    <FiChevronRight size={12} className="text-gray-300 group-hover:text-[#B42225] transition-colors shrink-0" />
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* CTA */}
+        <Link
+          href={`/seller/${product.seller_id}`}
+          className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border-2 border-[#B42225] text-[#B42225] hover:bg-[#B42225] hover:text-white transition-all"
+        >
+          <FaStore size={13} /> Visit Full Store
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────
 
@@ -126,6 +384,9 @@ const ProductDetails = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+  const [sellerProducts, setSellerProducts] = useState<Product[]>([]);
+  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
+  const [isLoadingSeller, setIsLoadingSeller] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -156,6 +417,73 @@ const ProductDetails = () => {
   const imageUrl = imgError ? PLACEHOLDER_IMAGE : getValidImageUrl(rawImageUrl);
 
   const theme = getCategoryTheme(product?.category_id || "");
+
+  // Fetch seller profile by seller ID
+  const fetchSellerProfile = useCallback(async (sellerId: string) => {
+    if (!sellerId) return;
+    
+    setIsLoadingSeller(true);
+    try {
+      // Try to get seller info from public seller endpoint
+      // The endpoint might be /seller/{sellerId} or /users/{sellerId}/seller-profile
+      // Let's try multiple approaches
+      let sellerData = null;
+      
+      // Approach 1: Try to get from public seller profile endpoint
+      try {
+        const response = await apiService.makeRequest(`/seller/public/${sellerId}`, { method: "GET" });
+        sellerData = response?.data ?? response;
+      } catch (err) {
+        console.log("Public seller endpoint failed");
+      }
+      
+      // Approach 2: Try to get from user endpoint
+      if (!sellerData) {
+        try {
+          const response = await apiService.makeRequest(`/users/${sellerId}`, { method: "GET" });
+          sellerData = response?.data ?? response;
+        } catch (err) {
+          console.log("User endpoint failed");
+        }
+      }
+      
+      // Approach 3: Try to get from seller application endpoint with user ID
+      if (!sellerData) {
+        try {
+          const response = await apiService.makeRequest(`/seller/application/${sellerId}`, { method: "GET" });
+          sellerData = response?.data ?? response;
+        } catch (err) {
+          console.log("Seller application endpoint failed");
+        }
+      }
+      
+      if (sellerData && Object.keys(sellerData).length > 0) {
+        // Extract seller info from response
+        const seller = sellerData.seller ?? sellerData;
+        setSellerProfile({
+          id: seller.id || sellerId,
+          business_name: seller.business_name || seller.store_name || "",
+          business_bio: seller.business_bio || seller.bio || "",
+          short_business_description: seller.short_business_description || seller.description || "",
+          logo_url: seller.logo_url || seller.avatar || seller.profile_image || "",
+          whatsapp_number: seller.whatsapp_number || seller.phone || "",
+          total_sales: seller.total_sales || seller.sold_count || 0,
+          total_products: seller.total_products || 0,
+          average_rating: seller.average_rating || seller.rating || 0,
+          review_count: seller.review_count || 0,
+          verified: seller.verified !== false,
+        });
+      } else {
+        // No seller data found, use product data as fallback
+        setSellerProfile(null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch seller profile:", err);
+      setSellerProfile(null);
+    } finally {
+      setIsLoadingSeller(false);
+    }
+  }, []);
 
   // Fetch product details
   const fetchProductDetails = useCallback(async () => {
@@ -222,6 +550,28 @@ const ProductDetails = () => {
       
       setProduct(productData);
       
+      // Fetch seller profile using the seller_id from product
+      if (productData.seller_id) {
+        await fetchSellerProfile(productData.seller_id);
+      }
+      
+      // Fetch seller's other products
+      if (productData.seller_id && productData.category_id) {
+        try {
+          const sellerRes = await apiService.getCategoryMarketspace(productData.category_id, {
+            limit: 10, offset: 0,
+          });
+          const d = sellerRes?.data ?? sellerRes;
+          setSellerProducts(
+            (d?.products ?? [])
+              .filter((p: Product) => p.seller_id === productData.seller_id && p.id !== productId)
+              .slice(0, 3)
+          );
+        } catch { 
+          setSellerProducts([]); 
+        }
+      }
+      
       // Fetch reviews
       try {
         const reviewsResponse = await apiService.makeRequest(`/reviews/product/${productId}`, { method: "GET" });
@@ -257,7 +607,7 @@ const ProductDetails = () => {
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, fetchSellerProfile]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -621,9 +971,9 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/* RETURN & WARRANTY CARDS */}
+        {/* RETURN & WARRANTY CARDS + SELLER CARD */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
-          <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
+          <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-white rounded-3xl p-5" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
               <div className="md:hidden">
                 <button className="w-full flex items-center justify-between" onClick={() => setReturnOpen(!returnOpen)}>
@@ -669,6 +1019,13 @@ const ProductDetails = () => {
                 ))}
               </div>
             </div>
+
+            <SellerCard 
+              product={product} 
+              sellerProfile={sellerProfile}
+              sellerProducts={sellerProducts}
+              isLoadingSeller={isLoadingSeller}
+            />
           </div>
         </div>
 
