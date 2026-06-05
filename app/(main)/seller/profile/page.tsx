@@ -1,7 +1,7 @@
 // app/(main)/seller/profile/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -86,7 +86,10 @@ const SellerOwnProfilePage = () => {
     business_location: "",
   });
 
-  // Define fetchProfile BEFORE using it in useEffect
+  // Ref to track if data has been fetched
+  const hasFetchedRef = useRef(false);
+
+  // Define fetchProfile with useCallback
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -115,9 +118,12 @@ const SellerOwnProfilePage = () => {
     }
   }, []); // No dependencies - this function is stable
 
-  // Now useEffect can safely call fetchProfile
+  // Use effect with ref to prevent double-fetch and satisfy ESLint
   useEffect(() => {
-    fetchProfile();
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchProfile();
+    }
   }, [fetchProfile]);
 
   const handleInputChange = (

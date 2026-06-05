@@ -8,7 +8,7 @@
  * Products:    GET /api/v1/marketspace/category/{category_id} filtered by seller
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -309,14 +309,14 @@ const SellerProfilePage = () => {
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // isClient is always true in client component - removed unnecessary state
   const [activeTab, setActiveTab] = useState<"products" | "about">("products");
   const [productView, setProductView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [shareOpen, setShareOpen] = useState(false);
-
-  // Removed the unnecessary setIsClient effect entirely
+  
+  // Ref to track if data has been fetched
+  const hasFetchedRef = useRef(false);
 
   // ── Fetch seller profile ──────────────────────────────────────────────────
   const fetchSellerData = useCallback(async () => {
@@ -325,16 +325,11 @@ const SellerProfilePage = () => {
     setError(null);
 
     try {
-      // GET /api/v1/seller/{seller_id}
       const response = await apiService.getPublicSellerProfile(sellerId);
       const sellerData: SellerProfile = response?.data ?? response;
       setSeller(sellerData);
 
-      // Fetch this seller's products via marketspace (best-effort)
       try {
-        // We query the general marketspace and filter by seller_id client-side,
-        // or use a dedicated seller-products public endpoint if available.
-        // Using getCategoryMarketspace with a broad search and filtering locally.
         const productsRes = await apiService.makeRequest(
           `/seller/${encodeURIComponent(sellerId)}/products`,
           { method: "GET" },
@@ -342,7 +337,6 @@ const SellerProfilePage = () => {
         const rawProducts = productsRes?.data?.products ?? productsRes?.data ?? productsRes ?? [];
         setProducts(Array.isArray(rawProducts) ? rawProducts : []);
       } catch {
-        // Fallback: try the marketspace and filter by seller
         try {
           const homepageRes = await apiService.getShopHomepage(50, false);
           const categories = homepageRes?.data ?? homepageRes;
@@ -369,10 +363,13 @@ const SellerProfilePage = () => {
     }
   }, [sellerId]);
 
-  // Data fetching effect - this is the correct pattern for initial data load
+  // Data fetching effect - using ref to prevent double-fetch in strict mode
   useEffect(() => {
-    fetchSellerData();
-  }, [fetchSellerData]);
+    if (!hasFetchedRef.current && sellerId) {
+      hasFetchedRef.current = true;
+      fetchSellerData();
+    }
+  }, [sellerId, fetchSellerData]);
 
   // ── Derived values ────────────────────────────────────────────────────────
   const filteredProducts = products.filter(
@@ -467,7 +464,6 @@ const SellerProfilePage = () => {
                 priority
               />
             )}
-            {/* Dot grid overlay */}
             <div
               className="absolute inset-0 opacity-10 pointer-events-none"
               style={{
@@ -717,7 +713,7 @@ const SellerProfilePage = () => {
           </div>
         )}
 
-        {/* �══ TABS + CONTENT ═══════════════════════════════════════════════ */}
+        {/* ═══ TABS + CONTENT ═══════════════════════════════════════════════ */}
         <div className="max-w-5xl mx-auto px-4 md:px-8 pb-12">
           {/* Tab bar */}
           <div className="flex items-center gap-1 border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">

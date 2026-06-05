@@ -405,8 +405,11 @@ const SellerWalletPage = () => {
   const [editWithdrawal, setEditWithdrawal] = useState<Withdrawal | null>(null);
   const [toastMsg, setToastMsg] = useState("");
 
+  // Refs to track if data has been fetched
   const walletFetchedRef = useRef(false);
   const txFetchedRef = useRef(false);
+  const withdrawalsFetchedRef = useRef(false);
+  const prevFilterRef = useRef(withdrawalFilter);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -473,10 +476,10 @@ const SellerWalletPage = () => {
         setLoadingWithdrawals(false);
       }
     },
-    [withdrawalFilter] // Keep withdrawalFilter as dependency
+    [withdrawalFilter]
   );
 
-  // Initial data fetching effects - each with proper dependencies
+  // Initial data fetching effects
   useEffect(() => {
     if (!walletFetchedRef.current) {
       walletFetchedRef.current = true;
@@ -491,14 +494,22 @@ const SellerWalletPage = () => {
     }
   }, [fetchTransactions]);
 
-  // Combined effect for withdrawals - handles both tab changes and filter changes
+  // Withdrawals effect - fetches when tab becomes active
   useEffect(() => {
-    if (activeTab === "withdrawals") {
+    if (activeTab === "withdrawals" && !withdrawalsFetchedRef.current) {
+      withdrawalsFetchedRef.current = true;
       fetchWithdrawals(0);
     }
-  }, [activeTab, fetchWithdrawals]); // Added fetchWithdrawals to dependencies
+  }, [activeTab, fetchWithdrawals]);
 
-  // Removed the duplicate effect for withdrawalFilter - it's already handled above since fetchWithdrawals changes when withdrawalFilter changes
+  // Reset and refetch when filter changes
+  useEffect(() => {
+    if (activeTab === "withdrawals" && prevFilterRef.current !== withdrawalFilter) {
+      prevFilterRef.current = withdrawalFilter;
+      withdrawalsFetchedRef.current = false;
+      fetchWithdrawals(0);
+    }
+  }, [withdrawalFilter, activeTab, fetchWithdrawals]);
 
   const currentPage = Math.floor(skip / LIMIT) + 1;
   const totalPages = Math.ceil(total / LIMIT);
@@ -524,6 +535,7 @@ const SellerWalletPage = () => {
         : "Withdrawal request submitted successfully."
     );
     fetchWallet();
+    withdrawalsFetchedRef.current = false;
     fetchWithdrawals(0);
   };
 
@@ -917,7 +929,10 @@ const SellerWalletPage = () => {
                     <option value="rejected">Rejected</option>
                   </select>
                   <button
-                    onClick={() => fetchWithdrawals(withdrawalSkip)}
+                    onClick={() => {
+                      withdrawalsFetchedRef.current = false;
+                      fetchWithdrawals(withdrawalSkip);
+                    }}
                     className="p-2 rounded-xl hover:bg-slate-50 border border-slate-100 transition text-slate-500"
                   >
                     <FiRefreshCw
@@ -1064,9 +1079,9 @@ const SellerWalletPage = () => {
                       {withdrawalCurrentPage} / {withdrawalTotalPages}
                     </span>
                     <button
-                      onClick={() =>
-                        fetchWithdrawals(withdrawalSkip + LIMIT)
-                      }
+                      onClick={() => {
+                        fetchWithdrawals(withdrawalSkip + LIMIT);
+                      }}
                       disabled={withdrawalSkip + LIMIT >= withdrawalTotal}
                       className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40"
                     >
