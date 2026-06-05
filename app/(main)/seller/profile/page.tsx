@@ -1,7 +1,7 @@
 // app/(main)/seller/profile/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -86,11 +86,8 @@ const SellerOwnProfilePage = () => {
     business_location: "",
   });
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  // Define fetchProfile BEFORE using it in useEffect
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiService.getMySellerProfile();
@@ -116,7 +113,12 @@ const SellerOwnProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies - this function is stable
+
+  // Now useEffect can safely call fetchProfile
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

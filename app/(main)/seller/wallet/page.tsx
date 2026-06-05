@@ -473,9 +473,10 @@ const SellerWalletPage = () => {
         setLoadingWithdrawals(false);
       }
     },
-    [withdrawalFilter]
+    [withdrawalFilter] // Keep withdrawalFilter as dependency
   );
 
+  // Initial data fetching effects - each with proper dependencies
   useEffect(() => {
     if (!walletFetchedRef.current) {
       walletFetchedRef.current = true;
@@ -490,18 +491,14 @@ const SellerWalletPage = () => {
     }
   }, [fetchTransactions]);
 
+  // Combined effect for withdrawals - handles both tab changes and filter changes
   useEffect(() => {
     if (activeTab === "withdrawals") {
       fetchWithdrawals(0);
     }
-  }, [activeTab, fetchWithdrawals]);
+  }, [activeTab, fetchWithdrawals]); // Added fetchWithdrawals to dependencies
 
-  // Re-fetch withdrawals when filter changes
-  useEffect(() => {
-    if (activeTab === "withdrawals") {
-      fetchWithdrawals(0);
-    }
-  }, [withdrawalFilter]);
+  // Removed the duplicate effect for withdrawalFilter - it's already handled above since fetchWithdrawals changes when withdrawalFilter changes
 
   const currentPage = Math.floor(skip / LIMIT) + 1;
   const totalPages = Math.ceil(total / LIMIT);

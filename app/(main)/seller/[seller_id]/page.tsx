@@ -309,17 +309,14 @@ const SellerProfilePage = () => {
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
-
+  // isClient is always true in client component - removed unnecessary state
   const [activeTab, setActiveTab] = useState<"products" | "about">("products");
   const [productView, setProductView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [shareOpen, setShareOpen] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Removed the unnecessary setIsClient effect entirely
 
   // ── Fetch seller profile ──────────────────────────────────────────────────
   const fetchSellerData = useCallback(async () => {
@@ -372,6 +369,7 @@ const SellerProfilePage = () => {
     }
   }, [sellerId]);
 
+  // Data fetching effect - this is the correct pattern for initial data load
   useEffect(() => {
     fetchSellerData();
   }, [fetchSellerData]);
@@ -488,87 +486,85 @@ const SellerProfilePage = () => {
             </Link>
 
             {/* Share button */}
-            {isClient && (
-              <div className="absolute top-4 right-4 z-10">
-                <div className="relative">
-                  <button
-                    onClick={() => setShareOpen(!shareOpen)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white text-xs font-bold hover:bg-white/30 transition border border-white/20"
-                  >
-                    <FiShare2 size={13} /> Share Store
-                  </button>
-                  {shareOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShareOpen(false)}
-                      />
-                      <div className="absolute top-10 right-0 bg-white rounded-2xl border border-gray-100 p-3 flex flex-col gap-1 w-44 z-9999 shadow-xl">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold px-1 mb-1">
-                          Share via
-                        </p>
-                        {[
-                          {
-                            icon: (
-                              <FaWhatsapp className="text-green-500" size={15} />
+            <div className="absolute top-4 right-4 z-10">
+              <div className="relative">
+                <button
+                  onClick={() => setShareOpen(!shareOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white text-xs font-bold hover:bg-white/30 transition border border-white/20"
+                >
+                  <FiShare2 size={13} /> Share Store
+                </button>
+                {shareOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShareOpen(false)}
+                    />
+                    <div className="absolute top-10 right-0 bg-white rounded-2xl border border-gray-100 p-3 flex flex-col gap-1 w-44 z-9999 shadow-xl">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold px-1 mb-1">
+                        Share via
+                      </p>
+                      {[
+                        {
+                          icon: (
+                            <FaWhatsapp className="text-green-500" size={15} />
+                          ),
+                          label: "WhatsApp",
+                          action: () =>
+                            window.open(
+                              `https://wa.me/?text=${encodeURIComponent(window.location.href)}`,
+                              "_blank",
                             ),
-                            label: "WhatsApp",
-                            action: () =>
-                              window.open(
-                                `https://wa.me/?text=${encodeURIComponent(window.location.href)}`,
-                                "_blank",
-                              ),
-                          },
-                          {
-                            icon: (
-                              <FaFacebook className="text-blue-600" size={15} />
+                        },
+                        {
+                          icon: (
+                            <FaFacebook className="text-blue-600" size={15} />
+                          ),
+                          label: "Facebook",
+                          action: () =>
+                            window.open(
+                              `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
+                              "_blank",
                             ),
-                            label: "Facebook",
-                            action: () =>
-                              window.open(
-                                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
-                                "_blank",
-                              ),
-                          },
-                          {
-                            icon: (
-                              <FaTwitter className="text-sky-500" size={15} />
+                        },
+                        {
+                          icon: (
+                            <FaTwitter className="text-sky-500" size={15} />
+                          ),
+                          label: "Twitter",
+                          action: () =>
+                            window.open(
+                              `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
+                              "_blank",
                             ),
-                            label: "Twitter",
-                            action: () =>
-                              window.open(
-                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
-                                "_blank",
-                              ),
-                          },
-                          {
-                            icon: (
-                              <FaCopy className="text-gray-500" size={15} />
+                        },
+                        {
+                          icon: (
+                            <FaCopy className="text-gray-500" size={15} />
+                          ),
+                          label: "Copy Link",
+                          action: () =>
+                            navigator.clipboard.writeText(
+                              window.location.href,
                             ),
-                            label: "Copy Link",
-                            action: () =>
-                              navigator.clipboard.writeText(
-                                window.location.href,
-                              ),
-                          },
-                        ].map(({ icon, label, action }) => (
-                          <button
-                            key={label}
-                            onClick={() => {
-                              action();
-                              setShareOpen(false);
-                            }}
-                            className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-50 text-xs text-gray-700 transition-colors font-medium"
-                          >
-                            {icon} {label}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
+                        },
+                      ].map(({ icon, label, action }) => (
+                        <button
+                          key={label}
+                          onClick={() => {
+                            action();
+                            setShareOpen(false);
+                          }}
+                          className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-50 text-xs text-gray-700 transition-colors font-medium"
+                        >
+                          {icon} {label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Avatar + name row */}
@@ -631,23 +627,21 @@ const SellerProfilePage = () => {
               </div>
 
               {/* CTA buttons */}
-              {isClient && (
-                <div className="flex gap-2 shrink-0">
-                  {seller.business_phone_number && (
-                    <a
-                      href={`https://wa.me/${seller.business_phone_number.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white bg-green-500 hover:bg-green-600 transition shadow-md"
-                    >
-                      <FaWhatsapp size={15} /> Chat
-                    </a>
-                  )}
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 border-[#B42225] text-[#B42225] hover:bg-[#B42225] hover:text-white transition">
-                    <FiAward size={15} /> Follow Store
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 shrink-0">
+                {seller.business_phone_number && (
+                  <a
+                    href={`https://wa.me/${seller.business_phone_number.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white bg-green-500 hover:bg-green-600 transition shadow-md"
+                  >
+                    <FaWhatsapp size={15} /> Chat
+                  </a>
+                )}
+                <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 border-[#B42225] text-[#B42225] hover:bg-[#B42225] hover:text-white transition">
+                  <FiAward size={15} /> Follow Store
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -723,7 +717,7 @@ const SellerProfilePage = () => {
           </div>
         )}
 
-        {/* ═══ TABS + CONTENT ═══════════════════════════════════════════════ */}
+        {/* �══ TABS + CONTENT ═══════════════════════════════════════════════ */}
         <div className="max-w-5xl mx-auto px-4 md:px-8 pb-12">
           {/* Tab bar */}
           <div className="flex items-center gap-1 border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
@@ -751,106 +745,81 @@ const SellerProfilePage = () => {
           {/* ── Products Tab ── */}
           {activeTab === "products" && (
             <div>
-              {isClient && (
-                <div className="flex flex-col sm:flex-row gap-3 mb-5">
-                  <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white border border-gray-200 flex-1">
-                    <FiSearch size={15} className="text-gray-400 shrink-0" />
-                    <input
-                      className="bg-transparent text-sm text-gray-700 outline-none flex-1 placeholder-gray-400"
-                      placeholder="Search products in this store…"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </div>
+              <div className="flex flex-col sm:flex-row gap-3 mb-5">
+                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white border border-gray-200 flex-1">
+                  <FiSearch size={15} className="text-gray-400 shrink-0" />
+                  <input
+                    className="bg-transparent text-sm text-gray-700 outline-none flex-1 placeholder-gray-400"
+                    placeholder="Search products in this store…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <select
-                      className="px-3 py-2.5 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 outline-none cursor-pointer"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
+                <div className="flex items-center gap-2">
+                  <select
+                    className="px-3 py-2.5 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 outline-none cursor-pointer"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="price_asc">Price: Low → High</option>
+                    <option value="price_desc">Price: High → Low</option>
+                    <option value="rating">Top Rated</option>
+                    <option value="popular">Most Sold</option>
+                  </select>
+
+                  <div className="flex items-center gap-1 p-1 bg-white border border-gray-200 rounded-xl">
+                    <button
+                      onClick={() => setProductView("grid")}
+                      className={`p-2 rounded-lg transition ${
+                        productView === "grid"
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
                     >
-                      <option value="newest">Newest</option>
-                      <option value="price_asc">Price: Low → High</option>
-                      <option value="price_desc">Price: High → Low</option>
-                      <option value="rating">Top Rated</option>
-                      <option value="popular">Most Sold</option>
-                    </select>
-
-                    <div className="flex items-center gap-1 p-1 bg-white border border-gray-200 rounded-xl">
-                      <button
-                        onClick={() => setProductView("grid")}
-                        className={`p-2 rounded-lg transition ${
-                          productView === "grid"
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
-                      >
-                        <FiGrid size={15} />
-                      </button>
-                      <button
-                        onClick={() => setProductView("list")}
-                        className={`p-2 rounded-lg transition ${
-                          productView === "list"
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-400 hover:text-gray-600"
-                        }`}
-                      >
-                        <FiList size={15} />
-                      </button>
-                    </div>
+                      <FiGrid size={15} />
+                    </button>
+                    <button
+                      onClick={() => setProductView("list")}
+                      className={`p-2 rounded-lg transition ${
+                        productView === "list"
+                          ? "bg-gray-100 text-gray-900"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      <FiList size={15} />
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Skeleton while not client yet */}
-              {!isClient && (
+              {sortedProducts.length === 0 ? (
+                <div className="py-16 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <FiPackage size={24} className="text-gray-300" />
+                  </div>
+                  <p className="font-bold text-gray-500">
+                    No products found
+                  </p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {search
+                      ? "Try a different search term"
+                      : "This seller has no products listed yet."}
+                  </p>
+                </div>
+              ) : productView === "grid" ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse"
-                    >
-                      <div className="aspect-square bg-gray-100" />
-                      <div className="p-3 space-y-2">
-                        <div className="h-4 bg-gray-100 rounded w-3/4" />
-                        <div className="h-3 bg-gray-100 rounded w-1/2" />
-                        <div className="h-5 bg-gray-100 rounded w-1/3" />
-                      </div>
-                    </div>
+                  {sortedProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} view="grid" />
                   ))}
                 </div>
-              )}
-
-              {isClient && (
-                <>
-                  {sortedProducts.length === 0 ? (
-                    <div className="py-16 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                        <FiPackage size={24} className="text-gray-300" />
-                      </div>
-                      <p className="font-bold text-gray-500">
-                        No products found
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        {search
-                          ? "Try a different search term"
-                          : "This seller has no products listed yet."}
-                      </p>
-                    </div>
-                  ) : productView === "grid" ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {sortedProducts.map((p) => (
-                        <ProductCard key={p.id} product={p} view="grid" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {sortedProducts.map((p) => (
-                        <ProductCard key={p.id} product={p} view="list" />
-                      ))}
-                    </div>
-                  )}
-                </>
+              ) : (
+                <div className="space-y-3">
+                  {sortedProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} view="list" />
+                  ))}
+                </div>
               )}
             </div>
           )}
