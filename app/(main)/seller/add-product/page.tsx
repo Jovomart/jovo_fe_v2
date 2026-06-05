@@ -51,8 +51,8 @@ interface SubcategoryField {
 interface FlashSaleCampaign {
   id: string;
   name: string;
-  start_date: string;
-  end_date: string;
+  start_time: string;
+  end_time: string;
   status: string;
 }
 
@@ -84,6 +84,12 @@ interface FlashSaleApply {
   flash_sale_id: string;
   flash_price: string;
   flash_stock: string;
+}
+
+interface UploadResult {
+  urls: string[];
+  files: any[];
+  primary_url: string;
 }
 
 const INITIAL_FORM: ProductForm = {
@@ -118,24 +124,17 @@ const INITIAL_FLASH_SALE: FlashSaleApply = {
 
 const CONDITIONS: ProductCondition[] = ["Like New", "Good", "Fair", "Poor"];
 
-// ─── Direct upload helper (bypasses apiService to control headers precisely) ──
+// ─── Direct upload helper ─────────────────────────────────────────────────────
 
-/**
- * Upload files directly, attaching the bearer token from localStorage.
- * This bypasses the apiService.makeRequest wrapper to rule out any token
- * handling bug there.
- */
 async function uploadFilesDirect(
   files: File[],
   uploadType: string,
   entityId: string | undefined,
   baseURL: string,
-): Promise<{ urls: string[]; files: any[]; primary_url: string }> {
-  // 1. Get the freshest possible token
+): Promise<UploadResult> {
   let token = localStorage.getItem("access_token");
   if (!token) throw new Error("No access token found. Please log in again.");
 
-  // 2. Check if expired; if so, try to refresh
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const isExpired = payload.exp < Math.floor(Date.now() / 1000);
@@ -158,10 +157,8 @@ async function uploadFilesDirect(
     if (jwtErr.message.includes("Session expired") || jwtErr.message.includes("log in")) {
       throw jwtErr;
     }
-    // JWT parse error — continue with the token we have
   }
 
-  // 3. Build FormData
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
   formData.append("upload_type", uploadType);
@@ -169,7 +166,6 @@ async function uploadFilesDirect(
     formData.append("entity_id", entityId.trim());
   }
 
-  // 4. Fire the request — NO Content-Type header; browser sets multipart boundary
   const response = await fetch(`${baseURL}/upload/files`, {
     method: "POST",
     headers: {
@@ -275,19 +271,15 @@ function extractSubcategoryFields(subcategoryData: any): SubcategoryField[] {
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition placeholder-slate-400 bg-white";
 
-const Field = ({
-  label,
-  required,
-  error,
-  hint,
-  children,
-}: {
+interface FieldProps {
   label: string;
   required?: boolean;
   error?: string;
   hint?: string;
   children: React.ReactNode;
-}) => (
+}
+
+const Field = ({ label, required, error, hint, children }: FieldProps) => (
   <div>
     <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">
       {label}
@@ -305,6 +297,15 @@ const Field = ({
   </div>
 );
 
+interface FormSectionProps {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  badge?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}
+
 const FormSection = ({
   id,
   icon,
@@ -312,14 +313,7 @@ const FormSection = ({
   badge,
   defaultOpen = true,
   children,
-}: {
-  id: string;
-  icon: React.ReactNode;
-  title: string;
-  badge?: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) => {
+}: FormSectionProps) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div
@@ -352,13 +346,12 @@ const FormSection = ({
   );
 };
 
-const Toggle = ({
-  checked,
-  onChange,
-}: {
+interface ToggleProps {
   checked: boolean;
   onChange: () => void;
-}) => (
+}
+
+const Toggle = ({ checked, onChange }: ToggleProps) => (
   <button
     type="button"
     onClick={onChange}
@@ -376,6 +369,16 @@ const Toggle = ({
 
 // ─── Image Uploader ─────────────────────────────────────────────────────────
 
+interface ImageUploaderProps {
+  images: File[];
+  previews: string[];
+  onImagesChange: (files: File[], previews: string[]) => void;
+  label: string;
+  required?: boolean;
+  error?: string;
+  uploading?: boolean;
+}
+
 const ImageUploader = ({
   images,
   previews,
@@ -384,15 +387,7 @@ const ImageUploader = ({
   required,
   error,
   uploading,
-}: {
-  images: File[];
-  previews: string[];
-  onImagesChange: (files: File[], previews: string[]) => void;
-  label: string;
-  required?: boolean;
-  error?: string;
-  uploading?: boolean;
-}) => {
+}: ImageUploaderProps) => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
@@ -524,17 +519,19 @@ const ImageUploader = ({
 
 // ─── Video Uploader ─────────────────────────────────────────────────────────
 
+interface VideoUploaderProps {
+  videos: File[];
+  previews: string[];
+  onVideosChange: (files: File[], previews: string[]) => void;
+  uploading?: boolean;
+}
+
 const VideoUploader = ({
   videos,
   previews,
   onVideosChange,
   uploading,
-}: {
-  videos: File[];
-  previews: string[];
-  onVideosChange: (files: File[], previews: string[]) => void;
-  uploading?: boolean;
-}) => {
+}: VideoUploaderProps) => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
@@ -627,27 +624,44 @@ const VideoUploader = ({
 
 // ─── Flash Sale Section ──────────────────────────────────────────────────────
 
+interface FlashSaleSectionProps {
+  flashSale: FlashSaleApply;
+  onFlashSaleChange: (data: FlashSaleApply) => void;
+  campaigns: FlashSaleCampaign[];
+  loadingCampaigns: boolean;
+  productCreated: boolean;
+  availableStock: number;
+  showToast: (msg: string, isError?: boolean) => void;
+}
+
 const FlashSaleSection = ({
   flashSale,
   onFlashSaleChange,
   campaigns,
   loadingCampaigns,
   productCreated,
-}: {
-  flashSale: FlashSaleApply;
-  onFlashSaleChange: (data: FlashSaleApply) => void;
-  campaigns: FlashSaleCampaign[];
-  loadingCampaigns: boolean;
-  productCreated: boolean;
-}) => {
+  availableStock,
+  showToast,
+}: FlashSaleSectionProps) => {
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return "Date not set";
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "Invalid date";
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
+  };
+
+  const handleFlashStockChange = (value: string) => {
+    const numValue = Number(value);
+    if (availableStock > 0 && numValue > availableStock) {
+      showToast(`Flash stock cannot exceed available inventory (${availableStock} units)`, true);
+      return;
+    }
+    onFlashSaleChange({ ...flashSale, flash_stock: value });
   };
 
   if (!productCreated) {
@@ -660,6 +674,25 @@ const FlashSaleSection = ({
         <p className="text-xs text-slate-400 mt-1">
           Submit your product, then come back to apply for flash sale campaigns
         </p>
+      </div>
+    );
+  }
+
+  if (loadingCampaigns) {
+    return (
+      <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+        <FiLoader size={14} className="animate-spin text-orange-400" />
+        Loading active campaigns…
+      </div>
+    );
+  }
+
+  if (campaigns.length === 0) {
+    return (
+      <div className="rounded-xl bg-slate-50 p-4 text-center">
+        <FiClock size={18} className="text-slate-300 mx-auto mb-2" />
+        <p className="text-sm text-slate-500">No active flash sales available</p>
+        <p className="text-xs text-slate-400 mt-1">Check back later</p>
       </div>
     );
   }
@@ -692,75 +725,70 @@ const FlashSaleSection = ({
 
       {flashSale.enabled && (
         <div className="space-y-4 border-l-2 border-orange-200 pl-4">
-          {loadingCampaigns ? (
-            <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
-              <FiLoader size={14} className="animate-spin text-orange-400" />
-              Loading active campaigns…
-            </div>
-          ) : campaigns.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 p-4 text-center">
-              <FiClock size={18} className="text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">No active flash sales available</p>
-              <p className="text-xs text-slate-400 mt-1">Check back later</p>
-            </div>
-          ) : (
-            <>
-              <Field label="Select Campaign" required>
-                <select
-                  className={inputCls}
-                  value={flashSale.flash_sale_id}
-                  onChange={(e) =>
-                    onFlashSaleChange({ ...flashSale, flash_sale_id: e.target.value })
-                  }
-                >
-                  <option value="">Select a flash sale campaign</option>
-                  {campaigns.map((campaign) => (
-                    <option key={campaign.id} value={campaign.id}>
-                      {campaign.name} — {formatDate(campaign.start_date)} to{" "}
-                      {formatDate(campaign.end_date)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+          <Field label="Select Campaign" required>
+            <select
+              className={inputCls}
+              value={flashSale.flash_sale_id}
+              onChange={(e) =>
+                onFlashSaleChange({ ...flashSale, flash_sale_id: e.target.value })
+              }
+            >
+              <option value="">Select a flash sale campaign</option>
+              {campaigns.map((campaign) => (
+                <option key={campaign.id} value={campaign.id}>
+                  {campaign.name} —{" "}
+                  {formatDate(campaign.start_time) !== "Invalid date" && formatDate(campaign.start_time) !== "Date not set"
+                    ? formatDate(campaign.start_time)
+                    : "TBD"}{" "}
+                  to{" "}
+                  {formatDate(campaign.end_time) !== "Invalid date" && formatDate(campaign.end_time) !== "Date not set"
+                    ? formatDate(campaign.end_time)
+                    : "TBD"}
+                </option>
+              ))}
+            </select>
+          </Field>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Flash Sale Price (₦)" required>
-                  <input
-                    className={inputCls}
-                    type="number"
-                    min="0"
-                    step="100"
-                    placeholder="Discounted price"
-                    value={flashSale.flash_price}
-                    onChange={(e) =>
-                      onFlashSaleChange({ ...flashSale, flash_price: e.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="Flash Sale Stock" required hint="Limited quantity for the flash sale">
-                  <input
-                    className={inputCls}
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="Units to allocate"
-                    value={flashSale.flash_stock}
-                    onChange={(e) =>
-                      onFlashSaleChange({ ...flashSale, flash_stock: e.target.value })
-                    }
-                  />
-                </Field>
-              </div>
-
-              <div className="flex items-start gap-2 py-2 px-3 rounded-xl bg-amber-50 border border-amber-100">
-                <FiInfo size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-700 font-medium">
-                  Admin approval is required before your product's discounted price activates.
-                  Applying doesn't guarantee acceptance.
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Flash Sale Price (₦)" required>
+              <input
+                className={inputCls}
+                type="number"
+                min="0"
+                step="100"
+                placeholder="Discounted price"
+                value={flashSale.flash_price}
+                onChange={(e) =>
+                  onFlashSaleChange({ ...flashSale, flash_price: e.target.value })
+                }
+              />
+            </Field>
+            <Field label="Flash Sale Stock" required hint="Limited quantity for the flash sale">
+              <input
+                className={inputCls}
+                type="number"
+                min="1"
+                max={availableStock || undefined}
+                step="1"
+                placeholder="Units to allocate"
+                value={flashSale.flash_stock}
+                onChange={(e) => handleFlashStockChange(e.target.value)}
+              />
+              {availableStock > 0 && (
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Available inventory: {availableStock} units
                 </p>
-              </div>
-            </>
-          )}
+              )}
+            </Field>
+          </div>
+
+          <div className="flex items-start gap-2 py-2 px-3 rounded-xl bg-amber-50 border border-amber-100">
+            <FiInfo size={14} className="text-amber-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-amber-700 font-medium">
+              Admin approval is required before your product's discounted price activates.
+              Applying doesn't guarantee acceptance.
+            </p>
+          </div>
         </div>
       )}
     </div>
@@ -779,7 +807,11 @@ const SECTIONS = [
   { id: "sec-seo", label: "SEO & Tags" },
 ];
 
-const SidebarNav = ({ activeSection }: { activeSection: string }) => {
+interface SidebarNavProps {
+  activeSection: string;
+}
+
+const SidebarNav = ({ activeSection }: SidebarNavProps) => {
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -859,13 +891,11 @@ const AddProductPage = () => {
   const hasFetchedRef = useRef(false);
   const isSubmitting = submitStep !== "idle" && submitStep !== "done";
 
-  // Derive base URL once
   const baseURL = (() => {
     const raw = process.env.NEXT_PUBLIC_API_URL ?? "";
     return raw.endsWith("/") ? raw.slice(0, -1) : raw;
   })();
 
-  // ── Intersection observer for sidebar highlight ──────────────────────────
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -891,7 +921,6 @@ const AddProductPage = () => {
     setTimeout(() => setToastMsg(""), 3500);
   };
 
-  // ── Fetch categories ─────────────────────────────────────────────────────
   const fetchCategories = useCallback(async () => {
     setCategoriesLoading(true);
     try {
@@ -908,28 +937,34 @@ const AddProductPage = () => {
     }
   }, []);
 
-  // ── Fetch flash sale campaigns ────────────────────────────────────────────
   const fetchFlashSaleCampaigns = useCallback(async () => {
     setLoadingCampaigns(true);
     try {
-      const response = await apiService.getActiveFlashSaleCampaign();
+      const response = await apiService.getSellerFlashSaleCampaigns("current");
       const data = response?.data ?? response;
       let campaigns: FlashSaleCampaign[] = [];
-      if (Array.isArray(data)) campaigns = data;
-      else if (data?.campaign && typeof data.campaign === "object") campaigns = [data.campaign];
-      else if (data?.id) campaigns = [data];
-      else if (Array.isArray(data?.campaigns)) campaigns = data.campaigns;
-      else if (data?.data && Array.isArray(data.data)) campaigns = data.data;
+      
+      if (Array.isArray(data)) {
+        campaigns = data;
+      } else if (data?.campaigns && Array.isArray(data.campaigns)) {
+        campaigns = data.campaigns;
+      } else if (data?.data && Array.isArray(data.data)) {
+        campaigns = data.data;
+      } else if (data?.id) {
+        campaigns = [data];
+      }
+      
       setFlashSaleCampaigns(
         campaigns.map((c: any) => ({
           id: c.id,
-          name: c.name || c.campaign_name || "Flash Sale",
-          start_date: c.start_date,
-          end_date: c.end_date,
-          status: c.status || "active",
-        })),
+          name: c.name || c.campaign_name || c.title || "Flash Sale",
+          start_time: c.start_time || c.start_date || c.startTime,
+          end_time: c.end_time || c.end_date || c.endTime,
+          status: c.status || "current",
+        }))
       );
-    } catch {
+    } catch (err: any) {
+      console.error("Failed to fetch flash sale campaigns:", err);
       setFlashSaleCampaigns([]);
     } finally {
       setLoadingCampaigns(false);
@@ -944,7 +979,6 @@ const AddProductPage = () => {
     }
   }, [fetchCategories, fetchFlashSaleCampaigns]);
 
-  // ── Subcategories ────────────────────────────────────────────────────────
   const fetchSubcategories = useCallback(async (categoryId: string) => {
     setSubcategories([]);
     setSubcategoriesLoading(true);
@@ -993,7 +1027,6 @@ const AddProductPage = () => {
     [fetchSubcategorySchema],
   );
 
-  // ── Tags ─────────────────────────────────────────────────────────────────
   const addTag = () => {
     const tag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
     if (tag && !form.tags.includes(tag) && form.tags.length < 10) {
@@ -1002,7 +1035,6 @@ const AddProductPage = () => {
     }
   };
 
-  // ── Validation ───────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!form.category_id) e.category_id = "Please select a category";
@@ -1028,20 +1060,29 @@ const AddProductPage = () => {
     return Object.keys(e).length === 0;
   };
 
-  // ── Flash sale apply ─────────────────────────────────────────────────────
   const applyToFlashSale = async (pid: string): Promise<void> => {
     if (!flashSale.enabled) return;
     if (!flashSale.flash_sale_id || !flashSale.flash_price || !flashSale.flash_stock) {
       showToast("Flash sale fields incomplete — skipped.", true);
       return;
     }
+    
+    // Validate flash stock against available inventory
+    const flashStockNum = Number(flashSale.flash_stock);
+    const availableStock = Number(form.stock_quantity);
+    
+    if (flashStockNum > availableStock) {
+      showToast(`Flash stock (${flashStockNum}) cannot exceed available inventory (${availableStock}). Please adjust.`, true);
+      return;
+    }
+    
     setSubmitStep("flash_sale");
     try {
       await apiService.applyProductToFlashSale({
         product_id: pid,
         flash_sale_id: flashSale.flash_sale_id,
         flash_price: Number(flashSale.flash_price),
-        flash_stock: Number(flashSale.flash_stock),
+        flash_stock: flashStockNum,
       });
       showToast("Flash sale application submitted for admin review!");
     } catch (err: any) {
@@ -1049,24 +1090,6 @@ const AddProductPage = () => {
     }
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────
-  /**
-   * Upload flow:
-   *
-   * The backend's /upload/files endpoint requires:
-   *   1. A valid Bearer token for a user with seller role.
-   *   2. upload_type = "product_images" / "product_videos"
-   *   3. entity_id = the product's ID (so the backend can verify ownership)
-   *
-   * We therefore:
-   *   Step 1 — Create the product (with a temporary placeholder image).
-   *   Step 2 — Upload real images via uploadFilesDirect(), which handles
-   *             token refresh inline and bypasses apiService to avoid any
-   *             token-caching bug.
-   *   Step 3 — (Optional) Upload videos the same way.
-   *   Step 4 — PATCH the product with the real image URLs.
-   *   Step 5 — (Optional) Apply flash sale.
-   */
   const handleSubmit = async () => {
     if (!validate()) return;
 
@@ -1076,13 +1099,12 @@ const AddProductPage = () => {
     let newProductId: string | null = null;
 
     try {
-      // ── STEP 1: Create product with placeholder image ─────────────────────
-        const payload: any = {
+      const payload: any = {
         product_original_price: Number(form.product_original_price),
         product_images: ["https://placehold.co/400x400/F97316/FFFFFF?text=Uploading"],
       };
 
-      payload.subcategory_id = form.subcategory_id; // required by backend
+      payload.subcategory_id = form.subcategory_id;
       if (form.is_on_sale) payload.is_on_sale = true;
       if (form.product_discount_price && Number(form.product_discount_price) > 0)
         payload.product_discount_price = Number(form.product_discount_price);
@@ -1093,6 +1115,9 @@ const AddProductPage = () => {
       if (form.tags.length) payload.tags = form.tags;
       if (form.seo_title) payload.seo_title = form.seo_title;
       if (form.seo_description) payload.seo_description = form.seo_description;
+      payload.product_name = form.product_name;
+      payload.product_description = form.product_description;
+      payload.product_condition = form.product_condition;
 
       const specs: Record<string, string> = {};
       for (const [k, v] of Object.entries(form.specifications)) {
@@ -1110,7 +1135,6 @@ const AddProductPage = () => {
       setProductId(newProductId);
       setProductCreated(true);
 
-      // ── STEP 2: Upload images (with entity_id = newProductId) ─────────────
       setSubmitStep("uploading_images");
 
       let imageUrls: string[] = [];
@@ -1123,7 +1147,6 @@ const AddProductPage = () => {
         );
         imageUrls = result.urls;
       } catch (uploadErr: any) {
-        // Clean up the orphan product
         try { await apiService.deleteProduct(newProductId); } catch (_) {}
         throw uploadErr;
       }
@@ -1133,7 +1156,6 @@ const AddProductPage = () => {
         throw new Error("Upload succeeded but no image URLs were returned. Please try again.");
       }
 
-      // ── STEP 3: Upload videos (optional, non-fatal) ───────────────────────
       setSubmitStep("uploading_videos");
 
       let videoUrls: string[] = [];
@@ -1151,7 +1173,6 @@ const AddProductPage = () => {
         }
       }
 
-      // ── STEP 4: PATCH product with real media URLs ────────────────────────
       setSubmitStep("updating");
 
       try {
@@ -1159,11 +1180,9 @@ const AddProductPage = () => {
         if (videoUrls.length > 0) updatePayload.product_videos = videoUrls;
         await apiService.updateProduct(newProductId, updatePayload);
       } catch (patchErr) {
-        // Images are already linked via entity_id — non-fatal
         console.warn("PATCH media URLs failed (non-fatal):", patchErr);
       }
 
-      // ── STEP 5: Flash sale ────────────────────────────────────────────────
       if (flashSale.enabled) {
         await applyToFlashSale(newProductId);
       }
@@ -1204,6 +1223,8 @@ const AddProductPage = () => {
         )
       : 0;
 
+  const availableStock = Number(form.stock_quantity) || 0;
+
   return (
     <>
       <SellerLayout activeNav="products" pageTitle="Add Product">
@@ -1231,7 +1252,7 @@ const AddProductPage = () => {
                 </div>
               )}
 
-              {/* ── Category ── */}
+              {/* Category Section */}
               <FormSection id="sec-category" icon={<FiTag size={15} />} title="Category" badge="Required">
                 {categoriesLoading ? (
                   <div className="flex items-center gap-2 py-6 text-slate-400 text-sm">
@@ -1353,7 +1374,7 @@ const AddProductPage = () => {
                 )}
               </FormSection>
 
-              {/* ── Details ── */}
+              {/* Details Section */}
               <FormSection id="sec-details" icon={<FiPackage size={15} />} title="Product Details" badge="Required">
                 <Field label="Product Name" required error={errors.product_name}>
                   <input
@@ -1416,7 +1437,7 @@ const AddProductPage = () => {
                 </div>
               </FormSection>
 
-              {/* ── Condition ── */}
+              {/* Condition Section */}
               <FormSection id="sec-condition" icon={<FiSliders size={15} />} title="Item Condition" badge="Required">
                 <Field label="Condition" required error={errors.product_condition}>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1448,7 +1469,7 @@ const AddProductPage = () => {
                 </Field>
               </FormSection>
 
-              {/* ── Pricing ── */}
+              {/* Pricing Section */}
               <FormSection id="sec-pricing" icon={<FiDollarSign size={15} />} title="Pricing & Stock" badge="Required">
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Price (₦)" required error={errors.product_original_price}>
@@ -1521,7 +1542,7 @@ const AddProductPage = () => {
                 </div>
               </FormSection>
 
-              {/* ── Media ── */}
+              {/* Media Section */}
               <FormSection id="sec-media" icon={<FiImage size={15} />} title="Photos & Video" badge="Required">
                 <ImageUploader
                   images={form.product_images}
@@ -1540,7 +1561,7 @@ const AddProductPage = () => {
                 />
               </FormSection>
 
-              {/* ── Flash Sale ── */}
+              {/* Flash Sale Section */}
               <FormSection id="sec-flashsale" icon={<FiZap size={15} />} title="Flash Sale" defaultOpen={false}>
                 <FlashSaleSection
                   flashSale={flashSale}
@@ -1548,10 +1569,12 @@ const AddProductPage = () => {
                   campaigns={flashSaleCampaigns}
                   loadingCampaigns={loadingCampaigns}
                   productCreated={productCreated}
+                  availableStock={availableStock}
+                  showToast={showToast}
                 />
               </FormSection>
 
-              {/* ── SEO ── */}
+              {/* SEO Section */}
               <FormSection id="sec-seo" icon={<FiInfo size={15} />} title="SEO & Tags" defaultOpen={false}>
                 <Field label="Tags" hint="Up to 10 tags. Press Enter or click Add.">
                   <div className="flex gap-2 mb-3">
@@ -1625,7 +1648,7 @@ const AddProductPage = () => {
                 </div>
               </FormSection>
 
-              {/* ── Submit bar ── */}
+              {/* Submit bar */}
               <div
                 className="sticky bottom-5 z-10 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 px-5 py-4 flex items-center justify-between gap-4"
                 style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.10)" }}

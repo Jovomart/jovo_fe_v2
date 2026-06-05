@@ -39,7 +39,9 @@ interface Product {
   is_approved: boolean;
   is_featured: boolean;
   approval_status?: string;
-  rejection_reason?: string;
+  approval_state?: string;
+  status?: string;
+  rejection_reason?: string | null;
   product_images: string[];
   average_rating: number;
   review_count: number;
@@ -49,6 +51,8 @@ interface Product {
   brand?: string;
   created_at: string;
   updated_at: string;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
 }
 
 interface Pagination {
@@ -61,33 +65,104 @@ interface Pagination {
 type ApprovalFilter = "all" | "approved" | "pending" | "rejected";
 type ActiveFilter = "all" | "active" | "inactive";
 
+// ─── Helper function to get approval status ───────────────────────────────────
+
+const getApprovalStatus = (product: Product): string => {
+  // If product is inactive, return inactive
+  if (!product.is_active) {
+    return "inactive";
+  }
+  
+  // If there's a rejection reason, it's rejected
+  if (product.rejection_reason) {
+    return "rejected";
+  }
+  
+  // Check multiple possible field names
+  const status = product.approval_status || product.approval_state || product.status;
+  
+  if (status === "pending" || status === "Pending") {
+    return "pending";
+  }
+  
+  if (status === "approved" || status === "Approved") {
+    return "approved";
+  }
+  
+  if (status === "rejected" || status === "Rejected") {
+    return "rejected";
+  }
+  
+  // Check if product has been reviewed before
+  // If it has a reviewed_at date but is_approved is false, it might be pending re-review
+  if (product.reviewed_at && !product.is_approved) {
+    return "pending";
+  }
+  
+  // Check if the product was updated recently but hasn't been reviewed
+  // This is a heuristic - if updated in last 24 hours and no reviewed_at, might be pending
+  const updatedAt = new Date(product.updated_at);
+  const now = new Date();
+  const hoursSinceUpdate = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
+  
+  // If updated in last hour and no reviewed_at timestamp, consider it pending
+  if (hoursSinceUpdate < 1 && !product.reviewed_at) {
+    return "pending";
+  }
+  
+  // Fallback to is_approved flag
+  if (product.is_approved === false) {
+    return "pending";
+  }
+  
+  if (product.is_approved === true) {
+    return "approved";
+  }
+  
+  return "pending";
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const ApprovalBadge = ({ product }: { product: Product }) => {
-  if (!product.is_active) {
+  const approvalStatus = getApprovalStatus(product);
+  
+  if (approvalStatus === "inactive") {
     return (
       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
         Inactive
       </span>
     );
   }
-  if (product.is_approved) {
+  
+  if (approvalStatus === "pending") {
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-        Approved
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+        Pending Review
       </span>
     );
   }
-  if (product.rejection_reason) {
+  
+  if (approvalStatus === "rejected") {
     return (
       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">
         Rejected
       </span>
     );
   }
+  
+  if (approvalStatus === "approved") {
+    return (
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+        Approved
+      </span>
+    );
+  }
+  
+  // Default fallback
   return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-      Pending Review
+    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+      Unknown
     </span>
   );
 };
@@ -186,7 +261,7 @@ const SellerProductsPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 
-  // FIX: Use ref to prevent multiple fetch calls
+  // Use ref to prevent multiple fetch calls
   const hasFetchedRef = useRef(false);
 
   const showToast = (msg: string) => {
@@ -230,11 +305,8 @@ const SellerProductsPage = () => {
     [approvalFilter, activeFilter]
   );
 
-  // FIX: Use ref to ensure fetchProducts is only called once on mount, but still respond to filter changes
-  // We want it to run when filters change, but not on every render due to dependency
-  // The useCallback already handles the dependencies on approvalFilter and activeFilter
+  // Reset ref when any filter changes to allow re-fetch
   useEffect(() => {
-    // Reset ref when any filter changes to allow re-fetch
     hasFetchedRef.current = false;
   }, [approvalFilter, activeFilter]);
 
@@ -292,6 +364,18 @@ const SellerProductsPage = () => {
     { key: "rejected", label: "Rejected" },
   ];
 
+  // Calculate stats based on actual approval status
+  const getStats = () => {
+    const total = pagination.total;
+    const active = products.filter((p) => p.is_active).length;
+    const approved = products.filter((p) => getApprovalStatus(p) === "approved" && p.is_active).length;
+    const pending = products.filter((p) => getApprovalStatus(p) === "pending" && p.is_active).length;
+    const rejected = products.filter((p) => getApprovalStatus(p) === "rejected" && p.is_active).length;
+    return { total, active, approved, pending, rejected };
+  };
+
+  const stats = getStats();
+
   return (
     <>
       <SellerLayout
@@ -320,28 +404,25 @@ const SellerProductsPage = () => {
             {[
               {
                 label: "Total Listed",
-                value: pagination.total,
+                value: stats.total,
                 color: "#6366F1",
                 bg: "#EEF2FF",
               },
               {
                 label: "Active",
-                value: products.filter((p) => p.is_active).length,
+                value: stats.active,
                 color: "#10B981",
                 bg: "#F0FDF4",
               },
               {
                 label: "Approved",
-                value: products.filter((p) => p.is_approved && p.is_active)
-                  .length,
+                value: stats.approved,
                 color: "#F97316",
                 bg: "#FFF7ED",
               },
               {
                 label: "Pending Review",
-                value: products.filter(
-                  (p) => !p.is_approved && !p.rejection_reason && p.is_active
-                ).length,
+                value: stats.pending,
                 color: "#F59E0B",
                 bg: "#FFFBEB",
               },
@@ -366,6 +447,16 @@ const SellerProductsPage = () => {
               </div>
             ))}
           </div>
+
+          {/* Info Banner about pending reviews */}
+          {stats.pending > 0 && (
+            <div className="flex items-center gap-3 rounded-2xl px-5 py-3 bg-amber-50 border border-amber-100">
+              <FiAlertCircle size={16} className="text-amber-600 shrink-0" />
+              <p className="text-amber-700 text-xs font-medium flex-1">
+                <strong>{stats.pending} product{stats.pending !== 1 ? 's are' : ' is'} pending review.</strong> Your recent changes are being reviewed by our admin team.
+              </p>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -517,7 +608,7 @@ const SellerProductsPage = () => {
                         key={product.id}
                         className="group hover:bg-orange-50/20 transition-colors"
                       >
-                        {/* Product - FIX: Replace img with Image */}
+                        {/* Product */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center relative">
@@ -623,136 +714,136 @@ const SellerProductsPage = () => {
                             <button
                               onClick={() =>
                                 router.push(
-                                  `/seller/products/${product.id}/edit`
-                                )
-                              }
-                              className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition"
-                              title="Edit product"
-                            >
-                              <FiEdit2 size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleToggleActive(product)}
-                              className={`p-2 rounded-lg transition ${
-                                product.is_active
-                                  ? "bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600"
-                                  : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                              }`}
-                              title={
-                                product.is_active
-                                  ? "Hide product"
-                                  : "Re-publish product"
-                              }
-                            >
-                              {product.is_active ? (
-                                <FiToggleRight size={13} />
-                              ) : (
-                                <FiToggleLeft size={13} />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => setDeleteTarget(product)}
-                              className="p-2 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition"
-                              title="Remove product"
-                            >
-                              <FiTrash2 size={13} />
-                            </button>
+                                                  `/seller/products/${product.id}/edit`
+                                                )
+                                              }
+                                              className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition"
+                                              title="Edit product"
+                                            >
+                                              <FiEdit2 size={13} />
+                                            </button>
+                                            <button
+                                              onClick={() => handleToggleActive(product)}
+                                              className={`p-2 rounded-lg transition ${
+                                                product.is_active
+                                                  ? "bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600"
+                                                  : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                              }`}
+                                              title={
+                                                product.is_active
+                                                  ? "Hide product"
+                                                  : "Re-publish product"
+                                              }
+                                            >
+                                              {product.is_active ? (
+                                                <FiToggleRight size={13} />
+                                              ) : (
+                                                <FiToggleLeft size={13} />
+                                              )}
+                                            </button>
+                                            <button
+                                              onClick={() => setDeleteTarget(product)}
+                                              className="p-2 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition"
+                                              title="Remove product"
+                                            >
+                                              <FiTrash2 size={13} />
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Pagination */}
+                            {!loading && pagination.total_pages > 1 && (
+                              <div
+                                className="flex items-center justify-between px-6 py-4"
+                                style={{ borderTop: "1px solid #F8FAFC" }}
+                              >
+                                <p className="text-xs text-slate-400 font-medium">
+                                  Showing {(pagination.page - 1) * pagination.page_size + 1}–
+                                  {Math.min(
+                                    pagination.page * pagination.page_size,
+                                    pagination.total
+                                  )}{" "}
+                                  of {pagination.total} products
+                                </p>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => fetchProducts(pagination.page - 1)}
+                                    disabled={pagination.page <= 1}
+                                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                  >
+                                    <FiChevronLeft size={14} />
+                                  </button>
+                                  {[...Array(pagination.total_pages)].map((_, i) => {
+                                    const p = i + 1;
+                                    if (
+                                      p === 1 ||
+                                      p === pagination.total_pages ||
+                                      Math.abs(p - pagination.page) <= 1
+                                    ) {
+                                      return (
+                                        <button
+                                          key={p}
+                                          onClick={() => fetchProducts(p)}
+                                          className={`w-8 h-8 rounded-lg text-xs font-bold transition ${
+                                            p === pagination.page
+                                              ? "bg-orange-500 text-white"
+                                              : "border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                          }`}
+                                        >
+                                          {p}
+                                        </button>
+                                      );
+                                    }
+                                    if (Math.abs(p - pagination.page) === 2) {
+                                      return (
+                                        <span key={p} className="text-slate-400 text-xs">
+                                          …
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                  <button
+                                    onClick={() => fetchProducts(pagination.page + 1)}
+                                    disabled={pagination.page >= pagination.total_pages}
+                                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                  >
+                                    <FiChevronRight size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </SellerLayout>
 
-            {/* Pagination */}
-            {!loading && pagination.total_pages > 1 && (
-              <div
-                className="flex items-center justify-between px-6 py-4"
-                style={{ borderTop: "1px solid #F8FAFC" }}
-              >
-                <p className="text-xs text-slate-400 font-medium">
-                  Showing {(pagination.page - 1) * pagination.page_size + 1}–
-                  {Math.min(
-                    pagination.page * pagination.page_size,
-                    pagination.total
-                  )}{" "}
-                  of {pagination.total} products
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => fetchProducts(pagination.page - 1)}
-                    disabled={pagination.page <= 1}
-                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <FiChevronLeft size={14} />
-                  </button>
-                  {[...Array(pagination.total_pages)].map((_, i) => {
-                    const p = i + 1;
-                    if (
-                      p === 1 ||
-                      p === pagination.total_pages ||
-                      Math.abs(p - pagination.page) <= 1
-                    ) {
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => fetchProducts(p)}
-                          className={`w-8 h-8 rounded-lg text-xs font-bold transition ${
-                            p === pagination.page
-                              ? "bg-orange-500 text-white"
-                              : "border border-slate-200 text-slate-500 hover:bg-slate-50"
-                          }`}
+                      {/* Delete Modal */}
+                      {deleteTarget && (
+                        <DeleteModal
+                          product={deleteTarget}
+                          onConfirm={handleDelete}
+                          onCancel={() => setDeleteTarget(null)}
+                          loading={deleting}
+                        />
+                      )}
+
+                      {/* Toast */}
+                      {toastMsg && (
+                        <div
+                          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"
+                          style={{ background: "linear-gradient(135deg,#0F172A,#1E293B)" }}
                         >
-                          {p}
-                        </button>
-                      );
-                    }
-                    if (Math.abs(p - pagination.page) === 2) {
-                      return (
-                        <span key={p} className="text-slate-400 text-xs">
-                          …
-                        </span>
-                      );
-                    }
-                    return null;
-                  })}
-                  <button
-                    onClick={() => fetchProducts(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.total_pages}
-                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <FiChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </SellerLayout>
+                          {toastMsg}
+                        </div>
+                      )}
+                    </>
+                  );
+                };
 
-      {/* Delete Modal */}
-      {deleteTarget && (
-        <DeleteModal
-          product={deleteTarget}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-          loading={deleting}
-        />
-      )}
-
-      {/* Toast */}
-      {toastMsg && (
-        <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"
-          style={{ background: "linear-gradient(135deg,#0F172A,#1E293B)" }}
-        >
-          {toastMsg}
-        </div>
-      )}
-    </>
-  );
-};
-
-export default SellerProductsPage;
+                export default SellerProductsPage;

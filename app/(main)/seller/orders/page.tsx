@@ -23,8 +23,9 @@ import {
   FiClock,
   FiLoader,
   FiMapPin,
+  FiEdit2,
+  FiSave,
 } from "react-icons/fi";
-import { MdOutlineDeliveryDining } from "react-icons/md";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ interface Order {
   payment_status: string;
   total_amount: number;
   created_at: string;
+  seller_notes?: string;
   buyer?: {
     full_name?: string;
     username?: string;
@@ -74,6 +76,13 @@ type OrderStatusFilter =
   | "delivered"
   | "cancelled";
 type PaymentFilter = "all" | "paid" | "pending" | "failed";
+type ItemStatusFilter =
+  | "all"
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
 const ITEM_STATUSES = [
   "pending",
@@ -87,7 +96,13 @@ const ITEM_STATUSES = [
 
 const statusConfig: Record<
   string,
-  { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
+  {
+    label: string;
+    color: string;
+    bg: string;
+    border: string;
+    icon: React.ReactNode;
+  }
 > = {
   pending: {
     label: "Pending",
@@ -198,7 +213,11 @@ const ItemStatusSelect = ({
       <select
         value={current}
         onChange={handleChange}
-        disabled={updating || current === "delivered" || current === "cancelled"}
+        disabled={
+          updating ||
+          current === "delivered" ||
+          current === "cancelled"
+        }
         className="appearance-none text-[11px] font-bold pl-2.5 pr-6 py-1.5 rounded-lg border cursor-pointer outline-none disabled:cursor-not-allowed transition"
         style={{
           color: cfg.color,
@@ -217,6 +236,98 @@ const ItemStatusSelect = ({
         className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
         style={{ color: cfg.color }}
       />
+    </div>
+  );
+};
+
+// ─── Seller Notes Editor ──────────────────────────────────────────────────────
+
+const SellerNotesEditor = ({
+  orderId,
+  initialNotes,
+  onToast,
+}: {
+  orderId: string;
+  initialNotes?: string;
+  onToast: (msg: string) => void;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [notes, setNotes] = useState(initialNotes ?? "");
+  const [draft, setDraft] = useState(initialNotes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiService.updateSellerOrderNotes(orderId, draft.trim());
+      setNotes(draft.trim());
+      setEditing(false);
+      onToast("Order notes updated.");
+    } catch (err: any) {
+      onToast(err.message ?? "Failed to save notes.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setDraft(notes);
+    setEditing(false);
+  };
+
+  return (
+    <div className="px-5 py-3 border-t border-slate-100 bg-amber-50/40">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[11px] font-black text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+          <FiEdit2 size={11} /> Internal Notes
+        </p>
+        {!editing && (
+          <button
+            onClick={() => {
+              setDraft(notes);
+              setEditing(true);
+            }}
+            className="text-[11px] font-bold text-amber-600 hover:text-amber-800 transition"
+          >
+            {notes ? "Edit" : "+ Add Note"}
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <div className="space-y-2">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            placeholder="Add an internal note for this order…"
+            className="w-full px-3 py-2 rounded-xl border border-amber-200 text-sm text-slate-700 outline-none focus:border-amber-400 resize-none bg-white transition"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black text-white transition disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg,#F97316,#EA580C)" }}
+            >
+              <FiSave size={11} /> {saving ? "Saving…" : "Save"}
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : notes ? (
+        <p className="text-xs text-amber-800 font-medium leading-relaxed">
+          {notes}
+        </p>
+      ) : (
+        <p className="text-xs text-amber-600/60 italic">No notes yet.</p>
+      )}
     </div>
   );
 };
@@ -310,12 +421,9 @@ const OrderRow = ({
         </div>
       </button>
 
-      {/* Expanded Items */}
+      {/* Expanded */}
       {expanded && (
-        <div
-          className="border-t border-slate-50"
-          style={{ background: "#FAFBFC" }}
-        >
+        <div className="border-t border-slate-50" style={{ background: "#FAFBFC" }}>
           {/* Delivery info */}
           {deliveryAddress && (
             <div className="px-5 py-3 flex items-start gap-2.5 border-b border-slate-100">
@@ -336,13 +444,10 @@ const OrderRow = ({
             </div>
           )}
 
-          {/* Items - FIX: Replace img with Image */}
+          {/* Items */}
           <div className="divide-y divide-slate-100">
             {(order.items ?? []).map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-4 px-5 py-3.5"
-              >
+              <div key={item.id} className="flex items-center gap-4 px-5 py-3.5">
                 <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center relative">
                   {item.product_image ? (
                     <Image
@@ -371,19 +476,14 @@ const OrderRow = ({
                   <span className="text-sm font-black text-slate-900 hidden sm:block">
                     {fmtCurrency(Number(item.total_price))}
                   </span>
-                  <ItemStatusSelect
-                    item={item}
-                    onUpdate={handleItemUpdate}
-                  />
+                  <ItemStatusSelect item={item} onUpdate={handleItemUpdate} />
                 </div>
               </div>
             ))}
           </div>
 
           {/* Order Total Footer */}
-          <div
-            className="flex items-center justify-between px-5 py-3 bg-white border-t border-slate-100"
-          >
+          <div className="flex items-center justify-between px-5 py-3 bg-white border-t border-slate-100">
             <span className="text-[11px] text-slate-400 font-semibold">
               Order Total
             </span>
@@ -391,6 +491,13 @@ const OrderRow = ({
               {fmtCurrency(Number(order.total_amount))}
             </span>
           </div>
+
+          {/* Seller Notes */}
+          <SellerNotesEditor
+            orderId={order.id}
+            initialNotes={order.seller_notes}
+            onToast={onToast}
+          />
         </div>
       )}
     </div>
@@ -415,14 +522,14 @@ const SellerOrdersPage = () => {
   const [search, setSearch] = useState("");
 
   // Filters
-  const [orderStatus, setOrderStatus] =
-    useState<OrderStatusFilter>("all");
+  const [orderStatus, setOrderStatus] = useState<OrderStatusFilter>("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
+  const [itemStatusFilter, setItemStatusFilter] =
+    useState<ItemStatusFilter>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  // FIX: Use ref to prevent multiple fetch calls
   const hasFetchedRef = useRef(false);
 
   const showToast = (msg: string) => {
@@ -438,6 +545,7 @@ const SellerOrdersPage = () => {
         const params: any = { page, per_page: 20 };
         if (orderStatus !== "all") params.order_status = orderStatus;
         if (paymentFilter !== "all") params.payment_status = paymentFilter;
+        if (itemStatusFilter !== "all") params.item_status = itemStatusFilter;
         if (startDate) params.start_date = startDate;
         if (endDate) params.end_date = endDate;
 
@@ -462,16 +570,13 @@ const SellerOrdersPage = () => {
         setLoading(false);
       }
     },
-    [orderStatus, paymentFilter, startDate, endDate]
+    [orderStatus, paymentFilter, itemStatusFilter, startDate, endDate]
   );
 
-  // FIX: Use ref to ensure fetchOrders is only called once on mount, but still respond to filter changes
-  // We want it to run when filters change, but not on every render due to dependency
-  // The useCallback already handles the dependencies on filters
+  // Reset fetch guard when any filter changes
   useEffect(() => {
-    // Reset ref when any filter changes to allow re-fetch
     hasFetchedRef.current = false;
-  }, [orderStatus, paymentFilter, startDate, endDate]);
+  }, [orderStatus, paymentFilter, itemStatusFilter, startDate, endDate]);
 
   useEffect(() => {
     if (!hasFetchedRef.current) {
@@ -482,7 +587,6 @@ const SellerOrdersPage = () => {
 
   const handleStatusUpdate = async (itemId: string, newStatus: string) => {
     await apiService.updateOrderItemStatus(itemId, newStatus);
-    // Refresh to reflect new statuses
     await fetchOrders(pagination.page);
   };
 
@@ -600,7 +704,9 @@ const SellerOrdersPage = () => {
           {error && (
             <div className="flex items-center gap-3 rounded-2xl px-5 py-4 bg-red-50 border border-red-200">
               <FiAlertCircle size={16} className="text-red-500 shrink-0" />
-              <p className="text-red-700 text-sm font-semibold flex-1">{error}</p>
+              <p className="text-red-700 text-sm font-semibold flex-1">
+                {error}
+              </p>
               <button
                 onClick={() => fetchOrders(1)}
                 className="text-xs font-bold text-red-600 hover:text-red-800 flex items-center gap-1"
@@ -638,7 +744,7 @@ const SellerOrdersPage = () => {
               </button>
             </div>
 
-            {/* Status tabs */}
+            {/* Order status tabs */}
             <div className="flex items-center gap-1 mt-3 overflow-x-auto pb-1">
               {orderStatusTabs.map(({ key, label }) => (
                 <button
@@ -657,7 +763,28 @@ const SellerOrdersPage = () => {
 
             {/* Advanced filters */}
             {showFilters && (
-              <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Item fulfillment status */}
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">
+                    Item Status
+                  </label>
+                  <select
+                    value={itemStatusFilter}
+                    onChange={(e) =>
+                      setItemStatusFilter(e.target.value as ItemStatusFilter)
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 outline-none bg-white"
+                  >
+                    <option value="all">All Items</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
                 {/* Payment status */}
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">
@@ -676,6 +803,7 @@ const SellerOrdersPage = () => {
                     <option value="failed">Failed</option>
                   </select>
                 </div>
+
                 {/* Date range */}
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">

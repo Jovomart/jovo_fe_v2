@@ -1,5 +1,6 @@
+// src/services/apiService.ts
+
 class ApiService {
-  [x: string]: any;
   baseURL: string;
 
   constructor() {
@@ -90,16 +91,17 @@ class ApiService {
         .join(", ");
     if (data?.message && typeof data.message === "string") return data.message;
     if (data?.error && typeof data.error === "string") return data.error;
-    if (data && typeof data === "object" && Object.keys(data).length === 0) {
-      return "Server returned an empty error response. Please check your input data.";
-    }
     console.error("Unrecognised error response shape:", data);
     return `Request failed with status ${statusCode}`;
   }
 
   async makeRequest(
     endpoint: string,
-    options: RequestInit & { headers?: Record<string, string> } = {},
+    options: {
+      method?: string;
+      body?: any;
+      headers?: Record<string, string>;
+    } = {},
   ): Promise<any> {
     if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
     const url = `${this.baseURL}${endpoint}`;
@@ -127,6 +129,8 @@ class ApiService {
       "/cart/update",
       "/cart/validate",
       "/marketspace",
+      "/products/",
+      "/seller/",
     ];
 
     const isPublic = publicPrefixes.some((ep) => endpoint.startsWith(ep));
@@ -141,7 +145,7 @@ class ApiService {
 
     const headers: Record<string, string> = {};
 
-    if (!isFormData) {
+    if (!isFormData && options.body) {
       headers["Content-Type"] = "application/json";
     }
 
@@ -161,11 +165,6 @@ class ApiService {
       method: options.method ?? "GET",
       headers,
       body: options.body,
-      signal: options.signal,
-      credentials: options.credentials,
-      cache: options.cache,
-      mode: options.mode,
-      redirect: options.redirect,
     };
 
     try {
@@ -179,13 +178,6 @@ class ApiService {
         data = {
           message: text || `Request failed with status ${response.status}`,
         };
-      }
-
-      if (!response.ok && response.status !== 401) {
-        console.error(`API Error [${response.status}] ${endpoint}:`, data);
-        if (options.body && !isFormData) {
-          console.error("Request body:", options.body);
-        }
       }
 
       if (response.status === 401) {
@@ -272,8 +264,7 @@ class ApiService {
     );
     const accessToken =
       response.access_token || response.data?.access_token || response.token;
-    const refreshToken =
-      response.refresh_token || response.data?.refresh_token;
+    const refreshToken = response.refresh_token || response.data?.refresh_token;
     if (accessToken) this.storeTokens(accessToken, refreshToken);
     return response;
   }
@@ -405,10 +396,7 @@ class ApiService {
   ) {
     const params = new URLSearchParams();
     if (category_id) params.append("category_id", category_id);
-    params.append(
-      "include_effective_schema",
-      String(include_effective_schema),
-    );
+    params.append("include_effective_schema", String(include_effective_schema));
     return this.makeRequest(
       `/category/subcategory/get-all-subcategories?${params.toString()}`,
       { method: "GET" },
@@ -420,14 +408,25 @@ class ApiService {
     include_effective_schema = true,
   ) {
     const params = new URLSearchParams();
-    params.append(
-      "include_effective_schema",
-      String(include_effective_schema),
-    );
+    params.append("include_effective_schema", String(include_effective_schema));
     return this.makeRequest(
       `/category/subcategory/get-subcategory/${encodeURIComponent(subcategory_id)}?${params.toString()}`,
       { method: "GET" },
     );
+  }
+
+  // ─── PRODUCTS ──────────────────────────────────────────────────────────────
+
+  /**
+   * Fetch a single product by ID (public, no auth required).
+   * Also increments the product's view_count by 1 (used for analytics).
+   * Returns full product details including seller info, pricing, media,
+   * stock scarcity indicators, warranty, return policy, and SEO fields.
+   */
+  async getProductById(product_id: string): Promise<any> {
+    return this.makeRequest(`/products/${encodeURIComponent(product_id)}`, {
+      method: "GET",
+    });
   }
 
   // ─── MARKETSPACE ───────────────────────────────────────────────────────────
@@ -437,31 +436,19 @@ class ApiService {
       limit_per_category: String(limitPerCategory),
       include_empty: String(includeEmpty),
     });
-    return this.makeRequest(
-      `/marketspace/shop-homepage?${params.toString()}`,
-      { method: "GET" },
-    );
+    return this.makeRequest(`/marketspace/shop-homepage?${params.toString()}`, {
+      method: "GET",
+    });
   }
 
-  async getCategoryMarketspace(
-    categoryId: string,
-    params?: {
-      subcategory_id?: string | null;
-      min_price?: number | null;
-      max_price?: number | null;
-      condition?: string | null;
-      brand?: string | null;
-      on_sale?: boolean | null;
-      search?: string | null;
-      sort_by?: "newest" | "price_asc" | "price_desc" | "most_popular" | "top_rated";
-      limit?: number;
-      offset?: number;
-    },
-  ) {
+  async getCategoryMarketspace(categoryId: string, params?: any) {
     const q = new URLSearchParams();
-    if (params?.subcategory_id) q.append("subcategory_id", params.subcategory_id);
-    if (params?.min_price != null) q.append("min_price", String(params.min_price));
-    if (params?.max_price != null) q.append("max_price", String(params.max_price));
+    if (params?.subcategory_id)
+      q.append("subcategory_id", params.subcategory_id);
+    if (params?.min_price != null)
+      q.append("min_price", String(params.min_price));
+    if (params?.max_price != null)
+      q.append("max_price", String(params.max_price));
     if (params?.condition) q.append("condition", params.condition);
     if (params?.brand) q.append("brand", params.brand);
     if (params?.on_sale != null) q.append("on_sale", String(params.on_sale));
@@ -476,62 +463,42 @@ class ApiService {
     );
   }
 
-  // ─── NEW: TRENDING PRODUCTS ────────────────────────────────────────────────
-  // Ranked by 24h weighted engagement velocity: Score = (Views × 1) + (Cart Adds × 5)
-
-  async getTrendingProducts(params?: {
-    limit?: number;  // 1–50, default 10
-    hours?: number;  // 1–720, default 24
-  }) {
+  async getTrendingProducts(params?: { limit?: number; hours?: number }) {
     const q = new URLSearchParams();
     if (params?.limit != null) q.append("limit", String(params.limit));
     if (params?.hours != null) q.append("hours", String(params.hours));
     const qs = q.toString();
-    return this.makeRequest(
-      `/marketspace/trending${qs ? `?${qs}` : ""}`,
-      { method: "GET" },
-    );
+    return this.makeRequest(`/marketspace/trending${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
   }
-
-  // ─── NEW: FLASH SALES ─────────────────────────────────────────────────────
-  // Active platform-wide flash sale campaign with dynamic price overrides & countdowns
 
   async getActiveFlashSaleCampaign(): Promise<any> {
     return this.makeRequest("/marketspace/flash-sales", { method: "GET" });
   }
 
-  // ─── NEW: TOP SELLERS ─────────────────────────────────────────────────────
-  // Ranked by rolling checkout volume
-
-  async getTopSellingProducts(params?: {
-    limit?: number;  // 1–50, default 10
-    days?: number;   // 1–30, default 7
-  }) {
+  async getTopSellingProducts(params?: { limit?: number; days?: number }) {
     const q = new URLSearchParams();
     if (params?.limit != null) q.append("limit", String(params.limit));
     if (params?.days != null) q.append("days", String(params.days));
     const qs = q.toString();
-    return this.makeRequest(
-      `/marketspace/top-sellers${qs ? `?${qs}` : ""}`,
-      { method: "GET" },
-    );
+    return this.makeRequest(`/marketspace/top-sellers${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
   }
 
-  // ─── NEW: LIMITED STOCK ───────────────────────────────────────────────────
-  // Products with remaining stock below specified threshold
-
   async getLimitedStockProducts(params?: {
-    threshold?: number;  // 1–10000, default 100
-    limit?: number;      // 1–100, default 20
+    threshold?: number;
+    limit?: number;
   }) {
     const q = new URLSearchParams();
-    if (params?.threshold != null) q.append("threshold", String(params.threshold));
+    if (params?.threshold != null)
+      q.append("threshold", String(params.threshold));
     if (params?.limit != null) q.append("limit", String(params.limit));
     const qs = q.toString();
-    return this.makeRequest(
-      `/marketspace/limited-stock${qs ? `?${qs}` : ""}`,
-      { method: "GET" },
-    );
+    return this.makeRequest(`/marketspace/limited-stock${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
   }
 
   // ─── DELIVERY ──────────────────────────────────────────────────────────────
@@ -588,7 +555,9 @@ class ApiService {
       : "";
     return this.makeRequest(
       `/cart/remove/${encodeURIComponent(product_id)}${qs}`,
-      { method: "DELETE" },
+      {
+        method: "DELETE",
+      },
     );
   }
 
@@ -629,7 +598,8 @@ class ApiService {
     q.append("delivery_state", params.delivery_state);
     q.append("delivery_country", params.delivery_country);
     q.append("delivery_option_id", params.delivery_option_id);
-    if (params.delivery_notes) q.append("delivery_notes", params.delivery_notes);
+    if (params.delivery_notes)
+      q.append("delivery_notes", params.delivery_notes);
     if (params.user_latitude != null)
       q.append("user_latitude", String(params.user_latitude));
     if (params.user_longitude != null)
@@ -644,7 +614,9 @@ class ApiService {
   async verifyPayment(reference: string) {
     return this.makeRequest(
       `/payments/verify/${encodeURIComponent(reference)}`,
-      { method: "GET" },
+      {
+        method: "GET",
+      },
     );
   }
 
@@ -660,7 +632,8 @@ class ApiService {
   }) {
     const q = new URLSearchParams();
     if (params?.order_status) q.append("order_status", params.order_status);
-    if (params?.payment_status) q.append("payment_status", params.payment_status);
+    if (params?.payment_status)
+      q.append("payment_status", params.payment_status);
     if (params?.start_date) q.append("start_date", params.start_date);
     if (params?.end_date) q.append("end_date", params.end_date);
     if (params?.page != null) q.append("page", String(params.page));
@@ -704,6 +677,48 @@ class ApiService {
     return this.makeRequest("/seller/dashboard", { method: "GET" });
   }
 
+  /**
+   * Get the authenticated seller's full business profile and performance metrics.
+   * Requires a valid access token (seller must be logged in).
+   */
+  async getMySellerProfile(): Promise<any> {
+    return this.makeRequest("/seller/profile", { method: "GET" });
+  }
+
+  /**
+   * Update the authenticated seller's business profile and contact info.
+   * Requires a valid access token (seller must be approved).
+   */
+  async updateMySellerProfile(data: {
+    business_name?: string;
+    short_business_description?: string;
+    business_address?: string;
+    seller_bio?: string;
+    business_phone_number?: string;
+    business_email?: string;
+    business_facebook?: string;
+    business_twitter?: string;
+    business_instagram?: string;
+    business_linkedin?: string;
+    business_website?: string;
+    business_location?: string;
+  }): Promise<any> {
+    return this.makeRequest("/seller/profile", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Get a public seller profile by seller ID (no auth required).
+   * Returns full business info and performance metrics for any seller.
+   */
+  async getPublicSellerProfile(seller_id: string): Promise<any> {
+    return this.makeRequest(`/seller/${encodeURIComponent(seller_id)}`, {
+      method: "GET",
+    });
+  }
+
   // ─── SELLER PRODUCTS ───────────────────────────────────────────────────────
 
   async getMyProducts(params?: {
@@ -714,9 +729,12 @@ class ApiService {
   }) {
     const q = new URLSearchParams();
     if (params?.page != null) q.append("page", String(params.page));
-    if (params?.page_size != null) q.append("page_size", String(params.page_size));
-    if (params?.is_active != null) q.append("is_active", String(params.is_active));
-    if (params?.approval_status) q.append("approval_status", params.approval_status);
+    if (params?.page_size != null)
+      q.append("page_size", String(params.page_size));
+    if (params?.is_active != null)
+      q.append("is_active", String(params.is_active));
+    if (params?.approval_status)
+      q.append("approval_status", params.approval_status);
     const qs = q.toString();
     return this.makeRequest(
       `/seller/products/my-products${qs ? `?${qs}` : ""}`,
@@ -725,30 +743,12 @@ class ApiService {
   }
 
   async getMyProductById(product_id: string) {
-    return this.makeRequest(`/seller/products/${product_id}`, { method: "GET" });
+    return this.makeRequest(`/seller/products/${product_id}`, {
+      method: "GET",
+    });
   }
 
-  async createProduct(data: {
-    category_id: string;
-    subcategory_id?: string;
-    product_name: string;
-    product_description: string;
-    product_condition: "Like New" | "Good" | "Fair" | "Poor";
-    product_original_price: number;
-    product_images: string[];
-    is_on_sale?: boolean;
-    product_discount_price?: number | null;
-    stock_quantity?: number;
-    attributes?: Record<string, any>;
-    brand?: string;
-    is_digital?: boolean;
-    product_videos?: string[];
-    model?: string;
-    seo_title?: string;
-    seo_description?: string;
-    tags?: string[];
-    [key: string]: any;
-  }) {
+  async createProduct(data: any) {
     console.log("Creating product with data:", JSON.stringify(data, null, 2));
     const response = await this.makeRequest("/seller/products", {
       method: "POST",
@@ -758,30 +758,7 @@ class ApiService {
     return response;
   }
 
-  async updateProduct(
-    product_id: string,
-    data: {
-      category_id?: string;
-      subcategory_id?: string;
-      product_name?: string;
-      product_description?: string;
-      product_condition?: "Like New" | "Good" | "Fair" | "Poor";
-      product_original_price?: number;
-      is_on_sale?: boolean;
-      product_discount_price?: number | null;
-      stock_quantity?: number;
-      is_in_stock?: boolean;
-      is_active?: boolean;
-      attributes?: Record<string, any>;
-      brand?: string;
-      model?: string;
-      seo_title?: string;
-      seo_description?: string;
-      tags?: string[];
-      product_images?: string[];
-      product_videos?: string[];
-    },
-  ) {
+  async updateProduct(product_id: string, data: any) {
     return this.makeRequest(`/seller/products/${product_id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -796,16 +773,58 @@ class ApiService {
 
   // ─── SELLER FLASH SALE ─────────────────────────────────────────────────────
 
+  async getSellerFlashSaleCampaigns(
+    statusFilter: string = "current",
+  ): Promise<any> {
+    const params = new URLSearchParams();
+    if (statusFilter) params.append("status", statusFilter);
+    const qs = params.toString();
+    return this.makeRequest(
+      `/seller/products/flash-sale/campaigns${qs ? `?${qs}` : ""}`,
+      {
+        method: "GET",
+      },
+    );
+  }
+
+  async getSellerFlashSaleApplications(
+    campaignId: string | null = null,
+  ): Promise<any> {
+    const params = new URLSearchParams();
+    if (campaignId) params.append("campaign_id", campaignId);
+    const qs = params.toString();
+    return this.makeRequest(
+      `/seller/products/flash-sale/applications${qs ? `?${qs}` : ""}`,
+      {
+        method: "GET",
+      },
+    );
+  }
+
   async applyProductToFlashSale(data: {
     product_id: string;
     flash_sale_id: string;
     flash_price: number;
     flash_stock: number;
-  }) {
+  }): Promise<any> {
     return this.makeRequest("/seller/products/flash-sale/apply", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        product_id: data.product_id,
+        flash_sale_id: data.flash_sale_id,
+        flash_price: data.flash_price,
+        flash_stock: data.flash_stock,
+      }),
     });
+  }
+
+  async getProductFlashSaleStatus(product_id: string): Promise<any> {
+    return this.makeRequest(
+      `/seller/products/flash-sale/status/${encodeURIComponent(product_id)}`,
+      {
+        method: "GET",
+      },
+    );
   }
 
   // ─── SELLER ORDERS ─────────────────────────────────────────────────────────
@@ -821,7 +840,8 @@ class ApiService {
   }) {
     const q = new URLSearchParams();
     if (params?.order_status) q.append("order_status", params.order_status);
-    if (params?.payment_status) q.append("payment_status", params.payment_status);
+    if (params?.payment_status)
+      q.append("payment_status", params.payment_status);
     if (params?.item_status) q.append("item_status", params.item_status);
     if (params?.start_date) q.append("start_date", params.start_date);
     if (params?.end_date) q.append("end_date", params.end_date);
@@ -840,13 +860,29 @@ class ApiService {
     );
   }
 
+  async updateSellerOrderNotes(
+    seller_order_id: string,
+    seller_notes: string,
+  ): Promise<any> {
+    return this.makeRequest(
+      `/seller/orders/${encodeURIComponent(seller_order_id)}/notes`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ seller_notes }),
+      },
+    );
+  }
+
   // ─── SELLER WALLET ─────────────────────────────────────────────────────────
 
   async getSellerWallet() {
     return this.makeRequest("/seller/wallet", { method: "GET" });
   }
 
-  async getSellerWalletTransactions(params?: { skip?: number; limit?: number }) {
+  async getSellerWalletTransactions(params?: {
+    skip?: number;
+    limit?: number;
+  }) {
     const q = new URLSearchParams();
     if (params?.skip != null) q.append("skip", String(params.skip));
     if (params?.limit != null) q.append("limit", String(params.limit));
@@ -855,6 +891,64 @@ class ApiService {
       `/seller/wallet/transactions${qs ? `?${qs}` : ""}`,
       { method: "GET" },
     );
+  }
+
+  async submitWithdrawalRequest(data: {
+    amount: number;
+    bank_name: string;
+    account_number: string;
+    account_name: string;
+    bank_code: string;
+  }): Promise<any> {
+    return this.makeRequest("/seller/wallet/withdraw", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateWithdrawalRequest(
+    withdrawal_id: string,
+    data: {
+      amount?: number;
+      bank_name?: string;
+      account_number?: string;
+      account_name?: string;
+      bank_code?: string;
+    },
+  ): Promise<any> {
+    return this.makeRequest(
+      `/seller/wallet/withdrawals/${encodeURIComponent(withdrawal_id)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  async getSellerWithdrawals(params?: {
+    status_filter?: "pending" | "completed" | "rejected" | null;
+    skip?: number;
+    limit?: number;
+  }): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.status_filter) q.append("status_filter", params.status_filter);
+    if (params?.skip != null) q.append("skip", String(params.skip));
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/seller/wallet/withdrawals${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  // ─── SELLER ANALYTICS ──────────────────────────────────────────────────────
+
+  async getSellerAnalyticsDashboard(): Promise<any> {
+    return this.makeRequest("/seller/analytics/dashboard", { method: "GET" });
+  }
+
+  async getSellerProductAnalytics(): Promise<any> {
+    return this.makeRequest("/seller/analytics/products", { method: "GET" });
   }
 
   // ─── SERVICE PROVIDER ──────────────────────────────────────────────────────
@@ -871,7 +965,10 @@ class ApiService {
     });
   }
 
-  async verifyServiceProviderOTP(service_provider_id: string, otp_code: string) {
+  async verifyServiceProviderOTP(
+    service_provider_id: string,
+    otp_code: string,
+  ) {
     return this.makeRequest("/service-provider/verify-otp", {
       method: "POST",
       body: JSON.stringify({ service_provider_id, otp_code }),
@@ -902,41 +999,28 @@ class ApiService {
     });
   }
 
-  async createService(data: {
-    display_name: string;
-    category_id: string;
-    description: string;
-    price_type: "fixed" | "starting_at" | "negotiable";
-    starting_price: number;
-    location: string;
-    availability_schedule: Record<string, Array<{ start: string; end: string }>>;
-    booking_mode: "request" | "instant";
-  }) {
+  async createService(data: any) {
     return this.makeRequest("/service-provider/services", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async getMarketplaceServices(params?: {
-    category_id?: string;
-    min_price?: number;
-    max_price?: number;
-    location?: string;
-    available_now?: boolean;
-    sort_by?: "top_rated" | "most_reviewed" | "lowest_price";
-    limit?: number;
-    offset?: number;
-  }) {
+  async getMarketplaceServices(params?: any) {
     const queryParams = new URLSearchParams();
-    if (params?.category_id) queryParams.append("category_id", params.category_id);
-    if (params?.min_price) queryParams.append("min_price", params.min_price.toString());
-    if (params?.max_price) queryParams.append("max_price", params.max_price.toString());
+    if (params?.category_id)
+      queryParams.append("category_id", params.category_id);
+    if (params?.min_price)
+      queryParams.append("min_price", params.min_price.toString());
+    if (params?.max_price)
+      queryParams.append("max_price", params.max_price.toString());
     if (params?.location) queryParams.append("location", params.location);
     if (params?.available_now) queryParams.append("available_now", "true");
     if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
-    if (params?.limit != null) queryParams.append("limit", params.limit.toString());
-    if (params?.offset != null) queryParams.append("offset", params.offset.toString());
+    if (params?.limit != null)
+      queryParams.append("limit", params.limit.toString());
+    if (params?.offset != null)
+      queryParams.append("offset", params.offset.toString());
     const qs = queryParams.toString();
     return this.makeRequest(
       `/service-provider/services/marketplace${qs ? `?${qs}` : ""}`,
@@ -956,19 +1040,7 @@ class ApiService {
     });
   }
 
-  async updateService(
-    service_id: string,
-    data: {
-      display_name?: string;
-      description?: string;
-      price_type?: "fixed" | "starting_at" | "negotiable";
-      starting_price?: number;
-      location?: string;
-      availability_schedule?: Record<string, Array<{ start: string; end: string }>>;
-      booking_mode?: "request" | "instant";
-      is_active?: boolean;
-    },
-  ) {
+  async updateService(service_id: string, data: any) {
     return this.makeRequest(`/service-provider/services/${service_id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -983,20 +1055,13 @@ class ApiService {
 
   // ─── CAMPUS GUIDE ──────────────────────────────────────────────────────────
 
-  async getCampusGuides(params?: {
-    school_id?: string;
-    category?: string;
-    search?: string;
-    must_know?: boolean;
-    sort_by?: "popular" | "rating" | "newest" | "name" | "must_know";
-    page?: number;
-    limit?: number;
-  }) {
+  async getCampusGuides(params?: any) {
     const q = new URLSearchParams();
     if (params?.school_id) q.append("school_id", params.school_id);
     if (params?.category) q.append("category", params.category);
     if (params?.search) q.append("search", params.search);
-    if (params?.must_know != null) q.append("must_know", String(params.must_know));
+    if (params?.must_know != null)
+      q.append("must_know", String(params.must_know));
     if (params?.sort_by) q.append("sort_by", params.sort_by);
     if (params?.page) q.append("page", String(params.page));
     if (params?.limit) q.append("limit", String(params.limit));
@@ -1038,15 +1103,7 @@ class ApiService {
     });
   }
 
-  async updateCampusReview(
-    review_id: string,
-    data: {
-      rating?: number;
-      review?: string;
-      is_verified?: boolean;
-      campus_guide_id?: string;
-    },
-  ) {
+  async updateCampusReview(review_id: string, data: any) {
     return this.makeRequest(`/campus-guide/reviews/${review_id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -1149,24 +1206,7 @@ class ApiService {
       | "category_icon"
       | "seller_document",
     entityId?: string,
-  ): Promise<{
-    urls: string[];
-    files: Array<{
-      filename: string;
-      url: string;
-      public_id: string;
-      format: string;
-      bytes: number;
-      width: number;
-      height: number;
-      resource_type: string;
-    }>;
-    upload_type: string;
-    folder_path: string;
-    count: number;
-    primary_url: string;
-    database_updated: boolean;
-  }> {
+  ): Promise<any> {
     const formData = new FormData();
 
     files.forEach((file) => {
@@ -1195,34 +1235,16 @@ class ApiService {
     return this.uploadFiles(files, "product_videos", productId);
   }
 
-  // ─── ADD THIS METHOD TO THE ApiService CLASS ─────────────────────────────────
-// Place it right after the uploadProductVideos method (before the logout method)
-
-  /**
-   * Delete files from Cloudinary and synchronize with the database.
-   *
-   * @param urls        Full Cloudinary URLs to delete (required).
-   * @param uploadType  The upload_type that was used when the files were uploaded
-   *                    (e.g. "product_images", "product_videos"). Required so the
-   *                    backend knows which DB field to update.
-   * @param entityId    The entity that owns these files (e.g. product ID). Pass
-   *                    this whenever the upload_type is entity-scoped so the
-   *                    backend can sync the correct row.
-   */
   async deleteFiles(
     urls: string[],
     uploadType: string,
     entityId?: string,
-  ): Promise<{
-    status_code: number;
-    message: string;
-    data: Record<string, any>;
-  }> {
+  ): Promise<any> {
     if (!urls || urls.length === 0) {
       throw new Error("At least one URL is required to delete files.");
     }
 
-    const body: Record<string, any> = { urls, upload_type: uploadType };
+    const body: any = { urls, upload_type: uploadType };
     if (entityId && entityId.trim()) {
       body.entity_id = entityId.trim();
     }
@@ -1233,56 +1255,75 @@ class ApiService {
     });
   }
 
-  /**
-   * Convenience wrapper — delete a subset of a product's images from Cloudinary
-   * and sync the change back to the product record automatically.
-   */
   async deleteProductImages(urls: string[], productId: string) {
     return this.deleteFiles(urls, "product_images", productId);
   }
 
-  /**
-   * Convenience wrapper — delete a subset of a product's videos from Cloudinary
-   * and sync the change back to the product record automatically.
-   */
   async deleteProductVideos(urls: string[], productId: string) {
     return this.deleteFiles(urls, "product_videos", productId);
   }
 
-// ─── HOW TO INTEGRATE INTO THE FULL apiService.ts ────────────────────────────
-//
-// In your existing apiService.ts, find the uploadProductVideos method:
-//
-//   async uploadProductVideos(files: File[], productId?: string) {
-//     return this.uploadFiles(files, "product_videos", productId);
-//   }
-//
-// Paste the three methods above (deleteFiles, deleteProductImages, deleteProductVideos)
-// IMMEDIATELY after uploadProductVideos, before the logout() method.
-//
-// That's it. The new methods use the existing makeRequest infrastructure
-// (auth, error handling, token refresh) — no other changes needed.
-//
-// ─── USAGE EXAMPLES ──────────────────────────────────────────────────────────
-//
-// Delete a single image and sync DB:
-//   await apiService.deleteProductImages(["https://res.cloudinary.com/..."], productId);
-//
-// Delete multiple images:
-//   await apiService.deleteProductImages(urlsArray, productId);
-//
-// Delete a video:
-//   await apiService.deleteProductVideos(["https://res.cloudinary.com/..."], productId);
-//
-// Generic delete (for future upload_types):
-//   await apiService.deleteFiles(urls, "seller_document", entityId);
-//
-// ─── ERROR HANDLING ───────────────────────────────────────────────────────────
-//
-// The endpoint returns 403 if the user doesn't own the files.
-// makeRequest already throws with the server's error message, so wrap
-// in try/catch as needed. In ImageUploader we treat delete errors as
-// non-fatal (warn + continue removing from local state).
+  // ─── REPORTS ──────────────────────────────────────────────────────────────
+
+  async reportSeller(
+    sellerId: string,
+    reason: string,
+    details: string,
+  ): Promise<any> {
+    return this.makeRequest("/reports/seller", {
+      method: "POST",
+      body: JSON.stringify({
+        seller_id: sellerId,
+        reason: reason,
+        details: details,
+      }),
+    });
+  }
+
+  async reportProvider(
+    providerId: string,
+    reason: string,
+    details: string,
+  ): Promise<any> {
+    return this.makeRequest("/reports/provider", {
+      method: "POST",
+      body: JSON.stringify({
+        provider_id: providerId,
+        reason: reason,
+        details: details,
+      }),
+    });
+  }
+
+  async reportProduct(
+    productId: string,
+    reason: string,
+    details: string,
+    images?: string[],
+  ): Promise<any> {
+    const requestBody: any = {
+      product_id: productId,
+      reason: reason,
+      details: details,
+    };
+
+    if (images && images.length > 0) {
+      requestBody.images = images;
+    }
+
+    return this.makeRequest("/reports/product", {
+      method: "POST",
+      body: JSON.stringify(requestBody),
+    });
+  }
+
+  async getMyReports(): Promise<any> {
+    return this.makeRequest("/reports/my-reports", {
+      method: "GET",
+    });
+  }
+
+  // ─── LOGOUT ────────────────────────────────────────────────────────────────
 
   logout() {
     this.clearTokens();

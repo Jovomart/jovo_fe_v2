@@ -17,6 +17,7 @@ import apiService from "@/services/apiService";
 // Types
 interface Errors {
   productName?: string;
+  productId?: string;
   reason?: string;
   text?: string;
   email?: string;
@@ -67,6 +68,7 @@ const processSteps = [
 ───────────────────────────────────────────────────────────── */
 const ReportProduct = () => {
   const [productName, setProductName] = useState<string>("");
+  const [productId, setProductId] = useState<string>("");
   const [selectedReason, setReason] = useState<string>("");
   const [reportText, setReportText] = useState<string>("");
   const [reporterEmail, setReporterEmail] = useState<string>("");
@@ -76,6 +78,7 @@ const ReportProduct = () => {
   const [errors, setErrors] = useState<Errors>({});
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []).slice(0, 5);
@@ -139,6 +142,7 @@ const ReportProduct = () => {
   const validate = (): boolean => {
     const e: Errors = {};
     if (!productName.trim()) e.productName = "Please enter the product name.";
+    if (!productId.trim()) e.productId = "Please enter the product ID (from the product page URL).";
     if (!selectedReason)    e.reason = "Please select a reason for reporting.";
     if (!reportText.trim()) e.text = "Please describe the issue.";
     if (reporterEmail && !/\S+@\S+\.\S+/.test(reporterEmail)) e.email = "Enter a valid email address.";
@@ -149,20 +153,33 @@ const ReportProduct = () => {
   const handleSubmit = async () => {
     if (!validate()) return;
     
-    // Here you would send the report to your backend API
-    console.log("Submitting report:", {
-      productName,
-      selectedReason,
-      reportText,
-      reporterEmail,
-      uploadedFiles,
-    });
+    setIsSubmitting(true);
     
-    setSubmitted(true);
+    try {
+      // Get the image URLs from uploaded files
+      const imageUrls = uploadedFiles.map(file => file.url);
+      
+      // Submit the report using the API
+      const result = await apiService.reportProduct(
+        productId,
+        selectedReason,
+        reportText,
+        imageUrls.length > 0 ? imageUrls : undefined
+      );
+      
+      console.log("Report submitted successfully:", result);
+      setSubmitted(true);
+      
+    } catch (error: any) {
+      console.error("Failed to submit report:", error);
+      setErrors(prev => ({ ...prev, text: error.message || "Failed to submit report. Please try again." }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
-    setProductName(""); setReason(""); setReportText("");
+    setProductName(""); setProductId(""); setReason(""); setReportText("");
     setReporterEmail(""); setFiles([]); setUploadedFiles([]);
     setErrors({}); setSubmitted(false); setUploading(false);
   };
@@ -331,6 +348,27 @@ const ReportProduct = () => {
                   </div>
                   {errors.productName && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1"><FiAlertTriangle size={11} /> {errors.productName}</p>}
                   <p className="text-[11px] text-gray-400 mt-1">Enter the exact product name as it appears on Jovo</p>
+                </div>
+
+                {/* Product ID */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
+                    Product ID <span className="text-[#B42225]">*</span>
+                  </label>
+                  <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all ${
+                    errors.productId ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                  }`}>
+                    <FiPackage size={15} className={errors.productId ? "text-red-400" : "text-gray-400"} />
+                    <input
+                      type="text"
+                      placeholder="Enter the product ID (e.g., from the product page URL)..."
+                      value={productId}
+                      onChange={(e) => { setProductId(e.target.value); setErrors((p) => ({ ...p, productId: "" })); }}
+                      className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400"
+                    />
+                  </div>
+                  {errors.productId && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1"><FiAlertTriangle size={11} /> {errors.productId}</p>}
+                  <p className="text-[11px] text-gray-400 mt-1">You can find the product ID in the URL: /product/[product-id]</p>
                 </div>
 
                 {/* Reason grid */}
@@ -506,11 +544,11 @@ const ReportProduct = () => {
                 {/* Submit */}
                 <button
                   onClick={handleSubmit}
-                  disabled={uploading}
+                  disabled={uploading || isSubmitting}
                   className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: "linear-gradient(135deg,#B42225,#DC2626)", boxShadow: "0 6px 24px rgba(180,34,37,0.35)" }}>
-                  {uploading ? (
-                    <><FiLoader size={17} className="spin" /> Uploading files...</>
+                  {(uploading || isSubmitting) ? (
+                    <><FiLoader size={17} className="spin" /> {uploading ? "Uploading files..." : "Submitting report..."}</>
                   ) : (
                     <><FiFlag size={17} /> Submit Report</>
                   )}

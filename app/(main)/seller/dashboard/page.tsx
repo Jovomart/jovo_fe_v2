@@ -1,23 +1,21 @@
 "use client";
 
-import { useState, useEffect, useContext, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { AuthContext } from "@/context/AuthContext";
 import apiService from "@/services/apiService";
 import SellerLayout, { fmtCurrency } from "@/components/layout/SellerLayout";
 import {
   FiPackage,
   FiShoppingBag,
   FiDollarSign,
-  FiArrowRight,
   FiAlertCircle,
   FiCheckCircle,
   FiClock,
   FiRefreshCw,
   FiEye,
   FiArrowUpRight,
-  FiPlus,
   FiChevronRight,
+  FiBarChart2,
 } from "react-icons/fi";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { FaRocket } from "react-icons/fa";
@@ -41,7 +39,9 @@ interface DashboardStats {
   pendingOrders: number;
   completedOrders: number;
   cancelledOrders: number;
+  fulfillmentRate: number;
   recentOrders: Order[];
+  dailySalesData: { date: string; amount: number }[];
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -94,25 +94,32 @@ const Sparkline = ({
   );
 };
 
-const RevenueChart = ({ data }: { data: number[] }) => {
-  const labels = [
-    "Jan","Feb","Mar","Apr","May","Jun",
-    "Jul","Aug","Sep","Oct","Nov","Dec",
-  ];
-  const chartData = labels.map((label, i) => ({
-    label,
-    value: data[i] ?? 0,
-  }));
+const RevenueChart = ({
+  dailyData,
+}: {
+  dailyData: { date: string; amount: number }[];
+}) => {
+  // Show last 30 points (or pad with 0s if fewer)
+  const chartData =
+    dailyData.length > 0
+      ? dailyData.slice(-30)
+      : Array.from({ length: 30 }, (_, i) => ({
+          date: `Day ${i + 1}`,
+          amount: 0,
+        }));
+
   const W = 700,
     H = 200,
     PAD = { t: 20, r: 20, b: 36, l: 56 };
   const innerW = W - PAD.l - PAD.r,
     innerH = H - PAD.t - PAD.b;
-  const maxVal = Math.max(...chartData.map((d) => d.value), 1);
+  const maxVal = Math.max(...chartData.map((d) => d.amount), 1);
+
   const pts = chartData.map((d, i) => ({
-    x: PAD.l + (i / (chartData.length - 1)) * innerW,
-    y: PAD.t + (1 - d.value / maxVal) * innerH,
+    x: PAD.l + (i / (Math.max(chartData.length - 1, 1))) * innerW,
+    y: PAD.t + (1 - d.amount / maxVal) * innerH,
   }));
+
   const linePath = pts
     .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
     .join(" ");
@@ -122,6 +129,10 @@ const RevenueChart = ({ data }: { data: number[] }) => {
     val: Math.round((maxVal * (1 - r)) / 1000),
     idx,
   }));
+
+  // Show every 5th label on the x-axis to avoid clutter
+  const xLabels = chartData.filter((_, i) => i % 5 === 0 || i === chartData.length - 1);
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full">
       <defs>
@@ -161,34 +172,49 @@ const RevenueChart = ({ data }: { data: number[] }) => {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {chartData.map((d, i) => (
-        <text
-          key={d.label}
-          x={pts[i].x}
-          y={H - 8}
-          textAnchor="middle"
-          fontSize="9.5"
-          fill="#94A3B8"
-          fontFamily="inherit"
-        >
-          {d.label}
-        </text>
-      ))}
-      <circle
-        cx={pts[pts.length - 1].x}
-        cy={pts[pts.length - 1].y}
-        r="5"
-        fill="#F97316"
-        stroke="white"
-        strokeWidth="2.5"
-      />
-      <circle
-        cx={pts[pts.length - 1].x}
-        cy={pts[pts.length - 1].y}
-        r="9"
-        fill="#F97316"
-        fillOpacity="0.15"
-      />
+      {chartData.map((d, i) => {
+        const showLabel =
+          i % 5 === 0 || i === chartData.length - 1;
+        if (!showLabel) return null;
+        const label = d.date
+          ? new Date(d.date).toLocaleDateString("en-NG", {
+              day: "numeric",
+              month: "short",
+            })
+          : d.date;
+        return (
+          <text
+            key={i}
+            x={pts[i].x}
+            y={H - 8}
+            textAnchor="middle"
+            fontSize="9.5"
+            fill="#94A3B8"
+            fontFamily="inherit"
+          >
+            {label}
+          </text>
+        );
+      })}
+      {pts.length > 0 && (
+        <>
+          <circle
+            cx={pts[pts.length - 1].x}
+            cy={pts[pts.length - 1].y}
+            r="5"
+            fill="#F97316"
+            stroke="white"
+            strokeWidth="2.5"
+          />
+          <circle
+            cx={pts[pts.length - 1].x}
+            cy={pts[pts.length - 1].y}
+            r="9"
+            fill="#F97316"
+            fillOpacity="0.15"
+          />
+        </>
+      )}
     </svg>
   );
 };
@@ -255,10 +281,7 @@ const AnimBar = ({
 }) => {
   const [w, setW] = useState(0);
   useEffect(() => {
-    const t = setTimeout(
-      () => setW(max > 0 ? (value / max) * 100 : 0),
-      300
-    );
+    const t = setTimeout(() => setW(max > 0 ? (value / max) * 100 : 0), 300);
     return () => clearTimeout(t);
   }, [value, max]);
   return (
@@ -377,47 +400,85 @@ const SellerDashboard = () => {
     pendingOrders: 0,
     completedOrders: 0,
     cancelledOrders: 0,
+    fulfillmentRate: 0,
     recentOrders: [],
+    dailySalesData: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // ── FIX: monthlyChart in state so Math.random() only runs client-side ──────
-  const [monthlyChart, setMonthlyChart] = useState<number[]>(
-    new Array(12).fill(0)
-  );
-  // ── FIX: date string in state, set only after mount ───────────────────────
   const [currentDate, setCurrentDate] = useState("");
-  
-  // FIX: Use ref to prevent multiple fetch calls
+
   const hasFetchedRef = useRef(false);
 
-  // FIX: Use setTimeout to avoid direct setState in effect
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setCurrentDate(
-      new Date().toLocaleDateString("en-NG", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      })
-    );
-  }, 0);
-  return () => clearTimeout(timer);
-}, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentDate(
+        new Date().toLocaleDateString("en-NG", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        })
+      );
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // ── Fetch ─────────────────────────────────────────────────────────────────
+  // ── Fetch using the real analytics endpoint ────────────────────────────────
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [ordersRes, productsRes, walletRes] = await Promise.all([
-        apiService.getSellerOrders({ page: 1, per_page: 10 }),
-        apiService.getMyProducts({ page: 1, page_size: 100 }),
-        apiService.getSellerWallet(),
+      const [analyticsRes, ordersRes] = await Promise.all([
+        apiService.getSellerAnalyticsDashboard(),
+        apiService.getSellerOrders({ page: 1, per_page: 5 }),
       ]);
 
-      // ── Orders ─────────────────────────────────────────────────────────────
+      // ── Analytics ──────────────────────────────────────────────────────────
+      const analytics = analyticsRes?.data ?? analyticsRes;
+
+      // The API returns aggregate financial earnings, fulfillment_rate,
+      // catalog_size, and 30-day daily_sales data.
+      const totalSales = Number(
+        analytics?.total_earnings ??
+          analytics?.total_revenue ??
+          analytics?.earnings ??
+          0
+      );
+      const totalOrders = Number(
+        analytics?.total_orders ?? analytics?.order_count ?? 0
+      );
+      const totalProducts = Number(
+        analytics?.catalog_size ?? analytics?.total_products ?? 0
+      );
+      const pendingOrders = Number(
+        analytics?.pending_orders ?? analytics?.pending_count ?? 0
+      );
+      const completedOrders = Number(
+        analytics?.completed_orders ??
+          analytics?.fulfilled_orders ??
+          analytics?.completed_count ??
+          0
+      );
+      const cancelledOrders = Number(
+        analytics?.cancelled_orders ?? analytics?.cancelled_count ?? 0
+      );
+      const fulfillmentRate = Number(
+        analytics?.fulfillment_rate ?? analytics?.fulfillment_percentage ?? 0
+      );
+
+      // daily_sales: [{date, amount}] or [{day, revenue}] — normalise
+      const rawDailySales: any[] =
+        analytics?.daily_sales ??
+        analytics?.sales_data ??
+        analytics?.daily_revenue ??
+        [];
+      const dailySalesData = rawDailySales.map((d: any) => ({
+        date: d.date ?? d.day ?? "",
+        amount: Number(d.amount ?? d.revenue ?? d.total ?? 0),
+      }));
+
+      // ── Recent Orders ──────────────────────────────────────────────────────
       const ordersBody = ordersRes?.data ?? ordersRes;
       const ordersList: any[] =
         ordersBody?.orders ??
@@ -425,21 +486,9 @@ useEffect(() => {
         ordersBody?.data ??
         (Array.isArray(ordersBody) ? ordersBody : []);
 
-      let pendingOrders = 0;
-      let completedOrders = 0;
-      let cancelledOrders = 0;
-
-      ordersList.forEach((o: any) => {
-        const s = (o.order_status ?? o.status ?? "").toLowerCase();
-        if (s === "pending") pendingOrders++;
-        else if (s === "completed" || s === "delivered") completedOrders++;
-        else if (s === "cancelled") cancelledOrders++;
-      });
-
       const recentOrders: Order[] = ordersList.slice(0, 5).map((o: any) => ({
         id: o.order_number ?? o.id ?? "—",
-        product:
-          o.items?.[0]?.product_name ?? o.product_name ?? "—",
+        product: o.items?.[0]?.product_name ?? o.product_name ?? "—",
         customer:
           o.buyer?.full_name ?? o.buyer?.username ?? o.customer ?? "—",
         amount: Number(o.total_amount ?? o.amount ?? 0),
@@ -452,46 +501,17 @@ useEffect(() => {
           : "—",
       }));
 
-      // ── Products ────────────────────────────────────────────────────────────
-      const productsBody = productsRes?.data ?? productsRes;
-      const totalProducts =
-        productsBody?.total ??
-        (Array.isArray(productsBody?.products)
-          ? productsBody.products.length
-          : 0);
-
-      // ── Wallet ──────────────────────────────────────────────────────────────
-      const walletBody = walletRes?.data ?? walletRes;
-      const totalSales = Number(
-        walletBody?.balance ??
-          walletBody?.available_balance ??
-          walletBody?.total_earned ??
-          0
-      );
-
-      const newStats = {
+      setStats({
         totalSales,
-        totalOrders: ordersList.length,
+        totalOrders,
         totalProducts,
         pendingOrders,
         completedOrders,
         cancelledOrders,
+        fulfillmentRate,
         recentOrders,
-      };
-
-      setStats(newStats);
-
-      // ── FIX: set monthlyChart AFTER mount (Math.random is client-only) ─────
-      if (totalSales > 0) {
-        const base = totalSales / 6;
-        setMonthlyChart(
-          new Array(12)
-            .fill(0)
-            .map(() => Math.round(base * (0.3 + Math.random() * 0.7)))
-        );
-      } else {
-        setMonthlyChart(new Array(12).fill(0));
-      }
+        dailySalesData,
+      });
     } catch (err: any) {
       setError(err.message ?? "Failed to load dashboard. Please try again.");
     } finally {
@@ -499,8 +519,6 @@ useEffect(() => {
     }
   }, []);
 
-  // FIX 2: fetchDashboard is now properly memoized with useCallback
-  // Removed the eslint-disable comment and added hasFetchedRef to prevent duplicate calls
   useEffect(() => {
     if (!hasFetchedRef.current) {
       hasFetchedRef.current = true;
@@ -508,9 +526,10 @@ useEffect(() => {
     }
   }, [fetchDashboard]);
 
+  // Spark data from daily sales amounts
+  const sparkData = stats.dailySalesData.map((d) => d.amount);
+
   return (
-    // ── FIX: SellerLayout always renders the same structure on server & client.
-    // The loading spinner no longer returns a completely different DOM tree.
     <SellerLayout
       activeNav="dashboard"
       onRefresh={fetchDashboard}
@@ -526,10 +545,7 @@ useEffect(() => {
         {/* Error */}
         {error && !loading && (
           <div className="flex items-start gap-3 rounded-2xl px-5 py-4 bg-red-50 border border-red-200">
-            <FiAlertCircle
-              size={17}
-              className="text-red-500 shrink-0 mt-0.5"
-            />
+            <FiAlertCircle size={17} className="text-red-500 shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-red-700 text-sm font-black">{error}</p>
             </div>
@@ -622,16 +638,24 @@ useEffect(() => {
                   {loading ? "…" : stats.totalOrders}
                 </span>
               </div>
-              <button
-                onClick={() => router.push("/seller/add-product")}
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-white"
-                style={{
-                  background: "linear-gradient(135deg,#F97316,#EA580C)",
-                  boxShadow: "0 4px 20px rgba(249,115,22,0.4)",
-                }}
-              >
-                <FaRocket size={13} /> New Listing
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={() => router.push("/seller/analytics")}
+                  className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition"
+                >
+                  <FiBarChart2 size={13} /> Analytics
+                </button>
+                <button
+                  onClick={() => router.push("/seller/add-product")}
+                  className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-white"
+                  style={{
+                    background: "linear-gradient(135deg,#F97316,#EA580C)",
+                    boxShadow: "0 4px 20px rgba(249,115,22,0.4)",
+                  }}
+                >
+                  <FaRocket size={13} /> New Listing
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -655,7 +679,7 @@ useEffect(() => {
               value={stats.totalSales}
               color="#F97316"
               bg="#FFF7ED"
-              sparkData={monthlyChart}
+              sparkData={sparkData}
             />
             <MetricCard
               icon={<FiShoppingBag size={18} />}
@@ -672,11 +696,12 @@ useEffect(() => {
               bg="#F0F9FF"
             />
             <MetricCard
-              icon={<FiEye size={18} />}
-              label="Pending Orders"
-              value={stats.pendingOrders}
-              color="#F97316"
-              bg="#FFF7ED"
+              icon={<FiCheckCircle size={18} />}
+              label="Fulfillment Rate"
+              value={stats.fulfillmentRate}
+              suffix="%"
+              color="#10B981"
+              bg="#F0FDF4"
             />
           </div>
         )}
@@ -747,7 +772,7 @@ useEffect(() => {
 
         {/* Charts Row */}
         <div className="grid xl:grid-cols-3 gap-5">
-          {/* Revenue Chart */}
+          {/* Revenue Chart — 30-day from analytics */}
           <div
             className="xl:col-span-2 bg-white rounded-3xl border border-slate-100 overflow-hidden"
             style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
@@ -757,14 +782,14 @@ useEffect(() => {
                 Performance
               </p>
               <p className="text-xl font-black text-slate-900 mt-1">
-                Sales Revenue
+                30-Day Sales Revenue
               </p>
               <p className="text-slate-400 text-xs font-medium mt-0.5">
-                Monthly breakdown
+                Daily breakdown
               </p>
             </div>
             <div className="px-4 pb-2" style={{ height: 220 }}>
-              <RevenueChart data={monthlyChart} />
+              <RevenueChart dailyData={stats.dailySalesData} />
             </div>
             <div
               className="grid grid-cols-3 gap-0"
@@ -892,8 +917,27 @@ useEffect(() => {
                     </div>
                   ))}
                 </div>
+                {/* Fulfillment Rate */}
                 <div
-                  className="mt-5 pt-4 flex items-center justify-between"
+                  className="mt-5 pt-4"
+                  style={{ borderTop: "1px solid #F8FAFC" }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-slate-500">
+                      Fulfillment Rate
+                    </span>
+                    <span className="text-sm font-black text-emerald-600">
+                      {stats.fulfillmentRate}%
+                    </span>
+                  </div>
+                  <AnimBar
+                    value={stats.fulfillmentRate}
+                    max={100}
+                    color="#10B981"
+                  />
+                </div>
+                <div
+                  className="mt-4 pt-3 flex items-center justify-between"
                   style={{ borderTop: "1px solid #F8FAFC" }}
                 >
                   <span className="text-xs font-semibold text-slate-400">
@@ -947,24 +991,26 @@ useEffect(() => {
                 className="grid grid-cols-6 gap-3 px-6 py-3"
                 style={{ background: "#F8FAFC" }}
               >
-                {["Order ID","Product","Customer","Amount","Status","Date"].map(
-                  (h) => (
-                    <p
-                      key={h}
-                      className="text-[10px] font-black uppercase tracking-widest text-slate-400"
-                    >
-                      {h}
-                    </p>
-                  )
-                )}
+                {[
+                  "Order ID",
+                  "Product",
+                  "Customer",
+                  "Amount",
+                  "Status",
+                  "Date",
+                ].map((h) => (
+                  <p
+                    key={h}
+                    className="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                  >
+                    {h}
+                  </p>
+                ))}
               </div>
               {loading ? (
                 <div className="divide-y divide-slate-50">
                   {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-6 gap-3 px-6 py-4"
-                    >
+                    <div key={i} className="grid grid-cols-6 gap-3 px-6 py-4">
                       {[...Array(6)].map((_, j) => (
                         <div
                           key={j}

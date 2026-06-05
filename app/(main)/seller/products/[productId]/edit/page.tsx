@@ -25,10 +25,12 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type ProductCondition = "Like New" | "Good" | "Fair" | "Poor";
+
 interface EditForm {
   product_name: string;
   product_description: string;
-  product_condition: "Like New" | "Good" | "Fair" | "Poor" | "";
+  product_condition: ProductCondition | "";
   product_original_price: string;
   is_on_sale: boolean;
   product_discount_price: string;
@@ -47,8 +49,8 @@ interface EditForm {
 interface FlashSaleCampaign {
   id: string;
   name: string;
-  start_date: string;
-  end_date: string;
+  start_time: string;
+  end_time: string;
   status: string;
 }
 
@@ -59,7 +61,17 @@ interface FlashSaleApply {
   flash_stock: string;
 }
 
-const CONDITIONS = ["Like New", "Good", "Fair", "Poor"] as const;
+interface FlashSaleStatus {
+  has_application: boolean;
+  application_id?: string;
+  flash_sale_id?: string;
+  flash_price?: number;
+  flash_stock?: number;
+  is_approved?: boolean;
+  campaign_name?: string;
+}
+
+const CONDITIONS: ProductCondition[] = ["Like New", "Good", "Fair", "Poor"];
 
 const inputCls =
   "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition placeholder-slate-400 bg-white";
@@ -81,17 +93,14 @@ const shimmerStyle: React.CSSProperties = {
   borderRadius: "0.5rem",
 };
 
-const Bone = ({
-  h = 14,
-  w = "100%",
-  radius = 8,
-  className = "",
-}: {
+interface BoneProps {
   h?: number;
   w?: string | number;
   radius?: number;
   className?: string;
-}) => (
+}
+
+const Bone = ({ h = 14, w = "100%", radius = 8, className = "" }: BoneProps) => (
   <div
     className={className}
     style={{ ...shimmerStyle, height: h, width: w, borderRadius: radius, flexShrink: 0 }}
@@ -112,7 +121,11 @@ const TextareaSkeleton = ({ rows = 4 }: { rows?: number }) => (
   </div>
 );
 
-const SectionSkeleton = ({ children }: { children: React.ReactNode }) => (
+interface SectionSkeletonProps {
+  children: React.ReactNode;
+}
+
+const SectionSkeleton = ({ children }: SectionSkeletonProps) => (
   <div
     className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
     style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.05)" }}
@@ -180,15 +193,13 @@ const LoadingSkeleton = () => (
 
 // ─── Error State ──────────────────────────────────────────────────────────────
 
-const LoadError = ({
-  message,
-  onRetry,
-  onBack,
-}: {
+interface LoadErrorProps {
   message: string;
   onRetry: () => void;
   onBack: () => void;
-}) => (
+}
+
+const LoadError = ({ message, onRetry, onBack }: LoadErrorProps) => (
   <div className="p-5 md:p-7">
     <div className="max-w-2xl mx-auto">
       <div className="bg-white rounded-3xl border border-red-100 overflow-hidden shadow-sm">
@@ -225,19 +236,15 @@ const LoadError = ({
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
-const Field = ({
-  label,
-  hint,
-  error,
-  required,
-  children,
-}: {
+interface FieldProps {
   label: string;
   hint?: string;
   error?: string;
   required?: boolean;
   children: React.ReactNode;
-}) => (
+}
+
+const Field = ({ label, hint, error, required, children }: FieldProps) => (
   <div>
     <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-1.5">
       {label}
@@ -255,15 +262,13 @@ const Field = ({
 
 // ─── Section Wrapper ──────────────────────────────────────────────────────────
 
-const Section = ({
-  title,
-  icon,
-  children,
-}: {
+interface SectionProps {
   title: string;
   icon: string;
   children: React.ReactNode;
-}) => (
+}
+
+const Section = ({ title, icon, children }: SectionProps) => (
   <div
     className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
     style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.05)" }}
@@ -278,7 +283,12 @@ const Section = ({
 
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
-const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+interface ToggleProps {
+  checked: boolean;
+  onChange: () => void;
+}
+
+const Toggle = ({ checked, onChange }: ToggleProps) => (
   <button
     type="button"
     onClick={onChange}
@@ -292,6 +302,16 @@ const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void 
 
 // ─── Image Upload Component ───────────────────────────────────────────────────
 
+interface ImageUploaderProps {
+  images: string[];
+  onImagesChange: (urls: string[]) => void;
+  label: string;
+  required?: boolean;
+  error?: string;
+  productId: string;
+  uploading?: boolean;
+}
+
 const ImageUploader = ({
   images,
   onImagesChange,
@@ -299,15 +319,9 @@ const ImageUploader = ({
   required,
   error,
   productId,
-}: {
-  images: string[];
-  onImagesChange: (urls: string[]) => void;
-  label: string;
-  required?: boolean;
-  error?: string;
-  productId: string;
-}) => {
-  const [uploading, setUploading] = useState(false);
+  uploading,
+}: ImageUploaderProps) => {
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
 
@@ -327,7 +341,7 @@ const ImageUploader = ({
       return;
     }
 
-    setUploading(true);
+    setUploadingFiles(true);
     setUploadProgress(0);
 
     try {
@@ -343,22 +357,19 @@ const ImageUploader = ({
     } catch (err: any) {
       alert(err.message || "Failed to upload images. Please try again.");
     } finally {
-      setTimeout(() => { setUploading(false); setUploadProgress(0); }, 500);
+      setTimeout(() => { setUploadingFiles(false); setUploadProgress(0); }, 500);
     }
   };
 
-  // Delete a single image from Cloudinary then remove from local state
   const removeImage = async (index: number) => {
     const url = images[index];
     setDeletingUrl(url);
     try {
-      // Only call delete API for real Cloudinary URLs (not placeholders)
       if (url && url.startsWith("http") && !url.includes("placehold.co")) {
         await apiService.deleteProductImages([url], productId);
       }
     } catch (err: any) {
-      // Non-fatal: even if Cloudinary delete fails, remove from local state
-      console.warn("Cloudinary delete failed (non-fatal):", err.message);
+      console.warn("Image delete failed (non-fatal):", err.message);
     } finally {
       setDeletingUrl(null);
       onImagesChange(images.filter((_, i) => i !== index));
@@ -372,7 +383,7 @@ const ImageUploader = ({
         {required && <span className="text-orange-500 ml-0.5">*</span>}
       </label>
 
-      {uploading && (
+      {(uploading || uploadingFiles) && (
         <div className="mb-3">
           <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
             <span className="flex items-center gap-2">
@@ -392,14 +403,14 @@ const ImageUploader = ({
 
       <label
         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer mb-3 ${
-          uploading
+          uploading || uploadingFiles
             ? "border-gray-200 bg-gray-50 opacity-50 pointer-events-none"
             : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
         }`}
       >
         <FiUpload size={16} className="text-gray-400" />
         <span className="text-sm font-medium text-gray-600">
-          {uploading ? "Uploading…" : "Click to Upload Images"}
+          {uploading || uploadingFiles ? "Uploading…" : "Click to Upload Images"}
         </span>
         <input
           type="file"
@@ -407,7 +418,7 @@ const ImageUploader = ({
           accept="image/jpeg,image/png,image/webp"
           className="hidden"
           onChange={handleFileUpload}
-          disabled={uploading}
+          disabled={uploading || uploadingFiles}
         />
       </label>
 
@@ -465,19 +476,35 @@ const ImageUploader = ({
 
 // ─── Flash Sale Section ───────────────────────────────────────────────────────
 
+interface FlashSaleSectionProps {
+  flashSale: FlashSaleApply;
+  onFlashSaleChange: (data: FlashSaleApply) => void;
+  campaigns: FlashSaleCampaign[];
+  loadingCampaigns: boolean;
+  productId: string;
+  existingStatus: FlashSaleStatus | null;
+  availableStock: number;
+  showToast: (msg: string, isError?: boolean) => void;
+  onRefresh: () => void;
+}
+
 const FlashSaleSection = ({
   flashSale,
   onFlashSaleChange,
   campaigns,
   loadingCampaigns,
-}: {
-  flashSale: FlashSaleApply;
-  onFlashSaleChange: (data: FlashSaleApply) => void;
-  campaigns: FlashSaleCampaign[];
-  loadingCampaigns: boolean;
-}) => {
+  productId,
+  existingStatus,
+  availableStock,
+  showToast,
+  onRefresh,
+}: FlashSaleSectionProps) => {
+  const [applying, setApplying] = useState(false);
+
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return "Date not set";
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "Invalid date";
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -485,6 +512,102 @@ const FlashSaleSection = ({
       minute: "2-digit",
     });
   };
+
+  const handleFlashStockChange = (value: string) => {
+    const numValue = Number(value);
+    if (availableStock > 0 && numValue > availableStock) {
+      showToast(`Flash stock cannot exceed available inventory (${availableStock} units)`, true);
+      return;
+    }
+    onFlashSaleChange({ ...flashSale, flash_stock: value });
+  };
+
+  const handleApply = async () => {
+    if (!flashSale.flash_sale_id || !flashSale.flash_price || !flashSale.flash_stock) {
+      showToast("Please fill in all flash sale fields.", true);
+      return;
+    }
+
+    const flashStockNum = Number(flashSale.flash_stock);
+    if (flashStockNum > availableStock) {
+      showToast(`Flash stock (${flashStockNum}) cannot exceed available inventory (${availableStock}). Please adjust.`, true);
+      return;
+    }
+
+    setApplying(true);
+    try {
+      await apiService.applyProductToFlashSale({
+        product_id: productId,
+        flash_sale_id: flashSale.flash_sale_id,
+        flash_price: Number(flashSale.flash_price),
+        flash_stock: flashStockNum,
+      });
+      showToast("Flash sale application submitted for admin review!");
+      onFlashSaleChange(INITIAL_FLASH_SALE);
+      onRefresh();
+    } catch (err: any) {
+      showToast(err.message || "Failed to apply for flash sale", true);
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  // Show existing application status if any
+  if (existingStatus?.has_application) {
+    const campaign = campaigns.find(c => c.id === existingStatus.flash_sale_id);
+    const isApproved = existingStatus.is_approved;
+    
+    return (
+      <div className={`rounded-xl border p-4 ${isApproved ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+        <div className="flex items-center gap-2 mb-3">
+          <FiZap size={16} className={isApproved ? "text-emerald-600" : "text-amber-600"} />
+          <span className={`text-sm font-black ${isApproved ? 'text-emerald-700' : 'text-amber-700'}`}>
+            {isApproved ? "✓ APPROVED" : "⏳ PENDING REVIEW"}
+          </span>
+        </div>
+        
+        <p className="text-sm font-bold text-slate-800 mb-2">{campaign?.name || existingStatus.campaign_name || "Flash Sale"}</p>
+        
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className="text-[10px] text-slate-500 font-medium">Flash Price</p>
+            <p className="text-base font-black text-orange-600">₦{existingStatus.flash_price?.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-medium">Flash Stock</p>
+            <p className="text-base font-black text-slate-700">{existingStatus.flash_stock} units</p>
+          </div>
+        </div>
+        
+        {!isApproved && (
+          <div className="border-t border-amber-200 pt-3 mt-2">
+            <p className="text-[11px] text-amber-600 font-medium mb-2">
+              Note: To update or withdraw this application, please contact admin support.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (loadingCampaigns) {
+    return (
+      <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+        <FiLoader size={14} className="animate-spin text-orange-400" />
+        Loading active campaigns…
+      </div>
+    );
+  }
+
+  if (campaigns.length === 0) {
+    return (
+      <div className="rounded-xl bg-slate-50 p-4 text-center">
+        <FiClock size={18} className="text-slate-300 mx-auto mb-2" />
+        <p className="text-sm text-slate-500">No active flash sales available</p>
+        <p className="text-xs text-slate-400 mt-1">Check back later</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -514,67 +637,83 @@ const FlashSaleSection = ({
 
       {flashSale.enabled && (
         <div className="space-y-4 border-l-2 border-orange-200 pl-4">
-          {loadingCampaigns ? (
-            <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
-              <FiLoader size={14} className="animate-spin text-orange-400" />
-              Loading active campaigns…
-            </div>
-          ) : campaigns.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 p-4 text-center">
-              <FiClock size={18} className="text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">No active flash sales available</p>
-              <p className="text-xs text-slate-400 mt-1">Check back later</p>
-            </div>
-          ) : (
-            <>
-              <Field label="Select Campaign" required>
-                <select
-                  className={inputCls}
-                  value={flashSale.flash_sale_id}
-                  onChange={(e) => onFlashSaleChange({ ...flashSale, flash_sale_id: e.target.value })}
-                >
-                  <option value="">Select a flash sale campaign</option>
-                  {campaigns.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} — {formatDate(c.start_date)} to {formatDate(c.end_date)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+          <Field label="Select Campaign" required>
+            <select
+              className={inputCls}
+              value={flashSale.flash_sale_id}
+              onChange={(e) => onFlashSaleChange({ ...flashSale, flash_sale_id: e.target.value })}
+            >
+              <option value="">Select a flash sale campaign</option>
+              {campaigns.map((c) => {
+                const startDisplay = formatDate(c.start_time);
+                const endDisplay = formatDate(c.end_time);
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.name} —{" "}
+                    {startDisplay !== "Invalid date" && startDisplay !== "Date not set"
+                      ? startDisplay
+                      : "TBD"}{" "}
+                    to{" "}
+                    {endDisplay !== "Invalid date" && endDisplay !== "Date not set"
+                      ? endDisplay
+                      : "TBD"}
+                  </option>
+                );
+              })}
+            </select>
+          </Field>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Flash Sale Price (₦)" required>
-                  <input
-                    className={inputCls}
-                    type="number"
-                    min="0"
-                    step="100"
-                    placeholder="Discounted price"
-                    value={flashSale.flash_price}
-                    onChange={(e) => onFlashSaleChange({ ...flashSale, flash_price: e.target.value })}
-                  />
-                </Field>
-                <Field label="Flash Sale Stock" required hint="Limited quantity for flash sale">
-                  <input
-                    className={inputCls}
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="Units to allocate"
-                    value={flashSale.flash_stock}
-                    onChange={(e) => onFlashSaleChange({ ...flashSale, flash_stock: e.target.value })}
-                  />
-                </Field>
-              </div>
-
-              <div className="flex items-start gap-2 py-2 px-3 rounded-xl bg-amber-50 border border-amber-100">
-                <FiInfo size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-700 font-medium">
-                  Admin approval is required before the flash sale price activates. Applying doesn't guarantee acceptance.
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Flash Sale Price (₦)" required>
+              <input
+                className={inputCls}
+                type="number"
+                min="0"
+                step="100"
+                placeholder="Discounted price"
+                value={flashSale.flash_price}
+                onChange={(e) => onFlashSaleChange({ ...flashSale, flash_price: e.target.value })}
+              />
+            </Field>
+            <Field label="Flash Sale Stock" required hint="Limited quantity for flash sale">
+              <input
+                className={inputCls}
+                type="number"
+                min="1"
+                max={availableStock || undefined}
+                step="1"
+                placeholder="Units to allocate"
+                value={flashSale.flash_stock}
+                onChange={(e) => handleFlashStockChange(e.target.value)}
+              />
+              {availableStock > 0 && (
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Available inventory: {availableStock} units
                 </p>
-              </div>
-            </>
-          )}
+              )}
+            </Field>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleApply}
+            disabled={applying || !flashSale.flash_sale_id || !flashSale.flash_price || !flashSale.flash_stock}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-60"
+            style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.25)" }}
+          >
+            {applying ? (
+              <><FiLoader size={13} className="animate-spin" /> Applying…</>
+            ) : (
+              <><FiZap size={13} /> Apply for Flash Sale</>
+            )}
+          </button>
+
+          <div className="flex items-start gap-2 py-2 px-3 rounded-xl bg-amber-50 border border-amber-100">
+            <FiInfo size={14} className="text-amber-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-amber-700 font-medium">
+              Admin approval is required before the flash sale price activates. Applying doesn't guarantee acceptance.
+            </p>
+          </div>
         </div>
       )}
     </div>
@@ -621,12 +760,15 @@ const EditProductPage = () => {
 
   const [flashSale, setFlashSale] = useState<FlashSaleApply>(INITIAL_FLASH_SALE);
   const [flashSaleCampaigns, setFlashSaleCampaigns] = useState<FlashSaleCampaign[]>([]);
+  const [flashSaleStatus, setFlashSaleStatus] = useState<FlashSaleStatus | null>(null);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
-  const [applyingFlashSale, setApplyingFlashSale] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [flashSaleError, setFlashSaleError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof EditForm, string>>>({});
   const [apiError, setApiError] = useState("");
   const [toastMsg, setToastMsg] = useState("");
@@ -704,33 +846,84 @@ const EditProductPage = () => {
     }
   }, [productId]);
 
+  // ── Load flash sale status for this product ─────────────────────────────────
+  const fetchFlashSaleStatus = useCallback(async () => {
+    if (!productId) return;
+    
+    setLoadingStatus(true);
+    setFlashSaleError(null);
+    
+    try {
+      const response = await apiService.getProductFlashSaleStatus(productId);
+      const data = response?.data ?? response;
+      
+      if (data && data.has_application) {
+        setFlashSaleStatus({
+          has_application: data.has_application,
+          application_id: data.application_id,
+          flash_sale_id: data.flash_sale_id,
+          flash_price: data.flash_price,
+          flash_stock: data.flash_stock,
+          is_approved: data.is_approved,
+          campaign_name: data.campaign_name,
+        });
+      } else {
+        setFlashSaleStatus({ has_application: false });
+      }
+    } catch (err: any) {
+      // Don't treat 404 as an error - it just means no flash sale application exists
+      if (err.message?.includes("404") || err.message?.includes("Not Found")) {
+        console.log("No flash sale application found for this product");
+        setFlashSaleStatus({ has_application: false });
+      } else {
+        console.error("Failed to fetch flash sale status:", err);
+        setFlashSaleError(err.message || "Failed to load flash sale status");
+        setFlashSaleStatus({ has_application: false });
+      }
+    } finally {
+      setLoadingStatus(false);
+    }
+  }, [productId]);
+
   // ── Load flash sale campaigns ─────────────────────────────────────────────
   const fetchFlashSaleCampaigns = useCallback(async () => {
     setLoadingCampaigns(true);
     try {
-      const response = await apiService.getActiveFlashSaleCampaign();
+      const response = await apiService.getSellerFlashSaleCampaigns("current");
       const data = response?.data ?? response;
       let campaigns: FlashSaleCampaign[] = [];
-      if (Array.isArray(data)) campaigns = data;
-      else if (data?.campaign && typeof data.campaign === "object") campaigns = [data.campaign];
-      else if (data?.id) campaigns = [data];
-      else if (Array.isArray(data?.campaigns)) campaigns = data.campaigns;
-      else if (data?.data && Array.isArray(data.data)) campaigns = data.data;
+      
+      if (Array.isArray(data)) {
+        campaigns = data;
+      } else if (data?.campaigns && Array.isArray(data.campaigns)) {
+        campaigns = data.campaigns;
+      } else if (data?.data && Array.isArray(data.data)) {
+        campaigns = data.data;
+      } else if (data?.id) {
+        campaigns = [data];
+      }
+      
       setFlashSaleCampaigns(
         campaigns.map((c: any) => ({
           id: c.id,
-          name: c.name || c.campaign_name || "Flash Sale",
-          start_date: c.start_date,
-          end_date: c.end_date,
-          status: c.status || "active",
-        })),
+          name: c.name || c.campaign_name || c.title || "Flash Sale",
+          start_time: c.start_time || c.start_date || c.startTime,
+          end_time: c.end_time || c.end_date || c.endTime,
+          status: c.status || "current",
+        }))
       );
-    } catch {
+    } catch (err: any) {
+      console.error("Failed to fetch flash sale campaigns:", err);
       setFlashSaleCampaigns([]);
     } finally {
       setLoadingCampaigns(false);
     }
   }, []);
+
+  const refreshFlashSaleData = useCallback(() => {
+    fetchFlashSaleCampaigns();
+    fetchFlashSaleStatus();
+  }, [fetchFlashSaleCampaigns, fetchFlashSaleStatus]);
 
   useEffect(() => {
     if (!hasLoadedRef.current && productId) {
@@ -743,11 +936,12 @@ const EditProductPage = () => {
   }, [loadProduct, productId]);
 
   useEffect(() => {
-    if (!hasFetchedCampaignsRef.current) {
+    if (!hasFetchedCampaignsRef.current && productId) {
       hasFetchedCampaignsRef.current = true;
       fetchFlashSaleCampaigns();
+      fetchFlashSaleStatus();
     }
-  }, [fetchFlashSaleCampaigns]);
+  }, [fetchFlashSaleCampaigns, fetchFlashSaleStatus, productId]);
 
   const CRITICAL_FIELDS: (keyof EditForm)[] = [
     "product_original_price",
@@ -788,33 +982,11 @@ const EditProductPage = () => {
     return Object.keys(e).length === 0;
   };
 
-  const handleApplyFlashSale = async () => {
-    if (!flashSale.enabled) return;
-    if (!flashSale.flash_sale_id || !flashSale.flash_price || !flashSale.flash_stock) {
-      showToast("Please fill in all flash sale fields.", true);
-      return;
-    }
-    setApplyingFlashSale(true);
-    try {
-      await apiService.applyProductToFlashSale({
-        product_id: productId,
-        flash_sale_id: flashSale.flash_sale_id,
-        flash_price: Number(flashSale.flash_price),
-        flash_stock: Number(flashSale.flash_stock),
-      });
-      showToast("Flash sale application submitted for admin review!");
-      setFlashSale(INITIAL_FLASH_SALE);
-    } catch (err: any) {
-      showToast(err.message || "Failed to apply for flash sale", true);
-    } finally {
-      setApplyingFlashSale(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!validate()) return;
     setSubmitting(true);
     setApiError("");
+    setUploading(true);
     try {
       await apiService.updateProduct(productId, {
         product_name: form.product_name.trim(),
@@ -835,11 +1007,6 @@ const EditProductPage = () => {
         product_videos: form.product_videos,
       });
 
-      // Also apply flash sale if enabled
-      if (flashSale.enabled && flashSale.flash_sale_id) {
-        await handleApplyFlashSale();
-      }
-
       showToast(
         willReset
           ? "Product updated. Sent for re-review due to critical changes."
@@ -850,8 +1017,11 @@ const EditProductPage = () => {
       setApiError(err.message ?? "Failed to update product.");
     } finally {
       setSubmitting(false);
+      setUploading(false);
     }
   };
+
+  const availableStock = Number(form.stock_quantity) || 0;
 
   useEffect(() => {
     return () => {
@@ -1076,31 +1246,34 @@ const EditProductPage = () => {
                 required
                 error={(errors as any).product_images}
                 productId={productId}
+                uploading={uploading}
               />
             </Section>
 
             {/* ── Flash Sale ── */}
             <Section title="Flash Sale" icon="⚡">
-              <FlashSaleSection
-                flashSale={flashSale}
-                onFlashSaleChange={setFlashSale}
-                campaigns={flashSaleCampaigns}
-                loadingCampaigns={loadingCampaigns}
-              />
-              {flashSale.enabled && flashSale.flash_sale_id && flashSale.flash_price && flashSale.flash_stock && (
-                <button
-                  type="button"
-                  onClick={handleApplyFlashSale}
-                  disabled={applyingFlashSale}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.25)" }}
-                >
-                  {applyingFlashSale ? (
-                    <><FiLoader size={13} className="animate-spin" /> Applying…</>
-                  ) : (
-                    <><FiZap size={13} /> Apply for Flash Sale Now</>
-                  )}
-                </button>
+              {flashSaleError ? (
+                <div className="rounded-xl bg-yellow-50 border border-yellow-200 p-4">
+                  <div className="flex items-start gap-2">
+                    <FiInfo size={16} className="text-yellow-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-800">Flash Sale Unavailable</p>
+                      <p className="text-xs text-yellow-700 mt-1">{flashSaleError}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <FlashSaleSection
+                  flashSale={flashSale}
+                  onFlashSaleChange={setFlashSale}
+                  campaigns={flashSaleCampaigns}
+                  loadingCampaigns={loadingCampaigns || loadingStatus}
+                  productId={productId}
+                  existingStatus={flashSaleStatus}
+                  availableStock={availableStock}
+                  showToast={showToast}
+                  onRefresh={refreshFlashSaleData}
+                />
               )}
             </Section>
 

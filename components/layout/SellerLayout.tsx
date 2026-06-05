@@ -164,6 +164,12 @@ const SellerLayout = ({
       badge: stats.totalProducts,
     },
     {
+      id: "analytics",
+      icon: <FiBarChart2 size={17} />,
+      label: "Analytics",
+      to: "/seller/analytics",
+    },
+    {
       id: "orders",
       icon: <FiShoppingBag size={17} />,
       label: "Orders",
