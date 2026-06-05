@@ -319,25 +319,12 @@ function ImageUploadField({
     try {
       let uploadedUrl = "";
 
-      if (entityId) {
-        if (uploadType === "provider_logo") {
-          const result = await apiService.uploadProviderLogo(file, entityId);
-          uploadedUrl = result.primary_url || result.urls?.[0];
-        } else if (uploadType === "provider_cover") {
-          const result = await apiService.uploadProviderCover(file, entityId);
-          uploadedUrl = result.primary_url || result.urls?.[0];
-        } else {
-          const result = await apiService.uploadFiles(
-            [file],
-            uploadType,
-            entityId,
-          );
-          uploadedUrl = result.primary_url || result.urls?.[0];
-        }
-      } else {
-        const result = await apiService.uploadFiles([file], uploadType);
-        uploadedUrl = result.primary_url || result.urls?.[0];
-      }
+      const result = await apiService.uploadFiles(
+        [file],
+        uploadType,
+        entityId || undefined,
+      );
+      uploadedUrl = result.primary_url || result.urls?.[0];
 
       clearInterval(progressInterval);
       setUploadProgress(100);
