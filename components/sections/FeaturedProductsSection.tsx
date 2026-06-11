@@ -421,7 +421,6 @@ export default function FeaturedProductsSection() {
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const fetchCategoriesAndProducts = useCallback(async () => {
-    setLoading(true);
     try {
       console.log('[FeaturedProducts] Fetching categories like HeroSection...');
       
@@ -516,7 +515,8 @@ export default function FeaturedProductsSection() {
 
   useEffect(() => {
     fetchCategoriesAndProducts();
-  }, [fetchCategoriesAndProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const displayTabs: Tab[] = useMemo(() => [
     { label: "All", value: "all", icon: faLayerGroup },
