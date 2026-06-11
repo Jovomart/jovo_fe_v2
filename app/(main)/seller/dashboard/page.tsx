@@ -12,7 +12,6 @@ import {
   FiCheckCircle,
   FiClock,
   FiRefreshCw,
-  FiEye,
   FiArrowUpRight,
   FiChevronRight,
   FiBarChart2,
@@ -99,7 +98,6 @@ const RevenueChart = ({
 }: {
   dailyData: { date: string; amount: number }[];
 }) => {
-  // Show last 30 points (or pad with 0s if fewer)
   const chartData =
     dailyData.length > 0
       ? dailyData.slice(-30)
@@ -116,7 +114,7 @@ const RevenueChart = ({
   const maxVal = Math.max(...chartData.map((d) => d.amount), 1);
 
   const pts = chartData.map((d, i) => ({
-    x: PAD.l + (i / (Math.max(chartData.length - 1, 1))) * innerW,
+    x: PAD.l + (i / Math.max(chartData.length - 1, 1)) * innerW,
     y: PAD.t + (1 - d.amount / maxVal) * innerH,
   }));
 
@@ -129,9 +127,6 @@ const RevenueChart = ({
     val: Math.round((maxVal * (1 - r)) / 1000),
     idx,
   }));
-
-  // Show every 5th label on the x-axis to avoid clutter
-  const xLabels = chartData.filter((_, i) => i % 5 === 0 || i === chartData.length - 1);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full">
@@ -173,8 +168,7 @@ const RevenueChart = ({
         strokeLinejoin="round"
       />
       {chartData.map((d, i) => {
-        const showLabel =
-          i % 5 === 0 || i === chartData.length - 1;
+        const showLabel = i % 5 === 0 || i === chartData.length - 1;
         if (!showLabel) return null;
         const label = d.date
           ? new Date(d.date).toLocaleDateString("en-NG", {
@@ -423,74 +417,101 @@ const SellerDashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // ── Fetch using the real analytics endpoint ────────────────────────────────
-
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [analyticsRes, ordersRes] = await Promise.all([
-        apiService.getSellerAnalyticsDashboard(),
-        apiService.getSellerOrders({ page: 1, per_page: 5 }),
-      ]);
+      // Single endpoint powers the entire dashboard
+      const res = await apiService.getSellerDashboard(); // GET /seller/dashboard
 
-      // ── Analytics ──────────────────────────────────────────────────────────
-      const analytics = analyticsRes?.data ?? analyticsRes;
+      // The response may be wrapped in a `data` key or returned directly
+      const d = res?.data ?? res;
 
-      // The API returns aggregate financial earnings, fulfillment_rate,
-      // catalog_size, and 30-day daily_sales data.
+      // ── Financial snapshot ──────────────────────────────────────────────────
       const totalSales = Number(
-        analytics?.total_earnings ??
-          analytics?.total_revenue ??
-          analytics?.earnings ??
+        d?.total_earnings ??
+          d?.financial_snapshot?.total_earnings ??
+          d?.total_revenue ??
+          d?.earnings ??
           0
       );
+
+      // ── Orders ──────────────────────────────────────────────────────────────
       const totalOrders = Number(
-        analytics?.total_orders ?? analytics?.order_count ?? 0
-      );
-      const totalProducts = Number(
-        analytics?.catalog_size ?? analytics?.total_products ?? 0
+        d?.total_orders ??
+          d?.order_pipeline?.total_orders ??
+          d?.order_count ??
+          0
       );
       const pendingOrders = Number(
-        analytics?.pending_orders ?? analytics?.pending_count ?? 0
+        d?.pending_orders ??
+          d?.order_pipeline?.pending_orders ??
+          d?.pending_count ??
+          0
       );
       const completedOrders = Number(
-        analytics?.completed_orders ??
-          analytics?.fulfilled_orders ??
-          analytics?.completed_count ??
+        d?.completed_orders ??
+          d?.order_pipeline?.completed_orders ??
+          d?.fulfilled_orders ??
+          d?.completed_count ??
           0
       );
       const cancelledOrders = Number(
-        analytics?.cancelled_orders ?? analytics?.cancelled_count ?? 0
-      );
-      const fulfillmentRate = Number(
-        analytics?.fulfillment_rate ?? analytics?.fulfillment_percentage ?? 0
+        d?.cancelled_orders ??
+          d?.order_pipeline?.cancelled_orders ??
+          d?.cancelled_count ??
+          0
       );
 
-      // daily_sales: [{date, amount}] or [{day, revenue}] — normalise
+      // ── KPIs ────────────────────────────────────────────────────────────────
+      const fulfillmentRate = Number(
+        d?.fulfillment_rate ??
+          d?.kpis?.fulfillment_rate ??
+          d?.fulfillment_percentage ??
+          0
+      );
+
+      // ── Catalog size ────────────────────────────────────────────────────────
+      const totalProducts = Number(
+        d?.catalog_size ??
+          d?.total_products ??
+          d?.store_identity?.total_listings ??
+          d?.kpis?.catalog_size ??
+          0
+      );
+
+      // ── Daily sales (30-day brand health) ───────────────────────────────────
       const rawDailySales: any[] =
-        analytics?.daily_sales ??
-        analytics?.sales_data ??
-        analytics?.daily_revenue ??
+        d?.daily_sales ??
+        d?.brand_health?.daily_sales ??
+        d?.sales_data ??
+        d?.daily_revenue ??
         [];
-      const dailySalesData = rawDailySales.map((d: any) => ({
-        date: d.date ?? d.day ?? "",
-        amount: Number(d.amount ?? d.revenue ?? d.total ?? 0),
+      const dailySalesData = rawDailySales.map((item: any) => ({
+        date: item.date ?? item.day ?? "",
+        amount: Number(item.amount ?? item.revenue ?? item.total ?? 0),
       }));
 
-      // ── Recent Orders ──────────────────────────────────────────────────────
-      const ordersBody = ordersRes?.data ?? ordersRes;
+      // ── Recent orders (last 5) ───────────────────────────────────────────────
       const ordersList: any[] =
-        ordersBody?.orders ??
-        ordersBody?.items ??
-        ordersBody?.data ??
-        (Array.isArray(ordersBody) ? ordersBody : []);
+        d?.recent_orders ??
+        d?.last_orders ??
+        d?.orders ??
+        [];
 
       const recentOrders: Order[] = ordersList.slice(0, 5).map((o: any) => ({
         id: o.order_number ?? o.id ?? "—",
-        product: o.items?.[0]?.product_name ?? o.product_name ?? "—",
+        product:
+          o.items?.[0]?.product_name ??
+          o.product_name ??
+          o.first_product ??
+          "—",
         customer:
-          o.buyer?.full_name ?? o.buyer?.username ?? o.customer ?? "—",
+          o.buyer?.full_name ??
+          o.buyer?.username ??
+          o.customer_name ??
+          o.customer ??
+          "—",
         amount: Number(o.total_amount ?? o.amount ?? 0),
         status: o.order_status ?? o.status ?? "pending",
         date: o.created_at
@@ -526,7 +547,6 @@ const SellerDashboard = () => {
     }
   }, [fetchDashboard]);
 
-  // Spark data from daily sales amounts
   const sparkData = stats.dailySalesData.map((d) => d.amount);
 
   return (
@@ -772,7 +792,7 @@ const SellerDashboard = () => {
 
         {/* Charts Row */}
         <div className="grid xl:grid-cols-3 gap-5">
-          {/* Revenue Chart — 30-day from analytics */}
+          {/* Revenue Chart */}
           <div
             className="xl:col-span-2 bg-white rounded-3xl border border-slate-100 overflow-hidden"
             style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
@@ -917,7 +937,6 @@ const SellerDashboard = () => {
                     </div>
                   ))}
                 </div>
-                {/* Fulfillment Rate */}
                 <div
                   className="mt-5 pt-4"
                   style={{ borderTop: "1px solid #F8FAFC" }}

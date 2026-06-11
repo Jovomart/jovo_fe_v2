@@ -15,6 +15,9 @@ import {
   FiArrowUpRight,
   FiArrowDownRight,
   FiSearch,
+  FiDollarSign,
+  FiCheckCircle,
+  FiClock,
 } from "react-icons/fi";
 import { MdOutlineInventory2 } from "react-icons/md";
 
@@ -43,7 +46,27 @@ interface DashboardAnalytics {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const fmt = (n: number) => n?.toLocaleString() ?? "0";
+const fmt = (n: number) => (n ?? 0).toLocaleString();
+
+// Safely extract a number from multiple possible keys in an object
+const pick = (obj: any, ...keys: string[]): number => {
+  for (const key of keys) {
+    const val = obj?.[key];
+    if (val != null && !isNaN(Number(val))) return Number(val);
+  }
+  return 0;
+};
+
+// Safely extract an array from multiple possible keys in an object
+const pickArr = (obj: any, ...keys: string[]): any[] => {
+  for (const key of keys) {
+    const val = obj?.[key];
+    if (Array.isArray(val) && val.length > 0) return val;
+  }
+  return [];
+};
+
+// ─── Conversion bar ───────────────────────────────────────────────────────────
 
 const ConversionBar = ({
   value,
@@ -62,11 +85,7 @@ const ConversionBar = ({
   }, [value, max]);
 
   const color =
-    value >= 10
-      ? "#10B981"
-      : value >= 5
-      ? "#F97316"
-      : "#EF4444";
+    value >= 10 ? "#10B981" : value >= 5 ? "#F97316" : "#EF4444";
 
   return (
     <div className="flex items-center gap-2">
@@ -83,13 +102,13 @@ const ConversionBar = ({
         className="text-[11px] font-black w-10 text-right"
         style={{ color }}
       >
-        {value?.toFixed(1) ?? "0.0"}%
+        {(value ?? 0).toFixed(1)}%
       </span>
     </div>
   );
 };
 
-// ─── Summary Card ──────────────────────────────────────────────────────────
+// ─── Summary Card ─────────────────────────────────────────────────────────────
 
 const SummaryCard = ({
   icon,
@@ -109,21 +128,21 @@ const SummaryCard = ({
   suffix?: string;
 }) => (
   <div
-    className="bg-white rounded-2xl p-5 border border-slate-100"
+    className="bg-white rounded-2xl p-5 border border-slate-100 transition-all hover:-translate-y-0.5 hover:shadow-lg"
     style={{ boxShadow: "0 1px 12px rgba(0,0,0,0.04)" }}
   >
     <div
-      className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+      className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
       style={{ background: bg, color }}
     >
       {icon}
     </div>
-    <p className="text-xl font-black text-slate-900">
+    <p className="text-2xl font-black text-slate-900 leading-none">
       {prefix}
       {typeof value === "number" ? value.toLocaleString() : value}
       {suffix}
     </p>
-    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
+    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mt-1">
       {label}
     </p>
   </div>
@@ -139,7 +158,11 @@ const SellerAnalyticsPage = () => {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<
-    "views" | "add_to_carts" | "units_sold" | "conversion_rate" | "revenue"
+    | "views"
+    | "add_to_carts"
+    | "units_sold"
+    | "conversion_rate"
+    | "revenue"
   >("units_sold");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 
@@ -149,68 +172,115 @@ const SellerAnalyticsPage = () => {
     setLoading(true);
     setError("");
     try {
-      const [dashRes, productsRes] = await Promise.all([
-        apiService.getSellerAnalyticsDashboard(),
-        apiService.getSellerProductAnalytics(),
+      // Fetch analytics dashboard, per-product analytics, and product count.
+      // We run them in parallel and handle each independently so a partial
+      // failure on one doesn't kill the whole page.
+      const results = await Promise.allSettled([
+        apiService.getSellerAnalyticsDashboard(), // GET /seller/analytics/dashboard
+        apiService.getSellerProductAnalytics(),   // GET /seller/analytics/products
+        apiService.getMyProducts({ page: 1, page_size: 1 }), // for catalog count
       ]);
 
-      // Dashboard summary
-      const dash = dashRes?.data ?? dashRes;
+      const dashRes =
+        results[0].status === "fulfilled" ? results[0].value : null;
+      const productsRes =
+        results[1].status === "fulfilled" ? results[1].value : null;
+      const myProductsRes =
+        results[2].status === "fulfilled" ? results[2].value : null;
+
+      // Surface the first actual error so users know something went wrong,
+      // but still render whatever data we did receive.
+      const firstError = results.find((r) => r.status === "rejected") as
+        | PromiseRejectedResult
+        | undefined;
+      if (firstError && !dashRes && !productsRes) {
+        throw new Error(
+          firstError.reason?.message ?? "Failed to load analytics."
+        );
+      }
+
+      // ── Dashboard summary ────────────────────────────────────────────────
+      // Unwrap possible `data` wrapper
+      const dash = dashRes?.data ?? dashRes ?? {};
+
+      // Live product count — sourced from /seller/products/my-products pagination
+      const myPB = myProductsRes?.data ?? myProductsRes ?? {};
+      const catalogSize = pick(
+        myPB,
+        "total",
+        "total_count",
+        "count",
+        "pagination.total"
+      ) || pick(dash, "catalog_size", "total_products");
+
       setDashboardStats({
-        total_earnings: Number(
-          dash?.total_earnings ?? dash?.total_revenue ?? dash?.earnings ?? 0
+        total_earnings: pick(
+          dash,
+          "total_earnings",
+          "total_revenue",
+          "earnings"
         ),
-        total_orders: Number(
-          dash?.total_orders ?? dash?.order_count ?? 0
+        total_orders: pick(dash, "total_orders", "order_count"),
+        catalog_size: catalogSize,
+        pending_orders: pick(dash, "pending_orders", "pending_count"),
+        completed_orders: pick(
+          dash,
+          "completed_orders",
+          "fulfilled_orders",
+          "completed_count"
         ),
-        catalog_size: Number(
-          dash?.catalog_size ?? dash?.total_products ?? 0
+        cancelled_orders: pick(
+          dash,
+          "cancelled_orders",
+          "cancelled_count"
         ),
-        pending_orders: Number(
-          dash?.pending_orders ?? dash?.pending_count ?? 0
-        ),
-        completed_orders: Number(
-          dash?.completed_orders ??
-            dash?.fulfilled_orders ??
-            dash?.completed_count ??
-            0
-        ),
-        cancelled_orders: Number(
-          dash?.cancelled_orders ?? dash?.cancelled_count ?? 0
-        ),
-        fulfillment_rate: Number(
-          dash?.fulfillment_rate ?? dash?.fulfillment_percentage ?? 0
+        fulfillment_rate: pick(
+          dash,
+          "fulfillment_rate",
+          "fulfillment_percentage"
         ),
       });
 
-      // Per-product analytics — normalise various possible shapes
-      const raw = productsRes?.data ?? productsRes;
-      const list: any[] =
-        raw?.products ??
-        raw?.items ??
-        raw?.analytics ??
-        (Array.isArray(raw) ? raw : []);
+      // ── Per-product analytics ────────────────────────────────────────────
+      // Unwrap possible `data` wrapper
+      const raw = productsRes?.data ?? productsRes ?? {};
 
-      const normalised: ProductAnalytic[] = list.map((p: any) => ({
+      // The list might live under different keys depending on the API version
+      const list: any[] = pickArr(
+        raw,
+        "products",
+        "items",
+        "analytics",
+        "data"
+      );
+
+      // If `raw` itself is an array, use it directly
+      const finalList = list.length > 0
+        ? list
+        : Array.isArray(raw)
+        ? raw
+        : [];
+
+      const normalised: ProductAnalytic[] = finalList.map((p: any) => ({
         product_id: p.product_id ?? p.id ?? "",
         product_name: p.product_name ?? p.name ?? "—",
-        product_image: p.product_image ?? p.image_url ?? p.thumbnail,
-        views: Number(p.views ?? p.view_count ?? 0),
-        add_to_carts: Number(
-          p.add_to_carts ?? p.cart_adds ?? p.cart_count ?? 0
-        ),
-        units_sold: Number(
-          p.units_sold ?? p.sold ?? p.total_units_sold ?? 0
-        ),
-        conversion_rate: Number(
-          p.conversion_rate ?? p.conversion ?? 0
-        ),
-        revenue: p.revenue != null ? Number(p.revenue) : undefined,
+        product_image:
+          p.product_image ?? p.image_url ?? p.thumbnail ?? undefined,
+        views: pick(p, "views", "view_count"),
+        add_to_carts: pick(p, "add_to_carts", "cart_adds", "cart_count"),
+        units_sold: pick(p, "units_sold", "sold", "total_units_sold"),
+        conversion_rate: pick(p, "conversion_rate", "conversion"),
+        revenue:
+          p.revenue != null
+            ? Number(p.revenue)
+            : p.total_revenue != null
+            ? Number(p.total_revenue)
+            : undefined,
       }));
 
       setProducts(normalised);
     } catch (err: any) {
-      setError(err.message ?? "Failed to load analytics.");
+      setError(err.message ?? "Failed to load analytics. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -223,7 +293,7 @@ const SellerAnalyticsPage = () => {
     }
   }, [fetchAnalytics]);
 
-  // Totals from products
+  // Totals derived from per-product data
   const totals = products.reduce(
     (acc, p) => ({
       views: acc.views + p.views,
@@ -239,8 +309,6 @@ const SellerAnalyticsPage = () => {
       : 0;
 
   // Sort + filter
-  const maxVal = Math.max(...products.map((p) => Number(p[sortBy] ?? 0)), 1);
-
   const displayed = products
     .filter((p) =>
       p.product_name.toLowerCase().includes(search.toLowerCase())
@@ -252,7 +320,12 @@ const SellerAnalyticsPage = () => {
     });
 
   const toggleSort = (
-    col: "views" | "add_to_carts" | "units_sold" | "conversion_rate" | "revenue"
+    col:
+      | "views"
+      | "add_to_carts"
+      | "units_sold"
+      | "conversion_rate"
+      | "revenue"
   ) => {
     if (sortBy === col) {
       setSortDir((d) => (d === "desc" ? "asc" : "desc"));
@@ -279,7 +352,8 @@ const SellerAnalyticsPage = () => {
       pageTitle="Analytics"
     >
       <div className="p-5 md:p-7 space-y-6">
-        {/* Error */}
+
+        {/* Error banner */}
         {error && (
           <div className="flex items-center gap-3 rounded-2xl px-5 py-4 bg-red-50 border border-red-200">
             <FiAlertCircle size={16} className="text-red-500 shrink-0" />
@@ -288,14 +362,14 @@ const SellerAnalyticsPage = () => {
             </p>
             <button
               onClick={fetchAnalytics}
-              className="text-xs font-bold text-red-600 flex items-center gap-1"
+              className="text-xs font-bold text-red-600 flex items-center gap-1 hover:text-red-800 transition-colors"
             >
               <FiRefreshCw size={12} /> Retry
             </button>
           </div>
         )}
 
-        {/* Hero */}
+        {/* Hero banner */}
         <div
           className="relative rounded-3xl overflow-hidden"
           style={{
@@ -304,18 +378,22 @@ const SellerAnalyticsPage = () => {
             minHeight: 120,
           }}
         >
+          {/* Glow blobs */}
           <div
-            className="absolute -left-16 -top-16 w-64 h-64 rounded-full opacity-30"
+            className="absolute -left-16 -top-16 w-64 h-64 rounded-full opacity-30 pointer-events-none"
             style={{
-              background: "radial-gradient(circle,#6366F1 0%,transparent 70%)",
+              background:
+                "radial-gradient(circle,#6366F1 0%,transparent 70%)",
             }}
           />
           <div
-            className="absolute right-0 bottom-0 w-56 h-56 rounded-full opacity-20"
+            className="absolute right-0 bottom-0 w-56 h-56 rounded-full opacity-20 pointer-events-none"
             style={{
-              background: "radial-gradient(circle,#F97316 0%,transparent 70%)",
+              background:
+                "radial-gradient(circle,#F97316 0%,transparent 70%)",
             }}
           />
+          {/* Dot grid */}
           <div
             className="absolute inset-0"
             style={{
@@ -341,47 +419,59 @@ const SellerAnalyticsPage = () => {
                 Product Performance
               </p>
               <p className="text-slate-400 text-sm font-medium mt-0.5">
-                Views, cart adds, conversions & sales per product
+                Views, cart adds, conversions &amp; sales per product
               </p>
             </div>
+            {/* Refresh button */}
+            <button
+              onClick={fetchAnalytics}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white border border-white/20 hover:bg-white/10 transition-colors disabled:opacity-50"
+            >
+              <FiRefreshCw
+                size={13}
+                className={loading ? "animate-spin" : ""}
+              />{" "}
+              Refresh
+            </button>
           </div>
         </div>
 
-        {/* Summary Cards — 4 across */}
+        {/* Summary cards */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="h-28 rounded-2xl bg-slate-100 animate-pulse"
+                className="h-32 rounded-2xl bg-slate-100 animate-pulse"
               />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <SummaryCard
-              icon={<FiEye size={17} />}
+              icon={<FiEye size={18} />}
               label="Total Views"
               value={totals.views}
               color="#6366F1"
               bg="#EEF2FF"
             />
             <SummaryCard
-              icon={<FiShoppingCart size={17} />}
+              icon={<FiShoppingCart size={18} />}
               label="Cart Adds"
               value={totals.carts}
               color="#F97316"
               bg="#FFF7ED"
             />
             <SummaryCard
-              icon={<FiPackage size={17} />}
+              icon={<FiPackage size={18} />}
               label="Units Sold"
               value={totals.sold}
-              color="#059669"
+              color="#10B981"
               bg="#F0FDF4"
             />
             <SummaryCard
-              icon={<FiTrendingUp size={17} />}
+              icon={<FiTrendingUp size={18} />}
               label="Avg Conversion"
               value={avgConversion.toFixed(1)}
               suffix="%"
@@ -391,7 +481,7 @@ const SellerAnalyticsPage = () => {
           </div>
         )}
 
-        {/* Dashboard summary row */}
+        {/* Dashboard summary strip */}
         {!loading && dashboardStats && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
@@ -399,42 +489,57 @@ const SellerAnalyticsPage = () => {
                 label: "Revenue",
                 value: fmtCurrency(dashboardStats.total_earnings),
                 color: "#F97316",
+                bg: "#FFF7ED",
+                icon: <FiDollarSign size={14} />,
               },
               {
                 label: "Orders",
                 value: fmt(dashboardStats.total_orders),
                 color: "#6366F1",
+                bg: "#EEF2FF",
+                icon: <FiShoppingCart size={14} />,
               },
               {
                 label: "Products",
                 value: fmt(dashboardStats.catalog_size),
                 color: "#0EA5E9",
+                bg: "#F0F9FF",
+                icon: <MdOutlineInventory2 size={14} />,
               },
               {
                 label: "Pending",
                 value: fmt(dashboardStats.pending_orders),
                 color: "#D97706",
+                bg: "#FFFBEB",
+                icon: <FiClock size={14} />,
               },
               {
                 label: "Completed",
                 value: fmt(dashboardStats.completed_orders),
                 color: "#059669",
+                bg: "#F0FDF4",
+                icon: <FiCheckCircle size={14} />,
               },
               {
                 label: "Fulfillment",
                 value: `${dashboardStats.fulfillment_rate}%`,
                 color: "#10B981",
+                bg: "#F0FDF4",
+                icon: <FiTrendingUp size={14} />,
               },
-            ].map(({ label, value, color }) => (
+            ].map(({ label, value, color, bg, icon }) => (
               <div
                 key={label}
                 className="bg-white rounded-2xl px-4 py-3 border border-slate-100 text-center"
                 style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
               >
-                <p
-                  className="text-base font-black"
-                  style={{ color }}
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center mx-auto mb-2"
+                  style={{ background: bg, color }}
                 >
+                  {icon}
+                </div>
+                <p className="text-base font-black" style={{ color }}>
                   {value}
                 </p>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
@@ -445,20 +550,23 @@ const SellerAnalyticsPage = () => {
           </div>
         )}
 
-        {/* Per-Product Table */}
+        {/* Per-product table */}
         <div
           className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
           style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
         >
-          {/* Header */}
+          {/* Table header */}
           <div
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-5"
             style={{ borderBottom: "1px solid #F8FAFC" }}
           >
             <div>
-              <p className="font-black text-slate-900">Per-Product Analytics</p>
+              <p className="font-black text-slate-900">
+                Per-Product Analytics
+              </p>
               <p className="text-slate-400 text-xs font-medium mt-0.5">
-                {products.length} product{products.length !== 1 ? "s" : ""}
+                {products.length} product{products.length !== 1 ? "s" : ""}{" "}
+                tracked
               </p>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -473,7 +581,9 @@ const SellerAnalyticsPage = () => {
               </div>
               <button
                 onClick={fetchAnalytics}
-                className="p-2 rounded-xl hover:bg-slate-50 border border-slate-100 transition text-slate-500"
+                disabled={loading}
+                className="p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 transition text-slate-500 disabled:opacity-50"
+                title="Refresh"
               >
                 <FiRefreshCw
                   size={14}
@@ -516,10 +626,7 @@ const SellerAnalyticsPage = () => {
           <div className="divide-y divide-slate-50">
             {loading ? (
               [...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-7 gap-3 px-6 py-4"
-                >
+                <div key={i} className="grid grid-cols-7 gap-3 px-6 py-4">
                   {[...Array(7)].map((_, j) => (
                     <div
                       key={j}
@@ -531,26 +638,34 @@ const SellerAnalyticsPage = () => {
                 </div>
               ))
             ) : displayed.length === 0 ? (
-              <div className="py-16 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
-                  <MdOutlineInventory2
-                    size={22}
-                    className="text-slate-300"
-                  />
+              <div className="py-20 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-4">
+                  <MdOutlineInventory2 size={24} className="text-slate-300" />
                 </div>
-                <p className="font-bold text-slate-600">
-                  {search ? "No products match your search" : "No analytics data yet"}
+                <p className="font-bold text-slate-700">
+                  {search
+                    ? "No products match your search"
+                    : "No analytics data yet"}
                 </p>
-                <p className="text-slate-400 text-sm mt-1">
-                  Analytics accumulate as customers view and purchase your
-                  products
+                <p className="text-slate-400 text-sm mt-1 max-w-xs mx-auto">
+                  {search
+                    ? "Try a different search term"
+                    : "Analytics accumulate as customers view and purchase your products"}
                 </p>
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    className="mt-3 text-sm text-orange-500 font-bold hover:underline"
+                  >
+                    Clear search
+                  </button>
+                )}
               </div>
             ) : (
               displayed.map((p, idx) => (
                 <div
                   key={p.product_id || idx}
-                  className="flex flex-col sm:grid sm:grid-cols-7 gap-3 px-6 py-4 hover:bg-slate-50/50 transition-colors"
+                  className="flex flex-col sm:grid sm:grid-cols-7 gap-3 px-6 py-4 hover:bg-orange-50/20 transition-colors"
                 >
                   {/* Product */}
                   <div className="col-span-2 flex items-center gap-3 min-w-0">
@@ -562,6 +677,7 @@ const SellerAnalyticsPage = () => {
                           width={40}
                           height={40}
                           className="w-full h-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <FiPackage size={16} className="text-slate-300" />
@@ -595,7 +711,12 @@ const SellerAnalyticsPage = () => {
                             className="h-full rounded-full"
                             style={{
                               width: `${Math.min(
-                                (p.views / Math.max(...displayed.map((x) => x.views), 1)) * 100,
+                                (p.views /
+                                  Math.max(
+                                    ...displayed.map((x) => x.views),
+                                    1
+                                  )) *
+                                  100,
                                 100
                               )}%`,
                               background: "#6366F1",
@@ -611,7 +732,7 @@ const SellerAnalyticsPage = () => {
                     <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
                       Cart Adds
                     </span>
-                    <p className="text-sm font-bold text-slate-700">
+                    <p className="text-sm font-bold text-orange-500">
                       {fmt(p.add_to_carts)}
                     </p>
                   </div>
@@ -656,24 +777,27 @@ const SellerAnalyticsPage = () => {
             )}
           </div>
 
-          {/* Footer totals */}
+          {/* Footer totals row */}
           {!loading && displayed.length > 0 && (
             <div
-              className="hidden sm:grid grid-cols-7 gap-3 px-6 py-4 bg-slate-50/60"
-              style={{ borderTop: "1px solid #F1F5F9" }}
+              className="hidden sm:grid grid-cols-7 gap-3 px-6 py-4"
+              style={{
+                borderTop: "1px solid #F1F5F9",
+                background: "#F8FAFC",
+              }}
             >
               <div className="col-span-2">
                 <p className="text-xs font-black text-slate-500 uppercase tracking-widest">
                   Totals ({displayed.length})
                 </p>
               </div>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-indigo-600">
                 {fmt(displayed.reduce((a, p) => a + p.views, 0))}
               </p>
-              <p className="text-sm font-black text-slate-800">
+              <p className="text-sm font-black text-orange-500">
                 {fmt(displayed.reduce((a, p) => a + p.add_to_carts, 0))}
               </p>
-              <p className="text-sm font-black text-emerald-700">
+              <p className="text-sm font-black text-emerald-600">
                 {fmt(displayed.reduce((a, p) => a + p.units_sold, 0))}
               </p>
               <p className="text-sm font-black text-sky-600">

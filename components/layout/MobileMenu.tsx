@@ -5,14 +5,6 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faXmark,
-  faPlug,
-  faMobileScreen,
-  faSpa,
-  faTv,
-  faShirt,
-  faLaptop,
-  faGamepad,
-  faBasketShopping,
   faBolt,
   faConciergeBell,
   faTruck,
@@ -27,105 +19,46 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { AuthContext } from "../../context/AuthContext";
 
+interface CategoryItem {
+  href: string;
+  icon: any;
+  label: string;
+  color: string;
+  slug: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
+  categories?: CategoryItem[];
 }
 
-const categories = [
-  {
-    href: "/appliances-deals",
-    icon: faPlug,
-    label: "Appliances",
-    color: "#f59e0b",
-  },
-  {
-    href: "/phone-deals",
-    icon: faMobileScreen,
-    label: "Phones & Tablets",
-    color: "#3b82f6",
-  },
-  {
-    href: "/beauty-deals",
-    icon: faSpa,
-    label: "Health & Beauty",
-    color: "#ec4899",
-  },
-  {
-    href: "/electronic-deals",
-    icon: faTv,
-    label: "Electronics",
-    color: "#8b5cf6",
-  },
-  { href: "/fashion-deals", icon: faShirt, label: "Fashion", color: "#B42225" },
-  {
-    href: "/computing-deals",
-    icon: faLaptop,
-    label: "Computing",
-    color: "#06b6d4",
-  },
-  { href: "/gaming-deals", icon: faGamepad, label: "Gaming", color: "#10b981" },
-  {
-    href: "/groceries",
-    icon: faBasketShopping,
-    label: "Groceries",
-    color: "#84cc16",
-  },
+// Static explore items - these stay untouched
+const STATIC_EXPLORE_ITEMS = [
+  { href: "/shop", icon: faBagShopping, label: "Shop All", sub: "Browse everything" },
+  { href: "/services", icon: faConciergeBell, label: "Campus Services", sub: "Skills & freelance" },
+  { href: "/logistics", icon: faTruck, label: "Delivery", sub: "Track your orders" },
+  { href: "/become-seller", icon: faStore, label: "Sell on JOVO", sub: "Start earning today" },
+  { href: "/wishlist", icon: faHeart, label: "My Wishlist", sub: "Saved items" },
+  { href: "/news", icon: faNewspaper, label: "News", sub: "Campus updates" },
+  { href: "/contact", icon: faPhone, label: "Contact Us", sub: "We're here to help" },
 ];
 
-export default function MobileMenu({ open, onClose }: Props) {
+export default function MobileMenu({ open, onClose, categories = [] }: Props) {
   const { isServiceProvider } = useContext(AuthContext);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const explore = [
-    {
-      href: "/shop",
-      icon: faBagShopping,
-      label: "Shop All",
-      sub: "Browse everything",
-    },
-    {
-      href: "/services",
-      icon: faConciergeBell,
-      label: "Campus Services",
-      sub: "Skills & freelance",
-    },
-    {
-      href: "/logistics",
-      icon: faTruck,
-      label: "Delivery",
-      sub: "Track your orders",
-    },
-    {
-      href: "/become-seller",
-      icon: faStore,
-      label: "Sell on JOVO",
-      sub: "Start earning today",
-    },
-    ...(isServiceProvider
-      ? []
-      : [
-          {
-            href: "/become-service-provider",
-            icon: faBriefcase,
-            label: "Become Service Provider",
-            sub: "Offer your services",
-          },
-        ]),
-    {
-      href: "/wishlist",
-      icon: faHeart,
-      label: "My Wishlist",
-      sub: "Saved items",
-    },
-    { href: "/news", icon: faNewspaper, label: "News", sub: "Campus updates" },
-    {
-      href: "/contact",
-      icon: faPhone,
-      label: "Contact Us",
-      sub: "We're here to help",
-    },
-  ];
+  // Dynamic explore items based on service provider status
+  const dynamicExploreItems = [...STATIC_EXPLORE_ITEMS];
+  
+  if (!isServiceProvider) {
+    dynamicExploreItems.splice(4, 0, {
+      href: "/become-service-provider",
+      icon: faBriefcase,
+      label: "Become Service Provider",
+      sub: "Offer your services",
+    });
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -164,7 +97,6 @@ export default function MobileMenu({ open, onClose }: Props) {
           box-shadow: 20px 0 60px rgba(0,0,0,0.12);
         }
         .jvm-overlay.open .jvm-panel { transform: translateX(0); }
-
         .jvm-head {
           background: #111;
           padding: 20px 18px 18px;
@@ -261,7 +193,6 @@ export default function MobileMenu({ open, onClose }: Props) {
       >
         <div className="jvm-backdrop" onClick={onClose} />
         <div className="jvm-panel" ref={panelRef}>
-          {/* Header */}
           <div className="jvm-head">
             <div className="flex items-center justify-between relative z-10">
               <Image
@@ -285,7 +216,6 @@ export default function MobileMenu({ open, onClose }: Props) {
             </p>
           </div>
 
-          {/* Flash */}
           <Link href="/flash-sales" onClick={onClose} className="jvm-flash">
             <div className="jvm-flash-ic">
               <FontAwesomeIcon icon={faBolt} />
@@ -301,27 +231,33 @@ export default function MobileMenu({ open, onClose }: Props) {
             <div className="w-2 h-2 rounded-full bg-[#FF8C00] jvm-pulse" />
           </Link>
 
-          {/* Body */}
           <div className="jvm-body">
-            <p className="jvm-sec">Shop by Category</p>
-            {categories.map(({ href, icon, label, color }) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={onClose}
-                className="jvm-item"
-                style={{ "--ic": color } as React.CSSProperties}
-              >
-                <div className="jvm-ic">
-                  <FontAwesomeIcon icon={icon} />
-                </div>
-                <span className="jvm-lbl">{label}</span>
-                <FontAwesomeIcon icon={faChevronRight} className="jvm-arr" />
-              </Link>
-            ))}
-            <div className="jvm-div" />
+            {/* Dynamic categories from API */}
+            {categories.length > 0 && (
+              <>
+                <p className="jvm-sec">Shop by Category</p>
+                {categories.map(({ href, icon, label, color }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={onClose}
+                    className="jvm-item"
+                    style={{ "--ic": color } as React.CSSProperties}
+                  >
+                    <div className="jvm-ic">
+                      <FontAwesomeIcon icon={icon} />
+                    </div>
+                    <span className="jvm-lbl">{label}</span>
+                    <FontAwesomeIcon icon={faChevronRight} className="jvm-arr" />
+                  </Link>
+                ))}
+                <div className="jvm-div" />
+              </>
+            )}
+            
+            {/* Static explore items - untouched */}
             <p className="jvm-sec">Explore</p>
-            {explore.map(({ href, icon, label, sub }) => (
+            {dynamicExploreItems.map(({ href, icon, label, sub }) => (
               <Link
                 key={href}
                 href={href}
@@ -340,7 +276,6 @@ export default function MobileMenu({ open, onClose }: Props) {
             ))}
           </div>
 
-          {/* Footer */}
           <div className="jvm-foot">
             <Link href="/login" onClick={onClose} className="jvm-signinbtn">
               <FontAwesomeIcon icon={faUser} className="text-[12px]" />

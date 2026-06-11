@@ -679,6 +679,7 @@ class ApiService {
 
   /**
    * Get the authenticated seller's full business profile and performance metrics.
+   * GET /api/v1/seller/profile
    * Requires a valid access token (seller must be logged in).
    */
   async getMySellerProfile(): Promise<any> {
@@ -687,6 +688,7 @@ class ApiService {
 
   /**
    * Update the authenticated seller's business profile and contact info.
+   * PATCH /api/v1/seller/profile
    * Requires a valid access token (seller must be approved).
    */
   async updateMySellerProfile(data: {
@@ -710,13 +712,116 @@ class ApiService {
   }
 
   /**
-   * Get a public seller profile by seller ID (no auth required).
-   * Returns full business info and performance metrics for any seller.
+   * Get profile viewers history (seller-only, authenticated).
+   * GET /api/v1/seller/profile/viewers
    */
-  async getPublicSellerProfile(seller_id: string): Promise<any> {
-    return this.makeRequest(`/seller/${encodeURIComponent(seller_id)}`, {
-      method: "GET",
-    });
+  async getSellerProfileViewers(params?: {
+    page?: number;
+    per_page?: number;
+  }): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.per_page != null) q.append("per_page", String(params.per_page));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/seller/profile/viewers${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  /**
+   * Get a public seller profile by seller ID (no auth required).
+   * GET /api/v1/seller/{seller_id}
+   */
+  async getPublicSellerProfile(seller_id: string, session_id?: string): Promise<any> {
+    const q = new URLSearchParams();
+    if (session_id) q.append("session_id", session_id);
+    const qs = q.toString();
+    return this.makeRequest(
+      `/seller/${encodeURIComponent(seller_id)}${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  /**
+   * Follow a seller's store (authenticated users only).
+   * POST /api/v1/seller/{seller_id}/follow
+   */
+  async followSeller(seller_id: string): Promise<any> {
+    return this.makeRequest(
+      `/seller/${encodeURIComponent(seller_id)}/follow`,
+      { method: "POST" },
+    );
+  }
+
+  /**
+   * Unfollow a seller's store (authenticated users only).
+   * DELETE /api/v1/seller/{seller_id}/follow
+   */
+  async unfollowSeller(seller_id: string): Promise<any> {
+    return this.makeRequest(
+      `/seller/${encodeURIComponent(seller_id)}/follow`,
+      { method: "DELETE" },
+    );
+  }
+
+  /**
+   * Get public approved products for a specific seller (paginated).
+   * GET /api/v1/seller/{seller_id}/products
+   */
+  async getPublicSellerProducts(
+    seller_id: string,
+    params?: {
+      subcategory_id?: string;
+      min_price?: number;
+      max_price?: number;
+      condition?: string;
+      search?: string;
+      sort_by?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.subcategory_id) q.append("subcategory_id", params.subcategory_id);
+    if (params?.min_price != null) q.append("min_price", String(params.min_price));
+    if (params?.max_price != null) q.append("max_price", String(params.max_price));
+    if (params?.condition) q.append("condition", params.condition);
+    if (params?.search) q.append("search", params.search);
+    if (params?.sort_by) q.append("sort_by", params.sort_by);
+    if (params?.limit != null) q.append("limit", String(params.limit));
+    if (params?.offset != null) q.append("offset", String(params.offset));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/seller/${encodeURIComponent(seller_id)}/products${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  }
+
+  /**
+   * Get public approved reviews for all products of a specific seller.
+   * GET /api/v1/seller/{seller_id}/reviews
+   */
+  async getPublicSellerReviews(
+    seller_id: string,
+    params?: {
+      rating?: number;
+      is_verified?: boolean;
+      page?: number;
+      per_page?: number;
+    },
+  ): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.rating != null) q.append("rating", String(params.rating));
+    if (params?.is_verified != null)
+      q.append("is_verified", String(params.is_verified));
+    if (params?.page != null) q.append("page", String(params.page));
+    if (params?.per_page != null) q.append("per_page", String(params.per_page));
+    const qs = q.toString();
+    return this.makeRequest(
+      `/seller/${encodeURIComponent(seller_id)}/reviews${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
   }
 
   // ─── SELLER PRODUCTS ───────────────────────────────────────────────────────

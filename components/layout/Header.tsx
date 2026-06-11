@@ -8,6 +8,7 @@ import {
   faShirt, faLaptop, faGamepad, faBasketShopping,
 } from "@fortawesome/free-solid-svg-icons";
 import MobileMenu from "./MobileMenu";
+import apiService from "@/services/apiService";
 
 export const CART_EVENT = "jovo:cart-update";
 
@@ -19,20 +20,119 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-const catItems = [
-  { href: "/appliances-deals", icon: faPlug, label: "Appliances", color: "#f59e0b" },
-  { href: "/phone-deals", icon: faMobileScreen, label: "Phones", color: "#3b82f6" },
-  { href: "/beauty-deals", icon: faSpa, label: "Beauty", color: "#ec4899" },
-  { href: "/electronic-deals", icon: faTv, label: "Electronics", color: "#8b5cf6" },
-  { href: "/fashion-deals", icon: faShirt, label: "Fashion", color: "#B42225" },
-  { href: "/computing-deals", icon: faLaptop, label: "Computing", color: "#06b6d4" },
-  { href: "/gaming-deals", icon: faGamepad, label: "Gaming", color: "#10b981" },
-  { href: "/groceries", icon: faBasketShopping, label: "Groceries", color: "#84cc16" },
-];
+// Icon mapping for categories
+const categoryIconMap: Record<string, any> = {
+  'appliances': faPlug,
+  'phones': faMobileScreen,
+  'mobile': faMobileScreen,
+  'beauty': faSpa,
+  'electronics': faTv,
+  'fashion': faShirt,
+  'clothing': faShirt,
+  'computing': faLaptop,
+  'laptops': faLaptop,
+  'gaming': faGamepad,
+  'groceries': faBasketShopping,
+};
+
+const getCategoryIcon = (slug: string): any => {
+  const slugLower = slug?.toLowerCase() || '';
+  for (const [key, icon] of Object.entries(categoryIconMap)) {
+    if (slugLower.includes(key)) return icon;
+  }
+  return faMobileScreen;
+};
+
+const getCategoryColor = (slug: string): string => {
+  const colorMap: Record<string, string> = {
+    'appliances': '#f59e0b',
+    'phones': '#3b82f6',
+    'mobile': '#3b82f6',
+    'beauty': '#ec4899',
+    'electronics': '#8b5cf6',
+    'fashion': '#B42225',
+    'clothing': '#B42225',
+    'computing': '#06b6d4',
+    'laptops': '#06b6d4',
+    'gaming': '#10b981',
+    'groceries': '#84cc16',
+  };
+  const slugLower = slug?.toLowerCase() || '';
+  for (const [key, color] of Object.entries(colorMap)) {
+    if (slugLower.includes(key)) return color;
+  }
+  return '#B42225';
+};
+
+interface CategoryItem {
+  href: string;
+  icon: any;
+  label: string;
+  color: string;
+  slug: string;
+}
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setFetching(true);
+      try {
+        console.log('[Header] Fetching categories...');
+        // Fetch categories exactly like HeroSection
+        const response = await apiService.getPublicCategories("PRODUCT");
+        console.log('[Header] Categories response:', response);
+        
+        let cats: any[] = [];
+        
+        // Parse response exactly like HeroSection
+        if (response?.data && Array.isArray(response.data)) {
+          cats = response.data;
+        } else if (response?.categories && Array.isArray(response.categories)) {
+          cats = response.categories;
+        } else if (Array.isArray(response)) {
+          cats = response;
+        } else if (response?.data?.categories && Array.isArray(response.data.categories)) {
+          cats = response.data.categories;
+        }
+        
+        console.log('[Header] Extracted categories count:', cats.length);
+        
+        if (cats.length > 0) {
+          const mappedCategories = cats.slice(0, 8).map((cat: any) => {
+            const categoryId = String(cat.id || cat.category_id);
+            const categorySlug = String(cat.slug || cat.category_slug || categoryId);
+            const categoryName = String(cat.name || cat.category_name || "");
+            
+            return {
+              href: `/category/${categorySlug || categoryId}`,
+              icon: getCategoryIcon(categorySlug),
+              label: categoryName,
+              color: getCategoryColor(categorySlug),
+              slug: categorySlug,
+            };
+          }).filter(cat => cat.label);
+          
+          console.log('[Header] Mapped categories count:', mappedCategories.length);
+          setCategories(mappedCategories);
+        } else {
+          console.warn('[Header] No categories found');
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error('[Header] Failed to fetch categories:', error);
+        setCategories([]);
+      } finally {
+        setFetching(false);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -62,8 +162,6 @@ export default function Header() {
           width: 100%;
           z-index: 500;
         }
-
-        /* ── Main bar ── */
         .jv-main {
           background: #ffffff;
           transition: box-shadow 0.3s ease;
@@ -84,8 +182,6 @@ export default function Header() {
         @media (min-width: 1024px) {
           .jv-main-inner { padding: 0 48px; gap: 0; }
         }
-
-        /* Burger */
         .jv-burger {
           display: flex;
           flex-direction: column;
@@ -116,12 +212,8 @@ export default function Header() {
         .jv-burger:hover span { background: #B42225; }
         .jv-burger:hover span:nth-child(2) { width: 18px; }
         @media (min-width: 1024px) { .jv-burger { display: none; } }
-
-        /* Logo */
         .jv-logo { flex-shrink: 0; transition: opacity 0.2s; }
         .jv-logo:hover { opacity: 0.75; }
-
-        /* Nav */
         .jv-nav {
           display: none;
           align-items: center;
@@ -140,8 +232,6 @@ export default function Header() {
           transition: color 0.2s, background 0.2s;
         }
         .jv-navlink:hover { color: #111; background: #f7f7f7; }
-
-        /* Right side */
         .jv-right {
           margin-left: auto;
           display: flex;
@@ -188,8 +278,6 @@ export default function Header() {
           box-shadow: 0 4px 16px rgba(180,34,37,0.3);
         }
         .jv-signin:active { transform: none; }
-
-        /* Flash pill in nav */
         .jv-flash {
           display: flex;
           align-items: center;
@@ -215,8 +303,6 @@ export default function Header() {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.35; transform: scale(0.65); }
         }
-
-        /* ── Category strip (dark) ── */
         .jv-cats {
           background: #111111;
           overflow-x: auto;
@@ -259,6 +345,7 @@ export default function Header() {
           transition: color 0.2s;
           position: relative;
           letter-spacing: 0.02em;
+          text-decoration: none;
         }
         .jv-catlink::after {
           content: '';
@@ -287,11 +374,8 @@ export default function Header() {
       `}</style>
 
       <header className="jv-header" role="banner">
-
-        {/* ── Main bar ── */}
         <div className={`jv-main ${scrolled ? "scrolled" : ""}`}>
           <div className="jv-main-inner">
-
             <button
               className="jv-burger"
               aria-label="Open menu"
@@ -332,32 +416,49 @@ export default function Header() {
                 <span className="hidden sm:inline">Sign In</span>
               </Link>
             </div>
-
           </div>
         </div>
 
-        {/* ── Category strip ── */}
-        <nav className="jv-cats" aria-label="Product categories">
-          <div className="jv-cats-inner">
-            {catItems.map(({ href, icon, label, color }, i) => (
-              <React.Fragment key={href}>
-                {i > 0 && <span className="jv-cat-sep" />}
-                <Link
-                  href={href}
-                  className="jv-catlink"
-                  style={{ "--cat-color": color } as React.CSSProperties}
-                >
-                  <FontAwesomeIcon icon={icon} className="jv-catic" />
-                  {label}
-                </Link>
-              </React.Fragment>
-            ))}
-          </div>
-        </nav>
-
+        {/* Category strip - show when we have categories */}
+        {!fetching && categories.length > 0 && (
+          <nav className="jv-cats" aria-label="Product categories">
+            <div className="jv-cats-inner">
+              {categories.map(({ href, icon, label, color }, i) => (
+                <React.Fragment key={href}>
+                  {i > 0 && <span className="jv-cat-sep" />}
+                  <Link
+                    href={href}
+                    className="jv-catlink"
+                    style={{ "--cat-color": color } as React.CSSProperties}
+                  >
+                    <FontAwesomeIcon icon={icon} className="jv-catic" />
+                    {label}
+                  </Link>
+                </React.Fragment>
+              ))}
+            </div>
+          </nav>
+        )}
+        
+        {/* Loading skeleton for category strip */}
+        {fetching && (
+          <nav className="jv-cats" aria-label="Product categories">
+            <div className="jv-cats-inner">
+              {[...Array(6)].map((_, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span className="jv-cat-sep" />}
+                  <div className="jv-catlink opacity-50">
+                    <div className="w-3 h-3 rounded-full bg-gray-600 animate-pulse" />
+                    <div className="w-16 h-3 bg-gray-700 rounded animate-pulse" />
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </nav>
+        )}
       </header>
 
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} />
     </>
   );
 }

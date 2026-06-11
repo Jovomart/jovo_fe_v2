@@ -23,6 +23,7 @@ export default function MainLayout({
   const isSellerProfile = pathname?.startsWith("/seller/profile");
   const isSellerDeliveries = pathname?.startsWith("/seller/deliveries");
   const isServiceDashboard = pathname?.startsWith("/services/dashboard");
+  const isSellerAnalytics = pathname?.startsWith("/seller/analytics");
   const isNewsSection = pathname?.startsWith("/news");
   const isHomePage = pathname === "/";
   const isAPIPage =
@@ -36,7 +37,7 @@ export default function MainLayout({
 
   const shouldHideNavbar =
     isSellerDashboard || isServiceDashboard || isSellerDeliveries || isSellerPromote || isSellerSettings
-    || isSellerOrders || isSellerProducts || isNewsSection || isSellerWallet || isHomePage || isSellerProfile || isSellerAddProduct || isSellerEditProduct;
+    || isSellerOrders || isSellerProducts || isNewsSection || isSellerWallet || isHomePage || isSellerProfile || isSellerAddProduct || isSellerEditProduct || isSellerAnalytics;
   const shouldHideBottomNav = isSellerDashboard || isHomePage;
   const shouldShowLoader = isAPIPage || isHomePage;
 

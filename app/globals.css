@@ -1912,6 +1912,74 @@ body {
   text-transform: uppercase;
 }
 
+/* ── Flash Sales: empty state ─────────────────────────────────────────────── */
+
+.flash-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3.5rem 1rem;
+  text-align: center;
+}
+
+.flash-empty__icon {
+  font-size: 2rem;
+  opacity: 0.25;
+  color: var(--flash-accent, #f97316);
+  margin-bottom: 0.25rem;
+}
+
+.flash-empty__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--flash-text, #fff);
+  opacity: 0.75;
+  margin: 0;
+}
+
+.flash-empty__sub {
+  font-size: 0.8rem;
+  color: var(--flash-text, #fff);
+  opacity: 0.45;
+  margin: 0;
+}
+
+/* ── Flash Sales: skeleton ───────────────────────────────────────────────── */
+
+.flash-card--skeleton {
+  pointer-events: none;
+}
+
+.flash-skeleton-img {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: inherit;
+}
+
+.flash-skeleton-line {
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.flash-skeleton-line--name  { height: 14px; width: 70%; }
+.flash-skeleton-line--price { height: 16px; width: 50%; }
+.flash-skeleton-line--bar   { height: 8px;  width: 100%; }
+
+/* ── Flash Sales: image placeholder (no image / load error) ──────────────── */
+
+.flash-card__img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
 /* ===== RESPONSIVE HEADER (MOBILE) ===== */
 @media (max-width: 640px) {
   .flash-header {
