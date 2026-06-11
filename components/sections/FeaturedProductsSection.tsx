@@ -515,6 +515,7 @@ export default function FeaturedProductsSection() {
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     fetchCategoriesAndProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
