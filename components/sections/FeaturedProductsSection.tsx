@@ -513,6 +513,7 @@ export default function FeaturedProductsSection() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     fetchCategoriesAndProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
