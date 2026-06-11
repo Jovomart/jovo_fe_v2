@@ -513,12 +513,13 @@ export default function FeaturedProductsSection() {
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Disable the set-state-in-effect rule for this useEffect
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     fetchCategoriesAndProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const displayTabs: Tab[] = useMemo(() => [
     { label: "All", value: "all", icon: faLayerGroup },
