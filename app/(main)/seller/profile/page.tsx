@@ -247,7 +247,11 @@ const SellerOwnProfilePage = () => {
   useEffect(() => {
     if (!hasFetchedRef.current) {
       hasFetchedRef.current = true;
-      fetchProfile();
+      // Defer so the initial setLoading(true) inside fetchProfile doesn't
+      // run synchronously within the effect body (set-state-in-effect rule).
+      queueMicrotask(() => {
+        fetchProfile();
+      });
     }
   }, [fetchProfile]);
 
@@ -273,8 +277,14 @@ const SellerOwnProfilePage = () => {
   }, [viewersFetched]);
 
   useEffect(() => {
-    if (activeTab === "viewers") fetchViewers();
-  }, [activeTab, fetchViewers]);
+    if (activeTab === "viewers" && !viewersFetched && !viewersLoading) {
+      // Defer so setViewersLoading(true) inside fetchViewers doesn't run
+      // synchronously within the effect body (set-state-in-effect rule).
+      queueMicrotask(() => {
+        fetchViewers();
+      });
+    }
+  }, [activeTab, viewersFetched, viewersLoading, fetchViewers]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -322,17 +332,22 @@ const SellerOwnProfilePage = () => {
 
   /**
    * Uploads a file using apiService.uploadFiles (POST /upload/files).
+   * `uploadType` MUST be distinct per image slot (cover vs. logo/avatar) —
+   * passing the same type for both was causing the backend/Cloudinary
+   * folder mapping to collide, so a cover upload ended up being returned
+   * (and saved) as the business/profile image instead.
    * Returns the URL string or null on failure.
    */
   const uploadImage = async (
     file: File,
+    uploadType: "seller_cover_image" | "seller_business_image",
     entityId?: string
   ): Promise<string | null> => {
     try {
       const result = await apiService.uploadFiles(
         [file],
-        "seller_business_image",
-        entityId
+        uploadType as Parameters<typeof apiService.uploadFiles>[1],
+        entityId,
       );
       // The endpoint can return different shapes — normalise to a URL string
       const urls = Array.isArray(result)
@@ -354,7 +369,7 @@ const SellerOwnProfilePage = () => {
     if (!file) return;
     setUploadingCover(true);
     setError(null);
-    const url = await uploadImage(file, profile?.id);
+    const url = await uploadImage(file, "seller_cover_image", profile?.id);
     if (url) {
       setCoverImage(url);
     } else {
@@ -371,7 +386,7 @@ const SellerOwnProfilePage = () => {
     if (!file) return;
     setUploadingAvatar(true);
     setError(null);
-    const url = await uploadImage(file, profile?.id);
+    const url = await uploadImage(file, "seller_business_image", profile?.id);
     if (url) {
       setBusinessImage(url);
     } else {
@@ -406,7 +421,7 @@ const SellerOwnProfilePage = () => {
           <FiAlertCircle size={26} className="text-red-500" />
         </div>
         <h2 className="text-lg font-bold text-slate-900">
-          We couldn't load your store
+          We couldn&apos;t load your store
         </h2>
         <p className="text-slate-500 text-sm text-center max-w-xs">{error}</p>
         <button
@@ -1110,8 +1125,8 @@ const SellerOwnProfilePage = () => {
                   </div>
                   <h3 className="font-bold text-slate-700">No views yet</h3>
                   <p className="text-sm text-slate-400 max-w-xs">
-                    Once shoppers start visiting your store page, they'll show
-                    up here.
+                    Once shoppers start visiting your store page, they&apos;ll
+                    show up here.
                   </p>
                 </div>
               ) : (

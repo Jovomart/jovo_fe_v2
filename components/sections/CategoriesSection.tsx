@@ -71,7 +71,7 @@ const getCategoryImage = (categoryName: string): string => {
     "Printers": "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=400&h=300&fit=crop",
     "Networking": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop",
   };
-  
+
   // Case-insensitive matching
   const searchName = categoryName?.toLowerCase() || '';
   for (const [key, url] of Object.entries(images)) {
@@ -110,9 +110,9 @@ export default function CategoriesSection() {
       // Fetch categories exactly like HeroSection does
       const response = await apiService.getPublicCategories("PRODUCT")
       console.log('[CategoriesSection] Categories response:', response)
-      
+
       let cats: any[] = []
-      
+
       // Parse response exactly like HeroSection
       if (response?.data && Array.isArray(response.data)) {
         cats = response.data
@@ -123,15 +123,15 @@ export default function CategoriesSection() {
       } else if (response?.data?.categories && Array.isArray(response.data.categories)) {
         cats = response.data.categories
       }
-      
+
       console.log('[CategoriesSection] Extracted categories count:', cats.length)
-      
+
       if (cats.length > 0) {
         // Map categories exactly like HeroSection
         const mappedCats = cats.map((cat: any) => {
           const categoryId = String(cat.id || cat.category_id)
           const categorySlug = String(cat.slug || cat.category_slug || categoryId)
-          
+
           return {
             id: categoryId,
             name: String(cat.name || cat.category_name || ""),
@@ -142,10 +142,10 @@ export default function CategoriesSection() {
             color: cat.color,
           }
         }).filter((cat: any) => cat.name && cat.id)
-        
+
         console.log('[CategoriesSection] Mapped categories count:', mappedCats.length)
         setCategories(mappedCats)
-        
+
         // Fetch product counts for each category like HeroSection does
         const categoriesToFetch = mappedCats.slice(0, 8)
         const countPromises = categoriesToFetch.map(async (cat) => {
@@ -159,13 +159,13 @@ export default function CategoriesSection() {
             return { id: cat.id, count: 0 }
           }
         })
-        
+
         const counts = await Promise.all(countPromises)
         const countsMap: Record<string, number> = {}
         counts.forEach(({ id, count }) => {
           countsMap[id] = count
         })
-        
+
         // Update categories with product counts
         setCategories(prev => prev.map(cat => ({
           ...cat,
@@ -185,7 +185,12 @@ export default function CategoriesSection() {
   }, [])
 
   useEffect(() => {
-    fetchCategories()
+    // Defer so the initial setLoading(true)/setError(null) inside
+    // fetchCategories doesn't run synchronously within the effect body
+    // (set-state-in-effect rule).
+    queueMicrotask(() => {
+      fetchCategories()
+    })
   }, [fetchCategories])
 
   // Loading state
@@ -257,7 +262,7 @@ export default function CategoriesSection() {
               <div className="cat2-header__num" aria-hidden="true">02</div>
             </div>
           </div>
-          
+
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-20 h-20 rounded-full bg-gray-800/50 flex items-center justify-center mb-4">
               <FontAwesomeIcon icon={faFolderOpen} className="text-3xl text-gray-500" />
@@ -280,7 +285,7 @@ export default function CategoriesSection() {
 
   // Render categories
   const displayCategories = categories.slice(0, 8)
-  
+
   return (
     <section ref={sectionRef} className="cat2-section" aria-label="Shop by category">
       <span className="cat2-watermark" aria-hidden="true">EXPLORE</span>
@@ -313,14 +318,14 @@ export default function CategoriesSection() {
             const theme = getCategoryTheme(cat.slug || cat.name)
             const icon = getCategoryIcon(cat.slug, cat.icon)
             const imageUrl = cat.image || getCategoryImage(cat.name)
-            
+
             return (
               <article
                 key={cat.id}
                 className="cat2-card"
                 role="listitem"
-                style={{ 
-                  '--ci': idx, 
+                style={{
+                  '--ci': idx,
                   '--cc': theme.accentColor || cat.color || '#B42225'
                 } as React.CSSProperties}
               >

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -518,30 +518,32 @@ export default function FeaturedProductsSection() {
     fetchCategoriesAndProducts();
   }, [fetchCategoriesAndProducts]);
 
-  const displayTabs: Tab[] = [
+  const displayTabs: Tab[] = useMemo(() => [
     { label: "All", value: "all", icon: faLayerGroup },
     ...categories.map(cat => ({
       label: cat.name,
       value: cat.slug,
       icon: getCategoryIcon(cat.name, cat.slug),
     }))
-  ];
+  ], [categories]);
 
-  const getProductCountForCategory = (categorySlug: string) => {
+  const getProductCountForCategory = useCallback((categorySlug: string) => {
     if (categorySlug === "all") return products.length;
     return categoryProductsMap[categorySlug]?.length || 0;
-  };
+  }, [products.length, categoryProductsMap]);
 
-  const filtered = activeTab === "all"
-    ? products
-    : categoryProductsMap[activeTab] || [];
+  const filtered = useMemo(() => 
+    activeTab === "all"
+      ? products
+      : categoryProductsMap[activeTab] || []
+  , [activeTab, products, categoryProductsMap]);
 
-  const checkScroll = () => {
+  const checkScroll = useCallback(() => {
     const el = sliderRef.current;
     if (!el) return;
     setShowLeftArrow(el.scrollLeft > 20);
     setShowRightArrow(el.scrollLeft + el.clientWidth < el.scrollWidth - 20);
-  };
+  }, []);
 
   useEffect(() => {
     const el = sliderRef.current;
@@ -549,9 +551,9 @@ export default function FeaturedProductsSection() {
     el.addEventListener("scroll", checkScroll);
     checkScroll();
     return () => el.removeEventListener("scroll", checkScroll);
-  }, [filtered]);
+  }, [filtered, checkScroll]);
 
-  const switchTab = (val: string) => {
+  const switchTab = useCallback((val: string) => {
     if (val === activeTab) return;
     setFading(true);
     setTimeout(() => {
@@ -562,15 +564,15 @@ export default function FeaturedProductsSection() {
         checkScroll();
       }
     }, 220);
-  };
+  }, [activeTab, checkScroll]);
 
-  const scroll = (dir: "left" | "right") => {
+  const scroll = useCallback((dir: "left" | "right") => {
     const el = sliderRef.current;
     if (!el) return;
     const firstCard = el.querySelector<HTMLElement>(".product-card");
     const cardWidth = firstCard ? firstCard.offsetWidth + 16 : 300;
     el.scrollBy({ left: dir === "left" ? -cardWidth : cardWidth, behavior: "smooth" });
-  };
+  }, []);
 
   const showEmptyState = activeTab !== "all" && filtered.length === 0;
 

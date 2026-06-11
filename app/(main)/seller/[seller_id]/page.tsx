@@ -23,7 +23,7 @@ import {
 } from "react-icons/fi";
 import {
   FaStar, FaStarHalfAlt, FaRegStar, FaWhatsapp,
-  FaFacebook, FaTwitter, FaCopy, FaInstagram, FaLinkedin,
+  FaFacebook, FaTwitter, FaCopy, FaInstagram, FaLinkedin, FaCheckCircle,
 } from "react-icons/fa";
 import { MdVerified, MdOutlineLocalShipping } from "react-icons/md";
 import { HiOutlineShieldCheck } from "react-icons/hi";
@@ -59,6 +59,7 @@ interface SellerProfile {
   member_since: string;
   follower_count: number;
   is_following: boolean;
+  approval_status?: string;
 }
 
 interface SellerProduct {
@@ -96,9 +97,9 @@ const Stars = ({ rating, size = 12 }: { rating: number; size?: number }) => {
   return (
     <span className="inline-flex items-center gap-0.5" suppressHydrationWarning>
       {[1, 2, 3, 4, 5].map((s) =>
-        r >= s ? <FaStar key={s} size={size} className="text-amber-400" suppressHydrationWarning /> :
-        r >= s - 0.5 ? <FaStarHalfAlt key={s} size={size} className="text-amber-400" suppressHydrationWarning /> :
-        <FaRegStar key={s} size={size} className="text-[#E5DFD6]" suppressHydrationWarning />
+        r >= s ? <FaStar key={s} size={size} className="text-orange-400" suppressHydrationWarning /> :
+        r >= s - 0.5 ? <FaStarHalfAlt key={s} size={size} className="text-orange-400" suppressHydrationWarning /> :
+        <FaRegStar key={s} size={size} className="text-slate-200" suppressHydrationWarning />
       )}
     </span>
   );
@@ -134,56 +135,56 @@ const ProductCard = ({ product, view }: { product: SellerProduct; view: "grid" |
   if (view === "list") {
     return (
       <Link href={`/product/${product.id}`}
-        className="group flex items-center gap-4 px-5 py-4 bg-white rounded-2xl border border-[#EFE9E2] hover:border-[#B42225]/30 hover:shadow-md hover:shadow-[#B42225]/5 transition-all duration-200">
-        <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#FAF9F7]">
+        className="group flex items-center gap-4 px-5 py-4 bg-white rounded-2xl border border-slate-100 hover:border-orange-300 hover:shadow-md hover:shadow-orange-500/5 transition-all duration-200">
+        <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-slate-50">
           {img
             ? <Image src={img} alt={product.product_name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="64px" unoptimized />
-            : <div className="w-full h-full flex items-center justify-center"><FiPackage size={22} className="text-[#D9D2C8]" /></div>}
+            : <div className="w-full h-full flex items-center justify-center"><FiPackage size={22} className="text-slate-300" /></div>}
           {!product.is_in_stock && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-              <span className="text-[8px] font-black text-[#B42225] uppercase tracking-widest">Sold out</span>
+              <span className="text-[8px] font-black text-orange-600 uppercase tracking-widest">Sold out</span>
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#1C1A17] group-hover:text-[#B42225] transition-colors truncate leading-tight">
+          <p className="text-sm font-bold text-slate-900 group-hover:text-orange-500 transition-colors truncate leading-tight">
             {product.product_name}
           </p>
-          <p className="text-[11px] text-[#B6AFA6] mt-0.5">{product.subcategory_name}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{product.subcategory_name}</p>
           <div className="flex items-center gap-2 mt-1.5">
             <Stars rating={product.average_rating} />
-            <span className="text-[10px] text-[#B6AFA6]">({product.review_count}) · {product.sold_count} sold</span>
+            <span className="text-[10px] text-slate-400">({product.review_count}) · {product.sold_count} sold</span>
           </div>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-sm font-black text-[#B42225]">{fmtPrice(product.current_price)}</p>
+          <p className="text-sm font-black text-orange-500">{fmtPrice(product.current_price)}</p>
           {disc > 0 && (
             <div className="mt-0.5 space-y-0.5">
-              <p className="text-[10px] text-[#B6AFA6] line-through">{fmtPrice(product.product_original_price)}</p>
-              <span className="text-[9px] font-black text-white bg-[#B42225] px-1.5 py-0.5 rounded-md">-{disc}%</span>
+              <p className="text-[10px] text-slate-400 line-through">{fmtPrice(product.product_original_price)}</p>
+              <span className="text-[9px] font-black text-white bg-orange-500 px-1.5 py-0.5 rounded-md">-{disc}%</span>
             </div>
           )}
         </div>
-        <FiChevronRight size={14} className="text-[#D9D2C8] group-hover:text-[#B42225] group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+        <FiChevronRight size={14} className="text-slate-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
       </Link>
     );
   }
 
   return (
     <Link href={`/product/${product.id}`}
-      className="group bg-white rounded-2xl border border-[#EFE9E2] overflow-hidden hover:border-[#B42225]/30 hover:shadow-lg hover:shadow-[#B42225]/8 transition-all duration-300 hover:-translate-y-1">
-      <div className="relative aspect-square bg-[#FAF9F7] overflow-hidden">
+      className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/8 transition-all duration-300 hover:-translate-y-1">
+      <div className="relative aspect-square bg-slate-50 overflow-hidden">
         {img
           ? <Image src={img} alt={product.product_name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:640px) 50vw, 25vw" unoptimized />
-          : <div className="w-full h-full flex items-center justify-center"><FiPackage size={32} className="text-[#E5DFD6]" /></div>}
+          : <div className="w-full h-full flex items-center justify-center"><FiPackage size={32} className="text-slate-200" /></div>}
         {disc > 0 && (
-          <span className="absolute top-2.5 left-2.5 z-10 text-[10px] font-black text-white bg-[#B42225] px-2 py-0.5 rounded-full shadow-sm">
+          <span className="absolute top-2.5 left-2.5 z-10 text-[10px] font-black text-white bg-orange-500 px-2 py-0.5 rounded-full shadow-sm">
             -{disc}%
           </span>
         )}
         {!product.is_in_stock && (
           <div className="absolute inset-0 z-10 bg-white/80 flex items-center justify-center backdrop-blur-[1px]">
-            <span className="text-xs font-black text-[#9A938A] uppercase tracking-widest">Sold Out</span>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Sold Out</span>
           </div>
         )}
         {product.is_on_sale && product.is_in_stock && (
@@ -193,19 +194,19 @@ const ProductCard = ({ product, view }: { product: SellerProduct; view: "grid" |
         )}
       </div>
       <div className="p-3.5">
-        <p className="text-[13px] font-semibold text-[#1C1A17] line-clamp-2 leading-snug group-hover:text-[#B42225] transition-colors mb-2 min-h-[36px]">
+        <p className="text-[13px] font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-orange-500 transition-colors mb-2 min-h-[36px]">
           {product.product_name}
         </p>
         <div className="flex items-center gap-1.5 mb-2.5">
           <Stars rating={product.average_rating} size={10} />
-          <span className="text-[10px] text-[#B6AFA6]">({product.review_count})</span>
+          <span className="text-[10px] text-slate-400">({product.review_count})</span>
         </div>
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm font-black text-[#B42225] leading-tight">{fmtPrice(product.current_price)}</p>
-            {disc > 0 && <p className="text-[10px] text-[#B6AFA6] line-through">{fmtPrice(product.product_original_price)}</p>}
+            <p className="text-sm font-black text-orange-500 leading-tight">{fmtPrice(product.current_price)}</p>
+            {disc > 0 && <p className="text-[10px] text-slate-400 line-through">{fmtPrice(product.product_original_price)}</p>}
           </div>
-          <span className="text-[10px] text-[#B6AFA6]">{product.sold_count} sold</span>
+          <span className="text-[10px] text-slate-400">{product.sold_count} sold</span>
         </div>
       </div>
     </Link>
@@ -218,9 +219,9 @@ const ReviewCard = ({ review }: { review: SellerReview }) => {
   const avatar = validUrl(review.reviewer_avatar);
   const initials = (review.reviewer_name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   return (
-    <div className="bg-white rounded-2xl border border-[#EFE9E2] p-5">
+    <div className="bg-white rounded-2xl border border-slate-100 p-5">
       <div className="flex items-start gap-3.5">
-        <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center bg-[#1C1A17] text-white text-xs font-black">
+        <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center bg-slate-900 text-white text-xs font-black">
           {avatar
             ? <Image src={avatar} alt={review.reviewer_name} fill className="object-cover" sizes="36px" unoptimized />
             : initials}
@@ -229,7 +230,7 @@ const ReviewCard = ({ review }: { review: SellerReview }) => {
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-bold text-[#1C1A17]">{review.reviewer_name}</p>
+                <p className="text-sm font-bold text-slate-900">{review.reviewer_name}</p>
                 {review.is_verified && (
                   <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">
                     <FiCheck size={8} /> Verified
@@ -239,14 +240,14 @@ const ReviewCard = ({ review }: { review: SellerReview }) => {
               <div className="flex items-center gap-2 mt-0.5">
                 <Stars rating={review.rating} size={10} />
                 {review.product_name && (
-                  <span className="text-[10px] text-[#B6AFA6] truncate max-w-[120px]">· {review.product_name}</span>
+                  <span className="text-[10px] text-slate-400 truncate max-w-[120px]">· {review.product_name}</span>
                 )}
               </div>
             </div>
-            <span className="text-[10px] text-[#B6AFA6] shrink-0">{timeAgo(review.created_at)}</span>
+            <span className="text-[10px] text-slate-400 shrink-0">{timeAgo(review.created_at)}</span>
           </div>
           {review.comment && (
-            <p className="text-[13px] text-[#5C564E] mt-2.5 leading-relaxed">{review.comment}</p>
+            <p className="text-[13px] text-slate-500 mt-2.5 leading-relaxed">{review.comment}</p>
           )}
         </div>
       </div>
@@ -274,6 +275,7 @@ export default function SellerProfilePage() {
   const [followLoading, setFollowLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsFetched, setReviewsFetched] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const fetchedRef = useRef(false);
@@ -307,20 +309,32 @@ export default function SellerProfilePage() {
       const res = await apiService.getPublicSellerReviews(sellerId, { per_page: 20 });
       const raw = res?.data?.reviews ?? res?.data ?? res ?? [];
       setReviews(Array.isArray(raw) ? raw : []);
-    } catch { setReviews([]); }
-    finally { setReviewsLoading(false); }
+    } catch {
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+      setReviewsFetched(true);
+    }
   }, [sellerId]);
 
   useEffect(() => {
     if (!fetchedRef.current && sellerId) {
       fetchedRef.current = true;
-      fetchSeller();
+      // Defer so the initial setLoading(true) inside fetchSeller doesn't
+      // run synchronously within the effect body.
+      queueMicrotask(() => {
+        fetchSeller();
+      });
     }
   }, [sellerId, fetchSeller]);
 
   useEffect(() => {
-    if (tab === "reviews" && reviews.length === 0 && !reviewsLoading) fetchReviews();
-  }, [tab, reviews.length, reviewsLoading, fetchReviews]);
+    if (tab === "reviews" && !reviewsFetched && !reviewsLoading) {
+      queueMicrotask(() => {
+        fetchReviews();
+      });
+    }
+  }, [tab, reviewsFetched, reviewsLoading, fetchReviews]);
 
   const handleFollow = async () => {
     if (followLoading) return;
@@ -359,27 +373,27 @@ export default function SellerProfilePage() {
   // ── Loading ───────────────────────────────────────────────────────────────
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FAF9F7]">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="flex flex-col items-center gap-4">
         <div className="relative w-12 h-12">
-          <div className="absolute inset-0 rounded-full border-2 border-[#EFE9E2]" />
-          <div className="absolute inset-0 rounded-full border-2 border-[#B42225] border-t-transparent animate-spin" />
+          <div className="absolute inset-0 rounded-full border-2 border-slate-200" />
+          <div className="absolute inset-0 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
         </div>
-        <p className="text-sm text-[#9A938A] font-medium">Loading store…</p>
+        <p className="text-sm text-slate-400 font-medium">Loading store…</p>
       </div>
     </div>
   );
 
   if (error || !seller) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-[#FAF9F7] px-4">
-      <div className="w-16 h-16 rounded-2xl bg-white border border-[#EFE9E2] flex items-center justify-center shadow-sm">
-        <FiAlertCircle size={26} className="text-[#9A938A]" />
+    <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-slate-50 px-4">
+      <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+        <FiAlertCircle size={26} className="text-slate-400" />
       </div>
       <div className="text-center">
-        <p className="font-black text-[#1C1A17] text-lg">Store not found</p>
-        <p className="text-sm text-[#9A938A] mt-1 max-w-xs">{error || "This seller's store could not be found."}</p>
+        <p className="font-black text-slate-900 text-lg">Store not found</p>
+        <p className="text-sm text-slate-400 mt-1 max-w-xs">{error || "This seller's store could not be found."}</p>
       </div>
-      <Link href="/shop" className="px-6 py-2.5 bg-[#1C1A17] text-white rounded-full text-sm font-bold hover:bg-[#B42225] transition-colors">
+      <Link href="/shop" className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-orange-500 transition-colors">
         Back to Shop
       </Link>
     </div>
@@ -387,49 +401,73 @@ export default function SellerProfilePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#FAF9F7]">
+      <div className="min-h-screen bg-slate-50 pb-16">
 
         {/* ══════════════════════════════════════════════════════════════════
-            HERO — full-bleed cover with identity card pinned at bottom
+            HERO — cover + identity card, matching seller-own-profile theme
         ══════════════════════════════════════════════════════════════════ */}
         <div className="relative">
 
-          <div className="relative w-full overflow-hidden h-44 sm:h-60">
-            {coverUrl
-              ? <Image src={coverUrl} alt="" fill className="object-cover" priority unoptimized />
-              : <div className="absolute inset-0 bg-gradient-to-br from-[#1C1A17] via-[#2A2622] to-[#1C1A17]" />
-            }
-            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <div
+            className="relative h-44 sm:h-60 w-full overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg,#0F172A 0%,#1E293B 50%,#0F172A 100%)",
+            }}
+          >
+            {coverUrl && (
+              <Image src={coverUrl} alt="Store cover" fill className="object-cover" priority unoptimized />
+            )}
+            {/* Subtle dot grid overlay */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
+            />
+            {/* Gradient fade to bottom */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/10" />
+
+            {/* Orange / indigo glow accents */}
+            <div
+              className="absolute -left-16 -top-16 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+              style={{ background: "radial-gradient(circle,#F97316 0%,transparent 70%)" }}
+            />
+            <div
+              className="absolute right-0 bottom-0 w-56 h-56 rounded-full opacity-20 pointer-events-none"
+              style={{ background: "radial-gradient(circle,#6366F1 0%,transparent 70%)" }}
+            />
 
             {/* Top nav row */}
-            <div className="absolute top-0 inset-x-0 px-4 sm:px-6 pt-4 flex items-center justify-between z-20">
+            <div className="absolute top-0 inset-x-0 px-4 sm:px-6 pt-4 sm:pt-6 flex items-center justify-between z-20">
               <Link href="/shop"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors">
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors">
                 <FiChevronLeft size={13} /> Back
               </Link>
 
               <div className="relative">
                 <button onClick={() => setShareOpen(v => !v)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors">
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors">
                   <FiShare2 size={12} /> Share
                 </button>
                 {shareOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShareOpen(false)} />
-                    <div className="absolute top-10 right-0 z-50 w-44 bg-white rounded-2xl border border-[#EFE9E2] shadow-xl p-2 overflow-hidden">
-                      <p className="px-3 pt-1 pb-2 text-[9px] font-black uppercase tracking-widest text-[#B6AFA6]">Share via</p>
+                    <div className="absolute top-10 right-0 z-50 w-44 bg-white rounded-2xl border border-slate-100 shadow-xl p-2 overflow-hidden">
+                      <p className="px-3 pt-1 pb-2 text-[9px] font-black uppercase tracking-widest text-slate-400">Share via</p>
                       {[
                         { icon: <FaWhatsapp className="text-green-500" size={14} />, label: "WhatsApp", fn: () => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`) },
                         { icon: <FaFacebook className="text-blue-600" size={14} />, label: "Facebook", fn: () => window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`) },
                         { icon: <FaTwitter className="text-sky-500" size={14} />, label: "Twitter", fn: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`) },
                         {
-                          icon: copied ? <FiCheck className="text-emerald-500" size={14} /> : <FaCopy className="text-[#9A938A]" size={14} />,
+                          icon: copied ? <FiCheck className="text-emerald-500" size={14} /> : <FaCopy className="text-slate-400" size={14} />,
                           label: copied ? "Copied!" : "Copy link",
                           fn: () => { navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); },
                         },
                       ].map(({ icon, label, fn }) => (
                         <button key={label} onClick={() => { fn(); if (label !== "Copy link" && label !== "Copied!") setShareOpen(false); }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#FAF9F7] text-xs font-semibold text-[#5C564E] transition-colors text-left">
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-600 transition-colors text-left">
                           {icon} {label}
                         </button>
                       ))}
@@ -445,44 +483,45 @@ export default function SellerProfilePage() {
             <div className="relative -mt-12 sm:-mt-14 flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
               {/* Avatar */}
               <div className="relative shrink-0">
-                <div
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-[#FAF9F7] bg-[#1C1A17] shadow-lg overflow-hidden flex items-center justify-center"
-                >
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-slate-50 bg-slate-900 shadow-lg overflow-hidden flex items-center justify-center">
                   {logoUrl
                     ? <Image src={logoUrl} alt={seller.business_name} fill className="object-cover" unoptimized />
                     : <span className="text-2xl font-black text-white tracking-tight">{initials}</span>}
                 </div>
-                <div className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-white border-2 border-[#FAF9F7] flex items-center justify-center shadow-md">
-                  <MdVerified size={16} className="text-[#B42225]" />
+                <div className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-white border-2 border-slate-50 flex items-center justify-center shadow-md">
+                  <MdVerified size={16} className="text-orange-500" />
                 </div>
               </div>
 
               {/* Name + meta */}
               <div className="flex-1 min-w-0 pb-1 sm:pb-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-black text-[#1C1A17] tracking-tight truncate">
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
                     {seller.business_name}
                   </h1>
+                  {seller.approval_status === "approved" && (
+                    <MdVerified className="text-orange-500 shrink-0" size={20} title="Verified seller" />
+                  )}
                 </div>
                 {seller.short_business_description && (
-                  <p className="text-sm text-[#9A938A] mt-0.5 truncate">
+                  <p className="text-sm text-slate-500 mt-0.5 truncate">
                     {seller.short_business_description}
                   </p>
                 )}
                 <div className="flex items-center gap-2.5 mt-2 flex-wrap">
                   <div className="flex items-center gap-1.5">
                     <Stars rating={seller.average_rating} size={11} />
-                    <span className="text-xs font-bold text-[#1C1A17]">{avgRating}</span>
-                    <span className="text-xs text-[#B6AFA6]">({seller.review_count || 0})</span>
+                    <span className="text-xs font-bold text-slate-900">{avgRating}</span>
+                    <span className="text-xs text-slate-400">({seller.review_count || 0})</span>
                   </div>
-                  <span className="text-[#E5DFD6] text-xs">·</span>
-                  <span className="text-xs text-[#9A938A] flex items-center gap-1">
+                  <span className="text-slate-200 text-xs">·</span>
+                  <span className="text-xs text-slate-500 flex items-center gap-1">
                     <FiUsers size={11} /> {followerCount.toLocaleString()} followers
                   </span>
                   {seller.business_location && (
                     <>
-                      <span className="text-[#E5DFD6] text-xs">·</span>
-                      <span className="text-xs text-[#9A938A] flex items-center gap-1">
+                      <span className="text-slate-200 text-xs">·</span>
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
                         <FiMapPin size={11} /> {seller.business_location}
                       </span>
                     </>
@@ -502,8 +541,8 @@ export default function SellerProfilePage() {
                 <button onClick={handleFollow} disabled={followLoading}
                   className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold transition-colors ${
                     following
-                      ? "bg-[#FAF9F7] border border-[#EFE9E2] text-[#1C1A17]"
-                      : "bg-[#1C1A17] text-white hover:bg-[#B42225]"
+                      ? "bg-slate-50 border border-slate-200 text-slate-900"
+                      : "bg-slate-900 text-white hover:bg-orange-500"
                   }`}>
                   {followLoading ? <FiLoader size={12} className="animate-spin" /> :
                     following ? <FiCheck size={12} /> : <FiHeart size={12} />}
@@ -512,18 +551,89 @@ export default function SellerProfilePage() {
               </div>
             </div>
 
+            {/* Approval banner */}
+            {seller.approval_status && seller.approval_status !== "approved" && (
+              <div
+                className={`mt-5 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
+                  seller.approval_status === "rejected"
+                    ? "bg-red-50 border-red-200"
+                    : "bg-amber-50 border-amber-200"
+                }`}
+              >
+                <FiAlertCircle
+                  className={seller.approval_status === "rejected" ? "text-red-500" : "text-amber-500"}
+                  size={18}
+                />
+                <p
+                  className={`text-sm font-medium ${
+                    seller.approval_status === "rejected" ? "text-red-700" : "text-amber-800"
+                  }`}
+                >
+                  {seller.approval_status === "pending"
+                    ? "This store is awaiting approval."
+                    : seller.approval_status === "rejected"
+                    ? "This store's application was not approved."
+                    : `Status: ${seller.approval_status}`}
+                </p>
+              </div>
+            )}
+
             {/* Stat strip */}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
               {[
-                { label: "Items sold", value: (seller.items_sold || 0).toLocaleString() },
-                { label: "Avg. rating", value: String(avgRating) },
-                { label: "Response time", value: seller.response_time || "—" },
-                { label: "Response rate", value: seller.response_rate || "—" },
-                { label: "Listings", value: String(seller.total_listings || 0) },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-white rounded-2xl border border-[#EFE9E2] px-4 py-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#B6AFA6] mb-1.5">{stat.label}</p>
-                  <p className="text-lg font-black text-[#1C1A17] leading-none">{stat.value}</p>
+                {
+                  icon: <FiShoppingBag size={17} />,
+                  label: "Listings",
+                  value: String(seller.total_listings || 0),
+                  color: "#F97316",
+                  bg: "#FFF7ED",
+                },
+                {
+                  icon: <FiPackage size={17} />,
+                  label: "Items sold",
+                  value: (seller.items_sold || 0).toLocaleString(),
+                  color: "#6366F1",
+                  bg: "#EEF2FF",
+                },
+                {
+                  icon: <FaStar size={14} />,
+                  label: "Rating",
+                  value: String(avgRating),
+                  color: "#F59E0B",
+                  bg: "#FFFBEB",
+                },
+                {
+                  icon: <FiUsers size={17} />,
+                  label: "Response time",
+                  value: seller.response_time || "—",
+                  color: "#10B981",
+                  bg: "#F0FDF4",
+                },
+                {
+                  icon: <MdOutlineLocalShipping size={17} />,
+                  label: "Response rate",
+                  value: seller.response_rate || "—",
+                  color: "#0EA5E9",
+                  bg: "#F0F9FF",
+                },
+              ].map((stat, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl border border-slate-100 px-4 py-3.5"
+                  style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="flex items-center gap-2 mb-1.5" style={{ color: stat.color }}>
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ background: stat.bg }}
+                    >
+                      {stat.icon}
+                    </div>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {stat.label}
+                    </span>
+                  </div>
+                  <p className="text-lg font-black text-slate-900 leading-none">{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -533,12 +643,12 @@ export default function SellerProfilePage() {
               <div className="flex flex-wrap gap-2 mt-4">
                 {seller.badges?.map(badge => (
                   <span key={badge}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-white border border-[#EFE9E2] text-[#5C564E]">
-                    <FiCheck size={9} className="text-emerald-500" /> {badge}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600">
+                    <FaCheckCircle size={11} className="text-emerald-500" /> {badge}
                   </span>
                 ))}
                 {seller.member_since && (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-[#B6AFA6] px-3 py-1.5 rounded-full bg-white border border-[#EFE9E2]">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 px-3 py-1.5 rounded-full bg-white border border-slate-200">
                     <FiClock size={9} />
                     Member since {new Date(seller.member_since).toLocaleDateString("en-NG", { month: "long", year: "numeric" })}
                   </span>
@@ -548,14 +658,12 @@ export default function SellerProfilePage() {
           </div>
         </div>
 
-        {/* Mobile chat row if no phone — keep follow visible */}
-
         {/* ══════════════════════════════════════════════════════════════════
             TABS + CONTENT
         ══════════════════════════════════════════════════════════════════ */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-16">
 
-          <div className="flex items-center gap-1 mb-7 overflow-x-auto no-scrollbar border-b border-[#EFE9E2]">
+          <div className="flex items-center gap-1 mb-7 overflow-x-auto no-scrollbar border-b border-slate-200">
             {([
               { key: "products", label: "Products", count: seller.total_listings || products.length },
               { key: "reviews",  label: "Reviews",  count: seller.review_count || 0 },
@@ -564,13 +672,13 @@ export default function SellerProfilePage() {
               <button key={key} onClick={() => setTab(key)}
                 className={`shrink-0 flex items-center gap-2 px-4 sm:px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${
                   tab === key
-                    ? "border-[#B42225] text-[#1C1A17]"
-                    : "border-transparent text-[#9A938A] hover:text-[#1C1A17]"
+                    ? "border-orange-500 text-slate-900"
+                    : "border-transparent text-slate-400 hover:text-slate-700"
                 }`}>
                 {label}
                 {count !== null && (
                   <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                    tab === key ? "bg-[#B42225]/10 text-[#B42225]" : "bg-[#FAF9F7] text-[#B6AFA6]"
+                    tab === key ? "bg-orange-50 text-orange-600" : "bg-slate-50 text-slate-400"
                   }`}>{count.toLocaleString()}</span>
                 )}
               </button>
@@ -582,22 +690,22 @@ export default function SellerProfilePage() {
             <div>
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <div className="relative flex-1">
-                  <FiSearch size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B6AFA6] pointer-events-none" />
+                  <FiSearch size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
-                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-[#EFE9E2] text-sm text-[#1C1A17] placeholder-[#C9C2B8] outline-none focus:border-[#B42225] focus:ring-2 focus:ring-[#B42225]/10 transition-colors"
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/10 transition-colors"
                     placeholder="Search products…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                   />
                   {search && (
-                    <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B6AFA6] hover:text-[#1C1A17] transition-colors">
+                    <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors">
                       <FiX size={13} />
                     </button>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <select
-                    className="px-3 py-2.5 rounded-xl bg-white border border-[#EFE9E2] text-sm text-[#5C564E] outline-none cursor-pointer font-medium"
+                    className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-600 outline-none cursor-pointer font-medium"
                     value={sort} onChange={e => setSort(e.target.value)}>
                     <option value="newest">Newest</option>
                     <option value="price_asc">Price ↑</option>
@@ -605,10 +713,10 @@ export default function SellerProfilePage() {
                     <option value="rating">Top rated</option>
                     <option value="popular">Best selling</option>
                   </select>
-                  <div className="flex bg-white border border-[#EFE9E2] rounded-xl p-1 gap-0.5">
+                  <div className="flex bg-white border border-slate-200 rounded-xl p-1 gap-0.5">
                     {([["grid", FiGrid], ["list", FiList]] as const).map(([v, Icon]) => (
                       <button key={v} onClick={() => setView(v as any)}
-                        className={`p-2 rounded-lg transition-colors ${view === v ? "bg-[#1C1A17] text-white" : "text-[#B6AFA6] hover:text-[#1C1A17]"}`}>
+                        className={`p-2 rounded-lg transition-colors ${view === v ? "bg-slate-900 text-white" : "text-slate-400 hover:text-slate-900"}`}>
                         <Icon size={14} />
                       </button>
                     ))}
@@ -617,21 +725,21 @@ export default function SellerProfilePage() {
               </div>
 
               {search && (
-                <p className="text-xs text-[#B6AFA6] mb-4 font-medium">
-                  {sorted.length} result{sorted.length !== 1 ? "s" : ""} for <span className="text-[#1C1A17] font-bold">"{search}"</span>
+                <p className="text-xs text-slate-400 mb-4 font-medium">
+                  {sorted.length} result{sorted.length !== 1 ? "s" : ""} for <span className="text-slate-900 font-bold">&quot;{search}&quot;</span>
                 </p>
               )}
 
               {sorted.length === 0 ? (
                 <div className="py-20 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-white border border-[#EFE9E2] flex items-center justify-center mx-auto mb-4">
-                    <FiPackage size={24} className="text-[#D9D2C8]" />
+                  <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mx-auto mb-4">
+                    <FiPackage size={24} className="text-slate-300" />
                   </div>
-                  <p className="font-black text-[#1C1A17]">No products found</p>
-                  <p className="text-sm text-[#9A938A] mt-1">
+                  <p className="font-black text-slate-900">No products found</p>
+                  <p className="text-sm text-slate-400 mt-1">
                     {search ? "Try a different search" : "This seller has no listed products yet."}
                   </p>
-                  {search && <button onClick={() => setSearch("")} className="mt-3 text-sm text-[#B42225] font-bold hover:underline">Clear search</button>}
+                  {search && <button onClick={() => setSearch("")} className="mt-3 text-sm text-orange-500 font-bold hover:underline">Clear search</button>}
                 </div>
               ) : view === "grid" ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -648,12 +756,12 @@ export default function SellerProfilePage() {
           {/* ── Reviews ──────────────────────────────────────────────────── */}
           {tab === "reviews" && (
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl border border-[#EFE9E2] p-6">
+              <div className="bg-white rounded-2xl border border-slate-100 p-6">
                 <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
                   <div className="text-center shrink-0">
-                    <p className="text-5xl font-black text-[#1C1A17] tabular-nums">{avgRating}</p>
+                    <p className="text-5xl font-black text-slate-900 tabular-nums">{avgRating}</p>
                     <div className="flex justify-center mt-2"><Stars rating={seller.average_rating} size={16} /></div>
-                    <p className="text-xs text-[#B6AFA6] mt-1.5 font-medium">{(seller.review_count || 0).toLocaleString()} reviews</p>
+                    <p className="text-xs text-slate-400 mt-1.5 font-medium">{(seller.review_count || 0).toLocaleString()} reviews</p>
                   </div>
                   <div className="flex-1 w-full space-y-1.5">
                     {[5, 4, 3, 2, 1].map(s => {
@@ -661,12 +769,12 @@ export default function SellerProfilePage() {
                       const pct = reviews.length > 0 ? Math.round((ct / reviews.length) * 100) : s === 5 ? 65 : s === 4 ? 22 : s === 3 ? 8 : s === 2 ? 3 : 2;
                       return (
                         <div key={s} className="flex items-center gap-2.5">
-                          <span className="text-[11px] font-bold text-[#9A938A] w-3 text-right tabular-nums">{s}</span>
-                          <FaStar size={9} className="text-amber-400 shrink-0" />
-                          <div className="flex-1 h-1.5 bg-[#F2EEE9] rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-400 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                          <span className="text-[11px] font-bold text-slate-400 w-3 text-right tabular-nums">{s}</span>
+                          <FaStar size={9} className="text-orange-400 shrink-0" />
+                          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-orange-400 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                           </div>
-                          <span className="text-[10px] text-[#B6AFA6] w-7 text-right tabular-nums">{pct}%</span>
+                          <span className="text-[10px] text-slate-400 w-7 text-right tabular-nums">{pct}%</span>
                         </div>
                       );
                     })}
@@ -676,15 +784,15 @@ export default function SellerProfilePage() {
 
               {reviewsLoading ? (
                 <div className="py-12 text-center">
-                  <FiLoader size={22} className="animate-spin text-[#B42225] mx-auto mb-3" />
-                  <p className="text-sm text-[#9A938A]">Loading reviews…</p>
+                  <FiLoader size={22} className="animate-spin text-orange-500 mx-auto mb-3" />
+                  <p className="text-sm text-slate-400">Loading reviews…</p>
                 </div>
               ) : reviews.length === 0 ? (
-                <div className="py-14 text-center bg-white rounded-2xl border border-[#EFE9E2]">
-                  <div className="w-12 h-12 rounded-xl bg-[#FAF9F7] flex items-center justify-center mx-auto mb-3">
-                    <FaStar size={18} className="text-[#E5DFD6]" />
+                <div className="py-14 text-center bg-white rounded-2xl border border-slate-100">
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                    <FaStar size={18} className="text-slate-200" />
                   </div>
-                  <p className="font-bold text-[#9A938A] text-sm">No reviews yet</p>
+                  <p className="font-bold text-slate-400 text-sm">No reviews yet</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -698,18 +806,18 @@ export default function SellerProfilePage() {
           {tab === "about" && (
             <div className="max-w-2xl space-y-4">
               {/* Bio */}
-              <div className="bg-white rounded-2xl border border-[#EFE9E2] p-6">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#B6AFA6] mb-3">About the store</p>
-                <p className="text-[13px] text-[#5C564E] leading-relaxed whitespace-pre-wrap">
+              <div className="bg-white rounded-2xl border border-slate-100 p-6">
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3">About the store</p>
+                <p className="text-[13px] text-slate-500 leading-relaxed whitespace-pre-wrap">
                   {seller.seller_bio || seller.short_business_description || "No description provided."}
                 </p>
               </div>
 
               {/* Store details */}
-              <div className="bg-white rounded-2xl border border-[#EFE9E2] overflow-hidden">
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
                 <div className="px-6 pt-5 pb-3">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#B6AFA6] mb-4">Store details</p>
-                  <div className="divide-y divide-[#F2EEE9]">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Store details</p>
+                  <div className="divide-y divide-slate-100">
                     {[
                       { label: "Member since", value: seller.member_since ? new Date(seller.member_since).toLocaleDateString("en-NG", { month: "long", year: "numeric" }) : null },
                       { label: "Location", value: seller.business_location || seller.business_address || null },
@@ -720,8 +828,8 @@ export default function SellerProfilePage() {
                       { label: "Response time", value: seller.response_time || null },
                     ].filter(r => r.value).map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between py-3">
-                        <span className="text-[13px] text-[#9A938A]">{label}</span>
-                        <span className="text-[13px] font-bold text-[#1C1A17]">{value}</span>
+                        <span className="text-[13px] text-slate-400">{label}</span>
+                        <span className="text-[13px] font-bold text-slate-900">{value}</span>
                       </div>
                     ))}
                   </div>
@@ -730,31 +838,31 @@ export default function SellerProfilePage() {
 
               {/* Contact */}
               {(seller.business_email || seller.business_phone_number || seller.business_website) && (
-                <div className="bg-white rounded-2xl border border-[#EFE9E2] p-6">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#B6AFA6] mb-4">Contact</p>
+                <div className="bg-white rounded-2xl border border-slate-100 p-6">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Contact</p>
                   <div className="space-y-3">
                     {seller.business_email && (
                       <a href={`mailto:${seller.business_email}`} className="flex items-center gap-3 group">
-                        <div className="w-8 h-8 rounded-lg bg-[#FAF9F7] flex items-center justify-center shrink-0 border border-[#EFE9E2]">
-                          <FiMail size={13} className="text-[#9A938A]" />
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                          <FiMail size={13} className="text-slate-400" />
                         </div>
-                        <span className="text-[13px] text-[#B42225] group-hover:underline">{seller.business_email}</span>
+                        <span className="text-[13px] text-orange-500 group-hover:underline">{seller.business_email}</span>
                       </a>
                     )}
                     {seller.business_phone_number && (
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-[#FAF9F7] flex items-center justify-center shrink-0 border border-[#EFE9E2]">
-                          <FiPhone size={13} className="text-[#9A938A]" />
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                          <FiPhone size={13} className="text-slate-400" />
                         </div>
-                        <span className="text-[13px] text-[#5C564E]">{seller.business_phone_number}</span>
+                        <span className="text-[13px] text-slate-600">{seller.business_phone_number}</span>
                       </div>
                     )}
                     {seller.business_website && (
                       <a href={seller.business_website} target="_blank" rel="noreferrer" className="flex items-center gap-3 group">
-                        <div className="w-8 h-8 rounded-lg bg-[#FAF9F7] flex items-center justify-center shrink-0 border border-[#EFE9E2]">
-                          <FiGlobe size={13} className="text-[#9A938A]" />
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                          <FiGlobe size={13} className="text-slate-400" />
                         </div>
-                        <span className="text-[13px] text-[#B42225] group-hover:underline truncate">{seller.business_website}</span>
+                        <span className="text-[13px] text-orange-500 group-hover:underline truncate">{seller.business_website}</span>
                       </a>
                     )}
                   </div>
@@ -763,8 +871,8 @@ export default function SellerProfilePage() {
 
               {/* Socials */}
               {(seller.business_facebook || seller.business_twitter || seller.business_instagram || seller.business_linkedin) && (
-                <div className="bg-white rounded-2xl border border-[#EFE9E2] p-6">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-[#B6AFA6] mb-4">Social</p>
+                <div className="bg-white rounded-2xl border border-slate-100 p-6">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Social</p>
                   <div className="flex flex-wrap gap-2.5">
                     {[
                       { url: seller.business_facebook,  icon: <FaFacebook  size={13} />, label: "Facebook",  cls: "text-blue-600  bg-blue-50  border-blue-100"  },
@@ -782,20 +890,20 @@ export default function SellerProfilePage() {
               )}
 
               {/* Trust */}
-              <div className="bg-white rounded-2xl border border-[#EFE9E2] p-6">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#B6AFA6] mb-4">Trust & safety</p>
+              <div className="bg-white rounded-2xl border border-slate-100 p-6">
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Trust &amp; safety</p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { icon: <HiOutlineShieldCheck size={16} className="text-emerald-500" />, bg: "bg-emerald-50", title: "Identity verified", sub: "ID confirmed" },
-                    { icon: <MdVerified size={16} className="text-[#B42225]" />, bg: "bg-[#B42225]/5", title: "Jovo certified", sub: "Quality standards met" },
-                    { icon: <FaStar size={14} className="text-amber-400" />, bg: "bg-amber-50", title: "Top seller", sub: "Top 5% on platform" },
+                    { icon: <MdVerified size={16} className="text-orange-500" />, bg: "bg-orange-50", title: "Jovo certified", sub: "Quality standards met" },
+                    { icon: <FaStar size={14} className="text-orange-400" />, bg: "bg-amber-50", title: "Top seller", sub: "Top 5% on platform" },
                     { icon: <MdOutlineLocalShipping size={16} className="text-blue-500" />, bg: "bg-blue-50", title: "Fast shipper", sub: "Ships within 24h" },
                   ].map(({ icon, bg, title, sub }) => (
-                    <div key={title} className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[#FAF9F7] border border-[#EFE9E2]">
+                    <div key={title} className="flex items-start gap-2.5 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                       <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
                       <div>
-                        <p className="text-xs font-bold text-[#1C1A17]">{title}</p>
-                        <p className="text-[10px] text-[#B6AFA6] mt-0.5">{sub}</p>
+                        <p className="text-xs font-bold text-slate-900">{title}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{sub}</p>
                       </div>
                     </div>
                   ))}
@@ -803,7 +911,14 @@ export default function SellerProfilePage() {
               </div>
 
               {/* CTA */}
-              <div className="rounded-2xl overflow-hidden relative p-7 bg-[#1C1A17]">
+              <div
+                className="rounded-2xl overflow-hidden relative p-7"
+                style={{ background: "linear-gradient(135deg,#0F172A 0%,#1E293B 100%)" }}
+              >
+                <div
+                  className="absolute -right-8 -top-8 w-36 h-36 rounded-full opacity-20 pointer-events-none"
+                  style={{ background: "radial-gradient(circle,#F97316 0%,transparent 70%)" }}
+                />
                 <div className="relative flex flex-col sm:flex-row items-center justify-between gap-5">
                   <div>
                     <p className="text-white font-black text-lg">Ready to shop?</p>
@@ -812,7 +927,8 @@ export default function SellerProfilePage() {
                     </p>
                   </div>
                   <button onClick={() => setTab("products")}
-                    className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white shrink-0 bg-[#B42225] hover:bg-[#cc2528] transition-colors">
+                    className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white shrink-0 transition-colors"
+                    style={{ background: "linear-gradient(135deg,#F97316,#EA580C)" }}>
                     <FiShoppingBag size={14} /> View products
                   </button>
                 </div>

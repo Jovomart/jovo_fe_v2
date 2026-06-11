@@ -33,7 +33,15 @@ export default function ProductCard({ product: p }: Props) {
   const wishlisted = isWishlisted(idNum);
 
   useEffect(() => {
-    setIsClient(true);
+    // Defer to a microtask so this isn't a synchronous setState-in-effect
+    // (avoids the cascading-render lint warning while still flipping after mount).
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setIsClient(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Calculate discount percentage if oldPrice exists
@@ -43,10 +51,10 @@ export default function ProductCard({ product: p }: Props) {
 
   // Get the product image with fallback
   const productImage = imageError ? PLACEHOLDER_IMAGE : (p.image || PLACEHOLDER_IMAGE);
-  
+
   // Get alt text for the image
   const altText = p.alt || p.name || "Product image";
-  
+
   // Check if product is in stock (using any available property or default to true)
   const isInStock = (p as any).is_in_stock !== undefined ? (p as any).is_in_stock : true;
 
@@ -151,8 +159,8 @@ export default function ProductCard({ product: p }: Props) {
           disabled={!isInStock}
           aria-label={`Add ${p.name} to cart`}
           className={`w-full flex items-center justify-center gap-[5px] py-[7.5px] rounded-[8px] text-[12px] font-bold transition-all font-body ${
-            added 
-              ? "!bg-[#22c55e] !text-white" 
+            added
+              ? "!bg-[#22c55e] !text-white"
               : !isInStock
               ? "bg-gray-200 text-gray-400 cursor-not-allowed"
               : "bg-gray-100 text-gray-900 hover:bg-brand-gradient hover:text-white"
