@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useEffect, useRef, useCallback } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import ApiService from "@/services/apiService";
@@ -129,7 +129,7 @@ const Profile = () => {
   const [deleteError, setDeleteError] = useState("");
 
   // ─── Fetch schools ────────────────────────────────────────────────────────
-  const fetchSchools = async () => {
+  const fetchSchools = useCallback(async () => {
     setLoadingSchools(true);
     try {
       const response = await ApiService.getAvailableSchools();
@@ -149,7 +149,7 @@ const Profile = () => {
     } finally {
       setLoadingSchools(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setHasMounted(true);
@@ -163,7 +163,7 @@ const Profile = () => {
     if (isEditModalOpen) {
       fetchSchools();
     }
-  }, [isEditModalOpen]);
+  }, [isEditModalOpen, fetchSchools]);
 
   useEffect(() => {
     if (user && isEditModalOpen) {

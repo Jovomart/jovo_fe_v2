@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useEffect, useRef, useCallback } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import ApiService from "@/services/apiService";
 import Image from "next/image";
@@ -95,8 +95,14 @@ const GENDER_OPTIONS = ["MALE", "FEMALE"];
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const Settings = () => {
-  const { user, updateProfile, updateProfileImage, changePassword, deleteAccount, logout } =
-    useContext(AuthContext);
+  const {
+    user,
+    updateProfile,
+    updateProfileImage,
+    changePassword,
+    deleteAccount,
+    logout,
+  } = useContext(AuthContext);
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("profile");
@@ -160,7 +166,7 @@ const Settings = () => {
   const [deleteError, setDeleteError] = useState("");
 
   // ─── Fetch schools ─────────────────────────────────────────────────────────
-  const fetchSchools = async () => {
+  const fetchSchools = useCallback(async () => {
     setLoadingSchools(true);
     try {
       const response = await ApiService.getAvailableSchools();
@@ -168,15 +174,17 @@ const Settings = () => {
       if (response?.data?.schools && Array.isArray(response.data.schools))
         arr = response.data.schools;
       else if (Array.isArray(response)) arr = response;
-      else if (response?.data && Array.isArray(response.data)) arr = response.data;
-      else if (response?.schools && Array.isArray(response.schools)) arr = response.schools;
+      else if (response?.data && Array.isArray(response.data))
+        arr = response.data;
+      else if (response?.schools && Array.isArray(response.schools))
+        arr = response.schools;
       setSchools(arr);
     } catch (err) {
       console.error("Failed to fetch schools:", err);
     } finally {
       setLoadingSchools(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -194,8 +202,7 @@ const Settings = () => {
       setSelectedSchoolId(user.school_id || user.schoolId || "");
     }
     fetchSchools();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, fetchSchools]);
 
   const filteredSchools = schools.filter((school) => {
     const s = schoolSearch.toLowerCase();
@@ -206,7 +213,9 @@ const Settings = () => {
   });
 
   // ─── Profile image upload ──────────────────────────────────────────────────
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -286,7 +295,10 @@ const Settings = () => {
   };
 
   // ─── Change password ───────────────────────────────────────────────────────
-  const handlePasswordFieldChange = (field: keyof PasswordForm, value: string) => {
+  const handlePasswordFieldChange = (
+    field: keyof PasswordForm,
+    value: string,
+  ) => {
     setPasswordForm((prev) => ({ ...prev, [field]: value }));
     setPasswordErrors((prev) => ({ ...prev, [field]: "" }));
   };
@@ -302,7 +314,9 @@ const Settings = () => {
     }
     if (!passwordForm.confirm_new_password) {
       errors.confirm_new_password = "Please confirm your new password";
-    } else if (passwordForm.new_password !== passwordForm.confirm_new_password) {
+    } else if (
+      passwordForm.new_password !== passwordForm.confirm_new_password
+    ) {
       errors.confirm_new_password = "Passwords do not match";
     }
     setPasswordErrors(errors);
@@ -329,7 +343,11 @@ const Settings = () => {
       });
       setTimeout(() => setPasswordSuccess(""), 4000);
     } catch (err: any) {
-      setPasswordErrors({ general: err.message || "Failed to change password. Check your current password and try again." });
+      setPasswordErrors({
+        general:
+          err.message ||
+          "Failed to change password. Check your current password and try again.",
+      });
     } finally {
       setPasswordLoading(false);
     }
@@ -347,7 +365,9 @@ const Settings = () => {
       await deleteAccount();
       router.push("/");
     } catch (err: any) {
-      setDeleteError(err.message || "Failed to delete account. Please try again.");
+      setDeleteError(
+        err.message || "Failed to delete account. Please try again.",
+      );
       setDeletingAccount(false);
     }
   };
@@ -411,8 +431,18 @@ const Settings = () => {
               onClick={() => router.push("/profile")}
               className="group inline-flex items-center gap-2 text-white/60 hover:text-white transition-all mb-6"
             >
-              <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               Back to Profile
             </button>
@@ -451,7 +481,13 @@ const Settings = () => {
                       ? "text-white shadow-md"
                       : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   }`}
-                  style={isActive ? { background: "linear-gradient(135deg,#B42225,#FF8C00)" } : {}}
+                  style={
+                    isActive
+                      ? {
+                          background: "linear-gradient(135deg,#B42225,#FF8C00)",
+                        }
+                      : {}
+                  }
                 >
                   <Icon size={16} />
                   {tab.label}
@@ -469,10 +505,15 @@ const Settings = () => {
                     <FiUser size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Georgia',serif" }}>
+                    <h2
+                      className="text-2xl font-black text-gray-900"
+                      style={{ fontFamily: "'Georgia',serif" }}
+                    >
                       Profile Information
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Update your personal details</p>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Update your personal details
+                    </p>
                   </div>
                 </div>
               </div>
@@ -492,7 +533,9 @@ const Settings = () => {
                     ) : (
                       <div
                         className="w-20 h-20 rounded-2xl flex items-center justify-center"
-                        style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)" }}
+                        style={{
+                          background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                        }}
                       >
                         <span className="text-2xl font-black text-white">
                           {initials || user.username?.[0]?.toUpperCase() || "U"}
@@ -506,9 +549,12 @@ const Settings = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-800">Profile Photo</p>
+                    <p className="text-sm font-bold text-gray-800">
+                      Profile Photo
+                    </p>
                     <p className="text-xs text-gray-400 mt-0.5 mb-2">
-                      Upload a clear photo of yourself. Supports JPG, PNG — max 5MB.
+                      Upload a clear photo of yourself. Supports JPG, PNG — max
+                      5MB.
                     </p>
                     {imageError && (
                       <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
@@ -544,7 +590,9 @@ const Settings = () => {
                     <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
                       <FiCheck size={16} className="text-white" />
                     </div>
-                    <p className="text-green-700 font-medium">{profileSuccess}</p>
+                    <p className="text-green-700 font-medium">
+                      {profileSuccess}
+                    </p>
                   </div>
                 )}
                 {profileErrors.general && (
@@ -552,7 +600,9 @@ const Settings = () => {
                     <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
                       <FiAlertCircle size={16} className="text-white" />
                     </div>
-                    <p className="text-red-600 text-sm">{profileErrors.general}</p>
+                    <p className="text-red-600 text-sm">
+                      {profileErrors.general}
+                    </p>
                   </div>
                 )}
 
@@ -567,24 +617,32 @@ const Settings = () => {
                         <input
                           type="text"
                           value={form.first_name}
-                          onChange={(e) => handleFieldChange("first_name", e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange("first_name", e.target.value)
+                          }
                           className={inputClass("first_name")}
                           placeholder="First name"
                         />
                         {profileErrors.first_name && (
-                          <p className="text-xs text-red-500 mt-1 ml-1">{profileErrors.first_name}</p>
+                          <p className="text-xs text-red-500 mt-1 ml-1">
+                            {profileErrors.first_name}
+                          </p>
                         )}
                       </div>
                       <div>
                         <input
                           type="text"
                           value={form.last_name}
-                          onChange={(e) => handleFieldChange("last_name", e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange("last_name", e.target.value)
+                          }
                           className={inputClass("last_name")}
                           placeholder="Last name"
                         />
                         {profileErrors.last_name && (
-                          <p className="text-xs text-red-500 mt-1 ml-1">{profileErrors.last_name}</p>
+                          <p className="text-xs text-red-500 mt-1 ml-1">
+                            {profileErrors.last_name}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -597,19 +655,26 @@ const Settings = () => {
                         Username
                       </label>
                       <div className="relative">
-                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">@</span>
+                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">
+                          @
+                        </span>
                         <input
                           type="text"
                           value={form.username}
                           onChange={(e) =>
-                            handleFieldChange("username", e.target.value.replace(/\s/g, ""))
+                            handleFieldChange(
+                              "username",
+                              e.target.value.replace(/\s/g, ""),
+                            )
                           }
                           className={`${inputClass("username")} pl-10`}
                           placeholder="username"
                         />
                       </div>
                       {profileErrors.username && (
-                        <p className="text-xs text-red-500 mt-1 ml-1">{profileErrors.username}</p>
+                        <p className="text-xs text-red-500 mt-1 ml-1">
+                          {profileErrors.username}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -619,12 +684,16 @@ const Settings = () => {
                       <input
                         type="tel"
                         value={form.phone}
-                        onChange={(e) => handleFieldChange("phone", e.target.value)}
+                        onChange={(e) =>
+                          handleFieldChange("phone", e.target.value)
+                        }
                         className={inputClass("phone")}
                         placeholder="08012345678"
                       />
                       {profileErrors.phone && (
-                        <p className="text-xs text-red-500 mt-1 ml-1">{profileErrors.phone}</p>
+                        <p className="text-xs text-red-500 mt-1 ml-1">
+                          {profileErrors.phone}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -646,13 +715,17 @@ const Settings = () => {
                               : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300"
                           }`}
                         >
-                          <span className="text-xl">{g === "MALE" ? "👨" : "👩"}</span>
+                          <span className="text-xl">
+                            {g === "MALE" ? "👨" : "👩"}
+                          </span>
                           {g.charAt(0) + g.slice(1).toLowerCase()}
                         </button>
                       ))}
                     </div>
                     {profileErrors.gender && (
-                      <p className="text-xs text-red-500 mt-1 ml-1">{profileErrors.gender}</p>
+                      <p className="text-xs text-red-500 mt-1 ml-1">
+                        {profileErrors.gender}
+                      </p>
                     )}
                   </div>
 
@@ -666,36 +739,48 @@ const Settings = () => {
                         <input
                           type="text"
                           value={form.country}
-                          onChange={(e) => handleFieldChange("country", e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange("country", e.target.value)
+                          }
                           className={inputClass("country")}
                           placeholder="Country"
                         />
                         {profileErrors.country && (
-                          <p className="text-xs text-red-500 mt-1">{profileErrors.country}</p>
+                          <p className="text-xs text-red-500 mt-1">
+                            {profileErrors.country}
+                          </p>
                         )}
                       </div>
                       <div>
                         <input
                           type="text"
                           value={form.state}
-                          onChange={(e) => handleFieldChange("state", e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange("state", e.target.value)
+                          }
                           className={inputClass("state")}
                           placeholder="State"
                         />
                         {profileErrors.state && (
-                          <p className="text-xs text-red-500 mt-1">{profileErrors.state}</p>
+                          <p className="text-xs text-red-500 mt-1">
+                            {profileErrors.state}
+                          </p>
                         )}
                       </div>
                       <div>
                         <input
                           type="text"
                           value={form.city}
-                          onChange={(e) => handleFieldChange("city", e.target.value)}
+                          onChange={(e) =>
+                            handleFieldChange("city", e.target.value)
+                          }
                           className={inputClass("city")}
                           placeholder="City"
                         />
                         {profileErrors.city && (
-                          <p className="text-xs text-red-500 mt-1">{profileErrors.city}</p>
+                          <p className="text-xs text-red-500 mt-1">
+                            {profileErrors.city}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -704,12 +789,15 @@ const Settings = () => {
                   {/* School */}
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
-                      School / Institution <span className="text-red-500">*</span>
+                      School / Institution{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <button
                         type="button"
-                        onClick={() => setSchoolDropdownOpen(!schoolDropdownOpen)}
+                        onClick={() =>
+                          setSchoolDropdownOpen(!schoolDropdownOpen)
+                        }
                         className={`w-full flex items-center justify-between rounded-2xl border px-5 py-3.5 text-sm transition-all ${
                           profileErrors.school
                             ? "border-red-400 bg-red-50"
@@ -718,12 +806,20 @@ const Settings = () => {
                       >
                         <span className="flex items-center gap-2">
                           <FiBriefcase className="text-gray-400" size={16} />
-                          <span className={selectedSchoolId ? "text-gray-800" : "text-gray-400"}>
+                          <span
+                            className={
+                              selectedSchoolId
+                                ? "text-gray-800"
+                                : "text-gray-400"
+                            }
+                          >
                             {selectedSchoolId
-                              ? schools.find((s) => (s.id || s._id) === selectedSchoolId)
-                                  ?.school_name ||
-                                schools.find((s) => (s.id || s._id) === selectedSchoolId)
-                                  ?.name ||
+                              ? schools.find(
+                                  (s) => (s.id || s._id) === selectedSchoolId,
+                                )?.school_name ||
+                                schools.find(
+                                  (s) => (s.id || s._id) === selectedSchoolId,
+                                )?.name ||
                                 "Select your school"
                               : "Select your school"}
                           </span>
@@ -734,7 +830,12 @@ const Settings = () => {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         </svg>
                       </button>
 
@@ -742,14 +843,26 @@ const Settings = () => {
                         <div className="absolute z-50 left-0 right-0 mt-2 rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
                           <div className="p-4 border-b border-gray-100 bg-gray-50">
                             <div className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-2.5 bg-white">
-                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
                               </svg>
                               <input
                                 type="text"
                                 placeholder="Search school..."
                                 value={schoolSearch}
-                                onChange={(e) => setSchoolSearch(e.target.value)}
+                                onChange={(e) =>
+                                  setSchoolSearch(e.target.value)
+                                }
                                 className="flex-1 text-sm outline-none bg-transparent"
                                 autoFocus
                               />
@@ -762,34 +875,52 @@ const Settings = () => {
                               </div>
                             ) : filteredSchools.length === 0 ? (
                               <div className="text-center py-12">
-                                <p className="text-gray-400 text-sm">No schools found</p>
+                                <p className="text-gray-400 text-sm">
+                                  No schools found
+                                </p>
                               </div>
                             ) : (
                               filteredSchools.map((school) => {
-                                const isSelected = (school.id || school._id) === selectedSchoolId;
+                                const isSelected =
+                                  (school.id || school._id) ===
+                                  selectedSchoolId;
                                 return (
                                   <button
                                     key={school.id || school._id}
                                     type="button"
                                     onClick={() => {
-                                      setSelectedSchoolId(school.id || school._id || "");
+                                      setSelectedSchoolId(
+                                        school.id || school._id || "",
+                                      );
                                       setSchoolDropdownOpen(false);
                                       setSchoolSearch("");
-                                      setProfileErrors((prev) => ({ ...prev, school: "" }));
+                                      setProfileErrors((prev) => ({
+                                        ...prev,
+                                        school: "",
+                                      }));
                                     }}
                                     className={`w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50 transition ${
                                       isSelected ? "bg-[#B42225]/5" : ""
                                     }`}
                                   >
                                     <div>
-                                      <p className={`text-sm font-medium ${isSelected ? "text-[#B42225]" : "text-gray-700"}`}>
+                                      <p
+                                        className={`text-sm font-medium ${isSelected ? "text-[#B42225]" : "text-gray-700"}`}
+                                      >
                                         {school.school_name || school.name}
                                       </p>
                                       {school.school_code && (
-                                        <p className="text-xs text-gray-400 mt-0.5">Code: {school.school_code}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                          Code: {school.school_code}
+                                        </p>
                                       )}
                                     </div>
-                                    {isSelected && <FiCheck size={16} className="text-[#B42225]" />}
+                                    {isSelected && (
+                                      <FiCheck
+                                        size={16}
+                                        className="text-[#B42225]"
+                                      />
+                                    )}
                                   </button>
                                 );
                               })
@@ -799,7 +930,9 @@ const Settings = () => {
                       )}
                     </div>
                     {profileErrors.school && (
-                      <p className="text-xs text-red-500 mt-1 ml-1">{profileErrors.school}</p>
+                      <p className="text-xs text-red-500 mt-1 ml-1">
+                        {profileErrors.school}
+                      </p>
                     )}
                   </div>
 
@@ -807,11 +940,15 @@ const Settings = () => {
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
                       Address{" "}
-                      <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                      <span className="text-gray-400 font-normal normal-case">
+                        (optional)
+                      </span>
                     </label>
                     <textarea
                       value={form.address}
-                      onChange={(e) => handleFieldChange("address", e.target.value)}
+                      onChange={(e) =>
+                        handleFieldChange("address", e.target.value)
+                      }
                       className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-sm focus:border-[#B42225] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B42225]/20 resize-none"
                       rows={2}
                       placeholder="Your street address"
@@ -822,7 +959,9 @@ const Settings = () => {
                     type="submit"
                     disabled={profileLoading}
                     className="w-full py-4 rounded-2xl font-black text-white transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 text-base shadow-lg hover:shadow-xl"
-                    style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}
+                    style={{
+                      background: "linear-gradient(135deg,#B42225,#FF8C00)",
+                    }}
                   >
                     {profileLoading ? (
                       <>
@@ -849,7 +988,10 @@ const Settings = () => {
                     <FiLock size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Georgia',serif" }}>
+                    <h2
+                      className="text-2xl font-black text-gray-900"
+                      style={{ fontFamily: "'Georgia',serif" }}
+                    >
                       Change Password
                     </h2>
                     <p className="text-sm text-gray-500 mt-0.5">
@@ -865,7 +1007,9 @@ const Settings = () => {
                     <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                       <FiCheck size={16} className="text-white" />
                     </div>
-                    <p className="text-green-700 font-medium">{passwordSuccess}</p>
+                    <p className="text-green-700 font-medium">
+                      {passwordSuccess}
+                    </p>
                   </div>
                 )}
                 {passwordErrors.general && (
@@ -873,7 +1017,9 @@ const Settings = () => {
                     <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center shrink-0">
                       <FiAlertCircle size={16} className="text-white" />
                     </div>
-                    <p className="text-red-600 text-sm">{passwordErrors.general}</p>
+                    <p className="text-red-600 text-sm">
+                      {passwordErrors.general}
+                    </p>
                   </div>
                 )}
 
@@ -887,7 +1033,12 @@ const Settings = () => {
                       <input
                         type={showCurrentPwd ? "text" : "password"}
                         value={passwordForm.current_password}
-                        onChange={(e) => handlePasswordFieldChange("current_password", e.target.value)}
+                        onChange={(e) =>
+                          handlePasswordFieldChange(
+                            "current_password",
+                            e.target.value,
+                          )
+                        }
                         className={pwdInputClass("current_password")}
                         placeholder="Enter your current password"
                         autoComplete="current-password"
@@ -897,11 +1048,17 @@ const Settings = () => {
                         onClick={() => setShowCurrentPwd(!showCurrentPwd)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                       >
-                        {showCurrentPwd ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                        {showCurrentPwd ? (
+                          <FiEyeOff size={16} />
+                        ) : (
+                          <FiEye size={16} />
+                        )}
                       </button>
                     </div>
                     {passwordErrors.current_password && (
-                      <p className="text-xs text-red-500 mt-1 ml-1">{passwordErrors.current_password}</p>
+                      <p className="text-xs text-red-500 mt-1 ml-1">
+                        {passwordErrors.current_password}
+                      </p>
                     )}
                   </div>
 
@@ -914,7 +1071,12 @@ const Settings = () => {
                       <input
                         type={showNewPwd ? "text" : "password"}
                         value={passwordForm.new_password}
-                        onChange={(e) => handlePasswordFieldChange("new_password", e.target.value)}
+                        onChange={(e) =>
+                          handlePasswordFieldChange(
+                            "new_password",
+                            e.target.value,
+                          )
+                        }
                         className={pwdInputClass("new_password")}
                         placeholder="At least 8 characters"
                         autoComplete="new-password"
@@ -924,20 +1086,30 @@ const Settings = () => {
                         onClick={() => setShowNewPwd(!showNewPwd)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                       >
-                        {showNewPwd ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                        {showNewPwd ? (
+                          <FiEyeOff size={16} />
+                        ) : (
+                          <FiEye size={16} />
+                        )}
                       </button>
                     </div>
                     {passwordErrors.new_password && (
-                      <p className="text-xs text-red-500 mt-1 ml-1">{passwordErrors.new_password}</p>
+                      <p className="text-xs text-red-500 mt-1 ml-1">
+                        {passwordErrors.new_password}
+                      </p>
                     )}
                     {/* Password strength hint */}
                     {passwordForm.new_password && (
                       <div className="mt-2 flex gap-1">
                         {[...Array(4)].map((_, i) => {
                           const len = passwordForm.new_password.length;
-                          const hasUpper = /[A-Z]/.test(passwordForm.new_password);
+                          const hasUpper = /[A-Z]/.test(
+                            passwordForm.new_password,
+                          );
                           const hasNum = /\d/.test(passwordForm.new_password);
-                          const hasSpecial = /[!@#$%^&*]/.test(passwordForm.new_password);
+                          const hasSpecial = /[!@#$%^&*]/.test(
+                            passwordForm.new_password,
+                          );
                           const strength =
                             (len >= 8 ? 1 : 0) +
                             (hasUpper ? 1 : 0) +
@@ -948,10 +1120,10 @@ const Settings = () => {
                             strength <= 1
                               ? "bg-red-400"
                               : strength === 2
-                              ? "bg-yellow-400"
-                              : strength === 3
-                              ? "bg-blue-400"
-                              : "bg-green-400";
+                                ? "bg-yellow-400"
+                                : strength === 3
+                                  ? "bg-blue-400"
+                                  : "bg-green-400";
                           return (
                             <div
                               key={i}
@@ -972,7 +1144,12 @@ const Settings = () => {
                       <input
                         type={showConfirmPwd ? "text" : "password"}
                         value={passwordForm.confirm_new_password}
-                        onChange={(e) => handlePasswordFieldChange("confirm_new_password", e.target.value)}
+                        onChange={(e) =>
+                          handlePasswordFieldChange(
+                            "confirm_new_password",
+                            e.target.value,
+                          )
+                        }
                         className={pwdInputClass("confirm_new_password")}
                         placeholder="Re-enter your new password"
                         autoComplete="new-password"
@@ -982,14 +1159,21 @@ const Settings = () => {
                         onClick={() => setShowConfirmPwd(!showConfirmPwd)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                       >
-                        {showConfirmPwd ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                        {showConfirmPwd ? (
+                          <FiEyeOff size={16} />
+                        ) : (
+                          <FiEye size={16} />
+                        )}
                       </button>
                     </div>
                     {passwordErrors.confirm_new_password && (
-                      <p className="text-xs text-red-500 mt-1 ml-1">{passwordErrors.confirm_new_password}</p>
+                      <p className="text-xs text-red-500 mt-1 ml-1">
+                        {passwordErrors.confirm_new_password}
+                      </p>
                     )}
                     {passwordForm.confirm_new_password &&
-                      passwordForm.new_password === passwordForm.confirm_new_password && (
+                      passwordForm.new_password ===
+                        passwordForm.confirm_new_password && (
                         <p className="text-xs text-green-500 mt-1 ml-1 flex items-center gap-1">
                           <FiCheck size={11} /> Passwords match
                         </p>
@@ -1000,7 +1184,9 @@ const Settings = () => {
                     type="submit"
                     disabled={passwordLoading}
                     className="w-full py-4 rounded-2xl font-black text-white transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 text-base shadow-lg hover:shadow-xl"
-                    style={{ background: "linear-gradient(135deg,#F59E0B,#FBBF24)" }}
+                    style={{
+                      background: "linear-gradient(135deg,#F59E0B,#FBBF24)",
+                    }}
                   >
                     {passwordLoading ? (
                       <>
@@ -1021,9 +1207,12 @@ const Settings = () => {
                     Danger Zone
                   </h3>
                   <div className="p-4 rounded-2xl border border-red-100 bg-red-50">
-                    <p className="text-sm font-bold text-gray-800 mb-1">Delete Account</p>
+                    <p className="text-sm font-bold text-gray-800 mb-1">
+                      Delete Account
+                    </p>
                     <p className="text-xs text-gray-500 mb-3">
-                      Permanently delete your account and all associated data. This cannot be undone.
+                      Permanently delete your account and all associated data.
+                      This cannot be undone.
                     </p>
                     <button
                       type="button"
@@ -1047,10 +1236,15 @@ const Settings = () => {
                     <FiBell size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Georgia',serif" }}>
+                    <h2
+                      className="text-2xl font-black text-gray-900"
+                      style={{ fontFamily: "'Georgia',serif" }}
+                    >
                       Notification Preferences
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Choose how you want to be notified</p>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Choose how you want to be notified
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1064,7 +1258,9 @@ const Settings = () => {
                     key: "emailNotifications" as keyof Preferences,
                   },
                   {
-                    icon: <FiSmartphone size={18} className="text-purple-600" />,
+                    icon: (
+                      <FiSmartphone size={18} className="text-purple-600" />
+                    ),
                     bg: "bg-purple-100",
                     label: "Push Notifications",
                     sub: "Get real-time alerts on your device",
@@ -1076,7 +1272,9 @@ const Settings = () => {
                     className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center`}>
+                      <div
+                        className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center`}
+                      >
                         {icon}
                       </div>
                       <div>
@@ -1118,10 +1316,15 @@ const Settings = () => {
                     <FiGlobe size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Georgia',serif" }}>
+                    <h2
+                      className="text-2xl font-black text-gray-900"
+                      style={{ fontFamily: "'Georgia',serif" }}
+                    >
                       Preferences
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Customize your experience</p>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Customize your experience
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1138,13 +1341,22 @@ const Settings = () => {
                     </div>
                     <div>
                       <p className="font-bold text-gray-800">Dark Mode</p>
-                      <p className="text-xs text-gray-400">Switch between light and dark theme</p>
+                      <p className="text-xs text-gray-400">
+                        Switch between light and dark theme
+                      </p>
                     </div>
                   </div>
                   <button
-                    onClick={() => setPreferences((prev) => ({ ...prev, darkMode: !prev.darkMode }))}
+                    onClick={() =>
+                      setPreferences((prev) => ({
+                        ...prev,
+                        darkMode: !prev.darkMode,
+                      }))
+                    }
                     className={`w-14 h-7 rounded-full transition-all relative ${
-                      preferences.darkMode ? "bg-gradient-to-r from-[#B42225] to-[#FF8C00]" : "bg-gray-300"
+                      preferences.darkMode
+                        ? "bg-gradient-to-r from-[#B42225] to-[#FF8C00]"
+                        : "bg-gray-300"
                     }`}
                   >
                     <div
@@ -1163,12 +1375,19 @@ const Settings = () => {
                     </div>
                     <div>
                       <p className="font-bold text-gray-800">Language</p>
-                      <p className="text-xs text-gray-400">Choose your preferred language</p>
+                      <p className="text-xs text-gray-400">
+                        Choose your preferred language
+                      </p>
                     </div>
                   </div>
                   <select
                     value={preferences.language}
-                    onChange={(e) => setPreferences((prev) => ({ ...prev, language: e.target.value }))}
+                    onChange={(e) =>
+                      setPreferences((prev) => ({
+                        ...prev,
+                        language: e.target.value,
+                      }))
+                    }
                     className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium focus:border-[#B42225] focus:outline-none"
                   >
                     <option value="English">English</option>
@@ -1201,7 +1420,10 @@ const Settings = () => {
       {deleteModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+          style={{
+            background: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(8px)",
+          }}
         >
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="p-6 border-b border-red-100 bg-red-50">
@@ -1222,12 +1444,13 @@ const Settings = () => {
             </div>
             <div className="p-6">
               <p className="text-sm text-gray-600 mb-4">
-                Deleting your account will permanently remove all your data, orders,
-                reviews, and seller/service provider information.{" "}
+                Deleting your account will permanently remove all your data,
+                orders, reviews, and seller/service provider information.{" "}
                 <strong>This cannot be recovered.</strong>
               </p>
               <p className="text-sm font-bold text-gray-700 mb-2">
-                Type <span className="text-red-500 font-black">DELETE</span> to confirm:
+                Type <span className="text-red-500 font-black">DELETE</span> to
+                confirm:
               </p>
               <input
                 type="text"

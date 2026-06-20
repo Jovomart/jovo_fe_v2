@@ -105,33 +105,51 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    let active = true;
 
-    const targetKey = getWishlistKey(user?.id || user?.user_id);
-    const guestWishlist = loadWishlistFromStorage(GUEST_WISHLIST_KEY);
-    const userWishlist = loadWishlistFromStorage(targetKey);
+    queueMicrotask(() => {
+      if (!active) return;
 
-    if (user) {
-      const merged = uniqueWishlistItems([...guestWishlist, ...userWishlist]);
-      setWishlist(merged);
-      currentKeyRef.current = targetKey;
-      if (guestWishlist.length > 0) {
-        localStorage.removeItem(GUEST_WISHLIST_KEY);
+      const targetKey = getWishlistKey(user?.id || user?.user_id);
+      const guestWishlist = loadWishlistFromStorage(GUEST_WISHLIST_KEY);
+      const userWishlist = loadWishlistFromStorage(targetKey);
+
+      if (user) {
+        const merged = uniqueWishlistItems([...guestWishlist, ...userWishlist]);
+        setWishlist(merged);
+        currentKeyRef.current = targetKey;
+        if (guestWishlist.length > 0) {
+          localStorage.removeItem(GUEST_WISHLIST_KEY);
+        }
+      } else {
+        setWishlist(userWishlist);
+        currentKeyRef.current = GUEST_WISHLIST_KEY;
       }
-    } else {
-      setWishlist(userWishlist);
-      currentKeyRef.current = GUEST_WISHLIST_KEY;
-    }
 
-    setHydrated(true);
+      setHydrated(true);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [user?.id, user?.user_id]);
 
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return;
-    try {
-      localStorage.setItem(currentKeyRef.current, JSON.stringify(wishlist));
-    } catch {
-      // ignore storage failures
-    }
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        localStorage.setItem(currentKeyRef.current, JSON.stringify(wishlist));
+      } catch {
+        // ignore storage failures
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [wishlist, hydrated]);
 
   const addToWishlist = (product: WishlistItem) => {
