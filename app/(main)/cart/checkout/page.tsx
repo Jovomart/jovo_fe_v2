@@ -86,29 +86,58 @@ function formatEstimatedDays(opt: DeliveryOption) {
 
 function isPickupOption(opt: DeliveryOption) {
   const t = (opt.delivery_type || "").toLowerCase();
-  return t.includes("pickup") || t.includes("store") || t.includes("collection");
+  return (
+    t.includes("pickup") || t.includes("store") || t.includes("collection")
+  );
+}
+
+function unwrapEnvelope(res: any): any {
+  return res?.data ?? res;
+}
+
+function extractPaystackAccessCode(paymentUrl: string): string {
+  const match = paymentUrl.match(/checkout\.paystack\.com\/([a-zA-Z0-9]+)/);
+  return match?.[1] ?? "";
 }
 
 // ─────────────────────────────────────────────────────────────
 // SUCCESS MODAL
 // ─────────────────────────────────────────────────────────────
 function PaymentSuccessModal({
-  orderId, total, onContinue,
+  orderId,
+  total,
+  onContinue,
 }: {
-  orderId: string; total: number; onContinue: () => void;
+  orderId: string;
+  total: number;
+  onContinue: () => void;
 }) {
   useEffect(() => {
     const t = setTimeout(() => {
       const duration = 2500;
       const end = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000001 };
-      const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+      const defaults = {
+        startVelocity: 30,
+        spread: 360,
+        ticks: 60,
+        zIndex: 1000001,
+      };
+      const rand = (min: number, max: number) =>
+        Math.random() * (max - min) + min;
       const iv = setInterval(() => {
         const left = end - Date.now();
         if (left <= 0) return clearInterval(iv);
         const pc = 50 * (left / duration);
-        confetti({ ...defaults, particleCount: pc, origin: { x: rand(0.1, 0.3), y: Math.random() - 0.2 } });
-        confetti({ ...defaults, particleCount: pc, origin: { x: rand(0.7, 0.9), y: Math.random() - 0.2 } });
+        confetti({
+          ...defaults,
+          particleCount: pc,
+          origin: { x: rand(0.1, 0.3), y: Math.random() - 0.2 },
+        });
+        confetti({
+          ...defaults,
+          particleCount: pc,
+          origin: { x: rand(0.7, 0.9), y: Math.random() - 0.2 },
+        });
       }, 250);
       return () => clearInterval(iv);
     }, 100);
@@ -117,39 +146,158 @@ function PaymentSuccessModal({
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)", zIndex: 999999 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+        background: "rgba(0,0,0,0.82)",
+        backdropFilter: "blur(8px)",
+        zIndex: 999999,
+      }}
       onClick={onContinue}
     >
       <div
-        style={{ position: "relative", maxWidth: "28rem", width: "100%", background: "#fff", borderRadius: "1.5rem", overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.4)", animation: "successSlideUp 0.5s cubic-bezier(0.34,1.2,0.64,1) both", zIndex: 1000000 }}
+        style={{
+          position: "relative",
+          maxWidth: "28rem",
+          width: "100%",
+          background: "#fff",
+          borderRadius: "1.5rem",
+          overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.4)",
+          animation: "successSlideUp 0.5s cubic-bezier(0.34,1.2,0.64,1) both",
+          zIndex: 1000000,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ paddingTop: "2rem", paddingBottom: "1.5rem", textAlign: "center", background: "linear-gradient(135deg,#22C55E,#16A34A)" }}>
-          <div style={{ width: "5rem", height: "5rem", borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem", animation: "successScaleIn 0.5s cubic-bezier(0.34,1.2,0.64,1) 0.2s both" }}>
+        <div
+          style={{
+            paddingTop: "2rem",
+            paddingBottom: "1.5rem",
+            textAlign: "center",
+            background: "linear-gradient(135deg,#22C55E,#16A34A)",
+          }}
+        >
+          <div
+            style={{
+              width: "5rem",
+              height: "5rem",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1rem",
+              animation:
+                "successScaleIn 0.5s cubic-bezier(0.34,1.2,0.64,1) 0.2s both",
+            }}
+          >
             <FiCheckCircle size={48} color="#fff" />
           </div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", margin: "0 0 0.25rem" }}>Payment Successful!</h2>
-          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.875rem", margin: 0 }}>Your order has been confirmed</p>
+          <h2
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: 900,
+              color: "#fff",
+              margin: "0 0 0.25rem",
+            }}
+          >
+            Payment Successful!
+          </h2>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.8)",
+              fontSize: "0.875rem",
+              margin: 0,
+            }}
+          >
+            Your order has been confirmed
+          </p>
         </div>
         <div style={{ padding: "1.5rem" }}>
-          <div style={{ background: "#F9FAFB", borderRadius: "1rem", padding: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-              <span style={{ fontSize: "0.75rem", color: "#6B7280" }}>Order ID</span>
-              <span style={{ fontSize: "0.875rem", fontWeight: 900, color: "#111827", fontFamily: "monospace" }}>{orderId}</span>
+          <div
+            style={{
+              background: "#F9FAFB",
+              borderRadius: "1rem",
+              padding: "1rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "0.75rem",
+              }}
+            >
+              <span style={{ fontSize: "0.75rem", color: "#6B7280" }}>
+                Order ID
+              </span>
+              <span
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: 900,
+                  color: "#111827",
+                  fontFamily: "monospace",
+                }}
+              >
+                {orderId}
+              </span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "0.75rem", borderTop: "1px solid #E5E7EB" }}>
-              <span style={{ fontSize: "0.75rem", color: "#6B7280" }}>Total Paid</span>
-              <span style={{ fontSize: "1.25rem", fontWeight: 900, color: "#B42225" }}>{fmt(total)}</span>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                paddingTop: "0.75rem",
+                borderTop: "1px solid #E5E7EB",
+              }}
+            >
+              <span style={{ fontSize: "0.75rem", color: "#6B7280" }}>
+                Total Paid
+              </span>
+              <span
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: 900,
+                  color: "#B42225",
+                }}
+              >
+                {fmt(total)}
+              </span>
             </div>
           </div>
           <button
             onClick={onContinue}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "0.875rem", borderRadius: "1rem", fontWeight: 900, color: "#fff", fontSize: "0.875rem", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 8px 24px rgba(180,34,37,0.35)" }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              padding: "0.875rem",
+              borderRadius: "1rem",
+              fontWeight: 900,
+              color: "#fff",
+              fontSize: "0.875rem",
+              border: "none",
+              cursor: "pointer",
+              background: "linear-gradient(135deg,#B42225,#FF8C00)",
+              boxShadow: "0 8px 24px rgba(180,34,37,0.35)",
+            }}
           >
             <FiShoppingBag size={16} /> View My Orders
           </button>
         </div>
-        <div style={{ height: "4px", width: "100%", background: "linear-gradient(90deg,#22C55E,#16A34A,#22C55E)" }} />
+        <div
+          style={{
+            height: "4px",
+            width: "100%",
+            background: "linear-gradient(90deg,#22C55E,#16A34A,#22C55E)",
+          }}
+        />
       </div>
     </div>
   );
@@ -173,22 +321,35 @@ function StepBar({ current }: { current: number }) {
                 className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black transition-all duration-300"
                 style={
                   done
-                    ? { background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff" }
+                    ? {
+                        background: "linear-gradient(135deg,#22C55E,#16A34A)",
+                        color: "#fff",
+                      }
                     : active
-                      ? { background: "linear-gradient(135deg,#B42225,#FF8C00)", color: "#fff", boxShadow: "0 4px 16px rgba(180,34,37,0.4)" }
+                      ? {
+                          background: "linear-gradient(135deg,#B42225,#FF8C00)",
+                          color: "#fff",
+                          boxShadow: "0 4px 16px rgba(180,34,37,0.4)",
+                        }
                       : { background: "#F3F4F6", color: "#9CA3AF" }
                 }
               >
                 {done ? <FiCheck size={16} /> : idx}
               </div>
-              <span className={`text-[10px] font-bold mt-1 ${active ? "text-[#B42225]" : done ? "text-green-600" : "text-gray-400"}`}>
+              <span
+                className={`text-[10px] font-bold mt-1 ${active ? "text-[#B42225]" : done ? "text-green-600" : "text-gray-400"}`}
+              >
                 {label}
               </span>
             </div>
             {i < steps.length - 1 && (
               <div
                 className="h-0.5 w-12 sm:w-20 mx-1 mb-4 rounded-full transition-all duration-500"
-                style={{ background: done ? "linear-gradient(90deg,#22C55E,#16A34A)" : "#E5E7EB" }}
+                style={{
+                  background: done
+                    ? "linear-gradient(90deg,#22C55E,#16A34A)"
+                    : "#E5E7EB",
+                }}
               />
             )}
           </div>
@@ -238,7 +399,10 @@ function PickupStationPicker({
 
       {stations.length > 3 && (
         <div className="relative mb-3">
-          <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <FiSearch
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             placeholder="Search by name or landmark…"
@@ -274,8 +438,12 @@ function PickupStationPicker({
       {!loading && !error && stations.length === 0 && (
         <div className="text-center py-6 text-gray-400">
           <MdStorefront size={28} className="mx-auto mb-2 opacity-40" />
-          <p className="text-sm font-medium">No pickup stations found for your school.</p>
-          <p className="text-xs mt-1">Please choose a doorstep delivery option instead.</p>
+          <p className="text-sm font-medium">
+            No pickup stations found for your school.
+          </p>
+          <p className="text-xs mt-1">
+            Please choose a doorstep delivery option instead.
+          </p>
         </div>
       )}
 
@@ -302,13 +470,17 @@ function PickupStationPicker({
               >
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                    selected ? "bg-[#B42225] text-white" : "bg-gray-100 text-gray-500"
+                    selected
+                      ? "bg-[#B42225] text-white"
+                      : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   <MdStorefront size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-bold leading-snug ${selected ? "text-[#B42225]" : "text-gray-800"}`}>
+                  <p
+                    className={`text-sm font-bold leading-snug ${selected ? "text-[#B42225]" : "text-gray-800"}`}
+                  >
                     {station.name}
                   </p>
                   {station.landmark && (
@@ -378,16 +550,21 @@ function StepDelivery({
 }) {
   const { user } = useContext(AuthContext);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
-  
+
   const hasPrefilledRef = useRef(false);
-  const selectedDeliveryOption = deliveryOptions.find((o) => o.id === selectedDeliveryId) ?? null;
-  const isPickup = !!selectedDeliveryOption && isPickupOption(selectedDeliveryOption);
+  const selectedDeliveryOption =
+    deliveryOptions.find((o) => o.id === selectedDeliveryId) ?? null;
+  const isPickup =
+    !!selectedDeliveryOption && isPickupOption(selectedDeliveryOption);
 
   useEffect(() => {
     if (user && !hasPrefilledRef.current) {
       hasPrefilledRef.current = true;
       setInfo({
-        fullName: user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "",
+        fullName:
+          user.full_name ||
+          `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+          "",
         phone: user.phone || user.phone_number || "",
         email: user.email || "",
         address: user.address || "",
@@ -443,7 +620,9 @@ function StepDelivery({
             : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#B42225]/15"
         }`}
       >
-        <span className={errors[key] ? "text-red-400" : "text-gray-400"}>{icon}</span>
+        <span className={errors[key] ? "text-red-400" : "text-gray-400"}>
+          {icon}
+        </span>
         <input
           type={type}
           placeholder={placeholder}
@@ -452,14 +631,24 @@ function StepDelivery({
           className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder-gray-400"
         />
       </div>
-      {errors[key] && <p className="text-xs text-red-500 mt-1 ml-1">{errors[key]}</p>}
+      {errors[key] && (
+        <p className="text-xs text-red-500 mt-1 ml-1">{errors[key]}</p>
+      )}
     </div>
   );
 
   return (
-    <div style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}>
-      <div className="bg-white rounded-3xl p-6 md:p-8 mb-6" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
-        <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+    <div
+      style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}
+    >
+      <div
+        className="bg-white rounded-3xl p-6 md:p-8 mb-6"
+        style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
+      >
+        <h2
+          className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <div className="w-8 h-8 rounded-xl bg-[#B42225]/10 flex items-center justify-center">
             <FiUser size={16} className="text-[#B42225]" />
           </div>
@@ -467,15 +656,38 @@ function StepDelivery({
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            {Field("Full Name", "fullName", "Your full name", <FiUser size={15} />)}
+            {Field(
+              "Full Name",
+              "fullName",
+              "Your full name",
+              <FiUser size={15} />,
+            )}
           </div>
-          {Field("Phone Number", "phone", "08012345678", <FiPhone size={15} />, "tel")}
-          {Field("Email Address", "email", "your@email.com", <FiMail size={15} />, "email")}
+          {Field(
+            "Phone Number",
+            "phone",
+            "08012345678",
+            <FiPhone size={15} />,
+            "tel",
+          )}
+          {Field(
+            "Email Address",
+            "email",
+            "your@email.com",
+            <FiMail size={15} />,
+            "email",
+          )}
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl p-6 md:p-8 mb-6" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
-        <h2 className="text-xl font-black text-gray-900 mb-5 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+      <div
+        className="bg-white rounded-3xl p-6 md:p-8 mb-6"
+        style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
+      >
+        <h2
+          className="text-xl font-black text-gray-900 mb-5 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
             <FiTruck size={16} className="text-blue-500" />
           </div>
@@ -484,13 +696,15 @@ function StepDelivery({
 
         {deliveryLoading && (
           <div className="flex items-center justify-center py-8 gap-2 text-sm text-gray-500">
-            <FiLoader size={22} className="animate-spin text-[#B42225]" /> Loading delivery options…
+            <FiLoader size={22} className="animate-spin text-[#B42225]" />{" "}
+            Loading delivery options…
           </div>
         )}
 
         {deliveryError && !deliveryLoading && (
           <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-xl text-sm">
-            <FiAlertCircle size={16} /><span>{deliveryError}</span>
+            <FiAlertCircle size={16} />
+            <span>{deliveryError}</span>
           </div>
         )}
 
@@ -510,32 +724,55 @@ function StepDelivery({
                 <div
                   onClick={() => {
                     setSelectedDeliveryId(opt.id);
-                    setErrors((prev) => ({ ...prev, delivery: "", station: "" }));
+                    setErrors((prev) => ({
+                      ...prev,
+                      delivery: "",
+                      station: "",
+                    }));
                   }}
                   className={`flex gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 mb-3 ${
-                    selected ? "border-[#B42225] bg-[#B42225]/3" : "border-gray-100 hover:border-gray-200"
+                    selected
+                      ? "border-[#B42225] bg-[#B42225]/3"
+                      : "border-gray-100 hover:border-gray-200"
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                      selected ? "bg-[#B42225] text-white" : "bg-gray-100 text-gray-500"
+                      selected
+                        ? "bg-[#B42225] text-white"
+                        : "bg-gray-100 text-gray-500"
                     }`}
                   >
-                    {pickup ? <MdStorefront size={20} /> : <FiTruck size={20} />}
+                    {pickup ? (
+                      <MdStorefront size={20} />
+                    ) : (
+                      <FiTruck size={20} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-gray-800">{opt.delivery_type}</p>
-                      <span className={`text-sm font-black shrink-0 ${opt.is_free_delivery ? "text-green-600" : "text-gray-800"}`}>
+                      <p className="text-sm font-bold text-gray-800">
+                        {opt.delivery_type}
+                      </p>
+                      <span
+                        className={`text-sm font-black shrink-0 ${opt.is_free_delivery ? "text-green-600" : "text-gray-800"}`}
+                      >
                         {opt.is_free_delivery ? "Free" : fmt(opt.delivery_cost)}
                       </span>
                     </div>
-                    <p className="text-xs text-[#B42225] font-semibold mt-0.5">⏱ {formatEstimatedDays(opt)}</p>
+                    <p className="text-xs text-[#B42225] font-semibold mt-0.5">
+                      ⏱ {formatEstimatedDays(opt)}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {opt.delivery_description || (pickup ? "Collect from a campus hub" : "Delivery to your doorstep")}
+                      {opt.delivery_description ||
+                        (pickup
+                          ? "Collect from a campus hub"
+                          : "Delivery to your doorstep")}
                     </p>
                     {opt.carrier_name && (
-                      <p className="text-xs text-gray-400 mt-1">📦 {opt.carrier_name}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        📦 {opt.carrier_name}
+                      </p>
                     )}
                   </div>
                   {selected && (
@@ -558,7 +795,9 @@ function StepDelivery({
                   />
                 )}
                 {selected && pickup && errors.station && (
-                  <p className="text-xs text-red-500 mt-1.5 ml-1">{errors.station}</p>
+                  <p className="text-xs text-red-500 mt-1.5 ml-1">
+                    {errors.station}
+                  </p>
                 )}
               </div>
             );
@@ -571,9 +810,15 @@ function StepDelivery({
       {!isPickup && (
         <div
           className="bg-white rounded-3xl p-6 md:p-8 mb-6"
-          style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)", animation: "fadeUp 0.3s ease both" }}
+          style={{
+            boxShadow: "0 4px 30px rgba(0,0,0,0.06)",
+            animation: "fadeUp 0.3s ease both",
+          }}
         >
-          <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+          <h2
+            className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2"
+            style={{ fontFamily: "'Georgia',serif" }}
+          >
             <div className="w-8 h-8 rounded-xl bg-[#B42225]/10 flex items-center justify-center">
               <FiMapPin size={16} className="text-[#B42225]" />
             </div>
@@ -581,7 +826,12 @@ function StepDelivery({
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              {Field("Street Address", "address", "House number, street name…", <FiMapPin size={15} />)}
+              {Field(
+                "Street Address",
+                "address",
+                "House number, street name…",
+                <FiMapPin size={15} />,
+              )}
             </div>
             {Field("City", "city", "e.g. Owerri", <FiMapPin size={15} />)}
             {Field("State", "state", "e.g. Imo", <FiMapPin size={15} />)}
@@ -611,14 +861,18 @@ function StepDelivery({
             <FiCheck size={16} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-green-800">Pickup station selected</p>
+            <p className="text-sm font-black text-green-800">
+              Pickup station selected
+            </p>
             <p className="text-xs text-green-600 truncate">
               {selectedStation.name}
               {selectedStation.landmark ? ` — ${selectedStation.landmark}` : ""}
             </p>
           </div>
           <button
-            onClick={() => onStationSelect({ ...selectedStation, id: "" } as any)}
+            onClick={() =>
+              onStationSelect({ ...selectedStation, id: "" } as any)
+            }
             className="shrink-0 text-green-400 hover:text-red-500 transition p-1"
             title="Change station"
           >
@@ -628,10 +882,15 @@ function StepDelivery({
       )}
 
       <button
-        onClick={() => { if (validate()) onNext(); }}
+        onClick={() => {
+          if (validate()) onNext();
+        }}
         disabled={deliveryLoading}
         className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 8px 30px rgba(180,34,37,0.35)" }}
+        style={{
+          background: "linear-gradient(135deg,#B42225,#FF8C00)",
+          boxShadow: "0 8px 30px rgba(180,34,37,0.35)",
+        }}
       >
         {deliveryLoading ? "Loading…" : "Review Order"}
         {!deliveryLoading && <FiChevronRight size={16} />}
@@ -666,29 +925,55 @@ function StepReview({
   const pickup = isPickupOption(selectedDelivery);
 
   return (
-    <div style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}>
-      <div className="bg-white rounded-3xl p-6 md:p-8 mb-5" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
-        <h2 className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+    <div
+      style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}
+    >
+      <div
+        className="bg-white rounded-3xl p-6 md:p-8 mb-5"
+        style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
+      >
+        <h2
+          className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <FiPackage size={18} className="text-[#B42225]" /> Order Items
         </h2>
         <div className="divide-y divide-gray-100">
           {items.map((item) => (
             <div key={item.product_id} className="flex items-center gap-3 py-3">
               <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
-                <Image src={item.image_url} alt={item.name} width={56} height={56} className="w-full h-full object-cover" />
+                <Image
+                  src={item.image_url}
+                  alt={item.name}
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-800 line-clamp-1">{item.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Qty: {item.quantity}</p>
+                <p className="text-sm font-bold text-gray-800 line-clamp-1">
+                  {item.name}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Qty: {item.quantity}
+                </p>
               </div>
-              <span className="text-sm font-black text-gray-900 shrink-0">{fmt(item.subtotal)}</span>
+              <span className="text-sm font-black text-gray-900 shrink-0">
+                {fmt(item.subtotal)}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl p-6 md:p-8 mb-5" style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}>
-        <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+      <div
+        className="bg-white rounded-3xl p-6 md:p-8 mb-5"
+        style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
+      >
+        <h2
+          className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2"
+          style={{ fontFamily: "'Georgia',serif" }}
+        >
           <FiFileText size={18} className="text-[#B42225]" /> Order Summary
         </h2>
 
@@ -696,16 +981,24 @@ function StepReview({
           <p className="font-bold text-gray-700 mb-1 flex items-center gap-1.5">
             <FiUser size={13} className="text-[#B42225]" /> Contact
           </p>
-          <p className="text-gray-600">{info.fullName} · {info.phone}</p>
+          <p className="text-gray-600">
+            {info.fullName} · {info.phone}
+          </p>
           <p className="text-gray-500">{info.email}</p>
         </div>
 
         <div className="bg-gray-50 rounded-2xl p-4 mb-4 text-sm flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-            {pickup ? <MdStorefront size={20} className="text-gray-500" /> : <FiTruck size={18} className="text-gray-500" />}
+            {pickup ? (
+              <MdStorefront size={20} className="text-gray-500" />
+            ) : (
+              <FiTruck size={18} className="text-gray-500" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-700">{selectedDelivery.delivery_type}</p>
+            <p className="font-bold text-gray-700">
+              {selectedDelivery.delivery_type}
+            </p>
             {pickup && selectedStation ? (
               <>
                 <p className="text-gray-600 mt-0.5">{selectedStation.name}</p>
@@ -727,8 +1020,16 @@ function StepReview({
             )}
             <p className="text-xs text-[#B42225] font-semibold mt-1">
               ⏱ {formatEstimatedDays(selectedDelivery)} ·{" "}
-              <span className={selectedDelivery.is_free_delivery ? "text-green-600 font-bold" : "text-gray-600"}>
-                {selectedDelivery.is_free_delivery ? "Free" : fmt(selectedDelivery.delivery_cost)}
+              <span
+                className={
+                  selectedDelivery.is_free_delivery
+                    ? "text-green-600 font-bold"
+                    : "text-gray-600"
+                }
+              >
+                {selectedDelivery.is_free_delivery
+                  ? "Free"
+                  : fmt(selectedDelivery.delivery_cost)}
               </span>
             </p>
           </div>
@@ -742,12 +1043,16 @@ function StepReview({
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Delivery</span>
             <span className="font-bold">
-              {selectedDelivery.is_free_delivery ? "Free" : fmt(selectedDelivery.delivery_cost)}
+              {selectedDelivery.is_free_delivery
+                ? "Free"
+                : fmt(selectedDelivery.delivery_cost)}
             </span>
           </div>
           <div className="border-t border-dashed border-gray-200 pt-3 flex justify-between">
             <span className="font-black text-gray-900">Total</span>
-            <span className="text-xl font-black text-[#B42225]">{fmt(total)}</span>
+            <span className="text-xl font-black text-[#B42225]">
+              {fmt(total)}
+            </span>
           </div>
         </div>
       </div>
@@ -764,12 +1069,19 @@ function StepReview({
           onClick={onPay}
           disabled={paying}
           className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-white text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 8px 30px rgba(180,34,37,0.35)" }}
+          style={{
+            background: "linear-gradient(135deg,#B42225,#FF8C00)",
+            boxShadow: "0 8px 30px rgba(180,34,37,0.35)",
+          }}
         >
           {paying ? (
-            <><FiLoader size={16} className="animate-spin" /> Processing…</>
+            <>
+              <FiLoader size={16} className="animate-spin" /> Processing…
+            </>
           ) : (
-            <><FiCreditCard size={16} /> Pay {fmt(total)} with Paystack</>
+            <>
+              <FiCreditCard size={16} /> Pay {fmt(total)} with Paystack
+            </>
           )}
         </button>
       </div>
@@ -781,7 +1093,13 @@ function StepReview({
 // MAIN CHECKOUT PAGE
 // ─────────────────────────────────────────────────────────────
 export default function Checkout() {
-  const { items, subtotal, refetchCart, itemCount, loading: cartLoading } = useCart();
+  const {
+    items,
+    subtotal,
+    refetchCart,
+    itemCount,
+    loading: cartLoading,
+  } = useCart();
   const { user, loading: authLoading } = useContext(AuthContext) as any;
   const router = useRouter();
 
@@ -795,7 +1113,7 @@ export default function Checkout() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [paystackLoaded, setPaystackLoaded] = useState(false);
   const [validatingCart, setValidatingCart] = useState(false);
-  
+
   const paymentDoneRef = useRef(false);
   const prevDeliveryIdRef = useRef<string | null>(null);
   const authCheckDoneRef = useRef(false);
@@ -807,34 +1125,50 @@ export default function Checkout() {
   };
 
   const [info, setInfo] = useState<DeliveryInfo>({
-    fullName: "", phone: "", email: "", address: "",
-    city: "", state: "", country: "Nigeria", notes: "",
+    fullName: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "Nigeria",
+    notes: "",
   });
 
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
+    null,
+  );
   const [deliveryLoading, setDeliveryLoading] = useState(true);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
   const [pickupStationsLoading, setPickupStationsLoading] = useState(false);
-  const [pickupStationsError, setPickupStationsError] = useState<string | null>(null);
-  const [selectedStation, setSelectedStation] = useState<PickupStation | null>(null);
+  const [pickupStationsError, setPickupStationsError] = useState<string | null>(
+    null,
+  );
+  const [selectedStation, setSelectedStation] = useState<PickupStation | null>(
+    null,
+  );
 
-  const selectedDelivery = deliveryOptions.find((d) => d.id === selectedDeliveryId) ?? null;
-  const deliveryCost = selectedDelivery?.is_free_delivery ? 0 : (selectedDelivery?.delivery_cost ?? 0);
+  const selectedDelivery =
+    deliveryOptions.find((d) => d.id === selectedDeliveryId) ?? null;
+  const deliveryCost = selectedDelivery?.is_free_delivery
+    ? 0
+    : (selectedDelivery?.delivery_cost ?? 0);
   const total = subtotal + deliveryCost;
-  const currentlyPickup = !!selectedDelivery && isPickupOption(selectedDelivery);
+  const currentlyPickup =
+    !!selectedDelivery && isPickupOption(selectedDelivery);
 
   // Load Paystack script
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     if ((window as any).PaystackPop) {
       setTimeout(() => setPaystackLoaded(true), 0);
       return;
     }
-    
+
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
@@ -845,7 +1179,7 @@ export default function Checkout() {
       console.error("Failed to load Paystack script");
     };
     document.body.appendChild(script);
-    
+
     return () => {
       if (script.parentNode) {
         script.parentNode.removeChild(script);
@@ -856,7 +1190,7 @@ export default function Checkout() {
   // Auth guard
   useEffect(() => {
     if (authCheckDoneRef.current) return;
-    
+
     if (authLoading === undefined) {
       const t = setTimeout(() => {
         if (!authCheckDoneRef.current) {
@@ -877,12 +1211,8 @@ export default function Checkout() {
     if (checkingAuth || paymentDone || cartRedirectDoneRef.current) return;
     if (!user) return;
     if (cartLoading) return;
-    
-    console.log("Cart items on checkout:", items.length);
-    console.log("Cart loading state:", cartLoading);
-    
+
     if (items.length === 0) {
-      console.log("Cart is empty, redirecting to shop...");
       cartRedirectDoneRef.current = true;
       setTimeout(() => {
         setCheckoutError("Your cart is empty. Redirecting you to shop...");
@@ -893,6 +1223,7 @@ export default function Checkout() {
     }
   }, [items.length, cartLoading, checkingAuth, paymentDone, user, router]);
 
+  // Redirect unauthenticated users to login
   useEffect(() => {
     if (checkingAuth || paymentDone) return;
     if (!user) {
@@ -910,9 +1241,13 @@ export default function Checkout() {
       setDeliveryError(null);
       try {
         const totalWeight = items.reduce(
-          (acc, item) => acc + ((item as any).weight || 1) * item.quantity, 0,
+          (acc, item) => acc + ((item as any).weight || 1) * item.quantity,
+          0,
         );
-        const res = await ApiService.getAvailableDeliveryOptions(subtotal, totalWeight);
+        const res = await ApiService.getAvailableDeliveryOptions(
+          subtotal,
+          totalWeight,
+        );
         const opts: DeliveryOption[] =
           res?.data?.delivery_options ??
           res?.delivery_options ??
@@ -932,6 +1267,7 @@ export default function Checkout() {
       }
     };
     fetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, subtotal, user]);
 
   // Fetch pickup stations
@@ -954,7 +1290,9 @@ export default function Checkout() {
       setPickupStationsLoading(true);
       setPickupStationsError(null);
       try {
-        const res = await ApiService.getSchoolPickupStations(schoolId, { per_page: 100 });
+        const res = await ApiService.getSchoolPickupStations(schoolId, {
+          per_page: 100,
+        });
         const stations: PickupStation[] =
           res?.data?.items ??
           res?.data?.stations ??
@@ -964,7 +1302,9 @@ export default function Checkout() {
         setPickupStations(stations.filter((s) => s.is_active !== false));
       } catch (err: any) {
         setTimeout(() => {
-          setPickupStationsError(err?.message ?? "Failed to load pickup stations");
+          setPickupStationsError(
+            err?.message ?? "Failed to load pickup stations",
+          );
         }, 0);
       } finally {
         setPickupStationsLoading(false);
@@ -975,14 +1315,14 @@ export default function Checkout() {
   }, [selectedDelivery, user]);
 
   useEffect(() => {
-  if (prevDeliveryIdRef.current !== selectedDeliveryId) {
-    setSelectedStation(null);
-    setPickupStations([]);
-    setPickupStationsError(null);
-    prevDeliveryIdRef.current = selectedDeliveryId;
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [selectedDeliveryId]);
+    if (prevDeliveryIdRef.current !== selectedDeliveryId) {
+      setSelectedStation(null);
+      setPickupStations([]);
+      setPickupStationsError(null);
+      prevDeliveryIdRef.current = selectedDeliveryId;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDeliveryId]);
 
   const handleStationSelect = (station: PickupStation) => {
     setSelectedStation(station.id ? station : null);
@@ -997,54 +1337,57 @@ export default function Checkout() {
       return;
     }
 
-    console.log("Frontend cart items:", items.length);
-    console.log("Frontend subtotal:", subtotal);
-
     if (!selectedDelivery) {
       setCheckoutError("Please select a delivery method");
       return;
     }
-    
+
     if (!paystackLoaded) {
-      setCheckoutError("Payment system is loading. Please try again in a moment.");
+      setCheckoutError(
+        "Payment system is loading. Please try again in a moment.",
+      );
       return;
     }
-    
+
     setPaying(true);
     setCheckoutError(null);
     setValidatingCart(true);
 
     try {
-      console.log("Validating cart with backend...");
+      // ── Validate cart ─────────────────────────────────────────────────────
       let validationResult;
       try {
         validationResult = await ApiService.validateCart();
-        console.log("Cart validation result:", validationResult);
       } catch (validateErr: any) {
         console.error("Cart validation error:", validateErr);
         await refetchCart();
-        throw new Error("Unable to validate cart. Please refresh and try again.");
+        throw new Error(
+          "Unable to validate cart. Please refresh and try again.",
+        );
       }
-      
-      const validationData = validationResult?.data || validationResult;
-      const backendItems = validationData?.items || validationData?.data?.items || [];
+
+      const validationData = unwrapEnvelope(validationResult);
+      const backendItems = validationData?.items ?? [];
+
       if (backendItems.length === 0) {
-        console.error("Backend cart is empty but frontend has items");
         await refetchCart();
-        throw new Error("Cart session expired. Please refresh the page and try again.");
+        throw new Error(
+          "Cart session expired. Please refresh the page and try again.",
+        );
       }
-      
-      if (validationData?.valid === false || validationData?.data?.valid === false) {
-        const errors = validationData?.errors || validationData?.data?.errors || [];
-        const errorMsg = errors.length > 0 
-          ? errors.join(", ") 
-          : "Your cart has issues. Please review your items.";
+
+      if (validationData?.valid === false) {
+        const errors = validationData?.errors ?? [];
+        const errorMsg =
+          errors.length > 0
+            ? errors.join(", ")
+            : "Your cart has issues. Please review your items.";
         throw new Error(errorMsg);
       }
-      
-      console.log("Cart validation passed. Backend items:", backendItems.length);
+
       setValidatingCart(false);
-      
+
+      // ── Resolve delivery destination fields ───────────────────────────────
       let deliveryStreetAddress: string;
       let deliveryCity: string;
       let deliveryState: string;
@@ -1055,8 +1398,10 @@ export default function Checkout() {
           selectedStation.address ||
           selectedStation.landmark ||
           selectedStation.name;
-        deliveryCity = selectedStation.city || user?.city || info.city || "Campus";
-        deliveryState = selectedStation.state || user?.state || info.state || "";
+        deliveryCity =
+          selectedStation.city || user?.city || info.city || "Campus";
+        deliveryState =
+          selectedStation.state || user?.state || info.state || "";
         deliveryNotes = `Campus Pickup — ${selectedStation.name}${selectedStation.landmark ? ` (${selectedStation.landmark})` : ""}`;
       } else {
         if (!info.address?.trim()) {
@@ -1074,53 +1419,61 @@ export default function Checkout() {
         deliveryNotes = info.notes || undefined;
       }
 
-      const checkoutParams = {
+      // ── Create the order ──────────────────────────────────────────────────
+      const checkoutRes = await ApiService.checkout({
         delivery_street_address: deliveryStreetAddress,
         delivery_city: deliveryCity,
         delivery_state: deliveryState,
         delivery_country: info.country || "Nigeria",
         delivery_option_id: selectedDelivery.id,
         delivery_notes: deliveryNotes,
-      };
+        email: info.email,
+        full_name: info.fullName,
+        phone: info.phone,
+      });
 
-      console.log("Checkout params:", checkoutParams);
+      const order = unwrapEnvelope(checkoutRes);
+      const { order_id, total_amount, payment_url } = order;
 
-      const res = await ApiService.checkout(checkoutParams);
-      
-      console.log("Checkout response:", res);
-
-      const result = res?.data || res;
-      const { order_id, total_amount, payment_url } = result;
-
+      if (!order_id) {
+        throw new Error("Order was not created. Please try again.");
+      }
       if (!payment_url) {
         throw new Error("No payment URL returned. Please try again.");
       }
 
-      const urlParts = payment_url.split("/");
-      const accessCode = urlParts[urlParts.length - 1];
-      
+      const accessCode = extractPaystackAccessCode(payment_url);
+
       if (!accessCode) {
+        // Could not parse access code — fall back to full-page redirect
         window.location.href = payment_url;
         return;
       }
 
       const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-      
+
       if (!paystackKey) {
         throw new Error("Paystack public key is not configured.");
       }
 
       const PaystackPop = (window as any).PaystackPop;
-      
-      if (!PaystackPop) {
-        throw new Error("Paystack is not loaded. Please refresh the page and try again.");
+
+      if (!PaystackPop || typeof PaystackPop.setup !== "function") {
+        throw new Error(
+          "Paystack is not loaded. Please refresh the page and try again.",
+        );
       }
 
-      const handler = PaystackPop.setup({
-        key: paystackKey,
-        access_code: accessCode,
-        callback: async (response: { reference: string }) => {
+      // ── FIX: wrap async logic in a plain synchronous function ─────────────
+      // Paystack's SDK validator checks typeof callback === "function" and
+      // rejects AsyncFunction. Wrapping in a plain function that immediately
+      // invokes an async IIFE satisfies the validator while preserving all
+      // async behaviour.
+      const onPaymentSuccess = (response: { reference: string }) => {
+        (async () => {
           try {
+            // verifyPayment is idempotent — safe even if the webhook already
+            // confirmed the payment server-side before this fires.
             await ApiService.verifyPayment(response.reference);
             await refetchCart();
             setPaying(false);
@@ -1133,38 +1486,70 @@ export default function Checkout() {
             console.error("Payment verification error:", verifyErr);
             setPaying(false);
             await refetchCart();
+            // Verification failing client-side doesn't mean payment failed —
+            // the Paystack webhook is the source of truth. Send the user to
+            // their order so they can see the real status.
             router.push(`/orders?ref=${order_id}`);
           }
-        },
-        onClose: () => {
-          setPaying(false);
-          router.push(`/orders?ref=${order_id}`);
-        },
-      });
+        })();
+      };
 
+      const onPaymentClose = () => {
+        setPaying(false);
+        router.push(`/orders?ref=${order_id}`);
+      };
+
+      const setupParams = {
+        key: paystackKey,
+        access_code: accessCode,
+        callback: onPaymentSuccess,
+        onClose: onPaymentClose,
+      };
+
+      // Defensive validation before calling setup()
+      if (typeof setupParams.key !== "string" || !setupParams.key) {
+        throw new Error("Paystack setup failed: invalid public key.");
+      }
+      if (
+        typeof setupParams.access_code !== "string" ||
+        !setupParams.access_code
+      ) {
+        throw new Error("Paystack setup failed: invalid access code.");
+      }
+      if (typeof setupParams.callback !== "function") {
+        throw new Error("Paystack setup failed: callback is not a function.");
+      }
+      if (typeof setupParams.onClose !== "function") {
+        throw new Error("Paystack setup failed: onClose is not a function.");
+      }
+
+      const handler = PaystackPop.setup(setupParams);
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
       setValidatingCart(false);
-      
+
       let errorMsg = err?.message ?? "Checkout failed. Please try again.";
-      
+
       if (err?.response?.data?.detail?.message) {
         errorMsg = err.response.data.detail.message;
       } else if (err?.detail?.message) {
         errorMsg = err.detail.message;
-      } else if (err?.message?.includes("401") || err?.message?.includes("Authentication")) {
+      } else if (
+        err?.message?.includes("401") ||
+        err?.message?.includes("Authentication")
+      ) {
         errorMsg = "Please log in again to complete your purchase.";
         setTimeout(() => {
           router.push("/login?redirect=/cart/checkout");
         }, 2000);
-      } else if (errorMsg.includes("empty")) {
+      } else if (errorMsg.toLowerCase().includes("empty")) {
         errorMsg = "Your cart is empty. Redirecting you to shop...";
         setTimeout(() => {
           router.push("/shop");
         }, 2000);
       }
-      
+
       setCheckoutError(errorMsg);
       console.error("Checkout error details:", err);
     }
@@ -1210,18 +1595,35 @@ export default function Checkout() {
       <div className="min-h-screen" style={{ background: "#F7F8FC" }}>
         <div
           className="relative overflow-hidden py-8 md:py-11"
-          style={{ background: "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)" }}
+          style={{
+            background:
+              "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
+          }}
         >
-          <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)", backgroundSize: "28px 28px" }} />
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
+          />
           <div className="max-w-3xl mx-auto px-4 md:px-8 relative z-10">
-            <Link href="/cart" className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors">
+            <Link
+              href="/cart"
+              className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors"
+            >
               <FiArrowLeft size={14} /> Back to Cart
             </Link>
-            <h1 className="text-3xl md:text-4xl font-black text-white" style={{ fontFamily: "'Georgia',serif" }}>
+            <h1
+              className="text-3xl md:text-4xl font-black text-white"
+              style={{ fontFamily: "'Georgia',serif" }}
+            >
               Checkout
             </h1>
             <p className="text-white/50 text-sm mt-1 flex items-center gap-1.5">
-              <FiLock size={13} /> Secured checkout · {items.length} item{items.length > 1 ? "s" : ""}
+              <FiLock size={13} /> Secured checkout · {items.length} item
+              {items.length > 1 ? "s" : ""}
             </p>
           </div>
         </div>

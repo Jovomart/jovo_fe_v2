@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { accommodations } from "@/data/accommodation";
 import Footer from "@/components/layout/Footer";
+import { useWishlist } from "@/context/WishlistContext";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -133,7 +134,7 @@ const AccommodationDetails = () => {
 
   const place = accommodations.find((a) => a.id === Number(id));
 
-  const [wishlisted, setWishlisted] = useState(false);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const [shareOpen, setShareOpen] = useState(false);
   const [booked, setBooked] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -182,7 +183,10 @@ const AccommodationDetails = () => {
         {/* ── Breadcrumb ── */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-2">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link href="/shop" className="hover:text-[#B42225] transition-colors">
+            <Link
+              href="/shop"
+              className="hover:text-[#B42225] transition-colors"
+            >
               Home
             </Link>
             <FiChevronRight size={12} />
@@ -226,13 +230,19 @@ const AccommodationDetails = () => {
                 {/* Actions */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
                   <button
-                    onClick={() => setWishlisted(!wishlisted)}
+                    onClick={() => {
+                      if (isWishlisted(place.id)) {
+                        removeFromWishlist(place.id);
+                      } else {
+                        addToWishlist({ ...place, id: String(place.id) });
+                      }
+                    }}
                     className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-110 transition-transform"
                   >
                     <FiHeart
                       size={16}
                       className={
-                        wishlisted
+                        isWishlisted(place.id)
                           ? "fill-red-500 text-red-500"
                           : "text-gray-400"
                       }

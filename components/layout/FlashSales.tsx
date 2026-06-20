@@ -19,6 +19,8 @@ interface FlashProduct {
   stock_quantity?: number;
   flash_stock?: number;
   remaining_stock?: number;
+  remaining_percentage?: number | null;
+  sold_quantity?: number;
   ends_at?: string;
   is_in_stock: boolean;
 }
@@ -27,6 +29,7 @@ interface FlashCampaign {
   id: string;
   name: string;
   ends_at: string;
+  ends_in_seconds: number | null;
   products: FlashProduct[];
 }
 
@@ -45,6 +48,8 @@ const getValidImageUrl = (url: string | undefined): string => {
 
 // ─── Countdown helpers ────────────────────────────────────────────────────────
 
+// Fallback only — prefer the server-computed `ends_in_seconds` wherever possible,
+// since it avoids client clock drift. This is only used if that field is missing.
 const getSecondsUntil = (isoDate: string | undefined): number => {
   if (!isoDate) return 36000;
   const diff = Math.floor((new Date(isoDate).getTime() - Date.now()) / 1000);
@@ -52,10 +57,11 @@ const getSecondsUntil = (isoDate: string | undefined): number => {
 };
 
 const formatTime = (seconds: number) => {
-  const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600).toString().padStart(2, "0");
   const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
   const s = Math.floor(seconds % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
+  return d > 0 ? `${d}d ${h}:${m}:${s}` : `${h}:${m}:${s}`;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -81,33 +87,53 @@ const FlashSales = () => {
       // Normalise: API may return the campaign directly or nested
       const campaignObj: FlashCampaign = {
         id: raw.id ?? "",
-        name: raw.name ?? "Flash Sales",
-        ends_at: raw.ends_at ?? raw.end_time ?? "",
+        // API sends "title", not "name" — keep both as fallbacks in case the
+        // backend shape changes again.
+        name: raw.title ?? raw.name ?? "Flash Sales",
+        ends_at: raw.end_time ?? raw.ends_at ?? "",
+        // Prefer the server-computed countdown — it's immune to the user's
+        // device clock being wrong, unlike re-deriving from end_time.
+        ends_in_seconds:
+          typeof raw.ends_in_seconds === "number" ? raw.ends_in_seconds : null,
         products: Array.isArray(raw.products)
-          ? raw.products.map((p: any) => ({
-              id: String(p.id ?? p.product_id ?? ""),
-              product_name: p.product_name ?? p.name ?? "",
-              product_images: Array.isArray(p.product_images)
-                ? p.product_images
-                : p.image
-                ? [p.image]
-                : [],
-              product_original_price:
-                p.product_original_price ?? p.original_price ?? 0,
-              current_price: p.current_price ?? p.price ?? 0,
-              flash_price: p.flash_price ?? p.current_price ?? p.price ?? 0,
-              discount_percentage: p.discount_percentage ?? 0,
-              stock_quantity: p.stock_quantity ?? p.stock ?? 0,
-              flash_stock: p.flash_stock ?? p.stock_quantity ?? 0,
-              remaining_stock: p.remaining_stock ?? p.flash_stock ?? p.stock_quantity ?? 0,
-              ends_at: p.ends_at ?? raw.ends_at ?? "",
-              is_in_stock: p.is_in_stock ?? true,
-            }))
+          ? raw.products.map((p: any) => {
+              // Flash-sale-specific pricing/stock lives in this nested object,
+              // separate from the product's general stock_quantity (which never
+              // decrements for flash sale purchases).
+              const fsd = p.flash_sale_details ?? {};
+              return {
+                id: String(p.id ?? p.product_id ?? ""),
+                product_name: p.product_name ?? p.name ?? "",
+                product_images: Array.isArray(p.product_images)
+                  ? p.product_images
+                  : p.image
+                  ? [p.image]
+                  : [],
+                product_original_price:
+                  p.product_original_price ?? p.original_price ?? 0,
+                current_price: p.current_price ?? p.price ?? 0,
+                flash_price: fsd.flash_price ?? p.current_price ?? p.price ?? 0,
+                discount_percentage: p.discount_percentage ?? 0,
+                stock_quantity: p.stock_quantity ?? 0,
+                flash_stock: fsd.flash_stock ?? p.stock_quantity ?? 0,
+                remaining_stock:
+                  fsd.remaining_stock ?? fsd.flash_stock ?? p.stock_quantity ?? 0,
+                remaining_percentage:
+                  typeof fsd.remaining_percentage === "number"
+                    ? fsd.remaining_percentage
+                    : null,
+                sold_quantity: fsd.sold_quantity ?? 0,
+                ends_at: p.ends_at ?? raw.end_time ?? raw.ends_at ?? "",
+                is_in_stock: p.is_in_stock ?? true,
+              };
+            })
           : [],
       };
 
       setCampaign(campaignObj);
-      setTimeLeft(getSecondsUntil(campaignObj.ends_at));
+      setTimeLeft(
+        campaignObj.ends_in_seconds ?? getSecondsUntil(campaignObj.ends_at),
+      );
     } catch {
       // No active flash sale — silently hide
     } finally {
@@ -157,7 +183,7 @@ const FlashSales = () => {
     <div className="w-full md:mt-0 bg-[#F5F6F7]">
       {/* HEADER */}
       <div
-        className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
+        className="flex items-center justify-between px-2 md:px-6 py-4 mb-6 relative overflow-hidden capitalize"
         style={{
           background:
             "linear-gradient(135deg,#7f0d0f 0%,#B42225 50%,#d63a1a 100%)",
@@ -225,10 +251,23 @@ const FlashSales = () => {
                 ? Math.round(((originalPrice - effectivePrice) / originalPrice) * 100)
                 : Math.round(product.discount_percentage ?? 0);
 
-            const totalStock = product.flash_stock ?? product.stock_quantity ?? 100;
-            const remainingStock = product.remaining_stock ?? totalStock;
+            // Prefer the server-computed remaining_percentage directly — it's
+            // the source of truth and avoids any chance of inverting
+            // sold-vs-remaining math on the frontend.
+            const totalStock =
+              (product.flash_stock ?? 0) > 0
+                ? (product.flash_stock as number)
+                : product.stock_quantity || 1;
+            const remainingStock = Math.min(
+              product.remaining_stock ?? totalStock,
+              totalStock,
+            );
             const stockPct =
-              totalStock > 0 ? Math.round((remainingStock / totalStock) * 100) : 0;
+              product.remaining_percentage != null
+                ? Math.round(product.remaining_percentage)
+                : totalStock > 0
+                ? Math.round((remainingStock / totalStock) * 100)
+                : 0;
 
             const imgUrl = imgErrors[product.id]
               ? PLACEHOLDER_IMAGE

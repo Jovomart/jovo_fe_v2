@@ -1,25 +1,20 @@
+// app/(main)/seller/[seller_id]/page.tsx
 "use client";
 
 /**
  * SellerProfilePage — Public-facing seller profile page
  * Route: /seller/[seller_id]
- *
- * GET  /api/v1/seller/{seller_id}              – profile
- * GET  /api/v1/seller/{seller_id}/products     – products
- * GET  /api/v1/seller/{seller_id}/reviews      – reviews
- * POST /api/v1/seller/{seller_id}/follow       – follow
- * DEL  /api/v1/seller/{seller_id}/follow       – unfollow
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   FiPackage, FiShoppingBag, FiShare2, FiChevronRight,
   FiSearch, FiGrid, FiList, FiCheck, FiClock,
   FiChevronLeft, FiLoader, FiAlertCircle,
-  FiGlobe, FiMail, FiPhone, FiMapPin, FiUsers, FiHeart, FiX,
+  FiGlobe, FiMail, FiPhone, FiMapPin, FiUsers, FiHeart, FiX, FiEye,
 } from "react-icons/fi";
 import {
   FaStar, FaStarHalfAlt, FaRegStar, FaWhatsapp,
@@ -28,6 +23,7 @@ import {
 import { MdVerified, MdOutlineLocalShipping } from "react-icons/md";
 import { HiOutlineShieldCheck } from "react-icons/hi";
 import Footer from "@/components/layout/Footer";
+import { showToast } from "@/components/ui/toast";
 import apiService from "@/services/apiService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -47,7 +43,7 @@ interface SellerProfile {
   business_website: string;
   business_location: string;
   business_image: string;
-  cover_image: string;
+  cover_image: string | null;
   created_at: string;
   average_rating: number;
   review_count: number;
@@ -60,6 +56,8 @@ interface SellerProfile {
   follower_count: number;
   is_following: boolean;
   approval_status?: string;
+  profile_views?: number;  // Profile views from seller profile API
+  view_count?: number;     // Alternative field name some APIs might use
 }
 
 interface SellerProduct {
@@ -172,7 +170,7 @@ const ProductCard = ({ product, view }: { product: SellerProduct; view: "grid" |
 
   return (
     <Link href={`/product/${product.id}`}
-      className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/8 transition-all duration-300 hover:-translate-y-1">
+      className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/8 transition-all duration-300 hover:-translate-y-0.5">
       <div className="relative aspect-square bg-slate-50 overflow-hidden">
         {img
           ? <Image src={img} alt={product.product_name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:640px) 50vw, 25vw" unoptimized />
@@ -258,6 +256,7 @@ const ReviewCard = ({ review }: { review: SellerReview }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SellerProfilePage() {
+  const router = useRouter();
   const params = useParams();
   const sellerId = (params?.seller_id ?? params?.id ?? "") as string;
 
@@ -320,37 +319,48 @@ export default function SellerProfilePage() {
   useEffect(() => {
     if (!fetchedRef.current && sellerId) {
       fetchedRef.current = true;
-      // Defer so the initial setLoading(true) inside fetchSeller doesn't
-      // run synchronously within the effect body.
-      queueMicrotask(() => {
-        fetchSeller();
-      });
+      queueMicrotask(() => { fetchSeller(); });
     }
   }, [sellerId, fetchSeller]);
 
   useEffect(() => {
     if (tab === "reviews" && !reviewsFetched && !reviewsLoading) {
-      queueMicrotask(() => {
-        fetchReviews();
-      });
+      queueMicrotask(() => { fetchReviews(); });
     }
   }, [tab, reviewsFetched, reviewsLoading, fetchReviews]);
 
   const handleFollow = async () => {
     if (followLoading) return;
     setFollowLoading(true);
+
+    const wasFollowing = following;
+    setFollowing(!wasFollowing);
+    setFollowerCount((c) => (wasFollowing ? Math.max(0, c - 1) : c + 1));
+    setSeller((prev) => prev ? { ...prev, is_following: !wasFollowing } : prev);
+
     try {
-      if (following) {
+      if (wasFollowing) {
         await apiService.unfollowSeller(sellerId);
-        setFollowing(false);
-        setFollowerCount(c => Math.max(0, c - 1));
       } else {
         await apiService.followSeller(sellerId);
-        setFollowing(true);
-        setFollowerCount(c => c + 1);
       }
-    } catch { /* user may not be logged in */ }
-    finally { setFollowLoading(false); }
+    } catch (error: any) {
+      const message =
+        error?.message ||
+        "Unable to update follow status. Please try again.";
+      const isOwnStore = /own store/i.test(message);
+      showToast(
+        isOwnStore
+          ? "You cannot follow your own store."
+          : message,
+        isOwnStore ? "info" : "error",
+      );
+      setFollowing(wasFollowing);
+      setFollowerCount((c) => (wasFollowing ? c + 1 : Math.max(0, c - 1)));
+      setSeller((prev) => prev ? { ...prev, is_following: wasFollowing } : prev);
+    } finally {
+      setFollowLoading(false);
+    }
   };
 
   const filtered = products.filter(p =>
@@ -369,8 +379,11 @@ export default function SellerProfilePage() {
   const avgRating = seller ? Math.round((seller.average_rating || 0) * 10) / 10 : 0;
   const logoUrl = validUrl(seller?.business_image);
   const coverUrl = validUrl(seller?.cover_image);
+  // Use the same pattern as seller own profile page - check both view_count and profile_views
+  const viewCount = seller?.view_count ?? seller?.profile_views ?? 0;
+  const approvalStatus = seller?.approval_status;
 
-  // ── Loading ───────────────────────────────────────────────────────────────
+  // ── Loading ────────────────────────────────────────────────────────────────
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -403,33 +416,25 @@ export default function SellerProfilePage() {
     <>
       <div className="min-h-screen bg-slate-50 pb-16">
 
-        {/* ══════════════════════════════════════════════════════════════════
-            HERO — cover + identity card, matching seller-own-profile theme
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* ── HERO ── */}
         <div className="relative">
 
+          {/* Cover */}
           <div
-            className="relative h-44 sm:h-60 w-full overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg,#0F172A 0%,#1E293B 50%,#0F172A 100%)",
-            }}
+            className="relative h-48 sm:h-64 md:h-72 w-full overflow-hidden"
+            style={{ background: "linear-gradient(135deg,#0F172A 0%,#1E293B 50%,#0F172A 100%)" }}
           >
             {coverUrl && (
               <Image src={coverUrl} alt="Store cover" fill className="object-cover" priority unoptimized />
             )}
-            {/* Subtle dot grid overlay */}
             <div
               className="absolute inset-0"
               style={{
-                backgroundImage:
-                  "radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px)",
+                backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px)",
                 backgroundSize: "20px 20px",
               }}
             />
-            {/* Gradient fade to bottom */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/10" />
-
-            {/* Orange / indigo glow accents */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/20" />
             <div
               className="absolute -left-16 -top-16 w-64 h-64 rounded-full opacity-30 pointer-events-none"
               style={{ background: "radial-gradient(circle,#F97316 0%,transparent 70%)" }}
@@ -440,15 +445,19 @@ export default function SellerProfilePage() {
             />
 
             {/* Top nav row */}
-            <div className="absolute top-0 inset-x-0 px-4 sm:px-6 pt-4 sm:pt-6 flex items-center justify-between z-20">
-              <Link href="/shop"
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors">
-                <FiChevronLeft size={13} /> Back
-              </Link>
+            <div className="absolute top-0 inset-x-0 px-4 sm:px-6 pt-4 sm:pt-5 flex items-center justify-between z-20">
+              <button
+                onClick={() => router.back()}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors"
+              >
+                <FiChevronLeft size={14} /> Back
+              </button>
 
               <div className="relative">
-                <button onClick={() => setShareOpen(v => !v)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors">
+                <button
+                  onClick={() => setShareOpen(v => !v)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-bold hover:bg-black/45 transition-colors"
+                >
                   <FiShare2 size={12} /> Share
                 </button>
                 {shareOpen && (
@@ -480,187 +489,167 @@ export default function SellerProfilePage() {
 
           {/* Identity card */}
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="relative -mt-12 sm:-mt-14 flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-              {/* Avatar */}
-              <div className="relative shrink-0">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-slate-50 bg-slate-900 shadow-lg overflow-hidden flex items-center justify-center">
-                  {logoUrl
-                    ? <Image src={logoUrl} alt={seller.business_name} fill className="object-cover" unoptimized />
-                    : <span className="text-2xl font-black text-white tracking-tight">{initials}</span>}
-                </div>
-                <div className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-white border-2 border-slate-50 flex items-center justify-center shadow-md">
-                  <MdVerified size={16} className="text-orange-500" />
-                </div>
-              </div>
+            <div className="relative -mt-16 sm:-mt-20 bg-white border border-slate-200 shadow-2xl shadow-slate-900/5 rounded-3xl p-5 sm:p-6">
+              <div className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-6">
 
-              {/* Name + meta */}
-              <div className="flex-1 min-w-0 pb-1 sm:pb-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
-                    {seller.business_name}
-                  </h1>
-                  {seller.approval_status === "approved" && (
-                    <MdVerified className="text-orange-500 shrink-0" size={20} title="Verified seller" />
-                  )}
-                </div>
-                {seller.short_business_description && (
-                  <p className="text-sm text-slate-500 mt-0.5 truncate">
-                    {seller.short_business_description}
-                  </p>
-                )}
-                <div className="flex items-center gap-2.5 mt-2 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <Stars rating={seller.average_rating} size={11} />
-                    <span className="text-xs font-bold text-slate-900">{avgRating}</span>
-                    <span className="text-xs text-slate-400">({seller.review_count || 0})</span>
+                {/* Avatar */}
+                <div className="relative shrink-0">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-[3px] sm:border-4 border-slate-50 bg-slate-900 shadow-lg overflow-hidden flex items-center justify-center relative">
+                    {logoUrl
+                      ? <Image src={logoUrl} alt={seller.business_name} fill className="object-cover" unoptimized />
+                      : <span className="text-2xl font-black text-white tracking-tight">{initials}</span>}
                   </div>
-                  <span className="text-slate-200 text-xs">·</span>
-                  <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <FiUsers size={11} /> {followerCount.toLocaleString()} followers
-                  </span>
-                  {seller.business_location && (
-                    <>
-                      <span className="text-slate-200 text-xs">·</span>
-                      <span className="text-xs text-slate-500 flex items-center gap-1">
-                        <FiMapPin size={11} /> {seller.business_location}
-                      </span>
-                    </>
+                  <div className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-white border-2 border-slate-50 flex items-center justify-center shadow-md">
+                    <MdVerified size={16} className="text-orange-500" />
+                  </div>
+                </div>
+
+                {/* Name + meta */}
+                <div className="flex-1 min-w-0 pb-1 sm:pb-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                      {seller.business_name}
+                    </h1>
+                    {(approvalStatus === "approved" || !approvalStatus) && (
+                      <MdVerified className="text-orange-500 shrink-0" size={20} title="Verified seller" />
+                    )}
+                  </div>
+                  {seller.short_business_description && (
+                    <p className="text-sm sm:text-base text-slate-500 mt-2 max-w-2xl leading-relaxed">
+                      {seller.short_business_description}
+                    </p>
                   )}
+                  <div className="flex items-center gap-2.5 mt-2.5 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <Stars rating={seller.average_rating} size={11} />
+                      <span className="text-xs font-bold text-slate-900">{avgRating}</span>
+                      <span className="text-xs text-slate-400">({seller.review_count || 0})</span>
+                    </div>
+                    <span className="text-slate-200 text-xs">·</span>
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <FiUsers size={11} /> {followerCount.toLocaleString()} followers
+                    </span>
+                    <span className="text-slate-200 text-xs">·</span>
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <FiEye size={11} /> {viewCount.toLocaleString()} views
+                    </span>
+                    {seller.business_location && (
+                      <>
+                        <span className="text-slate-200 text-xs hidden sm:inline">·</span>
+                        <span className="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500">
+                          <FiMapPin size={11} /> {seller.business_location}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* CTAs */}
+                <div className="flex items-center gap-2 sm:pb-3 shrink-0">
+                  {seller.business_phone_number && (
+                    <a
+                      href={`https://wa.me/${seller.business_phone_number.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold text-white bg-green-500 hover:bg-green-600 transition-colors"
+                    >
+                      <FaWhatsapp size={14} /> Chat
+                    </a>
+                  )}
+                  <button
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold transition-all duration-200 ${
+                      following
+                        ? "bg-slate-50 border border-slate-200 text-slate-900 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                        : "bg-slate-900 text-white hover:bg-orange-500"
+                    }`}
+                  >
+                    {followLoading
+                      ? <FiLoader size={12} className="animate-spin" />
+                      : following
+                      ? <FiCheck size={12} />
+                      : <FiHeart size={12} />}
+                    {following ? "Following" : "Follow"}
+                  </button>
                 </div>
               </div>
 
-              {/* CTAs */}
-              <div className="flex items-center gap-2 sm:pb-2 shrink-0">
-                {seller.business_phone_number && (
-                  <a href={`https://wa.me/${seller.business_phone_number.replace(/\D/g, "")}`}
-                    target="_blank" rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold text-white bg-green-500 hover:bg-green-600 transition-colors">
-                    <FaWhatsapp size={14} /> Chat
-                  </a>
-                )}
-                <button onClick={handleFollow} disabled={followLoading}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold transition-colors ${
-                    following
-                      ? "bg-slate-50 border border-slate-200 text-slate-900"
-                      : "bg-slate-900 text-white hover:bg-orange-500"
-                  }`}>
-                  {followLoading ? <FiLoader size={12} className="animate-spin" /> :
-                    following ? <FiCheck size={12} /> : <FiHeart size={12} />}
-                  {following ? "Following" : "Follow"}
-                </button>
-              </div>
-            </div>
-
-            {/* Approval banner */}
-            {seller.approval_status && seller.approval_status !== "approved" && (
-              <div
-                className={`mt-5 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
-                  seller.approval_status === "rejected"
-                    ? "bg-red-50 border-red-200"
-                    : "bg-amber-50 border-amber-200"
-                }`}
-              >
-                <FiAlertCircle
-                  className={seller.approval_status === "rejected" ? "text-red-500" : "text-amber-500"}
-                  size={18}
-                />
-                <p
-                  className={`text-sm font-medium ${
-                    seller.approval_status === "rejected" ? "text-red-700" : "text-amber-800"
+              {/* Approval banner — only if explicitly non-approved */}
+              {approvalStatus && approvalStatus !== "approved" && (
+                <div
+                  className={`mt-5 rounded-2xl border px-4 py-3 flex items-start sm:items-center gap-3 ${
+                    approvalStatus === "rejected"
+                      ? "bg-red-50 border-red-200"
+                      : "bg-amber-50 border-amber-200"
                   }`}
                 >
-                  {seller.approval_status === "pending"
-                    ? "This store is awaiting approval."
-                    : seller.approval_status === "rejected"
-                    ? "This store's application was not approved."
-                    : `Status: ${seller.approval_status}`}
-                </p>
-              </div>
-            )}
-
-            {/* Stat strip */}
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {[
-                {
-                  icon: <FiShoppingBag size={17} />,
-                  label: "Listings",
-                  value: String(seller.total_listings || 0),
-                  color: "#F97316",
-                  bg: "#FFF7ED",
-                },
-                {
-                  icon: <FiPackage size={17} />,
-                  label: "Items sold",
-                  value: (seller.items_sold || 0).toLocaleString(),
-                  color: "#6366F1",
-                  bg: "#EEF2FF",
-                },
-                {
-                  icon: <FaStar size={14} />,
-                  label: "Rating",
-                  value: String(avgRating),
-                  color: "#F59E0B",
-                  bg: "#FFFBEB",
-                },
-                {
-                  icon: <FiUsers size={17} />,
-                  label: "Response time",
-                  value: seller.response_time || "—",
-                  color: "#10B981",
-                  bg: "#F0FDF4",
-                },
-                {
-                  icon: <MdOutlineLocalShipping size={17} />,
-                  label: "Response rate",
-                  value: seller.response_rate || "—",
-                  color: "#0EA5E9",
-                  bg: "#F0F9FF",
-                },
-              ].map((stat, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white rounded-2xl border border-slate-100 px-4 py-3.5"
-                  style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
-                >
-                  <div className="flex items-center gap-2 mb-1.5" style={{ color: stat.color }}>
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ background: stat.bg }}
-                    >
-                      {stat.icon}
-                    </div>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                      {stat.label}
-                    </span>
-                  </div>
-                  <p className="text-lg font-black text-slate-900 leading-none">{stat.value}</p>
+                  <FiAlertCircle
+                    className={`shrink-0 mt-0.5 sm:mt-0 ${approvalStatus === "rejected" ? "text-red-500" : "text-amber-500"}`}
+                    size={18}
+                  />
+                  <p className={`text-sm font-medium ${approvalStatus === "rejected" ? "text-red-700" : "text-amber-800"}`}>
+                    {approvalStatus === "pending"
+                      ? "This store is awaiting approval."
+                      : approvalStatus === "rejected"
+                      ? "This store's application was not approved."
+                      : `Status: ${approvalStatus}`}
+                  </p>
                 </div>
-              ))}
-            </div>
+              )}
 
-            {/* Badges row */}
-            {(seller.badges?.length > 0 || seller.member_since) && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {seller.badges?.map(badge => (
-                  <span key={badge}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600">
-                    <FaCheckCircle size={11} className="text-emerald-500" /> {badge}
-                  </span>
+              {/* Stat strip */}
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {[
+                  { icon: <FiShoppingBag size={16} />, label: "Listings", value: String(seller.total_listings || 0), color: "#F97316", bg: "#FFF7ED" },
+                  { icon: <FiPackage size={16} />, label: "Items sold", value: (seller.items_sold || 0).toLocaleString(), color: "#6366F1", bg: "#EEF2FF" },
+                  { icon: <FaStar size={13} />, label: "Rating", value: String(avgRating), color: "#F59E0B", bg: "#FFFBEB" },
+                  { icon: <FiUsers size={16} />, label: "Response", value: seller.response_time || "—", color: "#10B981", bg: "#F0FDF4" },
+                  { icon: <MdOutlineLocalShipping size={16} />, label: "Rate", value: seller.response_rate || "—", color: "#0EA5E9", bg: "#F0F9FF" },
+                ].map((stat, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-2xl border border-slate-100 px-4 py-3.5"
+                    style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5" style={{ color: stat.color }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: stat.bg }}>
+                        {stat.icon}
+                      </div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">{stat.label}</span>
+                    </div>
+                    <p className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">{stat.value}</p>
+                  </div>
                 ))}
-                {seller.member_since && (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 px-3 py-1.5 rounded-full bg-white border border-slate-200">
-                    <FiClock size={9} />
-                    Member since {new Date(seller.member_since).toLocaleDateString("en-NG", { month: "long", year: "numeric" })}
-                  </span>
-                )}
               </div>
-            )}
+
+              {/* Badges row */}
+              {(seller.badges?.length > 0 || seller.member_since) && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {seller.badges?.map(badge => (
+                    <span key={badge}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600">
+                      <FaCheckCircle size={11} className="text-emerald-500" /> {badge}
+                    </span>
+                  ))}
+                  {seller.member_since && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 px-3 py-1.5 rounded-full bg-white border border-slate-200">
+                      <FiClock size={9} />
+                      Member since {
+                        // member_since may be "May 2026" or an ISO date
+                        typeof seller.member_since === "string" && seller.member_since.includes(" ")
+                          ? seller.member_since
+                          : new Date(seller.member_since).toLocaleDateString("en-NG", { month: "long", year: "numeric" })
+                      }
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════
-            TABS + CONTENT
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* ── TABS + CONTENT ── */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-16">
 
           <div className="flex items-center gap-1 mb-7 overflow-x-auto no-scrollbar border-b border-slate-200">
@@ -685,7 +674,7 @@ export default function SellerProfilePage() {
             ))}
           </div>
 
-          {/* ── Products ─────────────────────────────────────────────────── */}
+          {/* ── Products ── */}
           {tab === "products" && (
             <div>
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -753,10 +742,10 @@ export default function SellerProfilePage() {
             </div>
           )}
 
-          {/* ── Reviews ──────────────────────────────────────────────────── */}
+          {/* ── Reviews ── */}
           {tab === "reviews" && (
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                 <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
                   <div className="text-center shrink-0">
                     <p className="text-5xl font-black text-slate-900 tabular-nums">{avgRating}</p>
@@ -766,7 +755,9 @@ export default function SellerProfilePage() {
                   <div className="flex-1 w-full space-y-1.5">
                     {[5, 4, 3, 2, 1].map(s => {
                       const ct = reviews.filter(r => Math.round(r.rating) === s).length;
-                      const pct = reviews.length > 0 ? Math.round((ct / reviews.length) * 100) : s === 5 ? 65 : s === 4 ? 22 : s === 3 ? 8 : s === 2 ? 3 : 2;
+                      const pct = reviews.length > 0
+                        ? Math.round((ct / reviews.length) * 100)
+                        : s === 5 ? 65 : s === 4 ? 22 : s === 3 ? 8 : s === 2 ? 3 : 2;
                       return (
                         <div key={s} className="flex items-center gap-2.5">
                           <span className="text-[11px] font-bold text-slate-400 w-3 text-right tabular-nums">{s}</span>
@@ -802,11 +793,11 @@ export default function SellerProfilePage() {
             </div>
           )}
 
-          {/* ── About ────────────────────────────────────────────────────── */}
+          {/* ── About ── */}
           {tab === "about" && (
             <div className="max-w-2xl space-y-4">
               {/* Bio */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                 <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3">About the store</p>
                 <p className="text-[13px] text-slate-500 leading-relaxed whitespace-pre-wrap">
                   {seller.seller_bio || seller.short_business_description || "No description provided."}
@@ -815,15 +806,23 @@ export default function SellerProfilePage() {
 
               {/* Store details */}
               <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <div className="px-6 pt-5 pb-3">
+                <div className="px-5 sm:px-6 pt-5 pb-3">
                   <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Store details</p>
                   <div className="divide-y divide-slate-100">
                     {[
-                      { label: "Member since", value: seller.member_since ? new Date(seller.member_since).toLocaleDateString("en-NG", { month: "long", year: "numeric" }) : null },
+                      {
+                        label: "Member since",
+                        value: seller.member_since
+                          ? typeof seller.member_since === "string" && seller.member_since.includes(" ")
+                            ? seller.member_since
+                            : new Date(seller.member_since).toLocaleDateString("en-NG", { month: "long", year: "numeric" })
+                          : null,
+                      },
                       { label: "Location", value: seller.business_location || seller.business_address || null },
                       { label: "Listings", value: seller.total_listings ? `${seller.total_listings} products` : null },
                       { label: "Total sales", value: seller.items_sold ? `${seller.items_sold.toLocaleString()} orders` : null },
                       { label: "Followers", value: followerCount ? followerCount.toLocaleString() : null },
+                      { label: "Profile views", value: viewCount ? viewCount.toLocaleString() : null },
                       { label: "Response rate", value: seller.response_rate || null },
                       { label: "Response time", value: seller.response_time || null },
                     ].filter(r => r.value).map(({ label, value }) => (
@@ -838,7 +837,7 @@ export default function SellerProfilePage() {
 
               {/* Contact */}
               {(seller.business_email || seller.business_phone_number || seller.business_website) && (
-                <div className="bg-white rounded-2xl border border-slate-100 p-6">
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                   <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Contact</p>
                   <div className="space-y-3">
                     {seller.business_email && (
@@ -871,7 +870,7 @@ export default function SellerProfilePage() {
 
               {/* Socials */}
               {(seller.business_facebook || seller.business_twitter || seller.business_instagram || seller.business_linkedin) && (
-                <div className="bg-white rounded-2xl border border-slate-100 p-6">
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                   <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Social</p>
                   <div className="flex flex-wrap gap-2.5">
                     {[
@@ -890,7 +889,7 @@ export default function SellerProfilePage() {
               )}
 
               {/* Trust */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-6">
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                 <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Trust &amp; safety</p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
@@ -912,23 +911,25 @@ export default function SellerProfilePage() {
 
               {/* CTA */}
               <div
-                className="rounded-2xl overflow-hidden relative p-7"
+                className="rounded-2xl overflow-hidden relative p-6 sm:p-7"
                 style={{ background: "linear-gradient(135deg,#0F172A 0%,#1E293B 100%)" }}
               >
                 <div
                   className="absolute -right-8 -top-8 w-36 h-36 rounded-full opacity-20 pointer-events-none"
                   style={{ background: "radial-gradient(circle,#F97316 0%,transparent 70%)" }}
                 />
-                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-5">
+                <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <p className="text-white font-black text-lg">Ready to shop?</p>
                     <p className="text-white/50 text-sm mt-0.5">
                       {seller.total_listings || 0} products from {seller.business_name}
                     </p>
                   </div>
-                  <button onClick={() => setTab("products")}
+                  <button
+                    onClick={() => setTab("products")}
                     className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white shrink-0 transition-colors"
-                    style={{ background: "linear-gradient(135deg,#F97316,#EA580C)" }}>
+                    style={{ background: "linear-gradient(135deg,#F97316,#EA580C)" }}
+                  >
                     <FiShoppingBag size={14} /> View products
                   </button>
                 </div>

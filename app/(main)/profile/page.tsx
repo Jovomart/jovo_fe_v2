@@ -1,9 +1,10 @@
 "use client";
-import Link from "next/link"; // ✅ Added missing import
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { AuthContext } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 import ApiService from "@/services/apiService";
 import {
   FiUser,
@@ -22,27 +23,13 @@ import {
   FiX,
   FiCheck,
   FiAlertCircle,
+  FiCamera,
+  FiTrash2,
+  FiUpload,
 } from "react-icons/fi";
 import Footer from "@/components/layout/Footer";
 
-// Types
-interface User {
-  id?: string;
-  first_name?: string;
-  last_name?: string;
-  username?: string;
-  email?: string;
-  phone?: string;
-  gender?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  address?: string;
-  school_id?: string;
-  schoolId?: string;
-  photoURL?: string;
-  created_at?: string;
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface EditForm {
   first_name: string;
@@ -77,7 +64,8 @@ interface School {
   school_code?: string;
 }
 
-// Phone number validation
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const validatePhoneNumber = (phone: string): boolean => {
   if (!phone) return false;
   const phoneRegex = /^(0[789][01]\d{8})$/;
@@ -86,18 +74,35 @@ const validatePhoneNumber = (phone: string): boolean => {
 
 const GENDER_OPTIONS = ["MALE", "FEMALE"];
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 const Profile = () => {
-  const { user, updateProfile, logout } = useContext(AuthContext);
+  const {
+    user,
+    updateProfile,
+    updateProfileImage,
+    removeProfileImage,
+    deleteAccount,
+    logout,
+  } = useContext(AuthContext);
   const router = useRouter();
-  const [loggingOut, setLoggingOut] = useState<boolean>(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Edit modal state
-  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-  const [editLoading, setEditLoading] = useState<boolean>(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [profileImageBroken, setProfileImageBroken] = useState(false);
+  const { wishlist } = useWishlist();
+
+  // ── Profile image upload ──────────────────────────────────────────────────
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
+
+  // ── Edit modal ────────────────────────────────────────────────────────────
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
   const [editErrors, setEditErrors] = useState<EditErrors>({});
-  const [editSuccess, setEditSuccess] = useState<string>("");
+  const [editSuccess, setEditSuccess] = useState("");
 
-  // Form state for editing
   const [editForm, setEditForm] = useState<EditForm>({
     first_name: "",
     last_name: "",
@@ -110,13 +115,20 @@ const Profile = () => {
     phone: "",
   });
 
-  // Schools state
+  // ── Schools ───────────────────────────────────────────────────────────────
   const [schools, setSchools] = useState<School[]>([]);
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
-  const [loadingSchools, setLoadingSchools] = useState<boolean>(false);
-  const [schoolDropdownOpen, setSchoolDropdownOpen] = useState<boolean>(false);
-  const [schoolSearch, setSchoolSearch] = useState<string>("");
+  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [loadingSchools, setLoadingSchools] = useState(false);
+  const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false);
+  const [schoolSearch, setSchoolSearch] = useState("");
 
+  // ── Delete account modal ──────────────────────────────────────────────────
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  // ─── Fetch schools ────────────────────────────────────────────────────────
   const fetchSchools = async () => {
     setLoadingSchools(true);
     try {
@@ -140,15 +152,21 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setProfileImageBroken(false);
+  }, [user?.photoURL, user?.profile_image]);
+
+  useEffect(() => {
     if (isEditModalOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchSchools();
     }
   }, [isEditModalOpen]);
 
   useEffect(() => {
     if (user && isEditModalOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditForm({
         first_name: user.first_name || "",
         last_name: user.last_name || "",
@@ -165,12 +183,60 @@ const Profile = () => {
   }, [user, isEditModalOpen]);
 
   const filteredSchools = schools.filter((school) => {
-    const searchTerm = schoolSearch.toLowerCase();
-    const schoolName = (school.school_name || school.name || "").toLowerCase();
-    const schoolCode = (school.school_code || "").toLowerCase();
-    return schoolName.includes(searchTerm) || schoolCode.includes(searchTerm);
+    const s = schoolSearch.toLowerCase();
+    return (
+      (school.school_name || school.name || "").toLowerCase().includes(s) ||
+      (school.school_code || "").toLowerCase().includes(s)
+    );
   });
 
+  // ─── Profile image upload ─────────────────────────────────────────────────
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please select a valid image file (JPG, PNG, etc.)");
+      return;
+    }
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("Image must be smaller than 5MB");
+      return;
+    }
+
+    setImageError("");
+    setUploadingImage(true);
+    try {
+      await updateProfileImage(file);
+    } catch (err: any) {
+      setImageError(err.message || "Failed to upload image. Please try again.");
+    } finally {
+      setUploadingImage(false);
+      // Reset input so the same file can be re-selected
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!user?.photoURL && !user?.profile_image) return;
+    setImageError("");
+    setUploadingImage(true);
+    try {
+      await removeProfileImage();
+    } catch (err: any) {
+      setImageError(
+        err.message || "Failed to remove profile photo. Please try again.",
+      );
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // ─── Edit form ────────────────────────────────────────────────────────────
   const handleEditFieldChange = (field: keyof EditForm, value: string) => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
     setEditErrors((prev) => ({ ...prev, [field]: "" }));
@@ -189,7 +255,7 @@ const Profile = () => {
     if (!editForm.phone) {
       errors.phone = "Phone number is required";
     } else if (!validatePhoneNumber(editForm.phone)) {
-      errors.phone = "Enter a valid phone number (e.g., 08012345678)";
+      errors.phone = "Enter a valid Nigerian phone number (e.g., 08012345678)";
     }
     if (!selectedSchoolId) errors.school = "Please select your school";
     setEditErrors(errors);
@@ -199,11 +265,9 @@ const Profile = () => {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEditForm()) return;
-
     setEditLoading(true);
     setEditSuccess("");
     setEditErrors({});
-
     try {
       await updateProfile({
         first_name: editForm.first_name,
@@ -217,9 +281,7 @@ const Profile = () => {
         phone: editForm.phone,
         school_id: selectedSchoolId,
       });
-
       setEditSuccess("Profile updated successfully!");
-
       setTimeout(() => {
         setIsEditModalOpen(false);
         setEditSuccess("");
@@ -231,6 +293,26 @@ const Profile = () => {
     }
   };
 
+  // ─── Delete account ───────────────────────────────────────────────────────
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      setDeleteError('Please type "DELETE" to confirm');
+      return;
+    }
+    setDeletingAccount(true);
+    setDeleteError("");
+    try {
+      await deleteAccount();
+      router.push("/");
+    } catch (err: any) {
+      setDeleteError(
+        err.message || "Failed to delete account. Please try again.",
+      );
+      setDeletingAccount(false);
+    }
+  };
+
+  // ─── Logout ───────────────────────────────────────────────────────────────
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
@@ -241,8 +323,13 @@ const Profile = () => {
     }
   };
 
+  if (!hasMounted) {
+    return <div className="min-h-screen" style={{ background: "#F4F5F9" }} />;
+  }
+
   if (!user) return null;
 
+  // ─── Derived display values ───────────────────────────────────────────────
   const displayName =
     `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
     user.username ||
@@ -257,7 +344,6 @@ const Profile = () => {
         year: "numeric",
       })
     : "Recently joined";
-
   const formattedPhone = user.phone || "—";
 
   const quickLinks = [
@@ -265,7 +351,7 @@ const Profile = () => {
       icon: <FiShoppingBag size={18} />,
       label: "My Orders",
       sub: "Track and manage orders",
-      href: "/order",
+      href: "/orders",
       color: "bg-blue-50 text-blue-600",
     },
     {
@@ -291,7 +377,7 @@ const Profile = () => {
     },
   ];
 
-  const inputFieldClass = (field: keyof EditForm): string =>
+  const inputClass = (field: keyof EditErrors) =>
     `w-full rounded-xl border px-4 py-3 text-sm transition-all duration-200 ${
       editErrors[field]
         ? "border-red-400 bg-red-50 focus:border-red-500"
@@ -303,7 +389,7 @@ const Profile = () => {
       <div className="min-h-screen" style={{ background: "#F4F5F9" }}>
         {/* Hero banner */}
         <div
-          className="relative overflow-hidden h-30 md:h-48"
+          className="relative overflow-hidden h-32 md:h-48"
           style={{
             background:
               "linear-gradient(135deg,#0a0a0a 0%,#1a0303 40%,#B42225 100%)",
@@ -334,13 +420,13 @@ const Profile = () => {
         <div className="max-w-4xl mx-auto px-4 md:px-6">
           {/* Profile card */}
           <div
-            className="bg-white rounded-3xl mt-10 relative z-10 p-6 md:p-8 mb-5"
+            className="bg-white rounded-3xl -mt-10 relative z-10 p-6 md:p-8 mb-5"
             style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}
           >
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-              {/* Avatar */}
-              <div className="relative shrink-0">
-                {user.photoURL ? (
+              {/* ── Avatar with upload ── */}
+              <div className="relative shrink-0 group">
+                {user.photoURL && !profileImageBroken ? (
                   <Image
                     src={user.photoURL}
                     alt="Profile"
@@ -348,6 +434,19 @@ const Profile = () => {
                     height={112}
                     className="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover border-4 border-white"
                     style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}
+                    unoptimized
+                    onError={() => setProfileImageBroken(true)}
+                  />
+                ) : user.profile_image && !profileImageBroken ? (
+                  <Image
+                    src={user.profile_image}
+                    alt="Profile"
+                    width={112}
+                    height={112}
+                    className="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover border-4 border-white"
+                    style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}
+                    unoptimized
+                    onError={() => setProfileImageBroken(true)}
                   />
                 ) : (
                   <div
@@ -365,11 +464,44 @@ const Profile = () => {
                     </span>
                   </div>
                 )}
+
+                {/* Upload overlay */}
+                <button
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer disabled:cursor-not-allowed"
+                  title="Change profile photo"
+                >
+                  {uploadingImage ? (
+                    <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <FiCamera size={20} className="text-white" />
+                      <span className="text-white text-[9px] font-bold">
+                        Change Photo
+                      </span>
+                    </div>
+                  )}
+                </button>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageFileChange}
+                />
+
+                {/* Online indicator */}
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white" />
               </div>
 
               {/* Name & info */}
               <div className="flex-1 text-center sm:text-left min-w-0">
+                {imageError && (
+                  <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                    <FiAlertCircle size={12} /> {imageError}
+                  </p>
+                )}
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                   <h1
                     className="text-2xl md:text-3xl font-black text-gray-900"
@@ -409,6 +541,33 @@ const Profile = () => {
                     <FiCalendar size={12} /> {joinDate}
                   </span>
                 </div>
+
+                <div className="mt-3 flex flex-wrap justify-center sm:justify-start gap-2">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[#B42225] hover:bg-[#9e1e20] transition-all disabled:opacity-60"
+                  >
+                    <FiCamera size={16} />
+                    {uploadingImage
+                      ? "Processing..."
+                      : user.photoURL
+                        ? "Change photo"
+                        : "Upload photo"}
+                  </button>
+                  {user.photoURL && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      disabled={uploadingImage}
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-60"
+                    >
+                      <FiTrash2 size={16} />
+                      Remove photo
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Edit + Logout buttons */}
@@ -438,7 +597,7 @@ const Profile = () => {
           <div className="grid grid-cols-3 gap-4 mb-5">
             {[
               { label: "Orders", value: "0" },
-              { label: "Wishlist", value: "0" },
+              { label: "Wishlist", value: String(wishlist.length) },
               { label: "Reviews", value: "0" },
             ].map(({ label, value }) => (
               <div
@@ -539,6 +698,23 @@ const Profile = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Danger zone */}
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <h3 className="text-sm font-black text-red-500 mb-3 uppercase tracking-widest">
+                  Danger Zone
+                </h3>
+                <button
+                  onClick={() => setDeleteModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 transition-all"
+                >
+                  <FiTrash2 size={15} /> Delete Account Permanently
+                </button>
+                <p className="text-xs text-gray-400 mt-2">
+                  This action cannot be undone. All your data will be
+                  permanently removed.
+                </p>
+              </div>
             </div>
 
             {/* Quick links */}
@@ -578,7 +754,6 @@ const Profile = () => {
                 ))}
               </div>
 
-              {/* Logout button */}
               <div className="mt-5 pt-5 border-t border-gray-100">
                 <button
                   onClick={handleLogout}
@@ -594,14 +769,16 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* EDIT PROFILE MODAL */}
+      {/* ══════════════════════════════════════════════════
+          EDIT PROFILE MODAL
+      ══════════════════════════════════════════════════ */}
       {isEditModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
         >
           <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
+            {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div>
                 <h2
@@ -622,15 +799,77 @@ const Profile = () => {
               </button>
             </div>
 
-            {/* Modal Body */}
+            {/* Body */}
             <div className="flex-1 overflow-y-auto p-6">
+              {/* ── Photo upload inside modal ── */}
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-6">
+                <div className="relative shrink-0">
+                  {user.photoURL && !profileImageBroken ? (
+                    <Image
+                      src={user.photoURL}
+                      alt="Profile"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-xl object-cover"
+                      unoptimized
+                      onError={() => setProfileImageBroken(true)}
+                    />
+                  ) : user.profile_image && !profileImageBroken ? (
+                    <Image
+                      src={user.profile_image}
+                      alt="Profile"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-xl object-cover"
+                      unoptimized
+                      onError={() => setProfileImageBroken(true)}
+                    />
+                  ) : (
+                    <div
+                      className="w-16 h-16 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                      }}
+                    >
+                      <span className="text-2xl font-black text-white">
+                        {initials || user.username?.[0]?.toUpperCase() || "U"}
+                      </span>
+                    </div>
+                  )}
+                  {uploadingImage && (
+                    <div className="absolute inset-0 rounded-xl bg-black/50 flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-800">
+                    Profile Photo
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    JPG, PNG or GIF — max 5MB
+                  </p>
+                  {imageError && (
+                    <p className="text-xs text-red-500 mt-1">{imageError}</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-white hover:border-[#B42225] hover:text-[#B42225] transition-all disabled:opacity-50 shrink-0"
+                >
+                  <FiCamera size={14} />
+                  {uploadingImage ? "Uploading..." : "Choose Photo"}
+                </button>
+              </div>
+
               {editSuccess && (
                 <div className="mb-5 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
                   <FiCheck className="text-green-500 shrink-0" size={16} />
                   <p className="text-green-600 text-sm">{editSuccess}</p>
                 </div>
               )}
-
               {editErrors.general && (
                 <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
                   <FiAlertCircle className="text-red-500 shrink-0" size={16} />
@@ -650,7 +889,7 @@ const Profile = () => {
                       onChange={(e) =>
                         handleEditFieldChange("first_name", e.target.value)
                       }
-                      className={inputFieldClass("first_name")}
+                      className={inputClass("first_name")}
                       placeholder="First name"
                     />
                     {editErrors.first_name && (
@@ -669,7 +908,7 @@ const Profile = () => {
                       onChange={(e) =>
                         handleEditFieldChange("last_name", e.target.value)
                       }
-                      className={inputFieldClass("last_name")}
+                      className={inputClass("last_name")}
                       placeholder="Last name"
                     />
                     {editErrors.last_name && (
@@ -697,7 +936,7 @@ const Profile = () => {
                           e.target.value.replace(/\s/g, ""),
                         )
                       }
-                      className={`${inputFieldClass("username")} pl-8`}
+                      className={`${inputClass("username")} pl-8`}
                       placeholder="username"
                     />
                   </div>
@@ -718,7 +957,7 @@ const Profile = () => {
                     onChange={(e) =>
                       handleEditFieldChange("phone", e.target.value)
                     }
-                    className={inputFieldClass("phone")}
+                    className={inputClass("phone")}
                     placeholder="08012345678"
                   />
                   {editErrors.phone && (
@@ -769,7 +1008,7 @@ const Profile = () => {
                       onChange={(e) =>
                         handleEditFieldChange("country", e.target.value)
                       }
-                      className={inputFieldClass("country")}
+                      className={inputClass("country")}
                       placeholder="Nigeria"
                     />
                     {editErrors.country && (
@@ -788,7 +1027,7 @@ const Profile = () => {
                       onChange={(e) =>
                         handleEditFieldChange("state", e.target.value)
                       }
-                      className={inputFieldClass("state")}
+                      className={inputClass("state")}
                       placeholder="Lagos"
                     />
                     {editErrors.state && (
@@ -809,7 +1048,7 @@ const Profile = () => {
                     onChange={(e) =>
                       handleEditFieldChange("city", e.target.value)
                     }
-                    className={inputFieldClass("city")}
+                    className={inputClass("city")}
                     placeholder="Ikeja"
                   />
                   {editErrors.city && (
@@ -819,7 +1058,7 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* School Dropdown - Required */}
+                {/* School dropdown */}
                 <div>
                   <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-1.5">
                     School / Institution <span className="text-red-500">*</span>
@@ -997,13 +1236,100 @@ const Profile = () => {
                       </>
                     ) : (
                       <>
-                        <FiCheck size={14} />
-                        Save Changes
+                        <FiCheck size={14} /> Save Changes
                       </>
                     )}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════
+          DELETE ACCOUNT MODAL
+      ══════════════════════════════════════════════════ */}
+      {deleteModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{
+            background: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-red-100 bg-red-50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <FiTrash2 size={18} className="text-red-500" />
+                </div>
+                <h2
+                  className="text-lg font-black text-red-600"
+                  style={{ fontFamily: "'Georgia',serif" }}
+                >
+                  Delete Account
+                </h2>
+              </div>
+              <p className="text-sm text-red-500 font-medium">
+                This action is permanent and cannot be undone.
+              </p>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Deleting your account will permanently remove all your data,
+                orders, reviews, and any seller/service provider information.
+                This <strong>cannot be recovered</strong>.
+              </p>
+              <p className="text-sm font-bold text-gray-700 mb-2">
+                Type <span className="text-red-500 font-black">DELETE</span> to
+                confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => {
+                  setDeleteConfirmText(e.target.value);
+                  setDeleteError("");
+                }}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold tracking-wider focus:border-red-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-200 mb-3"
+                placeholder="DELETE"
+              />
+              {deleteError && (
+                <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
+                  <FiAlertCircle size={12} /> {deleteError}
+                </p>
+              )}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteModalOpen(false);
+                    setDeleteConfirmText("");
+                    setDeleteError("");
+                  }}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount || deleteConfirmText !== "DELETE"}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deletingAccount ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <FiTrash2 size={14} /> Delete Account
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

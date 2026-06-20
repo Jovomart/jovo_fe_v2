@@ -39,6 +39,7 @@ import {
   FiZap,
   FiUpload,
   FiImage,
+  FiCamera,
 } from "react-icons/fi";
 import {
   FaWhatsapp,
@@ -268,195 +269,6 @@ function formatPrice(type: string, price: number | null | undefined) {
   if (type === "negotiable") return "Negotiable";
   const prefix = type === "starting_from" ? "From " : "";
   return `${prefix}₦${(price ?? 0).toLocaleString()}`;
-}
-
-/* ─── Image Upload Field with Cloudinary ───────────────────────────────────── */
-function ImageUploadField({
-  label,
-  value,
-  onChange,
-  aspectSquare = false,
-  uploadType = "provider_logo",
-  entityId = null,
-}: {
-  label: string;
-  value: string;
-  onChange: (url: string) => void;
-  aspectSquare?: boolean;
-  uploadType?:
-    | "provider_logo"
-    | "provider_cover"
-    | "product_images"
-    | "category_image"
-    | "category_icon";
-  entityId?: string | null;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState("");
-
-  const handleFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError("File size exceeds 5MB limit");
-      return;
-    }
-
-    setError("");
-    setUploading(true);
-    setUploadProgress(0);
-
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => Math.min(prev + 10, 90));
-    }, 200);
-
-    try {
-      let uploadedUrl = "";
-
-      const result = await apiService.uploadFiles(
-        [file],
-        uploadType,
-        entityId || undefined,
-      );
-      uploadedUrl = result.primary_url || result.urls?.[0];
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      if (uploadedUrl) {
-        onChange(uploadedUrl);
-        console.log(`${label} uploaded successfully:`, uploadedUrl);
-      } else {
-        throw new Error("No URL returned from upload");
-      }
-    } catch (err: any) {
-      console.error("Upload failed:", err);
-      setError(err.message || "Failed to upload image. Please try again.");
-    } finally {
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      }, 500);
-    }
-  };
-
-  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-    if (inputRef.current) inputRef.current.value = "";
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
-  };
-
-  return (
-    <div>
-      <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">
-        {label}
-      </label>
-      <div
-        onClick={() => !uploading && inputRef.current?.click()}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={onDrop}
-        className="relative overflow-hidden cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200"
-        style={{
-          borderColor: dragOver ? "#F97316" : error ? "#EF4444" : "#E2E8F0",
-          background: dragOver ? "#FFF7ED" : error ? "#FEF2F2" : "#F8FAFC",
-          minHeight: aspectSquare ? "120px" : "96px",
-        }}
-      >
-        {error && (
-          <div className="absolute top-2 left-2 right-2 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {uploading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-10 rounded-2xl">
-            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mb-2" />
-            <p className="text-white text-xs font-semibold">
-              {uploadProgress}%
-            </p>
-          </div>
-        )}
-
-        {value ? (
-          <>
-            <div
-              className="relative w-full"
-              style={{
-                minHeight: aspectSquare ? "120px" : "96px",
-                maxHeight: aspectSquare ? "120px" : "96px",
-              }}
-            >
-              <Image
-                src={value}
-                alt={label}
-                width={aspectSquare ? 120 : 300}
-                height={aspectSquare ? 120 : 96}
-                className="w-full h-full object-cover rounded-2xl"
-                style={{
-                  minHeight: aspectSquare ? "120px" : "96px",
-                  maxHeight: aspectSquare ? "120px" : "96px",
-                }}
-              />
-            </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-2xl">
-              <FiUpload size={20} className="text-white mb-1" />
-              <p className="text-white text-[11px] font-bold">Change photo</p>
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-6 px-4 text-center h-full">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
-              style={{ background: "rgba(249,115,22,0.1)" }}
-            >
-              <FiImage size={18} className="text-orange-400" />
-            </div>
-            <p className="text-slate-600 text-xs font-bold mb-0.5">
-              Click or drag to upload
-            </p>
-            <p className="text-slate-400 text-[10px]">
-              JPG, PNG, WebP · max 5 MB
-            </p>
-          </div>
-        )}
-      </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={onInputChange}
-      />
-      {value && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onChange("");
-          }}
-          className="mt-1.5 text-[10px] text-red-400 hover:text-red-600 font-semibold flex items-center gap-1"
-        >
-          <FiX size={10} /> Remove photo
-        </button>
-      )}
-    </div>
-  );
 }
 
 /* ─── sub-components ─────────────────────────────────────────────── */
@@ -956,6 +768,55 @@ const MetricCard = ({
   </div>
 );
 
+/* ─── Helper: Upload image (upload only, no profile mutation) ───── */
+/**
+ * Uploads a provider image (logo or cover) and returns the resulting URL.
+ * Does NOT touch the provider profile - upload and save are two separate
+ * steps; a single full-payload save persists the URL afterward (see
+ * handleCoverUpload / handleLogoUpload below).
+ *
+ * Response-shape parsing mirrors apiService.uploadProfileImage(), which is
+ * the proven, already-working normalizer for this exact backend endpoint
+ * (/upload/files). uploadFiles() returns response.data as-is, whatever
+ * shape the backend sends, so we reuse the same checks rather than
+ * guessing at a different shape.
+ */
+async function uploadProviderImage(
+  file: File,
+  uploadType: "provider_logo" | "provider_cover",
+  providerId?: string,
+): Promise<string | null> {
+  let result: any;
+  try {
+    result = await apiService.uploadFiles([file], uploadType, providerId);
+  } catch (err) {
+    console.error(`uploadFiles(${uploadType}) request failed:`, err);
+    return null;
+  }
+
+  // Same shape-checks as apiService.uploadProfileImage(), the known-working
+  // normalizer for this backend's /upload/files response.
+  const urls: string[] = Array.isArray(result?.urls)
+    ? result.urls
+    : Array.isArray(result)
+      ? result.map((r: any) => r?.url || r)
+      : result?.url
+        ? [result.url]
+        : [];
+
+  if (!urls.length || typeof urls[0] !== "string") {
+    // Log the actual raw shape so a real mismatch is diagnosable instead of
+    // silently failing again with a guess.
+    console.error(
+      `uploadFiles(${uploadType}) returned an unrecognized shape:`,
+      result,
+    );
+    return null;
+  }
+
+  return urls[0];
+}
+
 /* ═══════════════════════ MAIN DASHBOARD ════════════════════════ */
 export default function ProviderDashboard() {
   const router = useRouter();
@@ -980,6 +841,13 @@ export default function ProviderDashboard() {
   const [deletingService, setDeletingService] = useState(false);
   const [togglingActive, setTogglingActive] = useState(false);
 
+  // Hero image upload states
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [coverImage, setCoverImage] = useState<string>("");
+  const [logoImage, setLogoImage] = useState<string>("");
+  const [imageError, setImageError] = useState("");
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
 
@@ -987,14 +855,14 @@ export default function ProviderDashboard() {
     business_name: "",
     business_bio: "",
     whatsapp_number: "",
-    logo_url: "",
-    cover_image_url: "",
   });
   const [profError, setProfError] = useState("");
   const [serviceError, setServiceError] = useState("");
 
   const hasLoadedRef = useRef(false);
   const categoriesFetchedRef = useRef(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const hour = new Date().getHours();
   const greeting =
@@ -1038,6 +906,186 @@ export default function ProviderDashboard() {
     }
   }, []);
 
+  /**
+   * Core fetch logic, shared by the initial load and any later refresh.
+   * Does NOT touch hasLoadedRef - callers decide whether this is the
+   * first load (full-page spinner) or a silent background refresh.
+   */
+  const fetchDashboardData = useCallback(async () => {
+    let profRes: any = null;
+    try {
+      profRes = await apiService.getServiceProviderDetails();
+    } catch (err: any) {
+      const status = err?.response?.status ?? err?.status ?? err?.statusCode;
+      const isNotFound =
+        status === 404 || err?.message?.toLowerCase().includes("not found");
+      if (isNotFound) {
+        router.replace("/services/apply");
+        return;
+      }
+      throw err;
+    }
+    if (!profRes)
+      throw new Error(
+        "Could not load your provider profile. Please try again.",
+      );
+
+    const p = profRes?.data || profRes;
+    let providerCats: string[] = [];
+    if (p.service_category && Array.isArray(p.service_category))
+      providerCats = p.service_category;
+    else if (p.service_categories && Array.isArray(p.service_categories))
+      providerCats = p.service_categories;
+    else if (p.categories && Array.isArray(p.categories))
+      providerCats = p.categories;
+    else if (p.category) providerCats = [p.category];
+    else if (p.category_id) providerCats = [p.category_id];
+    setAllowedCategoryIds(providerCats);
+
+    const resolvedStatus = (() => {
+      if (p.is_active === true) return "active";
+      const rawStatus = (
+        p.provider_status ||
+        p.status ||
+        p.account_status ||
+        ""
+      )
+        .toString()
+        .toLowerCase()
+        .trim();
+      if (
+        [
+          "active",
+          "verified",
+          "approved",
+          "complete",
+          "completed",
+          "enabled",
+        ].includes(rawStatus)
+      )
+        return "active";
+      if (
+        [
+          "pending",
+          "under_review",
+          "submitted",
+          "reviewing",
+          "review",
+          "",
+        ].includes(rawStatus)
+      ) {
+        if (p.is_phone_verified === true) return "active";
+        return "pending";
+      }
+      if (
+        ["inactive", "suspended", "disabled", "banned", "rejected"].includes(
+          rawStatus,
+        )
+      )
+        return "inactive";
+      return "pending";
+    })();
+
+    const profileWithStatus: ProviderProfile = {
+      ...p,
+      _resolvedStatus: resolvedStatus,
+    };
+    setProfile((prev) => ({
+      ...prev,
+      ...profileWithStatus,
+      // GET /service-provider/details does NOT include logo_url or
+      // cover_image_url in its response (confirmed: only id, business_name,
+      // business_bio, service_category, phone_number, whatsapp_number,
+      // is_phone_verified, provider_status). Falling back to the previous
+      // state here prevents this leaner endpoint from blanking out images
+      // that were correctly saved via the PATCH /service-provider/profile
+      // response - which DOES include them.
+      logo_url:
+        p.logo_url !== undefined ? p.logo_url : (prev?.logo_url ?? undefined),
+      cover_image_url:
+        p.cover_image_url !== undefined
+          ? p.cover_image_url
+          : (prev?.cover_image_url ?? undefined),
+    }));
+    // Only update image state from this response if the field is actually
+    // present - otherwise leave whatever is currently shown untouched.
+    if (p.cover_image_url !== undefined) {
+      setCoverImage(p.cover_image_url || "");
+    }
+    if (p.logo_url !== undefined) {
+      setLogoImage(p.logo_url || "");
+    }
+    setProfForm({
+      business_name: p.business_name || "",
+      business_bio: p.business_bio || "",
+      whatsapp_number: p.whatsapp_number || p.phone_number || "",
+    });
+
+    if (resolvedStatus === "pending") {
+      const providerId = p.id || p.service_provider_id;
+      if (providerId)
+        localStorage.setItem("sp_pending_id", String(providerId));
+      router.replace("/services/apply/verify");
+      return;
+    }
+    if (resolvedStatus === "inactive") return;
+
+    const token = localStorage.getItem("access_token");
+    const directResponse = await fetch(
+      "https://dev-api-jovomart.onrender.com/api/v1/service-provider/services/my-services",
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const directData = await directResponse.json();
+
+    let svcData = null;
+    if (directData?.data) {
+      const dataObj = directData.data;
+      if (Array.isArray(dataObj) && dataObj.length > 0) svcData = dataObj[0];
+      else if (dataObj && typeof dataObj === "object") {
+        if (
+          dataObj.services &&
+          Array.isArray(dataObj.services) &&
+          dataObj.services.length > 0
+        )
+          svcData = dataObj.services[0];
+        else if (
+          dataObj.items &&
+          Array.isArray(dataObj.items) &&
+          dataObj.items.length > 0
+        )
+          svcData = dataObj.items[0];
+        else if (
+          dataObj.results &&
+          Array.isArray(dataObj.results) &&
+          dataObj.results.length > 0
+        )
+          svcData = dataObj.results[0];
+        else if (dataObj.id) svcData = dataObj;
+        else {
+          for (const key in dataObj) {
+            if (
+              Array.isArray(dataObj[key]) &&
+              dataObj[key].length > 0 &&
+              dataObj[key][0]?.id
+            ) {
+              svcData = dataObj[key][0];
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (svcData && svcData.id) {
+      setService(svcData);
+      setHasService(true);
+    } else {
+      setHasService(false);
+      setService(null);
+    }
+  }, [router]);
+
+  /** First load only - shows the full-page spinner, runs once per mount. */
   const load = useCallback(async () => {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
@@ -1045,161 +1093,27 @@ export default function ProviderDashboard() {
     setPageError("");
     try {
       fetchCategories();
-      let profRes: any = null;
-      try {
-        profRes = await apiService.getServiceProviderDetails();
-      } catch (err: any) {
-        const status = err?.response?.status ?? err?.status ?? err?.statusCode;
-        const isNotFound =
-          status === 404 || err?.message?.toLowerCase().includes("not found");
-        if (isNotFound) {
-          router.replace("/services/apply");
-          return;
-        }
-        throw err;
-      }
-      if (!profRes)
-        throw new Error(
-          "Could not load your provider profile. Please try again.",
-        );
-
-      const p = profRes?.data || profRes;
-      let providerCats: string[] = [];
-      if (p.service_category && Array.isArray(p.service_category))
-        providerCats = p.service_category;
-      else if (p.service_categories && Array.isArray(p.service_categories))
-        providerCats = p.service_categories;
-      else if (p.categories && Array.isArray(p.categories))
-        providerCats = p.categories;
-      else if (p.category) providerCats = [p.category];
-      else if (p.category_id) providerCats = [p.category_id];
-      setAllowedCategoryIds(providerCats);
-
-      const resolvedStatus = (() => {
-        if (p.is_active === true) return "active";
-        const rawStatus = (
-          p.provider_status ||
-          p.status ||
-          p.account_status ||
-          ""
-        )
-          .toString()
-          .toLowerCase()
-          .trim();
-        if (
-          [
-            "active",
-            "verified",
-            "approved",
-            "complete",
-            "completed",
-            "enabled",
-          ].includes(rawStatus)
-        )
-          return "active";
-        if (
-          [
-            "pending",
-            "under_review",
-            "submitted",
-            "reviewing",
-            "review",
-            "",
-          ].includes(rawStatus)
-        ) {
-          if (p.is_phone_verified === true) return "active";
-          return "pending";
-        }
-        if (
-          ["inactive", "suspended", "disabled", "banned", "rejected"].includes(
-            rawStatus,
-          )
-        )
-          return "inactive";
-        return "pending";
-      })();
-
-      const profileWithStatus: ProviderProfile = {
-        ...p,
-        _resolvedStatus: resolvedStatus,
-      };
-      setProfile(profileWithStatus);
-      setProfForm({
-        business_name: p.business_name || "",
-        business_bio: p.business_bio || "",
-        whatsapp_number: p.whatsapp_number || p.phone_number || "",
-        logo_url: p.logo_url || "",
-        cover_image_url: p.cover_image_url || "",
-      });
-
-      if (resolvedStatus === "pending") {
-        const providerId = p.id || p.service_provider_id;
-        if (providerId)
-          localStorage.setItem("sp_pending_id", String(providerId));
-        router.replace("/services/apply/verify");
-        return;
-      }
-      if (resolvedStatus === "inactive") return;
-
-      const token = localStorage.getItem("access_token");
-      const directResponse = await fetch(
-        "https://dev-api-jovomart.onrender.com/api/v1/service-provider/services/my-services",
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      const directData = await directResponse.json();
-
-      let svcData = null;
-      if (directData?.data) {
-        const dataObj = directData.data;
-        if (Array.isArray(dataObj) && dataObj.length > 0) svcData = dataObj[0];
-        else if (dataObj && typeof dataObj === "object") {
-          if (
-            dataObj.services &&
-            Array.isArray(dataObj.services) &&
-            dataObj.services.length > 0
-          )
-            svcData = dataObj.services[0];
-          else if (
-            dataObj.items &&
-            Array.isArray(dataObj.items) &&
-            dataObj.items.length > 0
-          )
-            svcData = dataObj.items[0];
-          else if (
-            dataObj.results &&
-            Array.isArray(dataObj.results) &&
-            dataObj.results.length > 0
-          )
-            svcData = dataObj.results[0];
-          else if (dataObj.id) svcData = dataObj;
-          else {
-            for (const key in dataObj) {
-              if (
-                Array.isArray(dataObj[key]) &&
-                dataObj[key].length > 0 &&
-                dataObj[key][0]?.id
-              ) {
-                svcData = dataObj[key][0];
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if (svcData && svcData.id) {
-        setService(svcData);
-        setHasService(true);
-      } else {
-        setHasService(false);
-        setService(null);
-      }
+      await fetchDashboardData();
     } catch (err: any) {
       setPageError(err.message || "Failed to load your profile.");
     } finally {
       setPageLoading(false);
     }
-  }, [fetchCategories, router]);
+  }, [fetchCategories, fetchDashboardData]);
+
+  /**
+   * Silent refresh used after every mutation (toggle active, save profile,
+   * create/update/delete service, upload images). Always re-runs, unlike
+   * `load`, so the UI reflects the server's true state without requiring
+   * a manual page refresh.
+   */
+  const refresh = useCallback(async () => {
+    try {
+      await fetchDashboardData();
+    } catch (err: any) {
+      console.error("Refresh failed:", err);
+    }
+  }, [fetchDashboardData]);
 
   const dashboardLoadedRef = useRef(false);
 
@@ -1215,12 +1129,96 @@ export default function ProviderDashboard() {
     setProfError("");
     try {
       await apiService.updateServiceProviderProfile(profForm);
-      await load();
+      await refresh();
       setEditingProfile(false);
     } catch (err: any) {
       setProfError(err.message || "Failed to update profile.");
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  // ── Hero Image Handlers ──
+  // IMPORTANT: GET /service-provider/details (used by refresh/fetchDashboardData)
+  // returns a SLIMMER payload than PATCH /service-provider/profile - it does
+  // NOT include logo_url, cover_image_url, rating, review_count, etc. Calling
+  // refresh() after an image upload was overwriting the just-saved image back
+  // to blank, because refresh() re-fetches from /details and that response
+  // has no logo_url/cover_image_url field at all (undefined -> ""). The fix:
+  // trust the PATCH response directly as the source of truth for these
+  // fields, and do NOT call refresh() here.
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    setImageError("");
+    // Instant local preview so the UI feels responsive while uploading.
+    const localPreviewUrl = URL.createObjectURL(file);
+    setCoverImage(localPreviewUrl);
+    try {
+      const url = await uploadProviderImage(file, "provider_cover", profile?.id);
+      if (!url) {
+        throw new Error("Failed to upload cover image. Please try again.");
+      }
+      // Full-payload save: all current profile fields plus the new cover url.
+      const saveRes = await apiService.updateServiceProviderProfile({
+        ...profForm,
+        cover_image_url: url,
+      });
+      // Trust the PATCH response's own data over our local guess - it's the
+      // authoritative, freshest copy of the full profile (unlike /details).
+      const saved = saveRes?.data ?? saveRes;
+      const confirmedUrl =
+        (saved && typeof saved === "object" && saved.cover_image_url) || url;
+      setCoverImage(confirmedUrl);
+      setProfile((prev) =>
+        prev ? { ...prev, ...saved, cover_image_url: confirmedUrl } : prev,
+      );
+    } catch (err: any) {
+      console.error("Cover upload failed:", err);
+      setImageError(
+        err.message || "Failed to upload cover image. Please try again.",
+      );
+      // Roll back the preview since the upload didn't actually persist.
+      setCoverImage(profile?.cover_image_url || "");
+    } finally {
+      URL.revokeObjectURL(localPreviewUrl);
+      setUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = "";
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    setImageError("");
+    const localPreviewUrl = URL.createObjectURL(file);
+    setLogoImage(localPreviewUrl);
+    try {
+      const url = await uploadProviderImage(file, "provider_logo", profile?.id);
+      if (!url) {
+        throw new Error("Failed to upload logo. Please try again.");
+      }
+      const saveRes = await apiService.updateServiceProviderProfile({
+        ...profForm,
+        logo_url: url,
+      });
+      const saved = saveRes?.data ?? saveRes;
+      const confirmedUrl =
+        (saved && typeof saved === "object" && saved.logo_url) || url;
+      setLogoImage(confirmedUrl);
+      setProfile((prev) =>
+        prev ? { ...prev, ...saved, logo_url: confirmedUrl } : prev,
+      );
+    } catch (err: any) {
+      console.error("Logo upload failed:", err);
+      setImageError(err.message || "Failed to upload logo. Please try again.");
+      setLogoImage(profile?.logo_url || "");
+    } finally {
+      URL.revokeObjectURL(localPreviewUrl);
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
     }
   };
 
@@ -1260,7 +1258,7 @@ export default function ProviderDashboard() {
           },
         );
       }
-      await load();
+      await refresh();
       setShowServiceForm(false);
     } catch (err: any) {
       console.error("Create service error:", err);
@@ -1276,7 +1274,7 @@ export default function ProviderDashboard() {
     setServiceError("");
     try {
       await apiService.updateService(service.id, data);
-      await load();
+      await refresh();
       setEditingService(false);
     } catch (err: any) {
       setServiceError(err.message || "Failed to update service.");
@@ -1290,7 +1288,7 @@ export default function ProviderDashboard() {
     setDeletingService(true);
     try {
       await apiService.deleteService(service.id);
-      await load();
+      await refresh();
       setConfirmDelete(false);
     } catch (err: any) {
       setServiceError(err.message || "Failed to delete service.");
@@ -1302,13 +1300,21 @@ export default function ProviderDashboard() {
   const toggleActive = async () => {
     if (!service) return;
     setTogglingActive(true);
+    const previous = service;
+    const nextActive = !service.is_active;
+    // Optimistic update so the badge flips instantly...
+    setService({ ...service, is_active: nextActive });
     try {
       await apiService.updateService(service.id, {
-        is_active: !service.is_active,
+        is_active: nextActive,
       });
-      await load();
-    } catch {
-      /* silently fail */
+      // ...then confirm against the server, which now actually re-fetches
+      // because `refresh` is not gated like `load` was.
+      await refresh();
+    } catch (err) {
+      console.error("Toggle active failed:", err);
+      // Roll back on failure instead of leaving a state that lies to the user.
+      setService(previous);
     } finally {
       setTogglingActive(false);
     }
@@ -1322,7 +1328,6 @@ export default function ProviderDashboard() {
       ? categories.some((cat) => isCategoryAllowed(cat, allowedCategoryIds))
       : categories.length > 0;
   const activeServiceCount = hasService && service?.is_active === true ? 1 : 0;
-  const activeServiceText = activeServiceCount === 1 ? "Active" : "Inactive";
 
   const initials =
     profile?.business_name
@@ -1465,14 +1470,15 @@ export default function ProviderDashboard() {
           />
           <div className="flex items-center gap-3">
             <div className="relative shrink-0">
-              {profile?.logo_url ? (
+              {logoImage ? (
                 <Image
-                  src={profile.logo_url}
+                  src={logoImage}
                   alt="logo"
                   width={44}
                   height={44}
                   className="rounded-xl object-cover"
                   style={{ boxShadow: "0 4px 12px rgba(249,115,22,0.35)" }}
+                  unoptimized
                 />
               ) : (
                 <div
@@ -1563,6 +1569,16 @@ export default function ProviderDashboard() {
           style={{ borderTop: "1px solid #F8FAFC" }}
         >
           <Link
+            href="/shop"
+            className="w-full flex items-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold text-red-400 transition-all duration-200 hover:opacity-90"
+            style={{
+              background: "white",
+        
+            }}
+          >
+            <MdOutlineSwapHoriz size={17} /> Back to Shop
+          </Link>
+          <Link
             href="/services"
             className="w-full flex items-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90"
             style={{
@@ -1589,560 +1605,527 @@ export default function ProviderDashboard() {
           className="sticky top-0 z-30"
           style={{
             background: "rgba(255,255,255,0.98)",
-            borderBottom: "1px solid #F1F5F9",
-            boxShadow: "0 2px 24px rgba(0,0,0,0.06)",
+            borderBottom: "1px solid #EEF1F6",
+            boxShadow: "0 1px 0 rgba(15,23,42,0.02), 0 8px 24px rgba(15,23,42,0.04)",
             backdropFilter: "blur(20px)",
           }}
         >
+          {/* Thin brand hairline - desktop + mobile, understated not candy-bright */}
           <div
-            className="lg:hidden h-[2px] w-full"
+            className="h-[2px] w-full"
             style={{
               background:
-                "linear-gradient(90deg,#B42225 0%,#FF6B00 35%,#FFB347 55%,#FF6B00 75%,#B42225 100%)",
+                "linear-gradient(90deg,#7A1417 0%,#B42225 30%,#C45A1E 60%,#B42225 85%,#7A1417 100%)",
+              opacity: 0.9,
             }}
           />
-          <div className="flex items-center justify-between px-4 lg:px-5 py-3">
+
+          {/* ── Desktop / tablet row ── */}
+          <div className="hidden sm:flex items-center justify-between px-5 lg:px-6 py-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-all active:scale-95"
                 style={{
-                  background:
-                    "linear-gradient(135deg,rgba(180,34,37,0.08),rgba(255,140,0,0.08))",
-                  border: "1px solid rgba(255,140,0,0.22)",
+                  background: "#F8FAFC",
+                  border: "1px solid #EEF1F6",
                 }}
               >
-                <FiMenu size={17} className="text-orange-600" />
+                <FiMenu size={17} className="text-slate-600" />
               </button>
-              <div className="hidden sm:block">
+              <div>
                 <p className="text-slate-400 text-xs font-medium">{greeting}</p>
                 <p className="text-slate-900 text-[13px] font-black">
-                  {profile?.business_name || "Provider"}
-                </p>
-              </div>
-              <div className="sm:hidden">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[10px] font-bold text-orange-500">
-                    {greeting}
-                  </span>
-                  <span
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
-                    style={
-                      service?.is_active
-                        ? {
-                            background: "rgba(16,185,129,0.12)",
-                            color: "#059669",
-                          }
-                        : {
-                            background: "rgba(148,163,184,0.12)",
-                            color: "#64748B",
-                          }
-                    }
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "animate-pulse bg-emerald-500" : "bg-slate-400"}`}
-                    />
-                    {service?.is_active ? "LIVE" : "OFFLINE"}
-                  </span>
-                </div>
-                <p className="text-slate-900 text-sm font-black leading-none truncate max-w-[148px]">
                   {profile?.business_name || "Provider"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {(profile?.rating ?? 0) > 0 && (
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
+                <div
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
+                  style={{ background: "#FBF8F3", border: "1px solid #F0E6D2" }}
+                >
                   <FaStar size={11} className="text-amber-500" />
-                  <span className="text-amber-700 font-black text-sm">
+                  <span className="text-slate-800 font-black text-sm">
                     {profile?.rating?.toFixed(1)}
                   </span>
                 </div>
               )}
               <div
-                className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold ${service?.is_active ? "bg-emerald-50 border border-emerald-100 text-emerald-700" : "bg-slate-100 border border-slate-200 text-slate-500"}`}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold"
+                style={
+                  service?.is_active
+                    ? {
+                        background: "#F0FBF6",
+                        border: "1px solid #CFEEDD",
+                        color: "#0E7C53",
+                      }
+                    : {
+                        background: "#F8FAFC",
+                        border: "1px solid #E7EBF0",
+                        color: "#64748B",
+                      }
+                }
               >
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500" : "bg-slate-400"}`}
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{
+                    background: service?.is_active ? "#16A368" : "#94A3B8",
+                  }}
                 />
                 {service?.is_active ? "Live" : "Offline"}
               </div>
-              <button className="relative p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 transition text-slate-500">
+              <button
+                className="relative p-2.5 rounded-xl transition text-slate-500"
+                style={{ background: "#F8FAFC", border: "1px solid #EEF1F6" }}
+              >
                 <FiBell size={17} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white animate-pulse" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white" />
               </button>
               {showCreateButton && (
                 <button
                   onClick={() => setShowServiceForm(true)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
                   style={{
-                    background: "linear-gradient(135deg,#B42225,#FF8C00)",
-                    boxShadow: "0 4px 12px rgba(180,34,37,0.3)",
+                    background: "linear-gradient(135deg,#B42225,#9A3412)",
+                    boxShadow: "0 4px 12px rgba(180,34,37,0.25)",
                   }}
                 >
                   <FiPlus size={15} />
-                  <span className="hidden sm:inline">Create Service</span>
+                  <span>Create Service</span>
                 </button>
               )}
             </div>
           </div>
-          <div
-            className="sm:hidden flex items-center px-4 pb-2.5 overflow-x-auto gap-0"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {[
-              {
-                icon: <FiDollarSign size={13} />,
-                label: "Service Rate",
-                value: service?.starting_price
-                  ? `₦${service.starting_price.toLocaleString()}`
-                  : "Not set",
-                color: "#EA580C",
-              },
-              {
-                icon: <FiCalendar size={13} />,
-                label: "Days Open",
-                value: service?.availability_schedule
-                  ? `${Object.keys(service.availability_schedule).length}/7 days`
-                  : "0/7 days",
-                color: "#10B981",
-              },
-              {
-                icon: <FiZap size={13} />,
-                label: "Booking",
-                value: service?.booking_mode
-                  ? service.booking_mode.charAt(0).toUpperCase() +
-                    service.booking_mode.slice(1)
-                  : "—",
-                color: "#6366F1",
-              },
-            ].map(({ icon, label, value, color }, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-3 py-0.5 shrink-0"
-                style={i > 0 ? { borderLeft: "1px solid #F1F5F9" } : {}}
-              >
-                <span className="shrink-0" style={{ color }}>
-                  {icon}
-                </span>
-                <div>
-                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-300">
-                    {label}
+
+          {/* ── Mobile row: refined single bar, no candy gradient stacking ── */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-all active:scale-95"
+                  style={{ background: "#0F172A" }}
+                >
+                  <FiMenu size={16} className="text-white" />
+                </button>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                    {greeting}
                   </p>
-                  <p className="text-[11px] font-black" style={{ color }}>
-                    {value}
+                  <p className="text-[13.5px] font-black text-slate-900 leading-tight truncate max-w-[150px]">
+                    {profile?.business_name || "Provider"}
                   </p>
                 </div>
               </div>
-            ))}
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {(profile?.rating ?? 0) > 0 && (
+                  <div
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg"
+                    style={{ background: "#FBF8F3", border: "1px solid #F0E6D2" }}
+                  >
+                    <FaStar size={9} className="text-amber-500" />
+                    <span className="text-slate-800 font-black text-[11px]">
+                      {profile?.rating?.toFixed(1)}
+                    </span>
+                  </div>
+                )}
+                <span
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold"
+                  style={
+                    service?.is_active
+                      ? {
+                          background: "#F0FBF6",
+                          border: "1px solid #CFEEDD",
+                          color: "#0E7C53",
+                        }
+                      : {
+                          background: "#F8FAFC",
+                          border: "1px solid #E7EBF0",
+                          color: "#64748B",
+                        }
+                  }
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{
+                      background: service?.is_active ? "#16A368" : "#94A3B8",
+                    }}
+                  />
+                  {service?.is_active ? "Live" : "Offline"}
+                </span>
+                <button
+                  className="relative flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
+                  style={{ background: "#F8FAFC", border: "1px solid #EEF1F6" }}
+                >
+                  <FiBell size={15} className="text-slate-500" />
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 border-[1.5px] border-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Compact metric strip - quiet, professional, not oversized chips */}
+            <div
+              className="flex items-stretch px-4 pb-3 gap-2 overflow-x-auto"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {[
+                {
+                  icon: <FiDollarSign size={12} />,
+                  label: "Rate",
+                  value: service?.starting_price
+                    ? `₦${service.starting_price.toLocaleString()}`
+                    : "Not set",
+                },
+                {
+                  icon: <FiCalendar size={12} />,
+                  label: "Days",
+                  value: service?.availability_schedule
+                    ? `${Object.keys(service.availability_schedule).length}/7`
+                    : "0/7",
+                },
+                {
+                  icon: <FiZap size={12} />,
+                  label: "Booking",
+                  value: service?.booking_mode
+                    ? service.booking_mode.charAt(0).toUpperCase() +
+                      service.booking_mode.slice(1)
+                    : "—",
+                },
+              ].map(({ icon, label, value }, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl shrink-0"
+                  style={{ background: "#F8FAFC", border: "1px solid #EEF1F6" }}
+                >
+                  <span className="text-slate-400">{icon}</span>
+                  <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                    <span className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wide">
+                      {label}
+                    </span>
+                    <span className="text-[11.5px] font-bold text-slate-800">
+                      {value}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {showCreateButton && (
+                <button
+                  onClick={() => setShowServiceForm(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11.5px] font-bold text-white shrink-0"
+                  style={{
+                    background: "linear-gradient(135deg,#B42225,#9A3412)",
+                  }}
+                >
+                  <FiPlus size={13} /> Create
+                </button>
+              )}
+            </div>
           </div>
         </header>
 
         {/* ── PAGE CONTENT ── */}
         <main className="flex-1 overflow-y-auto">
           {/* ════ HERO BANNER ════ */}
-          <div
-            className="relative overflow-hidden"
-            style={{
-              background:
-                "linear-gradient(145deg, #6B0D10 0%, #8C1F10 22%, #A83318 42%, #C44D1A 62%, #D96318 80%, #E8751A 100%)",
-            }}
-          >
+          <div className="relative">
+            {/* Image-related error toast */}
+            {imageError && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-semibold shadow-lg flex items-center gap-2 max-w-[90%]">
+                <FiAlertCircle size={14} className="shrink-0" />
+                <span className="truncate">{imageError}</span>
+                <button
+                  onClick={() => setImageError("")}
+                  className="shrink-0 opacity-80 hover:opacity-100"
+                >
+                  <FiX size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Cover Image */}
             <div
-              className="absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full blur-3xl pointer-events-none"
+              className="relative h-48 sm:h-56 md:h-64 lg:h-72 w-full overflow-hidden"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(255,200,100,0.28) 0%, transparent 65%)",
-              }}
-            />
-            <div
-              className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full blur-3xl pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(60,5,0,0.75) 0%, transparent 65%)",
-              }}
-            />
-            <div
-              className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-56 rounded-full blur-3xl pointer-events-none opacity-30"
-              style={{
-                background:
-                  "radial-gradient(ellipse, rgba(255,140,40,0.45) 0%, transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(118deg, transparent 25%, rgba(255,255,255,0.045) 42%, transparent 55%)",
-              }}
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.11) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
-              }}
-            />
-            <div
-              className="absolute top-0 left-0 right-0 h-[2px] pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.45) 35%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.45) 65%, transparent 95%)",
-              }}
-            />
-            <div
-              className="absolute -top-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
-              style={{ border: "1px solid rgba(255,255,255,0.06)" }}
-            />
-            <div
-              className="absolute -top-20 -right-20 w-64 h-64 rounded-full pointer-events-none"
-              style={{ border: "1px solid rgba(255,255,255,0.05)" }}
-            />
-            <div
-              className="absolute bottom-14 right-4 md:right-10 pointer-events-none select-none leading-none"
-              style={{
-                fontSize: "clamp(48px,8vw,96px)",
-                fontWeight: 900,
-                color: "rgba(255,255,255,0.04)",
-                letterSpacing: "-0.04em",
-                whiteSpace: "nowrap",
+                  "linear-gradient(145deg, #6B0D10 0%, #8C1F10 22%, #A83318 42%, #C44D1A 62%, #D96318 80%, #E8751A 100%)",
               }}
             >
-              PROVIDER
+              {coverImage && (
+                <Image
+                  src={coverImage}
+                  alt="Cover image"
+                  fill
+                  className="object-cover"
+                  priority
+                  unoptimized
+                />
+              )}
+
+              {/* Dot grid overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle,rgba(255,255,255,0.06) 1px,transparent 1px)",
+                  backgroundSize: "24px 24px",
+                }}
+              />
+
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none" />
+
+              {/* Glow accents */}
+              <div
+                className="absolute -left-16 -top-16 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle,#F97316 0%,transparent 70%)",
+                }}
+              />
+              <div
+                className="absolute right-0 bottom-0 w-56 h-56 rounded-full opacity-20 pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle,#6366F1 0%,transparent 70%)",
+                }}
+              />
+
+              {/* Cover upload button - positioned like seller profile page */}
+              <div className="absolute top-0 inset-x-0 px-4 sm:px-6 pt-4 sm:pt-5 flex items-center justify-between z-20">
+                <button
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md text-white text-xs font-semibold hover:bg-black/45 transition-colors disabled:opacity-60"
+                >
+                  {uploadingCover ? (
+                    <FiLoader size={13} className="animate-spin" />
+                  ) : (
+                    <FiCamera size={13} />
+                  )}
+                  <span className="hidden sm:inline">
+                    {uploadingCover ? "Uploading…" : "Change cover"}
+                  </span>
+                  <span className="sm:hidden">
+                    {uploadingCover ? "…" : "Cover"}
+                  </span>
+                </button>
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCoverUpload}
+                />
+
+                {/* Edit profile button */}
+                <button
+                  onClick={() => setEditingProfile(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/90 backdrop-blur-md text-slate-900 text-xs font-semibold hover:bg-white transition-colors"
+                >
+                  <FiEdit2 size={13} />
+                  <span className="hidden sm:inline">Edit Profile</span>
+                  <span className="sm:hidden">Edit</span>
+                </button>
+              </div>
+
+              {/* Cover empty state hint */}
+              {!coverImage && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="flex flex-col items-center gap-2 opacity-40">
+                    <FiImage size={28} className="text-white" />
+                    <p className="text-white text-xs font-medium">
+                      Click &quot;Change cover&quot; to add a cover photo
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="relative z-10 px-3 sm:px-5 md:px-8 pt-6 sm:pt-8 md:pt-10 pb-0">
-              <div
-                className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
-                style={{
-                  background: "#FFFFFF",
-                  boxShadow:
-                    "0 28px 90px rgba(0,0,0,0.30), 0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(255,255,255,0.95)",
-                }}
-              >
-                {/* Slash decorations */}
-                <div className="absolute top-0 right-0 w-52 sm:w-64 h-full pointer-events-none overflow-hidden">
-                  {[
-                    { r: "-28px", w: "22px", h: "220px", op: 0.22 },
-                    { r: "4px", w: "12px", h: "200px", op: 0.3 },
-                    { r: "28px", w: "8px", h: "185px", op: 0.35 },
-                    { r: "48px", w: "5px", h: "170px", op: 0.28 },
-                    { r: "62px", w: "3px", h: "150px", op: 0.18 },
-                  ].map((s, i) => (
-                    <div
-                      key={i}
-                      className="absolute"
-                      style={{
-                        top: "-40px",
-                        right: s.r,
-                        width: s.w,
-                        height: s.h,
-                        background: `linear-gradient(180deg, rgba(220,80,12,${s.op}) 0%, rgba(249,115,22,0.06) 100%)`,
-                        transform: "rotate(22deg)",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  ))}
-                </div>
-                <div
-                  className="h-[7px] w-full relative"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, #6B0D10 0%, #9A2E10 20%, #C44D1A 42%, #EA580C 62%, #F97316 82%, #FB923C 100%)",
-                  }}
-                >
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.25) 48%, transparent 76%)",
-                    }}
-                  />
-                </div>
-                <div className="p-4 sm:p-5 md:p-6 relative z-10">
-                  <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
-                    <div className="relative shrink-0">
-                      <div
-                        className="p-[3px] rounded-2xl"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #C44D1A 0%, #EA580C 45%, #FB923C 100%)",
-                          boxShadow: "0 10px 30px rgba(196,77,26,0.40)",
-                        }}
-                      >
-                        {profile?.logo_url ? (
-                          <Image
-                            src={profile.logo_url}
-                            alt="logo"
-                            width={80}
-                            height={80}
-                            className="w-16 h-16 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-xl object-cover block"
-                          />
-                        ) : (
-                          <div
-                            className="w-16 h-16 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-xl flex items-center justify-center text-xl md:text-2xl font-black text-white"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #A83318, #C44D1A)",
-                            }}
-                          >
-                            {initials}
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full border-2 border-white flex items-center justify-center"
-                        style={{
-                          background: service?.is_active
-                            ? "#10B981"
-                            : "#94A3B8",
-                        }}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                        <h1 className="text-slate-900 font-black text-lg sm:text-xl md:text-2xl leading-tight tracking-tight">
-                          {profile?.business_name}
-                        </h1>
-                        <MdVerified
-                          size={17}
-                          style={{ color: "#EA580C" }}
-                          className="shrink-0"
+            {/* Identity card - overlaps the cover like seller profile page */}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+              <div className="relative -mt-14 sm:-mt-16 md:-mt-20 bg-white border border-slate-200 shadow-2xl shadow-slate-900/10 rounded-3xl p-5 sm:p-6">
+                <div className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-6">
+                  {/* Logo/Avatar with upload button - like seller profile */}
+                  <div className="relative shrink-0 group">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl border-[3px] sm:border-4 border-slate-50 bg-slate-900 shadow-lg overflow-hidden flex items-center justify-center relative">
+                      {logoImage ? (
+                        <Image
+                          src={logoImage}
+                          alt={profile?.business_name || "Provider"}
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5 mb-2.5 sm:mb-3">
-                        <span
-                          className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-[5px] rounded-full uppercase tracking-wider"
-                          style={
-                            service?.is_active
-                              ? {
-                                  background: "#ECFDF5",
-                                  color: "#059669",
-                                  border: "1px solid #A7F3D0",
-                                }
-                              : {
-                                  background: "#F8FAFC",
-                                  color: "#94A3B8",
-                                  border: "1px solid #E2E8F0",
-                                }
-                          }
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`}
-                          />
-                          {service?.is_active
-                            ? "Live on Marketplace"
-                            : "Currently Offline"}
+                      ) : (
+                        <span className="text-2xl font-black text-white tracking-tight">
+                          {initials}
                         </span>
-                        {(profile?.rating ?? 0) > 0 && (
-                          <span
-                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-[5px] rounded-full"
-                            style={{
-                              background: "#FFFBEB",
-                              color: "#B45309",
-                              border: "1px solid #FDE68A",
-                            }}
-                          >
-                            <FaStar size={8} className="text-amber-500" />
-                            {profile?.rating?.toFixed(1)} ·{" "}
-                            {profile?.review_count} reviews
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-slate-500 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-2.5 sm:mb-3 max-w-md capitalize">
-                        {profile?.business_bio ||
-                          "Precision-crafted service delivered with professionalism and care."}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {profile?.whatsapp_number && (
-                          <span
-                            className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-medium"
-                            style={{
-                              background: "#F0FDF4",
-                              color: "#15803D",
-                              border: "1px solid #BBF7D0",
-                            }}
-                          >
-                            <FaWhatsapp size={10} />
-                            {profile.whatsapp_number}
-                          </span>
-                        )}
-                        {profile?.phone_number && (
-                          <span
-                            className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-medium"
-                            style={{
-                              background: "#F8FAFC",
-                              color: "#475569",
-                              border: "1px solid #E2E8F0",
-                            }}
-                          >
-                            <FiPhone size={10} />
-                            {profile.phone_number}
-                          </span>
-                        )}
-                        {service?.location && (
-                          <span
-                            className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-medium"
-                            style={{
-                              background: "#FFF7ED",
-                              color: "#C2410C",
-                              border: "1px solid #FED7AA",
-                            }}
-                          >
-                            <FiMapPin size={10} />
-                            {service.location}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                     <button
-                      onClick={() => setEditingProfile(true)}
-                      className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #A83318, #C44D1A, #EA580C)",
-                        boxShadow: "0 4px 18px rgba(168,51,24,0.40)",
-                      }}
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      className="absolute -bottom-1.5 -right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-500 border-2 border-slate-50 flex items-center justify-center text-white shadow-md hover:bg-orange-600 transition-colors disabled:opacity-60"
+                      title="Change logo"
                     >
-                      <FiEdit2 size={13} />
-                      <span className="hidden xs:inline sm:hidden md:inline">
-                        Edit
-                      </span>
+                      {uploadingLogo ? (
+                        <FiLoader size={12} className="animate-spin" />
+                      ) : (
+                        <FiCamera size={12} />
+                      )}
                     </button>
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
                   </div>
-                  <div
-                    className="grid grid-cols-2 md:grid-cols-4 mt-4 sm:mt-5 pt-4"
-                    style={{ borderTop: "1px solid #F1F5F9" }}
-                  >
-                    {[
-                      {
-                        icon: <FiDollarSign size={12} />,
-                        label: "Service Rate",
-                        value: `₦${(service?.starting_price ?? 0).toLocaleString()}`,
-                        color: "#EA580C",
-                        borderCls: "border-r border-b md:border-b-0",
-                      },
-                      {
-                        icon: <FiActivity size={12} />,
-                        label: "Status",
-                        value: service?.is_active ? "Active" : "Inactive",
-                        color: service?.is_active ? "#059669" : "#94A3B8",
-                        borderCls: "border-b md:border-b-0 md:border-r",
-                      },
-                      {
-                        icon: <FiZap size={12} />,
-                        label: "Booking",
-                        value: service?.booking_mode
-                          ? service.booking_mode.charAt(0).toUpperCase() +
-                            service.booking_mode.slice(1)
-                          : "Not set",
-                        color: "#6366F1",
-                        borderCls: "border-r",
-                      },
-                      {
-                        icon: <FiCalendar size={12} />,
-                        label: "Availability",
-                        value:
-                          service?.availability_schedule &&
-                          Object.keys(service.availability_schedule).length > 0
-                            ? `${Object.keys(service.availability_schedule).length}/7 days`
-                            : "Not set",
-                        color: "#0891B2",
-                        borderCls: "",
-                      },
-                    ].map(({ icon, label, value, color, borderCls }, i) => (
-                      <div
-                        key={i}
-                        className={`px-3 md:px-4 py-3 md:py-1 border-slate-100 ${borderCls}`}
+
+                  {/* Name + meta */}
+                  <div className="flex-1 min-w-0 pb-1 sm:pb-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
+                        {profile?.business_name || "Provider"}
+                      </h1>
+                      <MdVerified
+                        className="text-orange-500 shrink-0"
+                        size={20}
+                        title="Verified provider"
+                      />
+                    </div>
+                    <p className="text-sm text-slate-500 mt-1 truncate max-w-2xl">
+                      {profile?.business_bio ||
+                        "Add a bio so clients know about your services"}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <FiTool size={11} />{" "}
+                        {service?.display_name || "No service listed yet"}
+                      </span>
+                      <span className="text-slate-200 text-xs">·</span>
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <FiMapPin size={11} />{" "}
+                        {service?.location || "Location not set"}
+                      </span>
+                      {profile?.rating && profile.rating > 0 && (
+                        <>
+                          <span className="text-slate-200 text-xs">·</span>
+                          <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                            <FaStar size={10} className="text-amber-500" />{" "}
+                            {profile.rating.toFixed(1)} ({profile.review_count}{" "}
+                            reviews)
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Quick status + actions */}
+                  <div className="flex items-center gap-2 sm:pb-3 shrink-0">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold ${
+                        service?.is_active
+                          ? "bg-emerald-50 border border-emerald-100 text-emerald-700"
+                          : "bg-slate-50 border border-slate-200 text-slate-500"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${service?.is_active ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`}
+                      />
+                      {service?.is_active ? "Active" : "Inactive"}
+                    </span>
+                    {service && (
+                      <button
+                        onClick={toggleActive}
+                        disabled={togglingActive}
+                        className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors disabled:opacity-50"
                       >
-                        <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                          <span style={{ color }}>{icon}</span>
-                          {label}
-                        </p>
-                        <p
-                          className="font-black text-sm md:text-base leading-tight"
-                          style={{ color }}
-                        >
-                          {value}
-                        </p>
-                      </div>
-                    ))}
+                        {togglingActive ? (
+                          <Spinner />
+                        ) : service.is_active ? (
+                          "Deactivate"
+                        ) : (
+                          "Activate"
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div
-                  className="h-[3px] w-full"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, transparent 0%, rgba(234,88,12,0.15) 30%, rgba(249,115,22,0.25) 55%, rgba(234,88,12,0.12) 80%, transparent 100%)",
-                  }}
-                />
+
+                {/* Stat strip - like seller profile page */}
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    {
+                      icon: <FiDollarSign size={16} />,
+                      label: "Service Rate",
+                      value: service?.starting_price
+                        ? `₦${service.starting_price.toLocaleString()}`
+                        : "Not set",
+                      color: "#F97316",
+                      bg: "#FFF7ED",
+                    },
+                    {
+                      icon: <FiCalendar size={16} />,
+                      label: "Available Days",
+                      value: service?.availability_schedule
+                        ? `${Object.keys(service.availability_schedule).length}/7`
+                        : "0/7",
+                      color: "#10B981",
+                      bg: "#F0FDF4",
+                    },
+                    {
+                      icon: <FiZap size={16} />,
+                      label: "Booking Mode",
+                      value: service?.booking_mode
+                        ? service.booking_mode.charAt(0).toUpperCase() +
+                          service.booking_mode.slice(1)
+                        : "—",
+                      color: "#6366F1",
+                      bg: "#EEF2FF",
+                    },
+                    {
+                      icon: <FiUsers size={16} />,
+                      label: "Total Reviews",
+                      value: profile?.review_count?.toLocaleString() || "0",
+                      color: "#F59E0B",
+                      bg: "#FFFBEB",
+                    },
+                  ].map((stat, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-2xl border border-slate-100 px-4 py-3.5"
+                      style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
+                    >
+                      <div
+                        className="flex items-center gap-2 mb-1.5"
+                        style={{ color: stat.color }}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: stat.bg }}
+                        >
+                          {stat.icon}
+                        </div>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">
+                          {stat.label}
+                        </span>
+                      </div>
+                      <p className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            {/* Curve transition */}
-            <div
-              className="relative w-full overflow-hidden"
-              style={{ height: "56px", marginTop: "-1px" }}
-            >
-              <svg
-                className="absolute bottom-0 w-full h-full"
-                preserveAspectRatio="none"
-                viewBox="0 0 1440 80"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M0 64L60 69.3C120 75 240 85 360 80C480 75 600 53 720 48C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V64Z"
-                  fill="#F8FAFC"
-                />
-              </svg>
-            </div>
           </div>
-          {/* ════ END HERO ════ */}
 
           {/* ── MAIN BODY ── */}
           <div className="px-5 md:px-8 py-8 space-y-6">
-            {/* Metric Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <MetricCard
-                icon={<FiDollarSign size={18} />}
-                label="Service Rate"
-                prefix="₦"
-                value={
-                  service?.starting_price != null
-                    ? service.starting_price.toLocaleString()
-                    : "0"
-                }
-                color="#F97316"
-                trend="+24%"
-                trendUp
-              />
-              <MetricCard
-                icon={<FiPackage size={18} />}
-                label="Active Service"
-                value={activeServiceCount}
-                color="#6366F1"
-                trend={activeServiceText}
-                trendUp={activeServiceCount === 1}
-              />
-              <MetricCard
-                icon={<FiCalendar size={18} />}
-                label="Available Days"
-                value={
-                  service?.availability_schedule
-                    ? Object.keys(service.availability_schedule).length
-                    : 0
-                }
-                suffix="/7"
-                color="#10B981"
-                trend={service?.is_active ? "Live" : "Offline"}
-                trendUp={service?.is_active}
-              />
-            </div>
-
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
@@ -2214,6 +2197,12 @@ export default function ProviderDashboard() {
                     </button>
                   </div>
                   <div className="p-6 space-y-5">
+                    {/* Note about image uploads */}
+                    <div className="p-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs">
+                      💡 Upload your logo and cover image directly from the
+                      banner above — they update instantly!
+                    </div>
+
                     {/* Text fields */}
                     {[
                       {
@@ -2262,29 +2251,6 @@ export default function ProviderDashboard() {
                         )}
                       </div>
                     ))}
-
-                    {/* ── Image Upload Fields with Cloudinary ── */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <ImageUploadField
-                        label="Business Logo"
-                        value={profForm.logo_url}
-                        onChange={(url) =>
-                          setProfForm((f) => ({ ...f, logo_url: url }))
-                        }
-                        aspectSquare
-                        uploadType="provider_logo"
-                        entityId={profile?.id}
-                      />
-                      <ImageUploadField
-                        label="Cover / Banner Image"
-                        value={profForm.cover_image_url}
-                        onChange={(url) =>
-                          setProfForm((f) => ({ ...f, cover_image_url: url }))
-                        }
-                        uploadType="provider_cover"
-                        entityId={profile?.id}
-                      />
-                    </div>
 
                     {profError && (
                       <div className="p-3 rounded-xl text-red-500 text-xs bg-red-50 border border-red-200">
@@ -2443,17 +2409,6 @@ export default function ProviderDashboard() {
               {/* Service Card */}
               {hasService && service && !editingService && (
                 <div>
-                  {profile?.cover_image_url && (
-                    <div className="h-28 sm:h-36 overflow-hidden relative">
-                      <Image
-                        src={profile.cover_image_url}
-                        alt="cover"
-                        width={900}
-                        height={144}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
                   <div className="p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-5">
                       <div
@@ -2485,35 +2440,6 @@ export default function ProviderDashboard() {
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2 shrink-0 mt-3 sm:mt-0">
-                        <button
-                          onClick={toggleActive}
-                          disabled={togglingActive}
-                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all"
-                          style={
-                            service.is_active
-                              ? {
-                                  background: "rgba(239,68,68,0.08)",
-                                  color: "#DC2626",
-                                  border: "1px solid rgba(239,68,68,0.2)",
-                                }
-                              : {
-                                  background: "rgba(16,185,129,0.08)",
-                                  color: "#059669",
-                                  border: "1px solid rgba(16,185,129,0.2)",
-                                }
-                          }
-                        >
-                          {togglingActive ? (
-                            <Spinner />
-                          ) : service.is_active ? (
-                            <FiToggleRight size={14} />
-                          ) : (
-                            <FiToggleLeft size={14} />
-                          )}
-                          <span className="hidden xs:inline">
-                            {service.is_active ? "Deactivate" : "Activate"}
-                          </span>
-                        </button>
                         <button
                           onClick={() => setEditingService(true)}
                           className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition"

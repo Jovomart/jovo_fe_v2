@@ -466,7 +466,7 @@ const HeroSection = () => {
     if (catLoading) {
       return (
         <div className="px-4 py-4 bg-white">
-          <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
             {Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5 shrink-0">
                 <div className="w-14 h-14 rounded-2xl bg-gray-200 animate-pulse" />
@@ -486,7 +486,7 @@ const HeroSection = () => {
 
     return (
       <div className="px-4 py-4 bg-white">
-        <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+        <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
           {displayCats.map((cat) => {
             const theme = getCategoryTheme(cat.slug || cat.name);
             const imageUrl = cat.image || getCategoryImage(cat.name);
@@ -496,7 +496,7 @@ const HeroSection = () => {
                 key={cat.id}
                 href={`/category/${cat.slug || cat.id}`}
                 prefetch={true}
-                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer"
+                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer "
               >
                 <div className="relative w-14 h-14 rounded-2xl overflow-hidden transition-all group-hover:scale-105 group-active:scale-95 bg-gray-100">
                   <Image

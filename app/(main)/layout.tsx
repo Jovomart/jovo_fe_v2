@@ -38,7 +38,7 @@ export default function MainLayout({
   const shouldHideNavbar =
     isSellerDashboard || isServiceDashboard || isSellerDeliveries || isSellerPromote || isSellerSettings
     || isSellerOrders || isSellerProducts || isNewsSection || isSellerWallet || isHomePage || isSellerProfile || isSellerAddProduct || isSellerEditProduct || isSellerAnalytics;
-  const shouldHideBottomNav = isSellerDashboard || isHomePage;
+  const shouldHideBottomNav = isSellerDashboard || isHomePage || isServiceDashboard;
   const shouldShowLoader = isAPIPage || isHomePage;
 
   return (

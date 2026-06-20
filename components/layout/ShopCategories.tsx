@@ -2,7 +2,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
-import { FiArrowRight, FiGrid, FiRefreshCw, FiAlertCircle, FiHeart } from "react-icons/fi";
+import {
+  FiArrowRight,
+  FiGrid,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiHeart,
+} from "react-icons/fi";
+import { useWishlist } from "@/context/WishlistContext";
 import { getCategoryTheme } from "@/categoryConfig";
 import apiService from "@/services/apiService";
 
@@ -31,27 +38,28 @@ interface CategoryCarouselProps {
 }
 
 // Placeholder image (valid data URL)
-const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3Crect x='140' y='250' width='120' height='15' rx='5' fill='%23d1d5db'/%3E%3Crect x='160' y='275' width='80' height='10' rx='5' fill='%23d1d5db'/%3E%3C/svg%3E";
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3Crect x='140' y='250' width='120' height='15' rx='5' fill='%23d1d5db'/%3E%3Crect x='160' y='275' width='80' height='10' rx='5' fill='%23d1d5db'/%3E%3C/svg%3E";
 
 // Helper function to validate image URL
 const getValidImageUrl = (url: string | undefined): string => {
   if (!url) return PLACEHOLDER_IMAGE;
-  
+
   // Check if it's a valid URL format
   try {
     // If it's already a data URL, return it
-    if (url.startsWith('data:')) return url;
-    
+    if (url.startsWith("data:")) return url;
+
     // Check if it's a valid http/https URL
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
       // Skip known bad domains
-      if (url.includes('api.yourstore.com')) return PLACEHOLDER_IMAGE;
+      if (url.includes("api.yourstore.com")) return PLACEHOLDER_IMAGE;
       return url;
     }
-    
+
     // Check if it's a relative path that starts with /
-    if (url.startsWith('/')) return url;
-    
+    if (url.startsWith("/")) return url;
+
     // Invalid URL format
     return PLACEHOLDER_IMAGE;
   } catch {
@@ -68,16 +76,20 @@ const CategoryGrid = ({
   products,
 }: CategoryCarouselProps) => {
   const theme = getCategoryTheme(categorySlug || categoryName);
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   const handleImageError = (productId: string) => {
-    setImgErrors(prev => ({ ...prev, [productId]: true }));
+    setImgErrors((prev) => ({ ...prev, [productId]: true }));
   };
 
   if (!products || products.length === 0) return null;
 
   return (
-    <div className="w-full mt-5 overflow-hidden" style={{ background: theme.bgColor }}>
+    <div
+      className="w-full mt-5 overflow-hidden"
+      style={{ background: theme.bgColor }}
+    >
       {/* ── Header with Theme Icon ── */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
@@ -86,13 +98,16 @@ const CategoryGrid = ({
         <div
           className="absolute inset-0 opacity-[0.07]"
           style={{
-            backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
+            backgroundImage:
+              "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
             backgroundSize: "16px 16px",
           }}
         />
         <div
           className="absolute -top-6 -right-6 w-32 h-32 rounded-full pointer-events-none opacity-20"
-          style={{ background: `radial-gradient(circle,${theme.glowColor},transparent 65%)` }}
+          style={{
+            background: `radial-gradient(circle,${theme.glowColor},transparent 65%)`,
+          }}
         />
 
         <div className="relative z-10 flex items-center gap-3">
@@ -105,7 +120,8 @@ const CategoryGrid = ({
               {categoryName}
             </h2>
             <span className="text-xs font-bold text-white/70 mt-0.5 block">
-              {products.length} product{products.length !== 1 ? "s" : ""} available
+              {products.length} product{products.length !== 1 ? "s" : ""}{" "}
+              available
             </span>
           </div>
         </div>
@@ -125,17 +141,17 @@ const CategoryGrid = ({
             const discount = product.discount_percentage
               ? Math.round(product.discount_percentage)
               : product.product_original_price > product.current_price
-              ? Math.round(
-                  ((product.product_original_price - product.current_price) /
-                    product.product_original_price) *
-                    100
-                )
-              : 0;
+                ? Math.round(
+                    ((product.product_original_price - product.current_price) /
+                      product.product_original_price) *
+                      100,
+                  )
+                : 0;
 
             // Use placeholder if image has error, otherwise validate the URL
             const rawImageUrl = product.product_images?.[0];
-            const imageUrl = imgErrors[product.id] 
-              ? PLACEHOLDER_IMAGE 
+            const imageUrl = imgErrors[product.id]
+              ? PLACEHOLDER_IMAGE
               : getValidImageUrl(rawImageUrl);
 
             return (
@@ -151,9 +167,12 @@ const CategoryGrid = ({
                     fill
                     className="object-cover group-hover:scale-105 transition duration-300"
                     onError={() => handleImageError(product.id)}
-                    unoptimized={imageUrl.startsWith('data:') || imageUrl.startsWith('blob:')}
+                    unoptimized={
+                      imageUrl.startsWith("data:") ||
+                      imageUrl.startsWith("blob:")
+                    }
                   />
-                  
+
                   {discount > 0 && (
                     <div
                       className="absolute top-2 left-2 text-white text-xs px-2 py-1 rounded-full font-bold shadow"
@@ -162,7 +181,7 @@ const CategoryGrid = ({
                       -{discount}%
                     </div>
                   )}
-                  
+
                   {!product.is_in_stock && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-t-xl">
                       <span className="text-white text-xs font-bold bg-black/60 px-2 py-1 rounded">
@@ -172,14 +191,33 @@ const CategoryGrid = ({
                   )}
 
                   {/* Wishlist button */}
-                  <button 
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                  <button
+                    className={`absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-transform duration-200 hover:scale-110 ${isWishlisted(product.id) ? "text-red-500" : "text-gray-600 opacity-0 group-hover:opacity-100"}`}
                     onClick={(e) => {
                       e.preventDefault();
-                      console.log("Add to wishlist:", product.id);
+                      e.stopPropagation();
+                      const item = {
+                        id: String(product.id),
+                        name: product.product_name,
+                        price: product.current_price,
+                        oldPrice: product.product_original_price,
+                        image: product.product_images?.[0] || "",
+                        brand: product.brand,
+                        product,
+                      };
+                      if (isWishlisted(product.id)) {
+                        removeFromWishlist(product.id);
+                      } else {
+                        addToWishlist(item);
+                      }
                     }}
+                    aria-label={
+                      isWishlisted(product.id)
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                    }
                   >
-                    <FiHeart className="text-gray-600 text-sm" />
+                    <FiHeart size={14} />
                   </button>
                 </div>
 
@@ -188,7 +226,9 @@ const CategoryGrid = ({
                     {product.product_name}
                   </p>
                   {product.brand && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{product.brand}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">
+                      {product.brand}
+                    </p>
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span
@@ -263,20 +303,23 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
       const data = await apiService.getShopHomepage(limitPerCategory, false);
 
       if (process.env.NODE_ENV === "development") {
-        console.log("[ShopCategories] raw API response:", JSON.stringify(data, null, 2));
+        console.log(
+          "[ShopCategories] raw API response:",
+          JSON.stringify(data, null, 2),
+        );
       }
 
       const rawList: any[] = Array.isArray(data)
         ? data
         : Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.categories)
-        ? data.categories
-        : Array.isArray(data?.data?.categories)
-        ? data.data.categories
-        : Array.isArray(data?.results)
-        ? data.results
-        : [];
+          ? data.data
+          : Array.isArray(data?.categories)
+            ? data.categories
+            : Array.isArray(data?.data?.categories)
+              ? data.data.categories
+              : Array.isArray(data?.results)
+                ? data.results
+                : [];
 
       const normalised: ShopCategoryData[] = rawList
         .map((item: any) => {
@@ -315,14 +358,17 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
             };
           }
 
-          console.warn("[ShopCategories] Unrecognised item shape, skipping:", item);
+          console.warn(
+            "[ShopCategories] Unrecognised item shape, skipping:",
+            item,
+          );
           return null;
         })
         .filter(
           (item): item is ShopCategoryData =>
             item !== null &&
             item.category.id !== "" &&
-            item.products.length > 0
+            item.products.length > 0,
         );
 
       setCategories(normalised);
@@ -330,8 +376,7 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
       const message: string = err?.message ?? "Failed to load categories";
 
       const is404 =
-        message.toLowerCase().includes("not found") ||
-        message.includes("404");
+        message.toLowerCase().includes("not found") || message.includes("404");
 
       const is500 =
         message.includes("500") ||
@@ -346,7 +391,7 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
         console.error(
           "[ShopCategories] 404: The shop-homepage endpoint was not found.\n" +
             "Check that /api/v1/marketspace/shop-homepage exists on your backend\n" +
-            "or update the endpoint URL in apiService.getShopHomepage()."
+            "or update the endpoint URL in apiService.getShopHomepage().",
         );
         setError("ENDPOINT_NOT_FOUND");
       } else if (is500) {
@@ -387,14 +432,14 @@ const ShopCategories = ({ limitPerCategory = 5 }: ShopCategoriesProps) => {
     const title = isEndpointMissing
       ? "Shop categories unavailable"
       : isServerError
-      ? "Something went wrong on our end"
-      : "Could not load categories";
+        ? "Something went wrong on our end"
+        : "Could not load categories";
 
     const description = isEndpointMissing
       ? "The categories endpoint could not be reached. Please check your API configuration."
       : isServerError
-      ? "Our server encountered an error. Please try again in a moment."
-      : "Please check your connection and try again.";
+        ? "Our server encountered an error. Please try again in a moment."
+        : "Please check your connection and try again.";
 
     return (
       <div className="w-full py-12 flex flex-col items-center justify-center gap-4 text-center px-4">

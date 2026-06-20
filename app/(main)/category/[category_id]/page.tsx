@@ -4,12 +4,25 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
-  FiHeart, FiShoppingBag, FiArrowLeft, FiSearch,
-  FiChevronDown, FiChevronUp, FiSliders, FiX, FiGrid,
-  FiRefreshCw, FiAlertCircle, FiTruck, FiShield, FiAward, FiTrendingUp,
+  FiHeart,
+  FiShoppingBag,
+  FiArrowLeft,
+  FiSearch,
+  FiChevronDown,
+  FiChevronUp,
+  FiSliders,
+  FiX,
+  FiGrid,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiTruck,
+  FiShield,
+  FiAward,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { FaHeart, FaStar } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
+import { useWishlist } from "@/context/WishlistContext";
 import { getCategoryTheme } from "@/categoryConfig";
 import apiService from "@/services/apiService";
 
@@ -58,7 +71,8 @@ interface PriceRange {
 }
 
 // Placeholder image as data URL (gray gradient with product icon)
-const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3Crect x='140' y='250' width='120' height='15' rx='5' fill='%23d1d5db'/%3E%3Crect x='160' y='275' width='80' height='10' rx='5' fill='%23d1d5db'/%3E%3C/svg%3E";
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ccircle cx='200' cy='150' r='50' fill='%239ca3af'/%3E%3Crect x='100' y='220' width='200' height='120' rx='10' fill='%239ca3af'/%3E%3Crect x='140' y='250' width='120' height='15' rx='5' fill='%23d1d5db'/%3E%3Crect x='160' y='275' width='80' height='10' rx='5' fill='%23d1d5db'/%3E%3C/svg%3E";
 
 // ─── Filter Section ───────────────────────────────────────────────────────────
 
@@ -134,14 +148,16 @@ const Sidebar = ({
   accentColor: string;
 }) => {
   const filteredBrands = brands.filter((b) =>
-    b.toLowerCase().includes(brandSearch.toLowerCase())
+    b.toLowerCase().includes(brandSearch.toLowerCase()),
   );
   const accentStyle = { accentColor };
 
   return (
     <aside className="w-full">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Filters</h2>
+        <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">
+          Filters
+        </h2>
         <button
           onClick={onClearAll}
           className="text-[11px] font-semibold hover:underline"
@@ -159,7 +175,11 @@ const Sidebar = ({
               <button
                 onClick={() => setSelectedSub(null)}
                 className="w-full text-left text-xs py-1.5 px-2 rounded-lg font-semibold transition-colors"
-                style={!selectedSub ? { background: `${accentColor}15`, color: accentColor } : { color: "#374151" }}
+                style={
+                  !selectedSub
+                    ? { background: `${accentColor}15`, color: accentColor }
+                    : { color: "#374151" }
+                }
               >
                 All
               </button>
@@ -171,7 +191,11 @@ const Sidebar = ({
                   className="w-full text-left text-xs py-1.5 px-2 rounded-lg transition-colors"
                   style={
                     selectedSub === sub.id
-                      ? { background: `${accentColor}15`, color: accentColor, fontWeight: 600 }
+                      ? {
+                          background: `${accentColor}15`,
+                          color: accentColor,
+                          fontWeight: 600,
+                        }
                       : { color: "#4B5563" }
                   }
                 >
@@ -187,7 +211,10 @@ const Sidebar = ({
       {brands.length > 0 && (
         <FilterSection title="Brand">
           <div className="relative mb-2">
-            <FiSearch size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <FiSearch
+              size={11}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               placeholder="Search brands"
@@ -290,7 +317,13 @@ const Sidebar = ({
 
 // ─── Stars ────────────────────────────────────────────────────────────────────
 
-const Stars = ({ rating, accentColor }: { rating: number; accentColor: string }) => (
+const Stars = ({
+  rating,
+  accentColor,
+}: {
+  rating: number;
+  accentColor: string;
+}) => (
   <div className="flex items-center gap-0.5 mt-1.5">
     {[1, 2, 3, 4, 5].map((s) => (
       <FaStar
@@ -316,28 +349,29 @@ const ProductCard = ({
   onWishlist: (id: string) => void;
 }) => {
   const [imgError, setImgError] = useState(false);
-  
+
   const discount = product.discount_percentage
     ? Math.round(product.discount_percentage)
     : product.product_original_price > product.current_price
-    ? Math.round(
-        ((product.product_original_price - product.current_price) /
-          product.product_original_price) *
-          100
-      )
-    : 0;
+      ? Math.round(
+          ((product.product_original_price - product.current_price) /
+            product.product_original_price) *
+            100,
+        )
+      : 0;
 
   // Check if image URL is valid and not pointing to unresolvable domain
   const isValidImageUrl = (url: string) => {
     if (!url) return false;
     // Skip URLs that are known to fail
-    if (url.includes('api.yourstore.com')) return false;
+    if (url.includes("api.yourstore.com")) return false;
     return true;
   };
 
-  const imageUrl = imgError || !isValidImageUrl(product.product_images?.[0]) 
-    ? PLACEHOLDER_IMAGE
-    : product.product_images[0];
+  const imageUrl =
+    imgError || !isValidImageUrl(product.product_images?.[0])
+      ? PLACEHOLDER_IMAGE
+      : product.product_images[0];
 
   return (
     <div
@@ -347,7 +381,9 @@ const ProductCard = ({
       {/* Top accent bar */}
       <div
         className="absolute top-0 left-0 right-0 h-0.5 z-10"
-        style={{ background: `linear-gradient(90deg,transparent,${theme.accentColor},transparent)` }}
+        style={{
+          background: `linear-gradient(90deg,transparent,${theme.accentColor},transparent)`,
+        }}
       />
 
       {/* Image */}
@@ -364,7 +400,7 @@ const ProductCard = ({
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               onError={() => setImgError(true)}
               loading="lazy"
-              unoptimized={imageUrl.includes('data:image')}
+              unoptimized={imageUrl.includes("data:image")}
             />
           </div>
         </Link>
@@ -389,7 +425,10 @@ const ProductCard = ({
 
         {/* Wishlist button */}
         <button
-          onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlist(product.id);
+          }}
           className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
         >
           {wishlisted ? (
@@ -429,7 +468,10 @@ const ProductCard = ({
           <p className="text-[10px] text-gray-400 mt-0.5">{product.brand}</p>
         )}
         <div className="mt-1.5 flex items-end gap-2 flex-wrap">
-          <span className="text-sm font-black" style={{ color: theme.accentColor }}>
+          <span
+            className="text-sm font-black"
+            style={{ color: theme.accentColor }}
+          >
             ₦{product.current_price.toLocaleString()}
           </span>
           {product.product_original_price > product.current_price && (
@@ -439,7 +481,10 @@ const ProductCard = ({
           )}
         </div>
         {product.average_rating > 0 && (
-          <Stars rating={product.average_rating} accentColor={theme.accentColor} />
+          <Stars
+            rating={product.average_rating}
+            accentColor={theme.accentColor}
+          />
         )}
       </div>
     </div>
@@ -486,11 +531,11 @@ export default function CategoryPage() {
   const [categoryName, setCategoryName] = useState("");
   const [categorySlug, setCategorySlug] = useState(categoryId);
   const [total, setTotal] = useState(0);
-  
+
   // Use refs to prevent infinite loops
   const offsetRef = useRef(0);
   const isLoadingRef = useRef(false);
-  
+
   // State for loading UI
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -503,9 +548,10 @@ export default function CategoryPage() {
   const [selectedPrice, setSelectedPrice] = useState<PriceRange | null>(null);
   const [showOnSale, setShowOnSale] = useState(false);
   const [brandSearch, setBrandSearch] = useState("");
-  const [sortBy, setSortBy] = useState<typeof SORT_OPTIONS[number]["value"]>("newest");
+  const [sortBy, setSortBy] =
+    useState<(typeof SORT_OPTIONS)[number]["value"]>("newest");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const { addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
 
   const theme = getCategoryTheme(categorySlug || categoryId);
 
@@ -514,111 +560,175 @@ export default function CategoryPage() {
     const max = filtersMetadata.max_price;
     if (max <= 0) return [];
     return [
-      { label: `Under ₦${(max * 0.2).toLocaleString()}`, min: 0, max: max * 0.2 },
-      { label: `₦${(max * 0.2).toLocaleString()} – ₦${(max * 0.5).toLocaleString()}`, min: max * 0.2, max: max * 0.5 },
-      { label: `₦${(max * 0.5).toLocaleString()} – ₦${(max * 0.8).toLocaleString()}`, min: max * 0.5, max: max * 0.8 },
-      { label: `Above ₦${(max * 0.8).toLocaleString()}`, min: max * 0.8, max: Infinity },
+      {
+        label: `Under ₦${(max * 0.2).toLocaleString()}`,
+        min: 0,
+        max: max * 0.2,
+      },
+      {
+        label: `₦${(max * 0.2).toLocaleString()} – ₦${(max * 0.5).toLocaleString()}`,
+        min: max * 0.2,
+        max: max * 0.5,
+      },
+      {
+        label: `₦${(max * 0.5).toLocaleString()} – ₦${(max * 0.8).toLocaleString()}`,
+        min: max * 0.5,
+        max: max * 0.8,
+      },
+      {
+        label: `Above ₦${(max * 0.8).toLocaleString()}`,
+        min: max * 0.8,
+        max: Infinity,
+      },
     ];
   }, [filtersMetadata.max_price]);
 
   // ── Fetch function with better error handling ───────────────────────────────
-  const fetchProducts = useCallback(async (reset: boolean) => {
-    // Prevent multiple simultaneous calls
-    if (isLoadingRef.current) {
-      return;
-    }
-    
-    if (!categoryId) {
-      setError("Invalid category");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      isLoadingRef.current = true;
-      
-      if (reset) {
-        setLoading(true);
-        setError(null);
-        offsetRef.current = 0;
-      } else {
-        setLoadingMore(true);
+  const fetchProducts = useCallback(
+    async (reset: boolean) => {
+      // Prevent multiple simultaneous calls
+      if (isLoadingRef.current) {
+        return;
       }
 
-      // Build params from current state
-      const currentOffset = offsetRef.current;
-      const params: any = {
-        limit: PAGE_LIMIT,
-        offset: currentOffset,
-      };
-      
-      if (selectedSub) params.subcategory_id = selectedSub;
-      if (selectedPrice?.min !== undefined && selectedPrice.min > 0) params.min_price = selectedPrice.min;
-      if (selectedPrice?.max !== undefined && selectedPrice.max !== Infinity) params.max_price = selectedPrice.max;
-      if (selectedConditions.length === 1) params.condition = selectedConditions[0];
-      if (selectedBrands.length === 1) params.brand = selectedBrands[0];
-      if (showOnSale) params.on_sale = true;
-      if (sortBy) params.sort_by = sortBy;
-
-      const json = await apiService.getCategoryMarketspace(categoryId, params);
-      const data = json?.data ?? json;
-
-      if (!data) {
-        throw new Error("No data received from API");
+      if (!categoryId) {
+        setError("Invalid category");
+        setLoading(false);
+        return;
       }
 
-      if (reset) {
-        setCategoryName(data?.category?.name ?? "");
-        setCategorySlug(data?.category?.slug ?? categoryId);
-        setSubcategories(Array.isArray(data?.subcategories) ? data.subcategories : []);
-        setFiltersMetadata(
-          data?.filters_metadata ?? { brands: [], conditions: [], min_price: 0, max_price: 999999 }
+      try {
+        isLoadingRef.current = true;
+
+        if (reset) {
+          setLoading(true);
+          setError(null);
+          offsetRef.current = 0;
+        } else {
+          setLoadingMore(true);
+        }
+
+        // Build params from current state
+        const currentOffset = offsetRef.current;
+        const params: any = {
+          limit: PAGE_LIMIT,
+          offset: currentOffset,
+        };
+
+        if (selectedSub) params.subcategory_id = selectedSub;
+        if (selectedPrice?.min !== undefined && selectedPrice.min > 0)
+          params.min_price = selectedPrice.min;
+        if (selectedPrice?.max !== undefined && selectedPrice.max !== Infinity)
+          params.max_price = selectedPrice.max;
+        if (selectedConditions.length === 1)
+          params.condition = selectedConditions[0];
+        if (selectedBrands.length === 1) params.brand = selectedBrands[0];
+        if (showOnSale) params.on_sale = true;
+        if (sortBy) params.sort_by = sortBy;
+
+        const json = await apiService.getCategoryMarketspace(
+          categoryId,
+          params,
         );
-        setProducts(Array.isArray(data?.products) ? data.products : []);
-        offsetRef.current = PAGE_LIMIT;
-      } else {
-        const newProducts = Array.isArray(data?.products) ? data.products : [];
-        setProducts((prev) => [...prev, ...newProducts]);
-        offsetRef.current = currentOffset + PAGE_LIMIT;
-      }
+        const data = json?.data ?? json;
 
-      setTotal(data?.total ?? 0);
-    } catch (err: any) {
-      const msg: string = err?.message ?? "Failed to load products";
-      console.error("[CategoryPage] fetch error:", err);
-      setError(msg);
-    } finally {
-      isLoadingRef.current = false;
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [categoryId, selectedSub, selectedBrands, selectedConditions, selectedPrice, showOnSale, sortBy]);
+        if (!data) {
+          throw new Error("No data received from API");
+        }
+
+        if (reset) {
+          setCategoryName(data?.category?.name ?? "");
+          setCategorySlug(data?.category?.slug ?? categoryId);
+          setSubcategories(
+            Array.isArray(data?.subcategories) ? data.subcategories : [],
+          );
+          setFiltersMetadata(
+            data?.filters_metadata ?? {
+              brands: [],
+              conditions: [],
+              min_price: 0,
+              max_price: 999999,
+            },
+          );
+          setProducts(Array.isArray(data?.products) ? data.products : []);
+          offsetRef.current = PAGE_LIMIT;
+        } else {
+          const newProducts = Array.isArray(data?.products)
+            ? data.products
+            : [];
+          setProducts((prev) => [...prev, ...newProducts]);
+          offsetRef.current = currentOffset + PAGE_LIMIT;
+        }
+
+        setTotal(data?.total ?? 0);
+      } catch (err: any) {
+        const msg: string = err?.message ?? "Failed to load products";
+        console.error("[CategoryPage] fetch error:", err);
+        setError(msg);
+      } finally {
+        isLoadingRef.current = false;
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [
+      categoryId,
+      selectedSub,
+      selectedBrands,
+      selectedConditions,
+      selectedPrice,
+      showOnSale,
+      sortBy,
+    ],
+  );
 
   // ── Effect for initial load and filter changes ───────────────────────────────
   useEffect(() => {
     if (!categoryId) return;
-    
+
     // Debounce the fetch to prevent rapid successive calls
     const timeoutId = setTimeout(() => {
       fetchProducts(true);
     }, 300);
-    
+
     return () => clearTimeout(timeoutId);
-  }, [categoryId, selectedSub, selectedBrands, selectedConditions, selectedPrice, showOnSale, sortBy, fetchProducts]);
+  }, [
+    categoryId,
+    selectedSub,
+    selectedBrands,
+    selectedConditions,
+    selectedPrice,
+    showOnSale,
+    sortBy,
+    fetchProducts,
+  ]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────────
   const toggleBrand = (b: string) =>
-    setSelectedBrands((prev) => prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]);
+    setSelectedBrands((prev) =>
+      prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b],
+    );
 
   const toggleCondition = (c: string) =>
-    setSelectedConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
+    setSelectedConditions((prev) =>
+      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
+    );
 
-  const toggleWishlist = (id: string) =>
-    setWishlistIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const toggleWishlist = (product: Product) => {
+    const id = String(product.id);
+    if (isWishlisted(id)) {
+      removeFromWishlist(id);
+    } else {
+      addToWishlist({
+        ...product,
+        id,
+        name: product.product_name,
+        price: product.current_price,
+        oldPrice: product.product_original_price,
+        image: product.product_images?.[0] || "",
+      });
+    }
+  };
 
   const clearAll = () => {
     setSelectedSub(null);
@@ -629,7 +739,12 @@ export default function CategoryPage() {
   };
 
   const loadMore = () => {
-    if (!isLoadingRef.current && products.length < total && !loading && !loadingMore) {
+    if (
+      !isLoadingRef.current &&
+      products.length < total &&
+      !loading &&
+      !loadingMore
+    ) {
       fetchProducts(false);
     }
   };
@@ -671,7 +786,10 @@ export default function CategoryPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Invalid category</p>
-          <Link href="/shop" className="text-blue-600 hover:underline mt-2 inline-block">
+          <Link
+            href="/shop"
+            className="text-blue-600 hover:underline mt-2 inline-block"
+          >
             Back to Shop
           </Link>
         </div>
@@ -682,7 +800,6 @@ export default function CategoryPage() {
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen" style={{ background: theme.bgColor }}>
-
       {/* ── Enhanced Hero Section ── */}
       <div
         className="relative overflow-hidden"
@@ -692,17 +809,23 @@ export default function CategoryPage() {
         <div
           className="absolute inset-0 opacity-[0.07] pointer-events-none animate-pulse"
           style={{
-            backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
+            backgroundImage:
+              "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
             backgroundSize: "16px 16px",
           }}
         />
         <div
           className="absolute -top-20 -left-10 w-96 h-96 rounded-full opacity-20 pointer-events-none animate-ping"
-          style={{ background: `radial-gradient(circle,${theme.glowColor},transparent 70%)`, animationDuration: "3s" }}
+          style={{
+            background: `radial-gradient(circle,${theme.glowColor},transparent 70%)`,
+            animationDuration: "3s",
+          }}
         />
         <div
           className="absolute -bottom-32 -right-20 w-80 h-80 rounded-full opacity-10 pointer-events-none animate-pulse"
-          style={{ background: `radial-gradient(circle,${theme.glowColor},transparent 70%)` }}
+          style={{
+            background: `radial-gradient(circle,${theme.glowColor},transparent 70%)`,
+          }}
         />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-16">
@@ -710,7 +833,11 @@ export default function CategoryPage() {
             href="/shop"
             className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors mb-6 group"
           >
-            <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Shop
+            <FiArrowLeft
+              size={14}
+              className="group-hover:-translate-x-1 transition-transform"
+            />{" "}
+            Back to Shop
           </Link>
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -724,12 +851,15 @@ export default function CategoryPage() {
                 }}
               >
                 {/* Use theme icon instead of hardcoded FiGrid */}
+
                 {theme.icon}
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">
-                    {total > 0 ? `${total.toLocaleString()} Products` : "Shop Now"}
+                    {total > 0
+                      ? `${total.toLocaleString()} Products`
+                      : "Shop Now"}
                   </span>
                   {!loading && total > 0 && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">
@@ -742,11 +872,12 @@ export default function CategoryPage() {
                   className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-none tracking-tight"
                   style={{ fontFamily: "'Georgia',serif" }}
                 >
-                  {loading ? "Loading..." : (categoryName || "Products")}
+                  {loading ? "Loading..." : categoryName || "Products"}
                 </h1>
                 <p className="mt-2 text-white/70 text-sm md:text-base max-w-lg">
-                  Discover amazing {categoryName?.toLowerCase() || "products"} at unbeatable prices. 
-                  Shop with confidence and get the best deals today!
+                  Discover amazing {categoryName?.toLowerCase() || "products"}{" "}
+                  at unbeatable prices. Shop with confidence and get the best
+                  deals today!
                 </p>
               </div>
             </div>
@@ -755,17 +886,25 @@ export default function CategoryPage() {
             {!loading && total > 0 && (
               <div className="flex gap-6 bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/20">
                 <div className="text-center">
-                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">Products</p>
-                  <p className="text-white text-xl font-black">{total.toLocaleString()}+</p>
+                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">
+                    Products
+                  </p>
+                  <p className="text-white text-xl font-black">
+                    {total.toLocaleString()}+
+                  </p>
                 </div>
                 <div className="w-px bg-white/20 self-stretch" />
                 <div className="text-center">
-                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">Sellers</p>
+                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">
+                    Sellers
+                  </p>
                   <p className="text-white text-xl font-black">100+</p>
                 </div>
                 <div className="w-px bg-white/20 self-stretch" />
                 <div className="text-center">
-                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">Happy Customers</p>
+                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">
+                    Happy Customers
+                  </p>
                   <p className="text-white text-xl font-black">10k+</p>
                 </div>
               </div>
@@ -773,28 +912,38 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
-          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill={theme.bgColor} />
+        <svg
+          className="absolute bottom-0 left-0 w-full"
+          viewBox="0 0 1440 40"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z"
+            fill={theme.bgColor}
+          />
         </svg>
       </div>
 
       {/* ── Main Layout ── */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-6">
-
         {/* Trust Badges */}
         <div className="hidden lg:grid grid-cols-3 gap-4 mb-8">
           <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
             <FiTruck className="text-gray-400" size={20} />
             <div>
               <p className="text-xs font-black text-gray-700">Free Shipping</p>
-              <p className="text-[10px] text-gray-400">On orders over ₦50,000</p>
+              <p className="text-[10px] text-gray-400">
+                On orders over ₦50,000
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
             <FiShield className="text-gray-400" size={20} />
             <div>
               <p className="text-xs font-black text-gray-700">Secure Payment</p>
-              <p className="text-[10px] text-gray-400">100% secure transactions</p>
+              <p className="text-[10px] text-gray-400">
+                100% secure transactions
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
@@ -827,7 +976,11 @@ export default function CategoryPage() {
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="ml-auto text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-700 focus:outline-none"
           >
-            {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -858,7 +1011,6 @@ export default function CategoryPage() {
         )}
 
         <div className="flex gap-6">
-
           {/* Desktop Sidebar */}
           <div className="hidden lg:block w-60 xl:w-64 shrink-0">
             <div
@@ -871,11 +1023,13 @@ export default function CategoryPage() {
 
           {/* Products Area */}
           <div className="flex-1 min-w-0">
-
             {/* Top bar */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 rounded-full" style={{ background: theme.gradient }} />
+                <div
+                  className="w-1 h-6 rounded-full"
+                  style={{ background: theme.gradient }}
+                />
                 <h2 className="text-base md:text-lg font-black text-gray-900">
                   {categoryName || "Products"}
                 </h2>
@@ -891,7 +1045,9 @@ export default function CategoryPage() {
                   className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none font-semibold"
                 >
                   {SORT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -903,45 +1059,79 @@ export default function CategoryPage() {
                 {selectedSub && (
                   <span
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
-                    style={{ background: `${theme.accentColor}15`, color: theme.accentColor, borderColor: `${theme.accentColor}40` }}
+                    style={{
+                      background: `${theme.accentColor}15`,
+                      color: theme.accentColor,
+                      borderColor: `${theme.accentColor}40`,
+                    }}
                   >
-                    {subcategories.find((s) => s.id === selectedSub)?.name ?? "Subcategory"}
-                    <button onClick={() => setSelectedSub(null)}><FiX size={11} /></button>
+                    {subcategories.find((s) => s.id === selectedSub)?.name ??
+                      "Subcategory"}
+                    <button onClick={() => setSelectedSub(null)}>
+                      <FiX size={11} />
+                    </button>
                   </span>
                 )}
                 {selectedBrands.map((b) => (
                   <span
                     key={b}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
-                    style={{ background: `${theme.accentColor}15`, color: theme.accentColor, borderColor: `${theme.accentColor}40` }}
+                    style={{
+                      background: `${theme.accentColor}15`,
+                      color: theme.accentColor,
+                      borderColor: `${theme.accentColor}40`,
+                    }}
                   >
-                    {b}<button onClick={() => toggleBrand(b)}><FiX size={11} /></button>
+                    {b}
+                    <button onClick={() => toggleBrand(b)}>
+                      <FiX size={11} />
+                    </button>
                   </span>
                 ))}
                 {selectedConditions.map((c) => (
                   <span
                     key={c}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
-                    style={{ background: `${theme.accentColor}15`, color: theme.accentColor, borderColor: `${theme.accentColor}40` }}
+                    style={{
+                      background: `${theme.accentColor}15`,
+                      color: theme.accentColor,
+                      borderColor: `${theme.accentColor}40`,
+                    }}
                   >
-                    {c}<button onClick={() => toggleCondition(c)}><FiX size={11} /></button>
+                    {c}
+                    <button onClick={() => toggleCondition(c)}>
+                      <FiX size={11} />
+                    </button>
                   </span>
                 ))}
                 {selectedPrice && (
                   <span
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
-                    style={{ background: `${theme.accentColor}15`, color: theme.accentColor, borderColor: `${theme.accentColor}40` }}
+                    style={{
+                      background: `${theme.accentColor}15`,
+                      color: theme.accentColor,
+                      borderColor: `${theme.accentColor}40`,
+                    }}
                   >
                     {selectedPrice.label}
-                    <button onClick={() => setSelectedPrice(null)}><FiX size={11} /></button>
+                    <button onClick={() => setSelectedPrice(null)}>
+                      <FiX size={11} />
+                    </button>
                   </span>
                 )}
                 {showOnSale && (
                   <span
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
-                    style={{ background: `${theme.accentColor}15`, color: theme.accentColor, borderColor: `${theme.accentColor}40` }}
+                    style={{
+                      background: `${theme.accentColor}15`,
+                      color: theme.accentColor,
+                      borderColor: `${theme.accentColor}40`,
+                    }}
                   >
-                    On Sale<button onClick={() => setShowOnSale(false)}><FiX size={11} /></button>
+                    On Sale
+                    <button onClick={() => setShowOnSale(false)}>
+                      <FiX size={11} />
+                    </button>
                   </span>
                 )}
               </div>
@@ -956,9 +1146,11 @@ export default function CategoryPage() {
                   <FiAlertCircle size={22} className="text-red-400" />
                 </div>
                 <div>
-                  <p className="text-gray-700 font-semibold text-sm">Failed to load products</p>
+                  <p className="text-gray-700 font-semibold text-sm">
+                    Failed to load products
+                  </p>
                   <p className="text-gray-400 text-xs mt-1 max-w-xs">
-                    {error.includes("avg(reviewrating)") 
+                    {error.includes("avg(reviewrating)")
                       ? "Database error: Please contact support. The product listing is temporarily unavailable."
                       : error}
                   </p>
@@ -990,8 +1182,12 @@ export default function CategoryPage() {
                       key={product.id}
                       product={product}
                       theme={theme}
-                      wishlisted={wishlistIds.has(product.id)}
-                      onWishlist={toggleWishlist}
+                      wishlisted={isWishlisted(product.id)}
+                      onWishlist={(id) => {
+                        const selected = products.find((p) => p.id === id);
+                        if (!selected) return;
+                        toggleWishlist(selected);
+                      }}
                     />
                   ))}
                 </div>
@@ -1037,7 +1233,8 @@ export default function CategoryPage() {
                       Sell {categoryName} on Jovo
                     </h3>
                     <p className="text-white/70 text-sm max-w-md">
-                      Join thousands of successful sellers. List your products for free and reach millions of customers.
+                      Join thousands of successful sellers. List your products
+                      for free and reach millions of customers.
                     </p>
                     <div className="flex gap-3 mt-4 justify-center sm:justify-start">
                       <div className="flex items-center gap-1 text-white/60 text-[10px]">
@@ -1054,7 +1251,10 @@ export default function CategoryPage() {
                   <Link
                     href="/become-seller"
                     className="relative z-10 shrink-0 px-6 py-3 rounded-xl font-bold text-sm text-white shadow-lg hover:scale-105 transition-all duration-200 whitespace-nowrap group"
-                    style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)" }}
+                    style={{
+                      background: "rgba(255,255,255,0.15)",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                    }}
                   >
                     Start Selling Now →
                     <span className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1062,7 +1262,6 @@ export default function CategoryPage() {
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>

@@ -19,10 +19,10 @@ import ApiService from "@/services/apiService";
 export interface CartItem {
   product_id: string;
   name: string;
-  price: number;        // Will be overridden with live price
+  price: number;
   image_url: string;
   quantity: number;
-  subtotal: number;     // Will be recalculated with live price
+  subtotal: number;
   stock_available: number;
   is_in_stock: boolean;
 }
@@ -44,6 +44,11 @@ export interface DeliveryInfo {
   notes?: string;
 }
 
+export interface PriceChange {
+  oldPrice: number;
+  newPrice: number;
+}
+
 // ─── Context shape ────────────────────────────────────────────────────────────
 interface CartContextType {
   cartData: CartData | null;
@@ -59,10 +64,10 @@ interface CartContextType {
   updateQuantity: (product_id: string, qty: number) => Promise<void>;
   clearCart: () => Promise<void>;
   validateCart: () => Promise<any>;
-  syncCartPrices: () => Promise<Map<string, { oldPrice: number; newPrice: number }>>;
+  syncCartPrices: () => Promise<Map<string, PriceChange>>;
   isInCart: (product_id: string) => boolean;
   getItemQuantity: (product_id: string) => number;
-  refetchCart: () => Promise<void>;
+  refetchCart: () => Promise<CartData>;
 }
 
 const defaultValues: CartContextType = {
@@ -82,7 +87,7 @@ const defaultValues: CartContextType = {
   syncCartPrices: async () => new Map(),
   isInCart: () => false,
   getItemQuantity: () => 0,
-  refetchCart: async () => {},
+  refetchCart: async () => ({ items: [], total_items: 0, total_price: 0 }),
 };
 
 export const CartContext = createContext<CartContextType>(defaultValues);
@@ -101,27 +106,16 @@ function getOrCreateSessionId(): string {
   return sid;
 }
 
-// ─── Fetch live price for a single product ───────────────────────────────────
-async function fetchLivePrice(product_id: string): Promise<number | null> {
-  try {
-    const res = await fetch(
-      `https://dev-api-jovomart.onrender.com/api/v1/products/${product_id}`
-    );
-    const data = await res.json();
-    // Extract current_price from the response structure
-    const livePrice = data?.data?.current_price ?? 
-                      data?.data?.product_discount_price ?? 
-                      data?.data?.product_original_price;
-    return livePrice ? Number(livePrice) : null;
-  } catch (err) {
-    console.error(`[CartContext] Failed to fetch live price for ${product_id}:`, err);
-    return null;
-  }
-}
-
-// ─── Parse the GET /cart response and override with live prices ──────────────
-async function parseCartResponseWithLivePrices(res: any): Promise<CartData> {
-  // Unwrap the standard envelope if present
+// ─── Parse the GET /cart response ──────────────────────────────────────────────
+// The backend is the single source of truth for price/subtotal/stock. Do not
+// re-derive or override these client-side — GET /cart already returns live,
+// authoritative numbers, and POST /cart/checkout re-validates and atomically
+// deducts stock server-side regardless of what the client displayed. Refetching
+// prices per-product here was a workaround for a backend issue that has since
+// been fixed; reintroducing it would just create a second, possibly
+// inconsistent, source of truth (e.g. it can disagree with flash-sale pricing
+// locked in at add-to-cart time, which /products/{id} doesn't account for).
+function parseCartResponse(res: any): CartData {
   const payload = res?.data ?? res;
 
   if (!payload || typeof payload !== "object") {
@@ -130,51 +124,25 @@ async function parseCartResponseWithLivePrices(res: any): Promise<CartData> {
 
   const rawItems: any[] = Array.isArray(payload.items) ? payload.items : [];
 
-  if (rawItems.length === 0) {
-    return { items: [], total_items: 0, total_price: 0 };
-  }
-
-  // Get unique product IDs and fetch their live prices in parallel
-  const uniqueProductIds = [...new Set(rawItems.map((raw) => raw.product_id))];
-  const priceMap = new Map<string, number>();
-  
-  await Promise.all(
-    uniqueProductIds.map(async (product_id) => {
-      const livePrice = await fetchLivePrice(product_id);
-      if (livePrice !== null) {
-        priceMap.set(product_id, livePrice);
-      }
-    })
-  );
-
-  // Build items with overridden prices
   const items: CartItem[] = rawItems.map((raw) => {
-    const product_id = String(raw.product_id ?? "");
-    const cartPrice = Number(raw.price ?? 0);
-    const livePrice = priceMap.get(product_id);
-    const finalPrice = livePrice !== undefined ? livePrice : cartPrice;
+    const price = Number(raw.price ?? 0);
     const quantity = Number(raw.quantity ?? 1);
-    
     return {
-      product_id,
+      product_id: String(raw.product_id ?? ""),
       name: String(raw.name ?? ""),
-      price: finalPrice,                    // Overridden with live price
+      price,
       image_url: String(raw.image_url ?? ""),
-      quantity: quantity,
-      subtotal: finalPrice * quantity,      // Recalculated with live price
+      quantity,
+      subtotal: Number(raw.subtotal ?? price * quantity),
       stock_available: Number(raw.stock_available ?? 0),
       is_in_stock: Boolean(raw.is_in_stock ?? false),
     };
   });
 
-  // Recalculate total_price from corrected subtotals
-  const total_price = items.reduce((sum, item) => sum + item.subtotal, 0);
-  const total_items = items.reduce((sum, item) => sum + item.quantity, 0);
-
   return {
     items,
-    total_items,
-    total_price,
+    total_items: Number(payload.total_items ?? items.reduce((s, i) => s + i.quantity, 0)),
+    total_price: Number(payload.total_price ?? items.reduce((s, i) => s + i.subtotal, 0)),
   };
 }
 
@@ -190,21 +158,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const hasFetchedRef  = useRef(false);
   const prevUserRef    = useRef<typeof user>(undefined);
+  // Mirrors cartData but is updated synchronously, so syncCartPrices can diff
+  // against the *previous* snapshot without racing React's async state update.
+  const cartDataRef    = useRef<CartData | null>(null);
 
-  // ── fetchCart — NOW WITH LIVE PRICE OVERRIDE ────────────────────────────────
+  // ── fetchCart ───────────────────────────────────────────────────────────────
   const fetchCart = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const sessionId = user ? undefined : getOrCreateSessionId();
       const res = await ApiService.getCart(sessionId);
-      // Use the enhanced parser that fetches live prices
-      const correctedCartData = await parseCartResponseWithLivePrices(res);
-      setCartData(correctedCartData);
+      const parsed = parseCartResponse(res);
+      cartDataRef.current = parsed;
+      setCartData(parsed);
+      return parsed;
     } catch (err: any) {
       console.error("[CartContext] fetchCart failed:", err);
       setError(err?.message ?? "Failed to load cart");
-      setCartData({ items: [], total_items: 0, total_price: 0 });
+      const empty = { items: [], total_items: 0, total_price: 0 };
+      cartDataRef.current = empty;
+      setCartData(empty);
+      return empty;
     } finally {
       setLoading(false);
     }
@@ -236,25 +211,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [recentlyAdded]);
 
-  // ── syncCartPrices — now actually useful ────────────────────────────────────
+  // ── syncCartPrices — diffs the last known cart against a fresh fetch ─────────
+  // Useful right before checkout to warn the user "this item changed price
+  // since you last looked", without ever inventing prices client-side.
   const syncCartPrices = useCallback(async () => {
-    const oldItems = cartData?.items ?? [];
-    const oldPriceMap = new Map(oldItems.map(i => [i.product_id, i.price]));
-    
-    await fetchCart();
-    
-    const newItems = cartData?.items ?? [];
-    const changes = new Map<string, { oldPrice: number; newPrice: number }>();
-    
-    for (const newItem of newItems) {
+    const oldItems = cartDataRef.current?.items ?? [];
+    const oldPriceMap = new Map(oldItems.map((i) => [i.product_id, i.price]));
+
+    const fresh = await fetchCart();
+
+    const changes = new Map<string, PriceChange>();
+    for (const newItem of fresh.items) {
       const oldPrice = oldPriceMap.get(newItem.product_id);
       if (oldPrice !== undefined && oldPrice !== newItem.price) {
         changes.set(newItem.product_id, { oldPrice, newPrice: newItem.price });
       }
     }
-    
     return changes;
-  }, [fetchCart, cartData]);
+  }, [fetchCart]);
 
   // ── Mutations ───────────────────────────────────────────────────────────────
   const addToCart = useCallback(async (product_id: string, qty = 1) => {
@@ -295,6 +269,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const sessionId = user ? undefined : getOrCreateSessionId();
+      // Per spec: PATCH /cart/update with quantity 0 removes the item.
       await ApiService.updateCartItem(product_id, qty, sessionId);
       await fetchCart();
     } catch (err: any) {
@@ -312,7 +287,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const sessionId = user ? undefined : getOrCreateSessionId();
       await ApiService.clearCart(sessionId);
-      setCartData({ items: [], total_items: 0, total_price: 0 });
+      const empty = { items: [], total_items: 0, total_price: 0 };
+      cartDataRef.current = empty;
+      setCartData(empty);
     } catch (err: any) {
       const msg = err?.message ?? "Failed to clear cart";
       setError(msg);
@@ -322,6 +299,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  // session_id is intentionally omitted here for authenticated users (the
+  // backend resolves the cart from the Bearer token); guests still need it.
   const validateCart = useCallback(async () => {
     const sessionId = user ? undefined : getOrCreateSessionId();
     return ApiService.validateCart(sessionId);

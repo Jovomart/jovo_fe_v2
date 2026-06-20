@@ -54,18 +54,19 @@ class ApiService {
       throw new Error("No valid refresh token");
     const response = await fetch(`${this.baseURL}/auth/refresh`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${refreshToken}`,
-      },
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
     });
     if (!response.ok) {
       this.clearTokens();
       throw new Error("Failed to refresh token");
     }
     const data = await response.json();
-    this.storeTokens(data.access_token, data.refresh_token);
-    return data.access_token;
+    const newAccessToken = data.access_token || data.data?.access_token;
+    const newRefreshToken = data.refresh_token || data.data?.refresh_token;
+    if (!newAccessToken) throw new Error("No access token in refresh response");
+    this.storeTokens(newAccessToken, newRefreshToken ?? null);
+    return newAccessToken;
   }
 
   async getValidAccessToken(): Promise<string | null> {
@@ -356,6 +357,23 @@ class ApiService {
     });
   }
 
+  async changePassword(data: {
+    current_password: string;
+    new_password: string;
+    confirm_new_password: string;
+  }): Promise<any> {
+    return this.makeRequest("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async hardDeleteAccount(): Promise<any> {
+    return this.makeRequest("/auth/hard-delete-account", {
+      method: "DELETE",
+    });
+  }
+
   async getAvailableSchools(country = "", state = "") {
     const params = new URLSearchParams();
     if (country) params.append("country", country);
@@ -417,12 +435,6 @@ class ApiService {
 
   // ─── PRODUCTS ──────────────────────────────────────────────────────────────
 
-  /**
-   * Fetch a single product by ID (public, no auth required).
-   * Also increments the product's view_count by 1 (used for analytics).
-   * Returns full product details including seller info, pricing, media,
-   * stock scarcity indicators, warranty, return policy, and SEO fields.
-   */
   async getProductById(product_id: string): Promise<any> {
     return this.makeRequest(`/products/${encodeURIComponent(product_id)}`, {
       method: "GET",
@@ -555,9 +567,7 @@ class ApiService {
       : "";
     return this.makeRequest(
       `/cart/remove/${encodeURIComponent(product_id)}${qs}`,
-      {
-        method: "DELETE",
-      },
+      { method: "DELETE" },
     );
   }
 
@@ -582,6 +592,13 @@ class ApiService {
     return this.makeRequest(`/cart/validate${qs}`, { method: "POST" });
   }
 
+  /**
+   * Process checkout and create an order.
+   * POST /api/v1/cart/checkout
+   * Auth required (Bearer token).
+   * email is REQUIRED — Paystack will reject the transaction without it.
+   * Returns { order_id, order_number, total_amount, item_count, payment_url }.
+   */
   async checkout(params: {
     delivery_street_address: string;
     delivery_city: string;
@@ -589,21 +606,40 @@ class ApiService {
     delivery_country: string;
     delivery_option_id: string;
     delivery_notes?: string;
+    // email is required — always pass it, never rely on the backend to infer it
+    email: string;
+    full_name?: string;
+    phone?: string;
     user_latitude?: number;
     user_longitude?: number;
   }) {
+    // Guard here as a last line of defence — the caller should have already
+    // validated, but a missing email produces a cryptic Paystack error
+    // ("Please enter a valid email address") that is hard to trace back to
+    // this call site.
+    if (!params.email?.trim()) {
+      throw new Error(
+        "checkout: email is required but was empty. " +
+        "Ensure the user's email is resolved before calling this method.",
+      );
+    }
+
     const q = new URLSearchParams();
     q.append("delivery_street_address", params.delivery_street_address);
     q.append("delivery_city", params.delivery_city);
     q.append("delivery_state", params.delivery_state);
     q.append("delivery_country", params.delivery_country);
     q.append("delivery_option_id", params.delivery_option_id);
-    if (params.delivery_notes)
-      q.append("delivery_notes", params.delivery_notes);
+    // Always append email — never skip it
+    q.append("email", params.email.trim().toLowerCase());
+    if (params.delivery_notes) q.append("delivery_notes", params.delivery_notes);
+    if (params.full_name)      q.append("full_name", params.full_name);
+    if (params.phone)          q.append("phone", params.phone);
     if (params.user_latitude != null)
       q.append("user_latitude", String(params.user_latitude));
     if (params.user_longitude != null)
       q.append("user_longitude", String(params.user_longitude));
+
     return this.makeRequest(`/cart/checkout?${q.toString()}`, {
       method: "POST",
     });
@@ -614,9 +650,7 @@ class ApiService {
   async verifyPayment(reference: string) {
     return this.makeRequest(
       `/payments/verify/${encodeURIComponent(reference)}`,
-      {
-        method: "GET",
-      },
+      { method: "GET" },
     );
   }
 
@@ -677,20 +711,10 @@ class ApiService {
     return this.makeRequest("/seller/dashboard", { method: "GET" });
   }
 
-  /**
-   * Get the authenticated seller's full business profile and performance metrics.
-   * GET /api/v1/seller/profile
-   * Requires a valid access token (seller must be logged in).
-   */
   async getMySellerProfile(): Promise<any> {
     return this.makeRequest("/seller/profile", { method: "GET" });
   }
 
-  /**
-   * Update the authenticated seller's business profile and contact info.
-   * PATCH /api/v1/seller/profile
-   * Requires a valid access token (seller must be approved).
-   */
   async updateMySellerProfile(data: {
     business_name?: string;
     short_business_description?: string;
@@ -711,10 +735,6 @@ class ApiService {
     });
   }
 
-  /**
-   * Get profile viewers history (seller-only, authenticated).
-   * GET /api/v1/seller/profile/viewers
-   */
   async getSellerProfileViewers(params?: {
     page?: number;
     per_page?: number;
@@ -723,17 +743,15 @@ class ApiService {
     if (params?.page != null) q.append("page", String(params.page));
     if (params?.per_page != null) q.append("per_page", String(params.per_page));
     const qs = q.toString();
-    return this.makeRequest(
-      `/seller/profile/viewers${qs ? `?${qs}` : ""}`,
-      { method: "GET" },
-    );
+    return this.makeRequest(`/seller/profile/viewers${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
   }
 
-  /**
-   * Get a public seller profile by seller ID (no auth required).
-   * GET /api/v1/seller/{seller_id}
-   */
-  async getPublicSellerProfile(seller_id: string, session_id?: string): Promise<any> {
+  async getPublicSellerProfile(
+    seller_id: string,
+    session_id?: string,
+  ): Promise<any> {
     const q = new URLSearchParams();
     if (session_id) q.append("session_id", session_id);
     const qs = q.toString();
@@ -743,10 +761,6 @@ class ApiService {
     );
   }
 
-  /**
-   * Follow a seller's store (authenticated users only).
-   * POST /api/v1/seller/{seller_id}/follow
-   */
   async followSeller(seller_id: string): Promise<any> {
     return this.makeRequest(
       `/seller/${encodeURIComponent(seller_id)}/follow`,
@@ -754,10 +768,6 @@ class ApiService {
     );
   }
 
-  /**
-   * Unfollow a seller's store (authenticated users only).
-   * DELETE /api/v1/seller/{seller_id}/follow
-   */
   async unfollowSeller(seller_id: string): Promise<any> {
     return this.makeRequest(
       `/seller/${encodeURIComponent(seller_id)}/follow`,
@@ -765,10 +775,6 @@ class ApiService {
     );
   }
 
-  /**
-   * Get public approved products for a specific seller (paginated).
-   * GET /api/v1/seller/{seller_id}/products
-   */
   async getPublicSellerProducts(
     seller_id: string,
     params?: {
@@ -783,9 +789,12 @@ class ApiService {
     },
   ): Promise<any> {
     const q = new URLSearchParams();
-    if (params?.subcategory_id) q.append("subcategory_id", params.subcategory_id);
-    if (params?.min_price != null) q.append("min_price", String(params.min_price));
-    if (params?.max_price != null) q.append("max_price", String(params.max_price));
+    if (params?.subcategory_id)
+      q.append("subcategory_id", params.subcategory_id);
+    if (params?.min_price != null)
+      q.append("min_price", String(params.min_price));
+    if (params?.max_price != null)
+      q.append("max_price", String(params.max_price));
     if (params?.condition) q.append("condition", params.condition);
     if (params?.search) q.append("search", params.search);
     if (params?.sort_by) q.append("sort_by", params.sort_by);
@@ -798,10 +807,6 @@ class ApiService {
     );
   }
 
-  /**
-   * Get public approved reviews for all products of a specific seller.
-   * GET /api/v1/seller/{seller_id}/reviews
-   */
   async getPublicSellerReviews(
     seller_id: string,
     params?: {
@@ -886,9 +891,7 @@ class ApiService {
     const qs = params.toString();
     return this.makeRequest(
       `/seller/products/flash-sale/campaigns${qs ? `?${qs}` : ""}`,
-      {
-        method: "GET",
-      },
+      { method: "GET" },
     );
   }
 
@@ -900,9 +903,7 @@ class ApiService {
     const qs = params.toString();
     return this.makeRequest(
       `/seller/products/flash-sale/applications${qs ? `?${qs}` : ""}`,
-      {
-        method: "GET",
-      },
+      { method: "GET" },
     );
   }
 
@@ -926,9 +927,7 @@ class ApiService {
   async getProductFlashSaleStatus(product_id: string): Promise<any> {
     return this.makeRequest(
       `/seller/products/flash-sale/status/${encodeURIComponent(product_id)}`,
-      {
-        method: "GET",
-      },
+      { method: "GET" },
     );
   }
 
@@ -1313,23 +1312,32 @@ class ApiService {
     entityId?: string,
   ): Promise<any> {
     const formData = new FormData();
-
     files.forEach((file) => {
       formData.append("files", file);
     });
-
     formData.append("upload_type", uploadType);
-
     if (entityId && entityId.trim()) {
       formData.append("entity_id", entityId.trim());
     }
-
     const response = await this.makeRequest("/upload/files", {
       method: "POST",
       body: formData,
     });
-
     return response?.data ?? response;
+  }
+
+  async uploadProfileImage(file: File, userId?: string): Promise<string> {
+    const result = await this.uploadFiles([file], "user_profile_image", userId);
+    const urls: string[] =
+      Array.isArray(result?.urls)
+        ? result.urls
+        : Array.isArray(result)
+        ? result.map((r: any) => r.url || r)
+        : result?.url
+        ? [result.url]
+        : [];
+    if (!urls.length) throw new Error("Upload failed: no URL returned");
+    return urls[0];
   }
 
   async uploadProductImages(files: File[], productId?: string) {
@@ -1348,12 +1356,10 @@ class ApiService {
     if (!urls || urls.length === 0) {
       throw new Error("At least one URL is required to delete files.");
     }
-
     const body: any = { urls, upload_type: uploadType };
     if (entityId && entityId.trim()) {
       body.entity_id = entityId.trim();
     }
-
     return this.makeRequest("/upload/files", {
       method: "DELETE",
       body: JSON.stringify(body),
@@ -1377,11 +1383,7 @@ class ApiService {
   ): Promise<any> {
     return this.makeRequest("/reports/seller", {
       method: "POST",
-      body: JSON.stringify({
-        seller_id: sellerId,
-        reason: reason,
-        details: details,
-      }),
+      body: JSON.stringify({ seller_id: sellerId, reason, details }),
     });
   }
 
@@ -1392,11 +1394,7 @@ class ApiService {
   ): Promise<any> {
     return this.makeRequest("/reports/provider", {
       method: "POST",
-      body: JSON.stringify({
-        provider_id: providerId,
-        reason: reason,
-        details: details,
-      }),
+      body: JSON.stringify({ provider_id: providerId, reason, details }),
     });
   }
 
@@ -1406,16 +1404,10 @@ class ApiService {
     details: string,
     images?: string[],
   ): Promise<any> {
-    const requestBody: any = {
-      product_id: productId,
-      reason: reason,
-      details: details,
-    };
-
+    const requestBody: any = { product_id: productId, reason, details };
     if (images && images.length > 0) {
       requestBody.images = images;
     }
-
     return this.makeRequest("/reports/product", {
       method: "POST",
       body: JSON.stringify(requestBody),
@@ -1423,9 +1415,7 @@ class ApiService {
   }
 
   async getMyReports(): Promise<any> {
-    return this.makeRequest("/reports/my-reports", {
-      method: "GET",
-    });
+    return this.makeRequest("/reports/my-reports", { method: "GET" });
   }
 
   // ─── LOGOUT ────────────────────────────────────────────────────────────────

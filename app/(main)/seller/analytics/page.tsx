@@ -27,11 +27,14 @@ interface ProductAnalytic {
   product_id: string;
   product_name: string;
   product_image?: string;
+  current_price: number;
+  in_stock: boolean;
+  stock_quantity: number;
   views: number;
   add_to_carts: number;
   units_sold: number;
   conversion_rate: number;
-  revenue?: number;
+  revenue: number;
 }
 
 interface DashboardAnalytics {
@@ -42,6 +45,15 @@ interface DashboardAnalytics {
   completed_orders: number;
   cancelled_orders: number;
   fulfillment_rate: number;
+}
+
+interface ProductTotals {
+  views: number;
+  carts: number;
+  sold: number;
+  revenue: number;
+  avgConversion: number;
+  productCount: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -154,6 +166,9 @@ const SellerAnalyticsPage = () => {
   const [dashboardStats, setDashboardStats] =
     useState<DashboardAnalytics | null>(null);
   const [products, setProducts] = useState<ProductAnalytic[]>([]);
+  const [productTotals, setProductTotals] = useState<ProductTotals | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -261,24 +276,84 @@ const SellerAnalyticsPage = () => {
         ? raw
         : [];
 
-      const normalised: ProductAnalytic[] = finalList.map((p: any) => ({
-        product_id: p.product_id ?? p.id ?? "",
-        product_name: p.product_name ?? p.name ?? "—",
-        product_image:
-          p.product_image ?? p.image_url ?? p.thumbnail ?? undefined,
-        views: pick(p, "views", "view_count"),
-        add_to_carts: pick(p, "add_to_carts", "cart_adds", "cart_count"),
-        units_sold: pick(p, "units_sold", "sold", "total_units_sold"),
-        conversion_rate: pick(p, "conversion_rate", "conversion"),
-        revenue:
-          p.revenue != null
-            ? Number(p.revenue)
-            : p.total_revenue != null
-            ? Number(p.total_revenue)
-            : undefined,
-      }));
+      const normalised: ProductAnalytic[] = finalList.map((p: any) => {
+        const images = pickArr(p, "product_images", "images");
+        return {
+          product_id: p.product_id ?? p.id ?? "",
+          product_name: p.product_name ?? p.name ?? "—",
+          product_image:
+            images[0] ??
+            p.product_image ??
+            p.image_url ??
+            p.thumbnail ??
+            undefined,
+          current_price: pick(p, "current_price", "price"),
+          in_stock: p.in_stock ?? p.is_in_stock ?? true,
+          stock_quantity: pick(p, "stock_quantity", "quantity"),
+          views: pick(p, "views_count_30d", "views", "view_count"),
+          add_to_carts: pick(
+            p,
+            "cart_adds_count_30d",
+            "add_to_carts",
+            "cart_adds",
+            "cart_count"
+          ),
+          units_sold: pick(
+            p,
+            "sold_count_30d",
+            "units_sold",
+            "sold",
+            "total_units_sold"
+          ),
+          conversion_rate: pick(
+            p,
+            "conversion_rate_30d",
+            "conversion_rate",
+            "conversion"
+          ),
+          revenue: pick(p, "revenue_30d", "revenue", "total_revenue"),
+        };
+      });
 
       setProducts(normalised);
+
+      // ── Totals block ─────────────────────────────────────────────────────
+      // The API ships a precomputed `totals` object — prefer that over
+      // re-deriving from the (possibly paginated) product list, falling
+      // back to a client-side sum only if the API doesn't provide one.
+      const totalsRaw = raw?.totals;
+      if (totalsRaw) {
+        setProductTotals({
+          views: pick(totalsRaw, "total_views_30d", "total_views"),
+          carts: pick(totalsRaw, "total_cart_adds_30d", "total_cart_adds"),
+          sold: pick(totalsRaw, "total_units_sold_30d", "total_units_sold"),
+          revenue: pick(totalsRaw, "total_revenue_30d", "total_revenue"),
+          avgConversion: pick(
+            totalsRaw,
+            "avg_conversion_rate_30d",
+            "avg_conversion_rate"
+          ),
+          productCount: pick(totalsRaw, "product_count") || normalised.length,
+        });
+      } else {
+        const views = normalised.reduce((a, p) => a + p.views, 0);
+        const carts = normalised.reduce((a, p) => a + p.add_to_carts, 0);
+        const sold = normalised.reduce((a, p) => a + p.units_sold, 0);
+        const revenue = normalised.reduce((a, p) => a + p.revenue, 0);
+        const avgConversion =
+          normalised.length > 0
+            ? normalised.reduce((a, p) => a + p.conversion_rate, 0) /
+              normalised.length
+            : 0;
+        setProductTotals({
+          views,
+          carts,
+          sold,
+          revenue,
+          avgConversion,
+          productCount: normalised.length,
+        });
+      }
     } catch (err: any) {
       setError(err.message ?? "Failed to load analytics. Please try again.");
     } finally {
@@ -292,21 +367,6 @@ const SellerAnalyticsPage = () => {
       fetchAnalytics();
     }
   }, [fetchAnalytics]);
-
-  // Totals derived from per-product data
-  const totals = products.reduce(
-    (acc, p) => ({
-      views: acc.views + p.views,
-      carts: acc.carts + p.add_to_carts,
-      sold: acc.sold + p.units_sold,
-    }),
-    { views: 0, carts: 0, sold: 0 }
-  );
-
-  const avgConversion =
-    products.length > 0
-      ? products.reduce((a, p) => a + p.conversion_rate, 0) / products.length
-      : 0;
 
   // Sort + filter
   const displayed = products
@@ -419,7 +479,7 @@ const SellerAnalyticsPage = () => {
                 Product Performance
               </p>
               <p className="text-slate-400 text-sm font-medium mt-0.5">
-                Views, cart adds, conversions &amp; sales per product
+                Views, cart adds, conversions &amp; sales per product (last 30 days)
               </p>
             </div>
             {/* Refresh button */}
@@ -452,28 +512,28 @@ const SellerAnalyticsPage = () => {
             <SummaryCard
               icon={<FiEye size={18} />}
               label="Total Views"
-              value={totals.views}
+              value={productTotals?.views ?? 0}
               color="#6366F1"
               bg="#EEF2FF"
             />
             <SummaryCard
               icon={<FiShoppingCart size={18} />}
               label="Cart Adds"
-              value={totals.carts}
+              value={productTotals?.carts ?? 0}
               color="#F97316"
               bg="#FFF7ED"
             />
             <SummaryCard
               icon={<FiPackage size={18} />}
               label="Units Sold"
-              value={totals.sold}
+              value={productTotals?.sold ?? 0}
               color="#10B981"
               bg="#F0FDF4"
             />
             <SummaryCard
               icon={<FiTrendingUp size={18} />}
               label="Avg Conversion"
-              value={avgConversion.toFixed(1)}
+              value={(productTotals?.avgConversion ?? 0).toFixed(1)}
               suffix="%"
               color="#0EA5E9"
               bg="#F0F9FF"
@@ -662,118 +722,125 @@ const SellerAnalyticsPage = () => {
                 )}
               </div>
             ) : (
-              displayed.map((p, idx) => (
-                <div
-                  key={p.product_id || idx}
-                  className="flex flex-col sm:grid sm:grid-cols-7 gap-3 px-6 py-4 hover:bg-orange-50/20 transition-colors"
-                >
-                  {/* Product */}
-                  <div className="col-span-2 flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
-                      {p.product_image ? (
-                        <Image
-                          src={p.product_image}
-                          alt={p.product_name}
-                          width={40}
-                          height={40}
-                          className="w-full h-full object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <FiPackage size={16} className="text-slate-300" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-800 truncate">
-                        {p.product_name}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-medium truncate">
-                        ID: {p.product_id.slice(0, 8)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Views */}
-                  <div className="flex sm:block items-center justify-between">
-                    <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Views
-                    </span>
-                    <div>
-                      <p className="text-sm font-black text-slate-900">
-                        {fmt(p.views)}
-                      </p>
-                      <div className="hidden sm:block mt-1">
-                        <div
-                          className="h-1 rounded-full overflow-hidden"
-                          style={{ background: "#F1F5F9" }}
-                        >
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${Math.min(
-                                (p.views /
-                                  Math.max(
-                                    ...displayed.map((x) => x.views),
-                                    1
-                                  )) *
-                                  100,
-                                100
-                              )}%`,
-                              background: "#6366F1",
-                            }}
+              displayed.map((p, idx) => {
+                const maxViews = Math.max(
+                  ...displayed.map((x) => x.views),
+                  1
+                );
+                const maxConversion = Math.max(
+                  ...displayed.map((x) => x.conversion_rate),
+                  1
+                );
+                return (
+                  <div
+                    key={p.product_id || idx}
+                    className="flex flex-col sm:grid sm:grid-cols-7 gap-3 px-6 py-4 hover:bg-orange-50/20 transition-colors"
+                  >
+                    {/* Product */}
+                    <div className="col-span-2 flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                        {p.product_image ? (
+                          <Image
+                            src={p.product_image}
+                            alt={p.product_name}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover"
+                            unoptimized
                           />
+                        ) : (
+                          <FiPackage size={16} className="text-slate-300" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate">
+                          {p.product_name}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium truncate">
+                          ID: {p.product_id.slice(0, 8)}
+                          {!p.in_stock && (
+                            <span className="ml-1.5 text-red-500 font-bold">
+                              · Out of stock
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Views */}
+                    <div className="flex sm:block items-center justify-between">
+                      <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Views
+                      </span>
+                      <div>
+                        <p className="text-sm font-black text-slate-900">
+                          {fmt(p.views)}
+                        </p>
+                        <div className="hidden sm:block mt-1">
+                          <div
+                            className="h-1 rounded-full overflow-hidden"
+                            style={{ background: "#F1F5F9" }}
+                          >
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${Math.min(
+                                  (p.views / maxViews) * 100,
+                                  100
+                                )}%`,
+                                background: "#6366F1",
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Cart Adds */}
-                  <div className="flex sm:block items-center justify-between">
-                    <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Cart Adds
-                    </span>
-                    <p className="text-sm font-bold text-orange-500">
-                      {fmt(p.add_to_carts)}
-                    </p>
-                  </div>
+                    {/* Cart Adds */}
+                    <div className="flex sm:block items-center justify-between">
+                      <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Cart Adds
+                      </span>
+                      <p className="text-sm font-bold text-orange-500">
+                        {fmt(p.add_to_carts)}
+                      </p>
+                    </div>
 
-                  {/* Units Sold */}
-                  <div className="flex sm:block items-center justify-between">
-                    <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Units Sold
-                    </span>
-                    <p className="text-sm font-black text-emerald-600">
-                      {fmt(p.units_sold)}
-                    </p>
-                  </div>
+                    {/* Units Sold */}
+                    <div className="flex sm:block items-center justify-between">
+                      <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Units Sold
+                      </span>
+                      <p className="text-sm font-black text-emerald-600">
+                        {fmt(p.units_sold)}
+                      </p>
+                    </div>
 
-                  {/* Conversion */}
-                  <div className="flex sm:block items-center justify-between">
-                    <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Conversion
-                    </span>
-                    <div className="w-full sm:max-w-[120px]">
-                      <ConversionBar
-                        value={p.conversion_rate}
-                        max={Math.max(
-                          ...displayed.map((x) => x.conversion_rate),
-                          1
-                        )}
-                      />
+                    {/* Conversion */}
+                    <div className="flex sm:block items-center justify-between">
+                      <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Conversion
+                      </span>
+                      <div className="w-full sm:max-w-[120px]">
+                        <ConversionBar
+                          value={p.conversion_rate}
+                          max={maxConversion}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Revenue */}
+                    <div className="flex sm:block items-center justify-between">
+                      <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Revenue
+                      </span>
+                      <p className="text-sm font-black text-slate-900">
+                        {fmtCurrency(p.revenue)}
+                      </p>
                     </div>
                   </div>
-
-                  {/* Revenue */}
-                  <div className="flex sm:block items-center justify-between">
-                    <span className="sm:hidden text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Revenue
-                    </span>
-                    <p className="text-sm font-black text-slate-900">
-                      {p.revenue != null ? fmtCurrency(p.revenue) : "—"}
-                    </p>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -808,11 +875,7 @@ const SellerAnalyticsPage = () => {
                 % avg
               </p>
               <p className="text-sm font-black text-slate-800">
-                {displayed.some((p) => p.revenue != null)
-                  ? fmtCurrency(
-                      displayed.reduce((a, p) => a + (p.revenue ?? 0), 0)
-                    )
-                  : "—"}
+                {fmtCurrency(displayed.reduce((a, p) => a + p.revenue, 0))}
               </p>
             </div>
           )}

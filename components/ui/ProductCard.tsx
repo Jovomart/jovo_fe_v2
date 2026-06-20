@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import type { Product } from "@/types";
-import { useWishlist } from "@/context/WishlistContext";
+import { useWishlist, type WishlistItem } from "@/context/WishlistContext";
 import { showToast } from "@/components/ui/toast";
 import { CART_EVENT } from "@/components/layout/Header";
 
@@ -21,7 +21,8 @@ interface Props {
 }
 
 // Placeholder image for when product image fails to load
-const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%239ca3af' font-size='14' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%239ca3af' font-size='14' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 export default function ProductCard({ product: p }: Props) {
   const [added, setAdded] = useState(false);
@@ -50,20 +51,24 @@ export default function ProductCard({ product: p }: Props) {
     : null;
 
   // Get the product image with fallback
-  const productImage = imageError ? PLACEHOLDER_IMAGE : (p.image || PLACEHOLDER_IMAGE);
+  const productImage = imageError
+    ? PLACEHOLDER_IMAGE
+    : p.image || PLACEHOLDER_IMAGE;
 
   // Get alt text for the image
   const altText = p.alt || p.name || "Product image";
 
   // Check if product is in stock (using any available property or default to true)
-  const isInStock = (p as any).is_in_stock !== undefined ? (p as any).is_in_stock : true;
+  const isInStock =
+    (p as any).is_in_stock !== undefined ? (p as any).is_in_stock : true;
 
   const toggleWishlist = () => {
     if (wishlisted) {
       removeFromWishlist(idNum);
       showToast("Removed from wishlist", "info");
     } else {
-      addToWishlist(p);
+      const wishlistItem: WishlistItem = { ...p, id: String(p.id) };
+      addToWishlist(wishlistItem);
       showToast("Added to wishlist ❤️", "success");
     }
   };
@@ -111,9 +116,13 @@ export default function ProductCard({ product: p }: Props) {
         <button
           onClick={toggleWishlist}
           className={`product-wishlist absolute top-2 right-2 w-[30px] h-[30px] rounded-full bg-white/90 backdrop-blur-[8px] flex items-center justify-center text-[13px] transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-20 ${showFilledHeart ? "!opacity-100 text-brand-red" : "text-gray-400 hover:text-brand-red"}`}
-          aria-label={showFilledHeart ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label={
+            showFilledHeart ? "Remove from wishlist" : "Add to wishlist"
+          }
         >
-          <FontAwesomeIcon icon={showFilledHeart ? faHeartSolid : faHeartRegular} />
+          <FontAwesomeIcon
+            icon={showFilledHeart ? faHeartSolid : faHeartRegular}
+          />
         </button>
       </div>
       <div className="p-3">
@@ -135,12 +144,15 @@ export default function ProductCard({ product: p }: Props) {
             className="flex items-center gap-1 mb-[7px]"
             aria-label={`${p.rating || 0} stars, ${p.reviews || 0} reviews`}
           >
-            <span className="text-brand-orange text-[10.5px]" aria-hidden="true">
+            <span
+              className="text-brand-orange text-[10.5px]"
+              aria-hidden="true"
+            >
               {"★".repeat(Math.floor(p.rating || 0))}
               {(p.rating || 0) % 1 >= 0.5 ? "☆" : ""}
             </span>
             <span className="text-[10px] text-gray-400">
-              ({((p.reviews || 0)).toLocaleString()})
+              ({(p.reviews || 0).toLocaleString()})
             </span>
           </div>
         )}
@@ -162,8 +174,8 @@ export default function ProductCard({ product: p }: Props) {
             added
               ? "!bg-[#22c55e] !text-white"
               : !isInStock
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-              : "bg-gray-100 text-gray-900 hover:bg-brand-gradient hover:text-white"
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-gray-100 text-gray-900 hover:bg-brand-gradient hover:text-white"
           }`}
           style={
             added

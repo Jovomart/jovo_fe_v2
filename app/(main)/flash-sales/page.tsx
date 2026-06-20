@@ -3,7 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useWishlist } from "@/context/WishlistContext";
-import { FiHeart, FiShoppingBag, FiArrowLeft, FiZap, FiRefreshCw, FiAlertCircle } from "react-icons/fi";
+import {
+  FiHeart,
+  FiShoppingBag,
+  FiArrowLeft,
+  FiZap,
+  FiRefreshCw,
+  FiAlertCircle,
+} from "react-icons/fi";
 import { FaHeart, FaFire } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
 import apiService from "@/services/apiService";
@@ -21,6 +28,8 @@ interface FlashProduct {
   stock_quantity: number;
   flash_stock: number;
   remaining_stock: number;
+  remaining_percentage: number | null;
+  sold_quantity: number;
   is_in_stock: boolean;
   brand: string | null;
 }
@@ -29,6 +38,7 @@ interface FlashCampaign {
   id: string;
   name: string;
   ends_at: string;
+  ends_in_seconds: number | null;
   products: FlashProduct[];
 }
 
@@ -47,15 +57,20 @@ const getValidImageUrl = (url: string | undefined): string => {
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
 
+// Fallback only — prefer the server-computed `ends_in_seconds` wherever possible,
+// since it avoids client clock drift. This is only used if that field is missing.
 const getSecondsUntil = (isoDate: string | undefined): number => {
   if (!isoDate) return 86400;
-  return Math.max(0, Math.floor((new Date(isoDate).getTime() - Date.now()) / 1000));
+  return Math.max(
+    0,
+    Math.floor((new Date(isoDate).getTime() - Date.now()) / 1000),
+  );
 };
 
 const TimeCell = ({ value, label }: { value: string; label: string }) => (
   <div className="flex flex-col items-center">
     <div
-      className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center overflow-hidden"
+      className="relative w-14 h-14 md:w-20 md:h-20 rounded-2xl flex items-center justify-center overflow-hidden"
       style={{
         background:
           "linear-gradient(145deg,rgba(255,255,255,0.18) 0%,rgba(255,255,255,0.06) 100%)",
@@ -66,11 +81,11 @@ const TimeCell = ({ value, label }: { value: string; label: string }) => (
       }}
     >
       <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10 rounded-t-2xl" />
-      <span className="relative text-2xl md:text-3xl font-black text-white tracking-tight tabular-nums">
+      <span className="relative text-xl md:text-3xl font-black text-white tracking-tight tabular-nums">
         {value}
       </span>
     </div>
-    <span className="mt-2 text-[10px] md:text-xs font-bold tracking-[0.2em] text-white/60 uppercase">
+    <span className="mt-2 text-[9px] md:text-xs font-bold tracking-[0.2em] text-white/60 uppercase">
       {label}
     </span>
   </div>
@@ -104,9 +119,19 @@ const ProductCard = ({
       ? Math.round(((originalPrice - effectivePrice) / originalPrice) * 100)
       : Math.round(product.discount_percentage ?? 0);
 
-  const totalStock = product.flash_stock ?? product.stock_quantity ?? 100;
-  const remaining = product.remaining_stock ?? totalStock;
-  const soldPct = totalStock > 0 ? Math.round(((totalStock - remaining) / totalStock) * 100) : 72;
+  // Prefer the server-computed remaining_percentage directly — it's the
+  // source of truth and avoids any chance of us inverting sold-vs-remaining
+  // math on the frontend. Only fall back to deriving it if the API omits it.
+  const totalStock =
+    product.flash_stock > 0 ? product.flash_stock : product.stock_quantity || 1;
+  const remaining = Math.min(product.remaining_stock, totalStock);
+  const remainingPct =
+    product.remaining_percentage != null
+      ? Math.round(product.remaining_percentage)
+      : totalStock > 0
+        ? Math.round((remaining / totalStock) * 100)
+        : 0;
+  const soldPct = 100 - remainingPct;
 
   const imgUrl = imgError
     ? PLACEHOLDER_IMAGE
@@ -115,7 +140,10 @@ const ProductCard = ({
   return (
     <div
       className="group relative bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5"
-      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.07)", animationDelay: `${index * 60}ms` }}
+      style={{
+        boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
+        animationDelay: `${index * 60}ms`,
+      }}
     >
       <Link
         href={`/product/${product.id}`}
@@ -182,7 +210,9 @@ const ProductCard = ({
         </div>
         <div className="mt-2.5">
           <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-            <span className="text-[#B42225] font-semibold">🔥 Selling fast</span>
+            <span className="text-[#B42225] font-semibold">
+              🔥 Selling fast
+            </span>
             <span>{soldPct}% sold</span>
           </div>
           <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
@@ -231,34 +261,56 @@ const FlashSalesPage = () => {
 
       const campaignObj: FlashCampaign = {
         id: raw.id ?? "",
-        name: raw.name ?? "Flash Sales",
-        ends_at: raw.ends_at ?? raw.end_time ?? "",
+        // API sends "title", not "name" — keep both as fallbacks in case the
+        // backend shape changes again.
+        name: raw.title ?? raw.name ?? "Flash Sales",
+        ends_at: raw.end_time ?? raw.ends_at ?? "",
+        // Prefer the server-computed countdown — it's immune to the user's
+        // device clock being wrong, unlike re-deriving from end_time.
+        ends_in_seconds:
+          typeof raw.ends_in_seconds === "number" ? raw.ends_in_seconds : null,
         products: Array.isArray(raw.products)
-          ? raw.products.map((p: any) => ({
-              id: String(p.id ?? p.product_id ?? ""),
-              product_name: p.product_name ?? p.name ?? "",
-              product_images: Array.isArray(p.product_images)
-                ? p.product_images
-                : p.image
-                ? [p.image]
-                : [],
-              product_original_price:
-                p.product_original_price ?? p.original_price ?? 0,
-              current_price: p.current_price ?? p.price ?? 0,
-              flash_price: p.flash_price ?? p.current_price ?? p.price ?? 0,
-              discount_percentage: p.discount_percentage ?? 0,
-              stock_quantity: p.stock_quantity ?? p.stock ?? 0,
-              flash_stock: p.flash_stock ?? p.stock_quantity ?? 0,
-              remaining_stock:
-                p.remaining_stock ?? p.flash_stock ?? p.stock_quantity ?? 0,
-              is_in_stock: p.is_in_stock ?? true,
-              brand: p.brand ?? null,
-            }))
+          ? raw.products.map((p: any) => {
+              // Flash-sale-specific pricing/stock lives in this nested object,
+              // separate from the product's general stock_quantity (which never
+              // decrements for flash sale purchases).
+              const fsd = p.flash_sale_details ?? {};
+              return {
+                id: String(p.id ?? p.product_id ?? ""),
+                product_name: p.product_name ?? p.name ?? "",
+                product_images: Array.isArray(p.product_images)
+                  ? p.product_images
+                  : p.image
+                    ? [p.image]
+                    : [],
+                product_original_price:
+                  p.product_original_price ?? p.original_price ?? 0,
+                current_price: p.current_price ?? p.price ?? 0,
+                flash_price: fsd.flash_price ?? p.current_price ?? p.price ?? 0,
+                discount_percentage: p.discount_percentage ?? 0,
+                stock_quantity: p.stock_quantity ?? 0,
+                flash_stock: fsd.flash_stock ?? p.stock_quantity ?? 0,
+                remaining_stock:
+                  fsd.remaining_stock ??
+                  fsd.flash_stock ??
+                  p.stock_quantity ??
+                  0,
+                remaining_percentage:
+                  typeof fsd.remaining_percentage === "number"
+                    ? fsd.remaining_percentage
+                    : null,
+                sold_quantity: fsd.sold_quantity ?? 0,
+                is_in_stock: p.is_in_stock ?? true,
+                brand: p.brand ?? null,
+              };
+            })
           : [],
       };
 
       setCampaign(campaignObj);
-      setTimeLeft(getSecondsUntil(campaignObj.ends_at));
+      setTimeLeft(
+        campaignObj.ends_in_seconds ?? getSecondsUntil(campaignObj.ends_at),
+      );
     } catch (err: any) {
       setError(err?.message ?? "No active flash sale at the moment.");
     } finally {
@@ -272,19 +324,15 @@ const FlashSalesPage = () => {
       await fetchCampaign();
     };
     loadCampaign();
-   
   }, [fetchCampaign]);
 
   // Countdown tick
   useEffect(() => {
-    const id = setInterval(
-      () => setTimeLeft((p) => (p > 0 ? p - 1 : 0)),
-      1000,
-    );
+    const id = setInterval(() => setTimeLeft((p) => (p > 0 ? p - 1 : 0)), 1000);
     return () => clearInterval(id);
   }, []);
-
-  const hours = String(Math.floor(timeLeft / 3600)).padStart(2, "0");
+  const days = Math.floor(timeLeft / 86400);
+  const hours = String(Math.floor((timeLeft % 86400) / 3600)).padStart(2, "0");
   const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
 
@@ -294,11 +342,12 @@ const FlashSalesPage = () => {
     const product = flashProducts.find((p) => p.id === id);
     if (!product) return;
     const wishlistItem = {
-      id: parseInt(product.id, 10) || 0,
+      id: product.id,
       name: product.product_name,
       price: product.flash_price ?? product.current_price,
       oldPrice:
-        product.product_original_price > (product.flash_price ?? product.current_price)
+        product.product_original_price >
+        (product.flash_price ?? product.current_price)
           ? product.product_original_price
           : null,
       rating: 0,
@@ -323,11 +372,15 @@ const FlashSalesPage = () => {
       >
         <div
           className="absolute -top-20 -left-20 w-96 h-96 rounded-full opacity-20 animate-pulse"
-          style={{ background: "radial-gradient(circle,#FF8C00,transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle,#FF8C00,transparent 70%)",
+          }}
         />
         <div
           className="absolute -bottom-10 right-0 w-80 h-80 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle,#B42225,transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle,#B42225,transparent 70%)",
+          }}
         />
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -391,7 +444,9 @@ const FlashSalesPage = () => {
               <p className="text-white/50 text-xs font-semibold tracking-widest uppercase">
                 Ends in
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
+                <TimeCell value={String(days).padStart(2, "0")} label="Days" />
+                <Sep />
                 <TimeCell value={hours} label="Hours" />
                 <Sep />
                 <TimeCell value={minutes} label="Mins" />
@@ -402,8 +457,15 @@ const FlashSalesPage = () => {
           </div>
         </div>
 
-        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
-          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#F3F4F8" />
+        <svg
+          className="absolute bottom-0 left-0 w-full"
+          viewBox="0 0 1440 40"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z"
+            fill="#F3F4F8"
+          />
         </svg>
       </div>
 
@@ -434,7 +496,9 @@ const FlashSalesPage = () => {
               <FiAlertCircle size={22} className="text-red-400" />
             </div>
             <div>
-              <p className="text-gray-700 font-semibold text-sm">No flash sale active</p>
+              <p className="text-gray-700 font-semibold text-sm">
+                No flash sale active
+              </p>
               <p className="text-gray-400 text-xs mt-1 max-w-xs">{error}</p>
             </div>
             <button

@@ -1,5 +1,12 @@
 "use client";
-import { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useRef,
+} from "react";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/firebase";
 import ApiService from "@/services/apiService";
@@ -33,7 +40,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     state: userData.state,
     city: userData.city,
     address: userData.address || "",
-    phone: userData.phone_number || existingUser?.phone || null,
+    phone:
+      userData.phone_number || userData.phone || existingUser?.phone || null,
     school_id: userData.school_id || existingUser?.school_id || null,
     schoolId: userData.school_id || existingUser?.schoolId || null,
     role: userData.role,
@@ -54,8 +62,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   // ── Merge guest cart into the newly authenticated user's cart ──────────────
-  // Call this right after login/google-auth/email-verification succeeds.
-  // Non-fatal: if the merge fails we just log and continue.
   const mergeGuestCart = async () => {
     if (typeof window === "undefined") return;
     const guestSessionId = localStorage.getItem("guest_session_id");
@@ -64,7 +70,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await ApiService.mergeCart(guestSessionId);
       localStorage.removeItem("guest_session_id");
     } catch (err) {
-      // Non-critical — user's account cart still works; guest items may be lost.
       console.warn("Cart merge failed (non-fatal):", err);
     }
   };
@@ -260,7 +265,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           localStorage.setItem("user", JSON.stringify(mappedUser));
           setUser(mappedUser);
           await checkServiceProviderStatus(mappedUser.id);
-          // Merge any guest cart items into this user's cart
           await mergeGuestCart();
           return mappedUser;
         }
@@ -271,7 +275,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
       await checkServiceProviderStatus(mappedUser.id);
-      // Merge any guest cart items into this user's cart
       await mergeGuestCart();
       return mappedUser;
     }
@@ -299,7 +302,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         userData = freshUser.data || freshUser;
       }
     } catch (err: any) {
-      console.warn("Could not fetch fresh user after Google login:", err.message);
+      console.warn(
+        "Could not fetch fresh user after Google login:",
+        err.message,
+      );
     }
     const requiresProfileCompletion =
       !userData?.username ||
@@ -311,7 +317,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(mappedUser));
       setUser(mappedUser);
       await checkServiceProviderStatus(mappedUser.id);
-      // Merge any guest cart items into this user's cart
       await mergeGuestCart();
     }
     return { userData, response, requiresProfileCompletion };
@@ -381,6 +386,80 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return updatedUser;
   };
 
+  /**
+   * Upload a new profile photo for the current user.
+   * Calls the upload endpoint then patches the user state with the returned URL.
+   */
+  const updateProfileImage = async (file: File): Promise<string> => {
+    const imageUrl = await ApiService.uploadProfileImage(file, user?.id);
+    // Persist the new photo URL in state and localStorage
+    const updatedUser = {
+      ...user,
+      profile_image: imageUrl,
+      photoURL: imageUrl,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    return imageUrl;
+  };
+
+  const removeProfileImage = async (): Promise<void> => {
+    if (!user)
+      throw new Error("You must be logged in to remove your profile photo.");
+    const currentImage = user.profile_image || user.photoURL;
+    if (!currentImage) return;
+
+    try {
+      await ApiService.deleteFiles(
+        [currentImage],
+        "user_profile_image",
+        user.id,
+      );
+    } catch (err) {
+      console.warn("Failed to delete profile image from server:", err);
+    }
+
+    const updatedUser = {
+      ...user,
+      profile_image: null,
+      photoURL: null,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
+
+  /**
+   * Change the authenticated user's password.
+   */
+  const changePassword = async (data: {
+    current_password: string;
+    new_password: string;
+    confirm_new_password: string;
+  }) => {
+    return ApiService.changePassword(data);
+  };
+
+  /**
+   * Permanently delete the authenticated user's account.
+   * Clears all local state and redirects the caller to handle navigation.
+   */
+  const deleteAccount = async () => {
+    await ApiService.hardDeleteAccount();
+    // Clear all local state just like logout
+    try {
+      if (auth) await signOut(auth);
+    } catch {}
+    localStorage.removeItem("user");
+    localStorage.removeItem("sellerMode");
+    localStorage.removeItem("guest_session_id");
+    ApiService.clearTokens();
+    setUser(null);
+    setSellerMode(false);
+    setIsServiceProvider(false);
+    sellerChecked.current = false;
+    providerChecked.current = false;
+  };
+
   const verifyEmail = async (email: string, code: string) => {
     const response = await ApiService.verifyEmail(email, code);
     if (response.access_token)
@@ -392,7 +471,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(mappedUser));
         setUser(mappedUser);
         await checkServiceProviderStatus(mappedUser.id);
-        // Merge any guest cart items into this user's cart
         await mergeGuestCart();
       } catch (err) {
         console.error("Failed to fetch user after verification:", err);
@@ -443,10 +521,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (auth) await signOut(auth);
     } catch {}
-    // Clear everything auth-related
     localStorage.removeItem("user");
     localStorage.removeItem("sellerMode");
-    // Remove guest session so a fresh one is created for the next guest session
     localStorage.removeItem("guest_session_id");
     ApiService.clearTokens();
     setUser(null);
@@ -476,6 +552,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         googleLogin,
         completeProfile,
         updateProfile,
+        updateProfileImage,
+        removeProfileImage,
+        changePassword,
+        deleteAccount,
         refreshUser,
         verifyEmail,
         resendVerificationCode,

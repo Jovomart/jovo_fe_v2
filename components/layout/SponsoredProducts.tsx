@@ -42,7 +42,7 @@ const SponsoredProducts = () => {
   }, []);
 
   return (
-    <div className="w-full mt-8 bg-[#F5F6F7]">
+    <div className="w-full mt-1 bg-[#F5F6F7]">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"

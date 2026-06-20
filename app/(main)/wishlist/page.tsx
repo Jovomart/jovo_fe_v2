@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiShoppingCart,
   FiTrash2,
@@ -18,20 +18,32 @@ import Footer from "@/components/layout/Footer";
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
-  const [addedIds, setAddedIds] = useState<number[]>([]);
-  const [removingIds, setRemovingIds] = useState<number[]>([]);
+  const [addedIds, setAddedIds] = useState<string[]>([]);
+  const [removingIds, setRemovingIds] = useState<string[]>([]);
+
+  // Hydration guard: wishlist comes from localStorage (or similar) inside
+  // WishlistContext, so its real value is only known on the client. On the
+  // very first client render we must render exactly what the server rendered
+  // (i.e. treat wishlist as empty) and only switch over after mount, once
+  // hydration has completed. Otherwise React sees mismatched HTML/text
+  // between server and client and throws a hydration error.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = (product: (typeof wishlist)[0]) => {
     // Pass the product ID as string and quantity
-    addToCart(String(product.id), 1);
-    setAddedIds((prev) => [...prev, product.id]);
+    const productId = String(product.id);
+    addToCart(productId, 1);
+    setAddedIds((prev) => [...prev, productId]);
     setTimeout(
-      () => setAddedIds((prev) => prev.filter((id) => id !== product.id)),
+      () => setAddedIds((prev) => prev.filter((id) => id !== productId)),
       2500,
     );
   };
 
-  const handleRemove = (id: number) => {
+  const handleRemove = (id: string) => {
     setRemovingIds((prev) => [...prev, id]);
     setTimeout(() => {
       removeFromWishlist(id);
@@ -46,6 +58,10 @@ export default function WishlistPage() {
     });
     window.location.href = "/cart";
   };
+
+  // Until mounted, always treat the list as empty so server and client
+  // markup match exactly on first paint. After mount, use the real value.
+  const items = mounted ? wishlist : [];
 
   return (
     <>
@@ -114,14 +130,16 @@ export default function WishlistPage() {
                     My Wishlist
                   </h1>
                   <p className="text-white/50 text-sm mt-0.5">
-                    {wishlist.length === 0
-                      ? "No saved items yet"
-                      : `${wishlist.length} ${wishlist.length === 1 ? "item" : "items"} saved for later`}
+                    {!mounted
+                      ? "Loading your saved items..."
+                      : items.length === 0
+                        ? "No saved items yet"
+                        : `${items.length} ${items.length === 1 ? "item" : "items"} saved for later`}
                   </p>
                 </div>
               </div>
 
-              {wishlist.length > 0 && (
+              {items.length > 0 && (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={clearWishlist}
@@ -149,8 +167,20 @@ export default function WishlistPage() {
           </div>
         </div>
 
-        {/* ── EMPTY STATE ── */}
-        {wishlist.length === 0 ? (
+        {/* ── LOADING STATE (first client paint, before we know real wishlist) ── */}
+        {!mounted ? (
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 flex flex-col items-center justify-center gap-4 text-center">
+            <div
+              className="w-10 h-10 rounded-full animate-spin"
+              style={{
+                border: "3px solid #f0d6d6",
+                borderTopColor: "#B42225",
+              }}
+            />
+            <p className="text-sm text-gray-400">Loading your wishlist...</p>
+          </div>
+        ) : items.length === 0 ? (
+          /* ── EMPTY STATE ── */
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-14 flex flex-col items-center justify-center gap-6 text-center">
             <div className="relative">
               <div
@@ -200,14 +230,14 @@ export default function WishlistPage() {
             {/* ── STATS ROW ── */}
             <div className="grid grid-cols-3 gap-3 mb-8 max-w-sm">
               {[
-                { label: "Saved Items", value: wishlist.length },
+                { label: "Saved Items", value: items.length },
                 {
                   label: "Total Value",
-                  value: `₦${wishlist.reduce((s, p) => s + p.price, 0).toLocaleString()}`,
+                  value: `₦${items.reduce((s, p) => s + p.price, 0).toLocaleString()}`,
                 },
                 {
                   label: "You Save",
-                  value: `₦${wishlist
+                  value: `₦${items
                     .reduce(
                       (s, p) => s + ((p.oldPrice ?? p.price) - p.price),
                       0,
@@ -235,15 +265,16 @@ export default function WishlistPage() {
 
             {/* ── PRODUCT GRID ── */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {wishlist.map((product) => {
+              {items.map((product) => {
                 const discount = product.oldPrice
                   ? Math.round(
                       ((product.oldPrice - product.price) / product.oldPrice) *
                         100,
                     )
                   : 0;
-                const added = addedIds.includes(product.id);
-                const removing = removingIds.includes(product.id);
+                const productId = String(product.id);
+                const added = addedIds.includes(productId);
+                const removing = removingIds.includes(productId);
 
                 return (
                   <Link
@@ -310,7 +341,7 @@ export default function WishlistPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleRemove(product.id);
+                          handleRemove(String(product.id));
                         }}
                         className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white flex items-center justify-center z-10 transition-transform hover:scale-110"
                         style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.15)" }}

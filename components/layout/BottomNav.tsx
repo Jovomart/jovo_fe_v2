@@ -6,12 +6,19 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { FiHome, FiBookOpen, FiHelpCircle, FiRadio } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useContext } from "react"
+import { useContext, useState, useEffect } from "react"
 import { AuthContext } from "@/context/AuthContext"
 
 const NAV_ITEMS_RIGHT = [
   { label: "Guide", icon: FiBookOpen, path: "/campus-guide" },
   { label: "Help", icon: FiHelpCircle, path: "/help" },
+];
+
+const HIDDEN_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/verify-email",
 ];
 
 // ─── Nav Item ─────────────────────────────────────────────────────────────
@@ -23,14 +30,13 @@ const NavItem = ({ icon: Icon, label, path, active, badge }: {
   badge?: string | number;
 }) => (
   <Link href={path} prefetch={true} className="flex-1">
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      className="relative flex flex-col items-center justify-center gap-0.5 w-full py-2"
+    <button
+      className="relative flex flex-col items-center justify-center gap-0.5 w-full py-2 active:scale-95 transition-transform duration-150"
     >
       <div className="relative">
         <Icon
           size={22}
-          className={`transition-all duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
+          className={`transition-colors duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
         />
         {badge && (
           <span className="absolute -top-2 -right-2.5 bg-[#B42225] text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-4 text-center leading-none">
@@ -50,13 +56,11 @@ const NavItem = ({ icon: Icon, label, path, active, badge }: {
         <motion.div
           layoutId="activeIndicator"
           className="absolute -top-1 w-6 h-0.5 bg-gradient-to-r from-[#B42225] to-[#FF8C00] rounded-full"
-          initial={{ opacity: 0, width: 0 }}
-          animate={{ opacity: 1, width: 24 }}
-          exit={{ opacity: 0, width: 0 }}
+          initial={false}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
         />
       )}
-    </motion.button>
+    </button>
   </Link>
 );
 
@@ -90,27 +94,42 @@ const CartIcon = () => (
 export default function BottomNavbar() {
   const pathname = usePathname()
   const { sellerMode } = useContext(AuthContext);
+
+  // AuthContext's sellerMode (and sometimes pathname on first tick) aren't
+  // reliably resolved on the very first client render — they depend on
+  // localStorage/cookies/async checks inside AuthContext. Rendering against
+  // a not-yet-resolved sellerMode is what causes the nav to flash between
+  // "logged out" layout and "seller" layout right after refresh. We wait
+  // one tick before trusting sellerMode for anything that changes the
+  // nav's items or visibility.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isActive = (p: string) => pathname === p;
+
+  const effectiveSellerMode = mounted ? sellerMode : false;
 
   const NAV_ITEMS_LEFT = [
     {
       label: "Home",
       icon: FiHome,
-      path: sellerMode ? "/seller/dashboard" : "/",
+      path: effectiveSellerMode ? "/seller/dashboard" : "/",
     },
     { label: "News", icon: FiRadio, path: "/news" },
   ];
 
-  const hiddenPaths = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/verify-email",
-  ];
-  if (hiddenPaths.includes(pathname) || sellerMode) return null;
+  const shouldHide =
+    HIDDEN_PATHS.includes(pathname) ||
+    effectiveSellerMode ||
+    (pathname?.startsWith('/seller') && pathname !== '/seller/dashboard');
 
-  // Don't show on auth pages
-  if (pathname?.startsWith('/seller') && pathname !== '/seller/dashboard') return null;
+  if (shouldHide) {
+    // Still reserve the spacer height so page content doesn't jump once
+    // the real sellerMode value resolves and the nav disappears/appears.
+    return <div className="h-[72px] md:hidden" />;
+  }
 
   return (
     <>
@@ -127,7 +146,7 @@ export default function BottomNavbar() {
             <div className="flex flex-1 justify-around max-w-[45%]">
               {NAV_ITEMS_LEFT.map(({ label, icon, path }) => (
                 <NavItem
-                  key={path}
+                  key={label}
                   icon={icon}
                   label={label}
                   path={path}
@@ -144,6 +163,7 @@ export default function BottomNavbar() {
                   <motion.button
                     whileTap={{ scale: 0.92 }}
                     whileHover={{ scale: 1.03 }}
+                    initial={false}
                     transition={{ 
                       type: "spring", 
                       stiffness: 500, 
