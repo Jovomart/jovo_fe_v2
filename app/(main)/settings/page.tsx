@@ -186,6 +186,7 @@ const Settings = () => {
     }
   }, []);
 
+  // ─── Initialize form with user data ──────────────────────────────────────
   useEffect(() => {
     if (user) {
       const nextForm = {
@@ -211,11 +212,39 @@ const Settings = () => {
         isCanceled = true;
       };
     }
-    // Fetch schools when user is null (shouldn't happen, but safe)
-    if (!user) {
-      fetchSchools();
-    }
-  }, [user, fetchSchools]);
+  }, [user]);
+
+  // ─── Fetch schools when component mounts ─────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+    const loadSchools = async () => {
+      setLoadingSchools(true);
+      try {
+        const response = await ApiService.getAvailableSchools();
+        let arr: School[] = [];
+        if (response?.data?.schools && Array.isArray(response.data.schools))
+          arr = response.data.schools;
+        else if (Array.isArray(response)) arr = response;
+        else if (response?.data && Array.isArray(response.data))
+          arr = response.data;
+        else if (response?.schools && Array.isArray(response.schools))
+          arr = response.schools;
+        if (isMounted) {
+          setSchools(arr);
+        }
+      } catch (err) {
+        console.error("Failed to fetch schools:", err);
+      } finally {
+        if (isMounted) {
+          setLoadingSchools(false);
+        }
+      }
+    };
+    loadSchools();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredSchools = schools.filter((school) => {
     const s = schoolSearch.toLowerCase();
