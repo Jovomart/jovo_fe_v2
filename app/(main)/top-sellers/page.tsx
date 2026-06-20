@@ -4,8 +4,14 @@ import Image from "next/image";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useWishlist } from "@/context/WishlistContext";
 import {
-  FiHeart, FiShoppingBag, FiArrowLeft, FiZap, FiAward,
-  FiTrendingUp, FiRefreshCw, FiAlertCircle,
+  FiHeart,
+  FiShoppingBag,
+  FiArrowLeft,
+  FiZap,
+  FiAward,
+  FiTrendingUp,
+  FiRefreshCw,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { FaHeart, FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
 import Footer from "@/components/layout/Footer";
@@ -58,14 +64,17 @@ const ProductCard = ({
     product.discount_percentage > 0
       ? Math.round(product.discount_percentage)
       : product.product_original_price > product.current_price
-      ? Math.round(
-          ((product.product_original_price - product.current_price) /
-            product.product_original_price) *
-            100,
-        )
-      : null;
+        ? Math.round(
+            ((product.product_original_price - product.current_price) /
+              product.product_original_price) *
+              100,
+          )
+        : null;
 
-  const rankConfig: Record<number, { icon: React.ReactNode; bg: string; label: string }> = {
+  const rankConfig: Record<
+    number,
+    { icon: React.ReactNode; bg: string; label: string }
+  > = {
     1: {
       icon: <FaCrown size={11} />,
       bg: "linear-gradient(135deg,#FFD700,#FFA500)",
@@ -201,15 +210,18 @@ const TopSellersPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiService.getTopSellingProducts({ limit: 50, days: 7 });
+      const data = await apiService.getTopSellingProducts({
+        limit: 50,
+        days: 7,
+      });
       const raw = data?.data ?? data;
       const list = Array.isArray(raw)
         ? raw
         : Array.isArray(raw?.products)
-        ? raw.products
-        : Array.isArray(raw?.items)
-        ? raw.items
-        : [];
+          ? raw.products
+          : Array.isArray(raw?.items)
+            ? raw.items
+            : [];
 
       const normalised: TopProduct[] = list.map((p: any) => ({
         id: String(p.id ?? p.product_id ?? ""),
@@ -217,9 +229,10 @@ const TopSellersPage = () => {
         product_images: Array.isArray(p.product_images)
           ? p.product_images
           : p.image
-          ? [p.image]
-          : [],
-        product_original_price: p.product_original_price ?? p.original_price ?? 0,
+            ? [p.image]
+            : [],
+        product_original_price:
+          p.product_original_price ?? p.original_price ?? 0,
         current_price: p.current_price ?? p.price ?? 0,
         discount_percentage: p.discount_percentage ?? 0,
         is_in_stock: p.is_in_stock ?? true,
@@ -242,14 +255,13 @@ const TopSellersPage = () => {
       await fetchTopSellers();
     };
     loadTopSellers();
-   
   }, [fetchTopSellers]);
 
   const handleWishlist = (id: string) => {
     const product = topProducts.find((p) => p.id === id);
     if (!product) return;
     const wishlistItem = {
-      id: parseInt(product.id, 10) || 0,
+      id: product.id,
       name: product.product_name,
       price: product.current_price,
       oldPrice:
@@ -278,11 +290,15 @@ const TopSellersPage = () => {
       >
         <div
           className="absolute -top-16 -left-16 w-80 h-80 rounded-full opacity-20 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#fb923c,transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle,#fb923c,transparent 70%)",
+          }}
         />
         <div
           className="absolute -bottom-10 right-10 w-72 h-72 rounded-full opacity-15 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#ea580c,transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle,#ea580c,transparent 70%)",
+          }}
         />
         <div
           className="absolute inset-0 opacity-[0.035]"
@@ -314,7 +330,10 @@ const TopSellersPage = () => {
                 <div>
                   <h1
                     className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia',serif", textShadow: "0 4px 30px rgba(234,88,12,0.4)" }}
+                    style={{
+                      fontFamily: "'Georgia',serif",
+                      textShadow: "0 4px 30px rgba(234,88,12,0.4)",
+                    }}
                   >
                     TOP
                   </h1>
@@ -333,15 +352,28 @@ const TopSellersPage = () => {
               </div>
 
               <p className="mt-3 text-white/50 text-sm md:text-base max-w-sm">
-                The products everyone's buying. Tried, loved, and trusted by thousands.
+                The products everyone's buying. Tried, loved, and trusted by
+                thousands.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               {[
-                { icon: <FiAward size={14} />, label: "Best Rated", val: "4.8★" },
-                { icon: <FiShoppingBag size={14} />, label: "Items Sold", val: "12K+" },
-                { icon: <FiTrendingUp size={14} />, label: "This Week", val: "+38%" },
+                {
+                  icon: <FiAward size={14} />,
+                  label: "Best Rated",
+                  val: "4.8★",
+                },
+                {
+                  icon: <FiShoppingBag size={14} />,
+                  label: "Items Sold",
+                  val: "12K+",
+                },
+                {
+                  icon: <FiTrendingUp size={14} />,
+                  label: "This Week",
+                  val: "+38%",
+                },
               ].map(({ icon, label, val }) => (
                 <div
                   key={label}
@@ -354,7 +386,9 @@ const TopSellersPage = () => {
                 >
                   <span className="text-orange-300">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-black text-sm leading-none">
+                      {val}
+                    </p>
                     <p className="text-white/50 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -363,8 +397,15 @@ const TopSellersPage = () => {
           </div>
         </div>
 
-        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
-          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#F3F4F8" />
+        <svg
+          className="absolute bottom-0 left-0 w-full"
+          viewBox="0 0 1440 40"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z"
+            fill="#F3F4F8"
+          />
         </svg>
       </div>
 

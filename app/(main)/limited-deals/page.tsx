@@ -4,8 +4,14 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { useWishlist } from "@/context/WishlistContext";
 import {
-  FiHeart, FiShoppingBag, FiArrowLeft, FiZap, FiClock,
-  FiAlertTriangle, FiRefreshCw, FiAlertCircle,
+  FiHeart,
+  FiShoppingBag,
+  FiArrowLeft,
+  FiZap,
+  FiClock,
+  FiAlertTriangle,
+  FiRefreshCw,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { FaHeart, FaExclamationTriangle } from "react-icons/fa";
 import { MdOutlineInventory2 } from "react-icons/md";
@@ -42,21 +48,33 @@ const getValidImageUrl = (url: string | undefined): string => {
 
 // ─── Stock Bar ────────────────────────────────────────────────────────────────
 
-const StockBar = ({ stock, threshold = 100 }: { stock: number; threshold?: number }) => {
+const StockBar = ({
+  stock,
+  threshold = 100,
+}: {
+  stock: number;
+  threshold?: number;
+}) => {
   // pct = how much stock remains relative to threshold
   const pct = Math.min(Math.round((stock / threshold) * 100), 100);
   const color =
     pct <= 20
       ? "linear-gradient(90deg,#B42225,#d63a1a)"
       : pct <= 50
-      ? "linear-gradient(90deg,#d63a1a,#e85d04)"
-      : "linear-gradient(90deg,#B42225,#d63a1a)";
+        ? "linear-gradient(90deg,#d63a1a,#e85d04)"
+        : "linear-gradient(90deg,#B42225,#d63a1a)";
 
   return (
     <div className="mt-2.5">
       <div className="flex justify-between text-[10px] mb-1">
-        <span className={pct <= 20 ? "text-red-500 font-bold" : "text-gray-400"}>
-          {pct <= 20 ? "⚠️ Almost gone!" : pct <= 50 ? "⏳ Selling fast" : "✅ In stock"}
+        <span
+          className={pct <= 20 ? "text-red-500 font-bold" : "text-gray-400"}
+        >
+          {pct <= 20
+            ? "⚠️ Almost gone!"
+            : pct <= 50
+              ? "⏳ Selling fast"
+              : "✅ In stock"}
         </span>
         <span className="text-gray-400">{stock} left</span>
       </div>
@@ -87,12 +105,12 @@ const ProductCard = ({
     product.discount_percentage > 0
       ? Math.round(product.discount_percentage)
       : product.product_original_price > product.current_price
-      ? Math.round(
-          ((product.product_original_price - product.current_price) /
-            product.product_original_price) *
-            100,
-        )
-      : null;
+        ? Math.round(
+            ((product.product_original_price - product.current_price) /
+              product.product_original_price) *
+              100,
+          )
+        : null;
 
   const imgUrl = imgError
     ? PLACEHOLDER_IMAGE
@@ -105,7 +123,9 @@ const ProductCard = ({
     >
       <div
         className="absolute top-0 left-0 right-0 h-0.5 z-10"
-        style={{ background: "linear-gradient(90deg,transparent,#d63a1a,transparent)" }}
+        style={{
+          background: "linear-gradient(90deg,transparent,#d63a1a,transparent)",
+        }}
       />
 
       <Link
@@ -224,10 +244,10 @@ const LimitedStockDealsPage = () => {
       const list = Array.isArray(raw)
         ? raw
         : Array.isArray(raw?.products)
-        ? raw.products
-        : Array.isArray(raw?.items)
-        ? raw.items
-        : [];
+          ? raw.products
+          : Array.isArray(raw?.items)
+            ? raw.items
+            : [];
 
       const normalised: LimitedProduct[] = list.map((p: any) => ({
         id: String(p.id ?? p.product_id ?? ""),
@@ -235,9 +255,10 @@ const LimitedStockDealsPage = () => {
         product_images: Array.isArray(p.product_images)
           ? p.product_images
           : p.image
-          ? [p.image]
-          : [],
-        product_original_price: p.product_original_price ?? p.original_price ?? 0,
+            ? [p.image]
+            : [],
+        product_original_price:
+          p.product_original_price ?? p.original_price ?? 0,
         current_price: p.current_price ?? p.price ?? 0,
         discount_percentage: p.discount_percentage ?? 0,
         stock_quantity: p.stock_quantity ?? p.stock ?? 0,
@@ -260,14 +281,13 @@ const LimitedStockDealsPage = () => {
       await fetchLimited();
     };
     loadLimited();
-   
   }, [fetchLimited]);
 
   const handleWishlist = (id: string) => {
     const product = limited.find((p) => p.id === id);
     if (!product) return;
     const wishlistItem = {
-      id: parseInt(product.id, 10) || 0,
+      id: product.id,
       name: product.product_name,
       price: product.current_price,
       oldPrice:
@@ -304,7 +324,9 @@ const LimitedStockDealsPage = () => {
         />
         <div
           className="absolute -top-20 -left-10 w-80 h-80 rounded-full opacity-15 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#FF4500,transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle,#FF4500,transparent 70%)",
+          }}
         />
         <div
           className="absolute inset-0 opacity-[0.035] pointer-events-none"
@@ -345,7 +367,10 @@ const LimitedStockDealsPage = () => {
                 <div>
                   <h1
                     className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia',serif", textShadow: "0 4px 30px rgba(216,58,26,0.4)" }}
+                    style={{
+                      fontFamily: "'Georgia',serif",
+                      textShadow: "0 4px 30px rgba(216,58,26,0.4)",
+                    }}
                   >
                     LIMITED
                   </h1>
@@ -353,7 +378,8 @@ const LimitedStockDealsPage = () => {
                     className="text-4xl md:text-6xl font-black leading-none tracking-tight"
                     style={{
                       fontFamily: "'Georgia',serif",
-                      background: "linear-gradient(90deg,#FFB347,#FFD699,#FFB347)",
+                      background:
+                        "linear-gradient(90deg,#FFB347,#FFD699,#FFB347)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -364,14 +390,23 @@ const LimitedStockDealsPage = () => {
               </div>
 
               <p className="mt-3 text-white/45 text-sm md:text-base max-w-sm">
-                These won't last. Grab yours before stock runs out — no restocks guaranteed.
+                These won't last. Grab yours before stock runs out — no restocks
+                guaranteed.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               {[
-                { icon: <FiClock size={14} />, label: "Restocking", val: "Unlikely" },
-                { icon: <FaExclamationTriangle size={12} />, label: "Avg Stock Left", val: "< 30%" },
+                {
+                  icon: <FiClock size={14} />,
+                  label: "Restocking",
+                  val: "Unlikely",
+                },
+                {
+                  icon: <FaExclamationTriangle size={12} />,
+                  label: "Avg Stock Left",
+                  val: "< 30%",
+                },
                 {
                   icon: <MdOutlineInventory2 size={15} />,
                   label: "Items",
@@ -389,7 +424,9 @@ const LimitedStockDealsPage = () => {
                 >
                   <span className="text-yellow-300">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-black text-sm leading-none">
+                      {val}
+                    </p>
                     <p className="text-white/40 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -398,8 +435,15 @@ const LimitedStockDealsPage = () => {
           </div>
         </div>
 
-        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
-          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#F5F6F7" />
+        <svg
+          className="absolute bottom-0 left-0 w-full"
+          viewBox="0 0 1440 40"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z"
+            fill="#F5F6F7"
+          />
         </svg>
       </div>
 
@@ -437,7 +481,10 @@ const LimitedStockDealsPage = () => {
           </div>
         ) : limited.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
-            <MdOutlineInventory2 size={48} className="mx-auto mb-4 opacity-20" />
+            <MdOutlineInventory2
+              size={48}
+              className="mx-auto mb-4 opacity-20"
+            />
             <p className="font-semibold">No limited stock items right now.</p>
           </div>
         ) : (

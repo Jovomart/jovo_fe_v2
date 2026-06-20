@@ -274,7 +274,7 @@ const PerishablePage = () => {
                     const product = products.find((p) => p.id === id);
                     if (!product) return;
                     if (isWishlisted(id)) removeFromWishlist(id);
-                    else addToWishlist(product);
+                    else addToWishlist({ ...product, id: String(product.id) });
                   }}
                 />
               ))}

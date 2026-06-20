@@ -264,8 +264,14 @@ const CleaningHygienePage = () => {
                 <ProductCard
                   key={p.id}
                   product={p}
-                  wishlisted={isWishlisted(p.id)}
-                  onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
+                  wishlisted={isWishlisted(String(p.id))}
+                  onWishlist={(id) => {
+                    const product = products.find((p) => p.id === id);
+                    if (!product) return;
+                    const itemId = String(product.id);
+                    if (isWishlisted(itemId)) removeFromWishlist(itemId);
+                    else addToWishlist({ ...product, id: itemId });
+                  }}
                 />
               ))}
             </div>

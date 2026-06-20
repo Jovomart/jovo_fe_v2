@@ -264,7 +264,12 @@ const PersonalCarePage = () => {
                   key={p.id}
                   product={p}
                   wishlisted={isWishlisted(p.id)}
-                  onWishlist={(id) => { const product = products.find((p) => p.id === id); if (!product) return; if (isWishlisted(id)) removeFromWishlist(id); else addToWishlist(product); }}
+                  onWishlist={(id) => {
+                    const product = products.find((p) => p.id === id);
+                    if (!product) return;
+                    if (isWishlisted(id)) removeFromWishlist(id);
+                    else addToWishlist({ ...product, id: String(product.id) });
+                  }}
                 />
               ))}
             </div>

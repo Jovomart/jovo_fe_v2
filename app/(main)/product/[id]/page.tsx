@@ -747,7 +747,7 @@ const ProductDetails = () => {
   // ── Wishlist helpers ────────────────────────────────────────────────────────
   const wishlistProduct = product
     ? {
-        id: parseInt(product.id, 10) || 0,
+        id: product.id,
         name: product.product_name,
         price: product.current_price,
         oldPrice:

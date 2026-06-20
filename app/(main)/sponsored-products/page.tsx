@@ -365,12 +365,15 @@ const SponsoredProductsPage = () => {
               <ProductCard
                 key={product.id}
                 product={product}
-                wishlisted={isWishlisted(product.id)}
+                wishlisted={isWishlisted(String(product.id))}
                 onWishlist={(id) => {
-                  const product = products.find((p) => p.id === id);
+                  const product = products.find(
+                    (p) => String(p.id) === String(id),
+                  );
                   if (!product) return;
-                  if (isWishlisted(id)) removeFromWishlist(id);
-                  else addToWishlist(product);
+                  const wishlistId = String(id);
+                  if (isWishlisted(wishlistId)) removeFromWishlist(wishlistId);
+                  else addToWishlist({ ...product, id: wishlistId });
                 }}
               />
             ))}
