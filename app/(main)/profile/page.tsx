@@ -175,11 +175,43 @@ const Profile = () => {
     };
   }, [user?.photoURL, user?.profile_image]);
 
+  // Fixed: Use a separate useEffect for fetching schools when modal opens
+  // Instead of calling setState directly in an effect, we trigger a fetch
+  // that will update state, which is acceptable when done through an async function
   useEffect(() => {
+    let isMounted = true;
     if (isEditModalOpen) {
-      fetchSchools();
+      const loadSchools = async () => {
+        setLoadingSchools(true);
+        try {
+          const response = await ApiService.getAvailableSchools();
+          let schoolsArray: School[] = [];
+          if (response?.data?.schools && Array.isArray(response.data.schools)) {
+            schoolsArray = response.data.schools;
+          } else if (Array.isArray(response)) {
+            schoolsArray = response;
+          } else if (response?.data && Array.isArray(response.data)) {
+            schoolsArray = response.data;
+          } else if (response?.schools && Array.isArray(response.schools)) {
+            schoolsArray = response.schools;
+          }
+          if (isMounted) {
+            setSchools(schoolsArray);
+          }
+        } catch (err) {
+          console.error("Failed to fetch schools:", err);
+        } finally {
+          if (isMounted) {
+            setLoadingSchools(false);
+          }
+        }
+      };
+      loadSchools();
     }
-  }, [isEditModalOpen, fetchSchools]);
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditModalOpen]);
 
   useEffect(() => {
     if (user && isEditModalOpen) {

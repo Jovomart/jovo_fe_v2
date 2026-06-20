@@ -211,7 +211,10 @@ const Settings = () => {
         isCanceled = true;
       };
     }
-    fetchSchools();
+    // Fetch schools when user is null (shouldn't happen, but safe)
+    if (!user) {
+      fetchSchools();
+    }
   }, [user, fetchSchools]);
 
   const filteredSchools = schools.filter((school) => {
