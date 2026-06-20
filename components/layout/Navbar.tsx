@@ -550,8 +550,15 @@ export default function Navbar() {
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
-      const timer = setTimeout(() => setMounted(true), 0);
-      return () => clearTimeout(timer);
+      let isCanceled = false;
+      queueMicrotask(() => {
+        if (!isCanceled) {
+          setMounted(true);
+        }
+      });
+      return () => {
+        isCanceled = true;
+      };
     }
   }, []);
 
@@ -737,7 +744,15 @@ export default function Navbar() {
   const profilePhoto = user?.photoURL || user?.profile_image || null;
 
   useEffect(() => {
-    setProfileImageBroken(false);
+    let isCanceled = false;
+    queueMicrotask(() => {
+      if (!isCanceled) {
+        setProfileImageBroken(false);
+      }
+    });
+    return () => {
+      isCanceled = true;
+    };
   }, [profilePhoto]);
 
   // ─────────────────────────────────────────────────────────────────────────

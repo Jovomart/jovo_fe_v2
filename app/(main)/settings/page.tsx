@@ -188,7 +188,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (user) {
-      setForm({
+      const nextForm = {
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         username: user.username || "",
@@ -198,8 +198,18 @@ const Settings = () => {
         city: user.city || "",
         address: user.address || "",
         phone: user.phone || "",
+      };
+      const nextSelectedSchoolId = user.school_id || user.schoolId || "";
+      let isCanceled = false;
+      queueMicrotask(() => {
+        if (!isCanceled) {
+          setForm(nextForm);
+          setSelectedSchoolId(nextSelectedSchoolId);
+        }
       });
-      setSelectedSchoolId(user.school_id || user.schoolId || "");
+      return () => {
+        isCanceled = true;
+      };
     }
     fetchSchools();
   }, [user, fetchSchools]);

@@ -152,11 +152,27 @@ const Profile = () => {
   }, []);
 
   useEffect(() => {
-    setHasMounted(true);
+    let isCanceled = false;
+    queueMicrotask(() => {
+      if (!isCanceled) {
+        setHasMounted(true);
+      }
+    });
+    return () => {
+      isCanceled = true;
+    };
   }, []);
 
   useEffect(() => {
-    setProfileImageBroken(false);
+    let isCanceled = false;
+    queueMicrotask(() => {
+      if (!isCanceled) {
+        setProfileImageBroken(false);
+      }
+    });
+    return () => {
+      isCanceled = true;
+    };
   }, [user?.photoURL, user?.profile_image]);
 
   useEffect(() => {
@@ -167,7 +183,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (user && isEditModalOpen) {
-      setEditForm({
+      const nextEditForm = {
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         username: user.username || "",
@@ -177,8 +193,18 @@ const Profile = () => {
         city: user.city || "",
         address: user.address || "",
         phone: user.phone || "",
+      };
+      const nextSelectedSchoolId = user.school_id || user.schoolId || "";
+      let isCanceled = false;
+      queueMicrotask(() => {
+        if (!isCanceled) {
+          setEditForm(nextEditForm);
+          setSelectedSchoolId(nextSelectedSchoolId);
+        }
       });
-      setSelectedSchoolId(user.school_id || user.schoolId || "");
+      return () => {
+        isCanceled = true;
+      };
     }
   }, [user, isEditModalOpen]);
 

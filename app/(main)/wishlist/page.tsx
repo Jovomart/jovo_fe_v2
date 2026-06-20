@@ -29,7 +29,15 @@ export default function WishlistPage() {
   // between server and client and throws a hydration error.
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    let isCanceled = false;
+    queueMicrotask(() => {
+      if (!isCanceled) {
+        setMounted(true);
+      }
+    });
+    return () => {
+      isCanceled = true;
+    };
   }, []);
 
   const handleAddToCart = (product: (typeof wishlist)[0]) => {
