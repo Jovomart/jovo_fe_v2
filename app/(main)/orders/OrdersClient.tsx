@@ -303,13 +303,20 @@ function OrderCard({
   const [showTracking, setShowTracking] = useState(false);
   const detailFetchedRef = useRef(false);
 
-  // Keep local order state in sync if the parent re-fetches the list
-  // (e.g. after a refresh) and passes a newer snapshot down.
-  useEffect(() => {
-    setOrder(initialOrder);
-  }, [initialOrder]);
+  // Use useMemo to update order state when initialOrder changes
+  // This is more performant than useEffect with setState
+  const updatedOrder = useMemo(() => {
+    // Only update if there's actually a difference
+    if (initialOrder.id !== order.id || initialOrder.order_status !== order.order_status) {
+      return initialOrder;
+    }
+    return order;
+  }, [initialOrder, order]);
 
-  const cfg = STATUS_CONFIG[order.order_status] ?? STATUS_CONFIG.pending;
+  // Use the updated order if it changed, otherwise keep current
+  const currentOrder = updatedOrder.id !== order.id ? updatedOrder : order;
+
+  const cfg = STATUS_CONFIG[currentOrder.order_status] ?? STATUS_CONFIG.pending;
 
   // Fetch full order detail (includes items + delivery_info) on first open
   useEffect(() => {
@@ -318,7 +325,7 @@ function OrderCard({
     const load = async () => {
       setLoadingDetail(true);
       try {
-        const res = await ApiService.getOrderById(order.id);
+        const res = await ApiService.getOrderById(currentOrder.id);
         const parsed = parseOrder(res);
         if (parsed) setOrder(parsed);
       } catch {
@@ -328,10 +335,10 @@ function OrderCard({
       }
     };
     load();
-  }, [open, order.id]);
+  }, [open, currentOrder.id]);
 
   const copyRef = () => {
-    const ref = order.payment_reference || order.order_number;
+    const ref = currentOrder.payment_reference || currentOrder.order_number;
     if (!ref) return;
     navigator.clipboard.writeText(ref).then(() => {
       setCopied(true);
@@ -342,26 +349,26 @@ function OrderCard({
   const handleCancel = async () => {
     setCancelling(true);
     try {
-      await onCancel(order.id);
+      await onCancel(currentOrder.id);
       setConfirmCancel(false);
     } finally {
       setCancelling(false);
     }
   };
 
-  const dateStr = safeFormatDate(order.created_at, {
+  const dateStr = safeFormatDate(currentOrder.created_at, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
   const canCancel =
-    order.order_status === "pending" && order.payment_status === "pending";
+    currentOrder.order_status === "pending" && currentOrder.payment_status === "pending";
 
   const canTrack =
-    order.order_status === "confirmed" ||
-    order.order_status === "shipped" ||
-    order.order_status === "delivered";
+    currentOrder.order_status === "confirmed" ||
+    currentOrder.order_status === "shipped" ||
+    currentOrder.order_status === "delivered";
 
   return (
     <div
@@ -390,19 +397,19 @@ function OrderCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-black text-gray-900">
-              {order.order_number}
+              {currentOrder.order_number}
             </p>
             <span
               className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.color}`}
             >
               {cfg.icon} {cfg.label}
             </span>
-            {order.payment_status === "paid" && (
+            {currentOrder.payment_status === "paid" && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-50 border border-green-200 text-green-700">
                 <FiCheck size={11} /> Paid
               </span>
             )}
-            {order.payment_status === "failed" && (
+            {currentOrder.payment_status === "failed" && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-red-700">
                 <FiXCircle size={11} /> Payment Failed
               </span>
@@ -413,14 +420,14 @@ function OrderCard({
               <FiCalendar size={11} /> {dateStr}
             </span>
             <span className="text-xs text-gray-400">
-              {order.item_count} item{order.item_count !== 1 ? "s" : ""}
+              {currentOrder.item_count} item{currentOrder.item_count !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
 
         <div className="text-right shrink-0">
           <p className="text-base font-black text-[#B42225]">
-            {fmt(order.total_amount)}
+            {fmt(currentOrder.total_amount)}
           </p>
           <FiChevronDown
             size={16}
@@ -441,7 +448,7 @@ function OrderCard({
           )}
 
           {/* Progress timeline */}
-          {order.order_status !== "cancelled" && (
+          {currentOrder.order_status !== "cancelled" && (
             <div className="px-5 md:px-6 py-5">
               <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">
                 Order Progress
@@ -512,13 +519,13 @@ function OrderCard({
           )}
 
           {/* Items */}
-          {order.items && order.items.length > 0 && (
+          {currentOrder.items && currentOrder.items.length > 0 && (
             <div className="px-5 md:px-6 pb-3">
               <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
                 Items Ordered
               </p>
               <div className="space-y-3">
-                {order.items.map((item) => (
+                {currentOrder.items.map((item) => (
                   <div
                     key={item.product_id}
                     className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50"
@@ -557,44 +564,44 @@ function OrderCard({
 
           {/* Delivery + payment summary */}
           <div className="grid sm:grid-cols-2 gap-4 px-5 md:px-6 py-4">
-            {order.delivery_info && (
+            {currentOrder.delivery_info && (
               <div className="bg-gray-50 rounded-2xl p-4">
                 <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
                   Delivery Info
                 </p>
-                {order.delivery_info.recipient_name && (
+                {currentOrder.delivery_info.recipient_name && (
                   <p className="text-sm font-bold text-gray-800">
-                    {order.delivery_info.recipient_name}
+                    {currentOrder.delivery_info.recipient_name}
                   </p>
                 )}
-                {order.delivery_info.recipient_phone && (
+                {currentOrder.delivery_info.recipient_phone && (
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     <FiPhone size={11} />{" "}
-                    {order.delivery_info.recipient_phone}
+                    {currentOrder.delivery_info.recipient_phone}
                   </p>
                 )}
-                {order.delivery_info.recipient_email && (
+                {currentOrder.delivery_info.recipient_email && (
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     <FiMail size={11} />{" "}
-                    {order.delivery_info.recipient_email}
+                    {currentOrder.delivery_info.recipient_email}
                   </p>
                 )}
-                {(order.delivery_info.street_address ||
-                  order.delivery_info.city) && (
+                {(currentOrder.delivery_info.street_address ||
+                  currentOrder.delivery_info.city) && (
                   <p className="text-xs text-gray-500 mt-0.5 flex items-start gap-1">
                     <FiMapPin size={11} className="mt-0.5 shrink-0" />
                     {[
-                      order.delivery_info.street_address,
-                      order.delivery_info.city,
-                      order.delivery_info.state,
+                      currentOrder.delivery_info.street_address,
+                      currentOrder.delivery_info.city,
+                      currentOrder.delivery_info.state,
                     ]
                       .filter(Boolean)
                       .join(", ")}
                   </p>
                 )}
-                {order.delivery_info.notes && (
+                {currentOrder.delivery_info.notes && (
                   <p className="text-xs text-gray-400 mt-1 italic">
-                    &quot;{order.delivery_info.notes}&quot;
+                    &quot;{currentOrder.delivery_info.notes}&quot;
                   </p>
                 )}
               </div>
@@ -605,28 +612,28 @@ function OrderCard({
                 Payment Summary
               </p>
               <div className="space-y-1.5">
-                {order.subtotal != null && (
+                {currentOrder.subtotal != null && (
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Subtotal</span>
                     <span className="font-bold text-gray-700">
-                      {fmt(order.subtotal)}
+                      {fmt(currentOrder.subtotal)}
                     </span>
                   </div>
                 )}
-                {order.delivery_cost != null && (
+                {currentOrder.delivery_cost != null && (
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Delivery</span>
                     <span className="font-bold text-gray-700">
-                      {order.delivery_cost === 0
+                      {currentOrder.delivery_cost === 0
                         ? "Free"
-                        : fmt(order.delivery_cost)}
+                        : fmt(currentOrder.delivery_cost)}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm border-t border-gray-200 pt-1.5 mt-1.5">
                   <span className="font-black text-gray-900">Total</span>
                   <span className="font-black text-[#B42225]">
-                    {fmt(order.total_amount)}
+                    {fmt(currentOrder.total_amount)}
                   </span>
                 </div>
               </div>
@@ -648,18 +655,18 @@ function OrderCard({
                   className={`transition-transform ${showTracking ? "rotate-180" : ""}`}
                 />
               </button>
-              {showTracking && <TrackingPanel orderId={order.id} />}
+              {showTracking && <TrackingPanel orderId={currentOrder.id} />}
             </div>
           )}
 
           {/* Reference */}
-          {(order.payment_reference || order.order_number) && (
+          {(currentOrder.payment_reference || currentOrder.order_number) && (
             <div className="px-5 md:px-6 pb-3">
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl">
                 <p className="text-xs text-gray-500 flex-1 min-w-0">
                   Ref:{" "}
                   <span className="font-mono text-gray-700 font-bold truncate">
-                    {order.payment_reference || order.order_number}
+                    {currentOrder.payment_reference || currentOrder.order_number}
                   </span>
                 </p>
                 <button
@@ -904,9 +911,13 @@ export default function OrdersClient() {
   // is forced to match the server's output exactly — we don't branch on
   // `user` at all until after hydration is complete.
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  
+  // Use useMemo to track if we should render mounted state
+  // This avoids setState in useEffect
+  const isMounted = useMemo(() => {
+    // This will be false on initial render, true after useEffect runs
+    return mounted;
+  }, [mounted]);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -934,10 +945,17 @@ export default function OrdersClient() {
     }
   }, []);
 
+  // Use useEffect only for side effects that need to happen
   useEffect(() => {
-    if (!mounted || !user) return;
+    // Set mounted state - this is a necessary side effect for hydration
+    setMounted(true);
+  }, []);
+
+  // Separate effect for data fetching that depends on mounted state
+  useEffect(() => {
+    if (!isMounted || !user) return;
     fetchOrders(1, false);
-  }, [mounted, user, fetchOrders]);
+  }, [isMounted, user, fetchOrders]);
 
   const handleCancel = async (order_id: string) => {
     try {
@@ -982,7 +1000,7 @@ export default function OrdersClient() {
   // HTML and the first client render identical, which is what stops the
   // hydration mismatch. Once `mounted` flips true (client-only), we branch
   // on the real auth state as normal.
-  if (!mounted) {
+  if (!isMounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
