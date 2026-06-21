@@ -100,6 +100,44 @@ function extractPaystackAccessCode(paymentUrl: string): string {
   return match?.[1] ?? "";
 }
 
+// ── Determine whether a /payments/verify response actually represents a
+//    *confirmed* successful payment. We never trust Paystack's inline-modal
+//    "callback" firing on its own — that only means the iframe closed in a
+//    way the SDK considers success. The backend's verify response is the
+//    only source of truth for whether the payment was real and recorded.
+//
+//    This deliberately checks several possible response shapes because the
+//    backend's exact schema for this endpoint isn't pinned down yet (see the
+//    404 issue currently being fixed server-side) — once that's resolved,
+//    this can be tightened to the single real shape it returns.
+function isPaymentVerifiedSuccessful(verifyRes: any): boolean {
+  if (!verifyRes) return false;
+  const payload = unwrapEnvelope(verifyRes);
+
+  // Explicit top-level status field, e.g. { status: "success" }
+  if (typeof verifyRes?.status === "string") {
+    if (verifyRes.status.toLowerCase() === "failure") return false;
+  }
+
+  // Common shapes for "this payment is confirmed paid":
+  //   { data: { payment_status: "paid" } }
+  //   { data: { status: "success" } }
+  //   { data: { paid: true } }
+  //   { data: { verified: true } }
+  const paymentStatus = (payload?.payment_status ?? payload?.status ?? "")
+    .toString()
+    .toLowerCase();
+
+  if (paymentStatus === "paid" || paymentStatus === "success" || paymentStatus === "successful") {
+    return true;
+  }
+  if (payload?.paid === true || payload?.verified === true) {
+    return true;
+  }
+
+  return false;
+}
+
 // ─────────────────────────────────────────────────────────────
 // SUCCESS MODAL
 // ─────────────────────────────────────────────────────────────
@@ -588,6 +626,8 @@ function StepDelivery({
     if (!info.fullName?.trim()) e.fullName = "Full name is required";
     if (!info.phone?.trim()) e.phone = "Phone number is required";
     if (!info.email?.trim()) e.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email.trim()))
+      e.email = "Please enter a valid email address";
     if (!selectedDeliveryId) e.delivery = "Please select a delivery method";
 
     if (isPickup) {
@@ -1113,6 +1153,13 @@ export default function Checkout() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [paystackLoaded, setPaystackLoaded] = useState(false);
   const [validatingCart, setValidatingCart] = useState(false);
+  // True while we're waiting on the backend to confirm a payment that the
+  // Paystack iframe already reported as "done" on its end. Distinct from
+  // `paying`, which covers the whole pay flow including order creation —
+  // this one specifically covers the verification window so the UI can
+  // show "Confirming your payment…" instead of silently doing nothing
+  // after the Paystack modal closes.
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
 
   const paymentDoneRef = useRef(false);
   const prevDeliveryIdRef = useRef<string | null>(null);
@@ -1160,7 +1207,7 @@ export default function Checkout() {
   const currentlyPickup =
     !!selectedDelivery && isPickupOption(selectedDelivery);
 
-  // Load Paystack script
+  // ── Load Paystack script ────────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -1187,7 +1234,7 @@ export default function Checkout() {
     };
   }, []);
 
-  // Auth guard
+  // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (authCheckDoneRef.current) return;
 
@@ -1206,7 +1253,7 @@ export default function Checkout() {
     }
   }, [authLoading]);
 
-  // Check cart and redirect if empty
+  // ── Check cart and redirect if empty ───────────────────────────────────────
   useEffect(() => {
     if (checkingAuth || paymentDone || cartRedirectDoneRef.current) return;
     if (!user) return;
@@ -1223,7 +1270,7 @@ export default function Checkout() {
     }
   }, [items.length, cartLoading, checkingAuth, paymentDone, user, router]);
 
-  // Redirect unauthenticated users to login
+  // ── Redirect unauthenticated users ─────────────────────────────────────────
   useEffect(() => {
     if (checkingAuth || paymentDone) return;
     if (!user) {
@@ -1233,7 +1280,7 @@ export default function Checkout() {
     }
   }, [user, router, checkingAuth, paymentDone]);
 
-  // Fetch delivery options
+  // ── Fetch delivery options ──────────────────────────────────────────────────
   useEffect(() => {
     if (!user || items.length === 0) return;
     const fetch = async () => {
@@ -1270,7 +1317,7 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, subtotal, user]);
 
-  // Fetch pickup stations
+  // ── Fetch pickup stations ───────────────────────────────────────────────────
   useEffect(() => {
     if (!selectedDelivery || !isPickupOption(selectedDelivery)) {
       return;
@@ -1328,12 +1375,11 @@ export default function Checkout() {
     setSelectedStation(station.id ? station : null);
   };
 
+  // ── handlePay ───────────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!items || items.length === 0) {
       setCheckoutError("Your cart is empty. Please add items before checkout.");
-      setTimeout(() => {
-        router.push("/shop");
-      }, 2000);
+      setTimeout(() => router.push("/shop"), 2000);
       return;
     }
 
@@ -1342,9 +1388,40 @@ export default function Checkout() {
       return;
     }
 
+    // ── Resolve the Paystack public key early so we surface a clear error ──
+    // NEXT_PUBLIC_ vars are inlined at build time. If the key is missing in
+    // the deployment environment the build output will literally contain the
+    // string "undefined", so we check for that explicitly.
+    const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey || paystackKey === "undefined" || paystackKey.trim() === "") {
+      setCheckoutError(
+        "Payment is not configured. Please contact support. (Missing NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY)",
+      );
+      console.error(
+        "[Checkout] NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is not set. " +
+        "Add it to your deployment environment variables and redeploy.",
+      );
+      return;
+    }
+
     if (!paystackLoaded) {
       setCheckoutError(
-        "Payment system is loading. Please try again in a moment.",
+        "Payment system is still loading. Please wait a moment and try again.",
+      );
+      return;
+    }
+
+    // ── Validate email before doing anything else ───────────────────────────
+    const resolvedEmail = info.email?.trim().toLowerCase();
+    if (!resolvedEmail) {
+      setCheckoutError(
+        "An email address is required to process payment. Please go back and fill in your email.",
+      );
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resolvedEmail)) {
+      setCheckoutError(
+        "The email address you entered is invalid. Please go back and correct it.",
       );
       return;
     }
@@ -1404,15 +1481,9 @@ export default function Checkout() {
           selectedStation.state || user?.state || info.state || "";
         deliveryNotes = `Campus Pickup — ${selectedStation.name}${selectedStation.landmark ? ` (${selectedStation.landmark})` : ""}`;
       } else {
-        if (!info.address?.trim()) {
-          throw new Error("Delivery address is required");
-        }
-        if (!info.city?.trim()) {
-          throw new Error("City is required");
-        }
-        if (!info.state?.trim()) {
-          throw new Error("State is required");
-        }
+        if (!info.address?.trim()) throw new Error("Delivery address is required");
+        if (!info.city?.trim()) throw new Error("City is required");
+        if (!info.state?.trim()) throw new Error("State is required");
         deliveryStreetAddress = info.address;
         deliveryCity = info.city;
         deliveryState = info.state;
@@ -1427,7 +1498,9 @@ export default function Checkout() {
         delivery_country: info.country || "Nigeria",
         delivery_option_id: selectedDelivery.id,
         delivery_notes: deliveryNotes,
-        email: info.email,
+        // Always send email — the backend passes it to Paystack when creating
+        // the payment link; without it Paystack rejects the transaction.
+        email: resolvedEmail,
         full_name: info.fullName,
         phone: info.phone,
       });
@@ -1435,47 +1508,56 @@ export default function Checkout() {
       const order = unwrapEnvelope(checkoutRes);
       const { order_id, total_amount, payment_url } = order;
 
-      if (!order_id) {
-        throw new Error("Order was not created. Please try again.");
-      }
-      if (!payment_url) {
-        throw new Error("No payment URL returned. Please try again.");
-      }
+      if (!order_id) throw new Error("Order was not created. Please try again.");
+      if (!payment_url) throw new Error("No payment URL returned. Please try again.");
 
       const accessCode = extractPaystackAccessCode(payment_url);
 
       if (!accessCode) {
-        // Could not parse access code — fall back to full-page redirect
+        // Could not parse access code from the URL — fall back to redirect.
         window.location.href = payment_url;
         return;
       }
 
-      const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-
-      if (!paystackKey) {
-        throw new Error("Paystack public key is not configured.");
-      }
-
       const PaystackPop = (window as any).PaystackPop;
-
       if (!PaystackPop || typeof PaystackPop.setup !== "function") {
-        throw new Error(
-          "Paystack is not loaded. Please refresh the page and try again.",
-        );
+        // SDK not ready — fall back to redirect.
+        window.location.href = payment_url;
+        return;
       }
 
-      // ── FIX: wrap async logic in a plain synchronous function ─────────────
-      // Paystack's SDK validator checks typeof callback === "function" and
-      // rejects AsyncFunction. Wrapping in a plain function that immediately
-      // invokes an async IIFE satisfies the validator while preserving all
-      // async behaviour.
+      // ── Open Paystack inline modal ────────────────────────────────────────
+      // Paystack's setup() is synchronous and validates its params eagerly.
+      // We must pass `email` and `amount` alongside `access_code`; without
+      // them the SDK throws "Please enter a valid email address" even though
+      // the access_code already embeds these values server-side.
+      // `amount` is in kobo (1 NGN = 100 kobo).
       const onPaymentSuccess = (response: { reference: string }) => {
+        // Plain wrapper so typeof callback === "function" (not AsyncFunction),
+        // satisfying Paystack's internal validator.
         (async () => {
+          // IMPORTANT: Paystack's inline SDK firing this callback only means
+          // the *iframe* considers the transaction complete on its end. It is
+          // NOT proof that our backend has recorded the payment. We always
+          // gate the success UI behind an explicit, checked response from
+          // our own /payments/verify endpoint — never on the callback firing
+          // alone. Previously this call's result was discarded, which let
+          // the success modal show even when verification failed (e.g. a
+          // 404 because the backend didn't recognise the reference).
+          setVerifyingPayment(true);
           try {
-            // verifyPayment is idempotent — safe even if the webhook already
-            // confirmed the payment server-side before this fires.
-            await ApiService.verifyPayment(response.reference);
+            const verifyRes = await ApiService.verifyPayment(response.reference);
+
+            if (!isPaymentVerifiedSuccessful(verifyRes)) {
+              throw new Error(
+                "We received your payment but could not confirm it yet. " +
+                "Please check your orders page in a moment — if it still " +
+                "shows as pending, contact support with your order ID.",
+              );
+            }
+
             await refetchCart();
+            setVerifyingPayment(false);
             setPaying(false);
             setSuccessOrderId(order_id);
             setSuccessTotal(total_amount ?? total);
@@ -1484,12 +1566,22 @@ export default function Checkout() {
             paymentDoneRef.current = true;
           } catch (verifyErr: any) {
             console.error("Payment verification error:", verifyErr);
+            setVerifyingPayment(false);
             setPaying(false);
             await refetchCart();
-            // Verification failing client-side doesn't mean payment failed —
-            // the Paystack webhook is the source of truth. Send the user to
-            // their order so they can see the real status.
-            router.push(`/orders?ref=${order_id}`);
+            // Verification failure client-side ≠ payment failure.
+            // We don't know for certain whether the backend will eventually
+            // reconcile this (e.g. via a delayed webhook), so we never claim
+            // success here — we send the user to their orders page where the
+            // real, authoritative status is shown instead of an artificial
+            // confirmation message.
+            setCheckoutError(
+              verifyErr?.message ??
+                "We couldn't confirm your payment yet. Redirecting you to your orders — please check the status there.",
+            );
+            setTimeout(() => {
+              router.push(`/orders?ref=${order_id}`);
+            }, 1500);
           }
         })();
       };
@@ -1499,31 +1591,19 @@ export default function Checkout() {
         router.push(`/orders?ref=${order_id}`);
       };
 
-      const setupParams = {
+      const handler = PaystackPop.setup({
         key: paystackKey,
         access_code: accessCode,
+        // email and amount are required by the Paystack JS SDK even when
+        // access_code is provided. Without email the modal shows the
+        // "Please enter a valid email address" error before the iframe loads.
+        email: resolvedEmail,
+        amount: Math.round((total_amount ?? total) * 100), // convert NGN → kobo
+        currency: "NGN",
         callback: onPaymentSuccess,
         onClose: onPaymentClose,
-      };
+      });
 
-      // Defensive validation before calling setup()
-      if (typeof setupParams.key !== "string" || !setupParams.key) {
-        throw new Error("Paystack setup failed: invalid public key.");
-      }
-      if (
-        typeof setupParams.access_code !== "string" ||
-        !setupParams.access_code
-      ) {
-        throw new Error("Paystack setup failed: invalid access code.");
-      }
-      if (typeof setupParams.callback !== "function") {
-        throw new Error("Paystack setup failed: callback is not a function.");
-      }
-      if (typeof setupParams.onClose !== "function") {
-        throw new Error("Paystack setup failed: onClose is not a function.");
-      }
-
-      const handler = PaystackPop.setup(setupParams);
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
@@ -1540,14 +1620,10 @@ export default function Checkout() {
         err?.message?.includes("Authentication")
       ) {
         errorMsg = "Please log in again to complete your purchase.";
-        setTimeout(() => {
-          router.push("/login?redirect=/cart/checkout");
-        }, 2000);
+        setTimeout(() => router.push("/login?redirect=/cart/checkout"), 2000);
       } else if (errorMsg.toLowerCase().includes("empty")) {
         errorMsg = "Your cart is empty. Redirecting you to shop...";
-        setTimeout(() => {
-          router.push("/shop");
-        }, 2000);
+        setTimeout(() => router.push("/shop"), 2000);
       }
 
       setCheckoutError(errorMsg);
@@ -1590,6 +1666,30 @@ export default function Checkout() {
           total={successTotal}
           onContinue={handleContinueShopping}
         />
+      )}
+
+      {verifyingPayment && !showSuccess && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+            background: "rgba(0,0,0,0.75)",
+            backdropFilter: "blur(6px)",
+            zIndex: 999998,
+          }}
+        >
+          <div className="bg-white rounded-3xl p-8 text-center max-w-xs w-full">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-black text-gray-900 mb-1">Confirming your payment…</p>
+            <p className="text-xs text-gray-400">
+              Please don't close this window.
+            </p>
+          </div>
+        </div>
       )}
 
       <div className="min-h-screen" style={{ background: "#F7F8FC" }}>

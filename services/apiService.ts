@@ -688,6 +688,14 @@ class ApiService {
     });
   }
 
+  // ─── Add this method to ApiService inside the USER ORDERS section ──────────
+
+async trackOrder(order_id: string): Promise<any> {
+  return this.makeRequest(`/user/orders/${order_id}/tracking`, {
+    method: "GET",
+  });
+}
+
   // ─── SELLER ────────────────────────────────────────────────────────────────
 
   async applyAsSeller(data: any) {
