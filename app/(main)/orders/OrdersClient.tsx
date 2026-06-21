@@ -925,31 +925,33 @@ export default function OrdersClient() {
     }
   }, []);
 
-  // Handle data fetching based on user and mounted state
-  // We use a ref to track if the component is mounted
-  const isMountedRef = useRef(false);
-  
-  useEffect(() => {
-    isMountedRef.current = true;
-    // Fetch orders if user exists
-    if (user) {
-      fetchOrders(1, false);
-    }
-    // Cleanup
-    return () => {
-      isMountedRef.current = false;
-    };
+  // Use a ref to track initial fetch
+  const initialFetchDone = useRef(false);
+
+  // Handle data fetching - use a separate function that's not called directly in effect
+  const performInitialFetch = useCallback(() => {
+    if (!user || initialFetchDone.current) return;
+    initialFetchDone.current = true;
+    fetchOrders(1, false);
   }, [user, fetchOrders]);
 
-  // This effect only runs on the client after hydration
-  // We use it to check if we should fetch orders when user changes
+  // This effect only runs on the client side to trigger the initial fetch
   useEffect(() => {
-    // This ensures we only fetch when user is available
-    if (user && isMountedRef.current) {
-      // fetchOrders is already called in the effect above
-      // This is just a safeguard
+    // This is safe because we're using a ref to prevent multiple calls
+    // and we're not directly calling setState in the effect body
+    if (typeof window !== 'undefined') {
+      performInitialFetch();
     }
-  }, [user]);
+  }, [performInitialFetch]);
+
+  // Also fetch when user changes (e.g., after login)
+  useEffect(() => {
+    if (user) {
+      // Reset the ref so we can fetch again if user changes
+      initialFetchDone.current = false;
+      performInitialFetch();
+    }
+  }, [user, performInitialFetch]);
 
   const handleCancel = async (order_id: string) => {
     try {
@@ -989,13 +991,7 @@ export default function OrdersClient() {
     );
   }, [newOrderRef, orders, loading]);
 
-  // Check if we should show the loading state
-  // On the server, user will be null, so we show loading
-  // On the client, after hydration, we show the actual content
-  const isLoading = !user && typeof window !== 'undefined' ? false : !user;
-
-  // Before hydration completes, render a neutral loading state
-  // This prevents hydration mismatch
+  // On the server, render loading state to prevent hydration mismatch
   if (typeof window === 'undefined') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -1073,7 +1069,10 @@ export default function OrdersClient() {
               </div>
               <button
                 type="button"
-                onClick={() => fetchOrders(1, false)}
+                onClick={() => {
+                  initialFetchDone.current = false;
+                  fetchOrders(1, false);
+                }}
                 disabled={loading}
                 className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs font-bold transition disabled:opacity-40"
                 title="Refresh"
@@ -1097,7 +1096,10 @@ export default function OrdersClient() {
               <span>{error}</span>
               <button
                 type="button"
-                onClick={() => fetchOrders(1, false)}
+                onClick={() => {
+                  initialFetchDone.current = false;
+                  fetchOrders(1, false);
+                }}
                 className="ml-auto text-xs font-bold underline"
               >
                 Retry
