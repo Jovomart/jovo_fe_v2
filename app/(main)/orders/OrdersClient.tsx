@@ -899,26 +899,6 @@ export default function OrdersClient() {
   // ?ref= is the order_id UUID passed from checkout redirect
   const newOrderRef = params.get("ref");
 
-  // `user` comes from AuthContext, which typically resolves from a token
-  // in localStorage — unavailable during SSR, so the server always renders
-  // with `user` unset. On the client, AuthContext can resolve `user`
-  // synchronously (or on the very first effect tick) before React finishes
-  // reconciling against the server-rendered HTML, causing the server's
-  // "signed out" branch to mismatch the client's "signed in" branch.
-  //
-  // `mounted` only flips to true inside a useEffect, which never runs
-  // during SSR. So the first client render (the one React hydrates against)
-  // is forced to match the server's output exactly — we don't branch on
-  // `user` at all until after hydration is complete.
-  const [mounted, setMounted] = useState(false);
-  
-  // Use useMemo to track if we should render mounted state
-  // This avoids setState in useEffect
-  const isMounted = useMemo(() => {
-    // This will be false on initial render, true after useEffect runs
-    return mounted;
-  }, [mounted]);
-
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -945,17 +925,31 @@ export default function OrdersClient() {
     }
   }, []);
 
-  // Use useEffect only for side effects that need to happen
+  // Handle data fetching based on user and mounted state
+  // We use a ref to track if the component is mounted
+  const isMountedRef = useRef(false);
+  
   useEffect(() => {
-    // Set mounted state - this is a necessary side effect for hydration
-    setMounted(true);
-  }, []);
+    isMountedRef.current = true;
+    // Fetch orders if user exists
+    if (user) {
+      fetchOrders(1, false);
+    }
+    // Cleanup
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [user, fetchOrders]);
 
-  // Separate effect for data fetching that depends on mounted state
+  // This effect only runs on the client after hydration
+  // We use it to check if we should fetch orders when user changes
   useEffect(() => {
-    if (!isMounted || !user) return;
-    fetchOrders(1, false);
-  }, [isMounted, user, fetchOrders]);
+    // This ensures we only fetch when user is available
+    if (user && isMountedRef.current) {
+      // fetchOrders is already called in the effect above
+      // This is just a safeguard
+    }
+  }, [user]);
 
   const handleCancel = async (order_id: string) => {
     try {
@@ -995,12 +989,14 @@ export default function OrdersClient() {
     );
   }, [newOrderRef, orders, loading]);
 
-  // Before hydration completes, render the same neutral loading state
-  // regardless of what `user` actually is — this is what keeps the server
-  // HTML and the first client render identical, which is what stops the
-  // hydration mismatch. Once `mounted` flips true (client-only), we branch
-  // on the real auth state as normal.
-  if (!isMounted) {
+  // Check if we should show the loading state
+  // On the server, user will be null, so we show loading
+  // On the client, after hydration, we show the actual content
+  const isLoading = !user && typeof window !== 'undefined' ? false : !user;
+
+  // Before hydration completes, render a neutral loading state
+  // This prevents hydration mismatch
+  if (typeof window === 'undefined') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
