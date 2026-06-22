@@ -107,14 +107,6 @@ function getOrCreateSessionId(): string {
 }
 
 // ─── Parse the GET /cart response ──────────────────────────────────────────────
-// The backend is the single source of truth for price/subtotal/stock. Do not
-// re-derive or override these client-side — GET /cart already returns live,
-// authoritative numbers, and POST /cart/checkout re-validates and atomically
-// deducts stock server-side regardless of what the client displayed. Refetching
-// prices per-product here was a workaround for a backend issue that has since
-// been fixed; reintroducing it would just create a second, possibly
-// inconsistent, source of truth (e.g. it can disagree with flash-sale pricing
-// locked in at add-to-cart time, which /products/{id} doesn't account for).
 function parseCartResponse(res: any): CartData {
   const payload = res?.data ?? res;
 
@@ -158,12 +150,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const hasFetchedRef  = useRef(false);
   const prevUserRef    = useRef<typeof user>(undefined);
-  // Mirrors cartData but is updated synchronously, so syncCartPrices can diff
-  // against the *previous* snapshot without racing React's async state update.
   const cartDataRef    = useRef<CartData | null>(null);
+  const fetchAttemptedRef = useRef(false);
 
   // ── fetchCart ───────────────────────────────────────────────────────────────
   const fetchCart = useCallback(async () => {
+    // Don't fetch if already fetching or if auth is loading
+    if (authLoading) return { items: [], total_items: 0, total_price: 0 };
+    
+    // If user is logged in but we're still loading auth state, wait
+    if (authLoading) return { items: [], total_items: 0, total_price: 0 };
+
     setLoading(true);
     setError(null);
     try {
@@ -174,8 +171,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setCartData(parsed);
       return parsed;
     } catch (err: any) {
+      // If the error is "Authentication required" and we have a user, 
+      // it means the token is invalid - clear it
+      if (err?.message?.includes("Authentication required") && user) {
+        // Don't clear tokens here - let AuthContext handle it
+        console.warn("[CartContext] Authentication failed, but user exists. Token may be expired.");
+      }
+      
+      // For guest users or when auth fails, just return empty cart
       console.error("[CartContext] fetchCart failed:", err);
-      setError(err?.message ?? "Failed to load cart");
+      setError(null); // Don't show error for guests
       const empty = { items: [], total_items: 0, total_price: 0 };
       cartDataRef.current = empty;
       setCartData(empty);
@@ -183,12 +188,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // Initial fetch once auth resolves
   useEffect(() => {
     if (authLoading) return;
-    if (!hasFetchedRef.current) {
+    if (!hasFetchedRef.current && !fetchAttemptedRef.current) {
+      fetchAttemptedRef.current = true;
       hasFetchedRef.current = true;
       fetchCart();
     }
@@ -199,6 +205,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (authLoading) return;
     if (prevUserRef.current !== undefined && prevUserRef.current !== user) {
       hasFetchedRef.current = false;
+      fetchAttemptedRef.current = false;
       fetchCart();
     }
     prevUserRef.current = user;
@@ -212,8 +219,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [recentlyAdded]);
 
   // ── syncCartPrices — diffs the last known cart against a fresh fetch ─────────
-  // Useful right before checkout to warn the user "this item changed price
-  // since you last looked", without ever inventing prices client-side.
   const syncCartPrices = useCallback(async () => {
     const oldItems = cartDataRef.current?.items ?? [];
     const oldPriceMap = new Map(oldItems.map((i) => [i.product_id, i.price]));
@@ -269,7 +274,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const sessionId = user ? undefined : getOrCreateSessionId();
-      // Per spec: PATCH /cart/update with quantity 0 removes the item.
       await ApiService.updateCartItem(product_id, qty, sessionId);
       await fetchCart();
     } catch (err: any) {
@@ -299,8 +303,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  // session_id is intentionally omitted here for authenticated users (the
-  // backend resolves the cart from the Bearer token); guests still need it.
   const validateCart = useCallback(async () => {
     const sessionId = user ? undefined : getOrCreateSessionId();
     return ApiService.validateCart(sessionId);

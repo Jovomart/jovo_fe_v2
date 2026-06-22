@@ -13,7 +13,6 @@ import {
   FiUser,
   FiPhone,
   FiMail,
-  FiShield,
   FiAlertCircle,
   FiLock,
   FiPackage,
@@ -100,35 +99,25 @@ function extractPaystackAccessCode(paymentUrl: string): string {
   return match?.[1] ?? "";
 }
 
-// ── Determine whether a /payments/verify response actually represents a
-//    *confirmed* successful payment. We never trust Paystack's inline-modal
-//    "callback" firing on its own — that only means the iframe closed in a
-//    way the SDK considers success. The backend's verify response is the
-//    only source of truth for whether the payment was real and recorded.
-//
-//    This deliberately checks several possible response shapes because the
-//    backend's exact schema for this endpoint isn't pinned down yet (see the
-//    404 issue currently being fixed server-side) — once that's resolved,
-//    this can be tightened to the single real shape it returns.
+// ── Determine whether a /payments/verify response represents a confirmed
+//    successful payment. Checks multiple response shapes defensively.
 function isPaymentVerifiedSuccessful(verifyRes: any): boolean {
   if (!verifyRes) return false;
   const payload = unwrapEnvelope(verifyRes);
 
-  // Explicit top-level status field, e.g. { status: "success" }
   if (typeof verifyRes?.status === "string") {
     if (verifyRes.status.toLowerCase() === "failure") return false;
   }
 
-  // Common shapes for "this payment is confirmed paid":
-  //   { data: { payment_status: "paid" } }
-  //   { data: { status: "success" } }
-  //   { data: { paid: true } }
-  //   { data: { verified: true } }
   const paymentStatus = (payload?.payment_status ?? payload?.status ?? "")
     .toString()
     .toLowerCase();
 
-  if (paymentStatus === "paid" || paymentStatus === "success" || paymentStatus === "successful") {
+  if (
+    paymentStatus === "paid" ||
+    paymentStatus === "success" ||
+    paymentStatus === "successful"
+  ) {
     return true;
   }
   if (payload?.paid === true || payload?.verified === true) {
@@ -1137,6 +1126,7 @@ export default function Checkout() {
     items,
     subtotal,
     refetchCart,
+    clearCart,
     itemCount,
     loading: cartLoading,
   } = useCart();
@@ -1153,12 +1143,6 @@ export default function Checkout() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [paystackLoaded, setPaystackLoaded] = useState(false);
   const [validatingCart, setValidatingCart] = useState(false);
-  // True while we're waiting on the backend to confirm a payment that the
-  // Paystack iframe already reported as "done" on its end. Distinct from
-  // `paying`, which covers the whole pay flow including order creation —
-  // this one specifically covers the verification window so the UI can
-  // show "Confirming your payment…" instead of silently doing nothing
-  // after the Paystack modal closes.
   const [verifyingPayment, setVerifyingPayment] = useState(false);
 
   const paymentDoneRef = useRef(false);
@@ -1183,20 +1167,14 @@ export default function Checkout() {
   });
 
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
-    null,
-  );
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
   const [pickupStationsLoading, setPickupStationsLoading] = useState(false);
-  const [pickupStationsError, setPickupStationsError] = useState<string | null>(
-    null,
-  );
-  const [selectedStation, setSelectedStation] = useState<PickupStation | null>(
-    null,
-  );
+  const [pickupStationsError, setPickupStationsError] = useState<string | null>(null);
+  const [selectedStation, setSelectedStation] = useState<PickupStation | null>(null);
 
   const selectedDelivery =
     deliveryOptions.find((d) => d.id === selectedDeliveryId) ?? null;
@@ -1204,40 +1182,29 @@ export default function Checkout() {
     ? 0
     : (selectedDelivery?.delivery_cost ?? 0);
   const total = subtotal + deliveryCost;
-  const currentlyPickup =
-    !!selectedDelivery && isPickupOption(selectedDelivery);
+  const currentlyPickup = !!selectedDelivery && isPickupOption(selectedDelivery);
 
   // ── Load Paystack script ────────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     if ((window as any).PaystackPop) {
       setTimeout(() => setPaystackLoaded(true), 0);
       return;
     }
-
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
-    script.onload = () => {
-      setTimeout(() => setPaystackLoaded(true), 0);
-    };
-    script.onerror = () => {
-      console.error("Failed to load Paystack script");
-    };
+    script.onload = () => setTimeout(() => setPaystackLoaded(true), 0);
+    script.onerror = () => console.error("Failed to load Paystack script");
     document.body.appendChild(script);
-
     return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+      if (script.parentNode) script.parentNode.removeChild(script);
     };
   }, []);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (authCheckDoneRef.current) return;
-
     if (authLoading === undefined) {
       const t = setTimeout(() => {
         if (!authCheckDoneRef.current) {
@@ -1258,15 +1225,10 @@ export default function Checkout() {
     if (checkingAuth || paymentDone || cartRedirectDoneRef.current) return;
     if (!user) return;
     if (cartLoading) return;
-
     if (items.length === 0) {
       cartRedirectDoneRef.current = true;
-      setTimeout(() => {
-        setCheckoutError("Your cart is empty. Redirecting you to shop...");
-      }, 0);
-      setTimeout(() => {
-        router.push("/shop");
-      }, 2000);
+      setTimeout(() => setCheckoutError("Your cart is empty. Redirecting you to shop..."), 0);
+      setTimeout(() => router.push("/shop"), 2000);
     }
   }, [items.length, cartLoading, checkingAuth, paymentDone, user, router]);
 
@@ -1276,7 +1238,6 @@ export default function Checkout() {
     if (!user) {
       sessionStorage.setItem("redirectAfterLogin", "/cart/checkout");
       router.replace("/login");
-      return;
     }
   }, [user, router, checkingAuth, paymentDone]);
 
@@ -1291,10 +1252,7 @@ export default function Checkout() {
           (acc, item) => acc + ((item as any).weight || 1) * item.quantity,
           0,
         );
-        const res = await ApiService.getAvailableDeliveryOptions(
-          subtotal,
-          totalWeight,
-        );
+        const res = await ApiService.getAvailableDeliveryOptions(subtotal, totalWeight);
         const opts: DeliveryOption[] =
           res?.data?.delivery_options ??
           res?.delivery_options ??
@@ -1319,27 +1277,19 @@ export default function Checkout() {
 
   // ── Fetch pickup stations ───────────────────────────────────────────────────
   useEffect(() => {
-    if (!selectedDelivery || !isPickupOption(selectedDelivery)) {
-      return;
-    }
-
+    if (!selectedDelivery || !isPickupOption(selectedDelivery)) return;
     const schoolId = user?.school_id || user?.schoolId;
     if (!schoolId) {
-      setTimeout(() => {
-        setPickupStationsError(
-          "No school linked to your account. Please update your profile to select a pickup station.",
-        );
-      }, 0);
+      setTimeout(() => setPickupStationsError(
+        "No school linked to your account. Please update your profile to select a pickup station.",
+      ), 0);
       return;
     }
-
     const fetch = async () => {
       setPickupStationsLoading(true);
       setPickupStationsError(null);
       try {
-        const res = await ApiService.getSchoolPickupStations(schoolId, {
-          per_page: 100,
-        });
+        const res = await ApiService.getSchoolPickupStations(schoolId, { per_page: 100 });
         const stations: PickupStation[] =
           res?.data?.items ??
           res?.data?.stations ??
@@ -1348,16 +1298,11 @@ export default function Checkout() {
           (Array.isArray(res) ? res : []);
         setPickupStations(stations.filter((s) => s.is_active !== false));
       } catch (err: any) {
-        setTimeout(() => {
-          setPickupStationsError(
-            err?.message ?? "Failed to load pickup stations",
-          );
-        }, 0);
+        setTimeout(() => setPickupStationsError(err?.message ?? "Failed to load pickup stations"), 0);
       } finally {
         setPickupStationsLoading(false);
       }
     };
-
     fetch();
   }, [selectedDelivery, user]);
 
@@ -1388,10 +1333,7 @@ export default function Checkout() {
       return;
     }
 
-    // ── Resolve the Paystack public key early so we surface a clear error ──
-    // NEXT_PUBLIC_ vars are inlined at build time. If the key is missing in
-    // the deployment environment the build output will literally contain the
-    // string "undefined", so we check for that explicitly.
+    // ── Resolve the Paystack public key early ──────────────────────────────
     const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
     if (!paystackKey || paystackKey === "undefined" || paystackKey.trim() === "") {
       setCheckoutError(
@@ -1405,24 +1347,18 @@ export default function Checkout() {
     }
 
     if (!paystackLoaded) {
-      setCheckoutError(
-        "Payment system is still loading. Please wait a moment and try again.",
-      );
+      setCheckoutError("Payment system is still loading. Please wait a moment and try again.");
       return;
     }
 
-    // ── Validate email before doing anything else ───────────────────────────
+    // ── Validate email ─────────────────────────────────────────────────────
     const resolvedEmail = info.email?.trim().toLowerCase();
     if (!resolvedEmail) {
-      setCheckoutError(
-        "An email address is required to process payment. Please go back and fill in your email.",
-      );
+      setCheckoutError("An email address is required to process payment. Please go back and fill in your email.");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resolvedEmail)) {
-      setCheckoutError(
-        "The email address you entered is invalid. Please go back and correct it.",
-      );
+      setCheckoutError("The email address you entered is invalid. Please go back and correct it.");
       return;
     }
 
@@ -1438,9 +1374,7 @@ export default function Checkout() {
       } catch (validateErr: any) {
         console.error("Cart validation error:", validateErr);
         await refetchCart();
-        throw new Error(
-          "Unable to validate cart. Please refresh and try again.",
-        );
+        throw new Error("Unable to validate cart. Please refresh and try again.");
       }
 
       const validationData = unwrapEnvelope(validationResult);
@@ -1448,18 +1382,16 @@ export default function Checkout() {
 
       if (backendItems.length === 0) {
         await refetchCart();
-        throw new Error(
-          "Cart session expired. Please refresh the page and try again.",
-        );
+        throw new Error("Cart session expired. Please refresh the page and try again.");
       }
 
       if (validationData?.valid === false) {
         const errors = validationData?.errors ?? [];
-        const errorMsg =
+        throw new Error(
           errors.length > 0
             ? errors.join(", ")
-            : "Your cart has issues. Please review your items.";
-        throw new Error(errorMsg);
+            : "Your cart has issues. Please review your items.",
+        );
       }
 
       setValidatingCart(false);
@@ -1475,10 +1407,8 @@ export default function Checkout() {
           selectedStation.address ||
           selectedStation.landmark ||
           selectedStation.name;
-        deliveryCity =
-          selectedStation.city || user?.city || info.city || "Campus";
-        deliveryState =
-          selectedStation.state || user?.state || info.state || "";
+        deliveryCity = selectedStation.city || user?.city || info.city || "Campus";
+        deliveryState = selectedStation.state || user?.state || info.state || "";
         deliveryNotes = `Campus Pickup — ${selectedStation.name}${selectedStation.landmark ? ` (${selectedStation.landmark})` : ""}`;
       } else {
         if (!info.address?.trim()) throw new Error("Delivery address is required");
@@ -1498,8 +1428,6 @@ export default function Checkout() {
         delivery_country: info.country || "Nigeria",
         delivery_option_id: selectedDelivery.id,
         delivery_notes: deliveryNotes,
-        // Always send email — the backend passes it to Paystack when creating
-        // the payment link; without it Paystack rejects the transaction.
         email: resolvedEmail,
         full_name: info.fullName,
         phone: info.phone,
@@ -1514,39 +1442,38 @@ export default function Checkout() {
       const accessCode = extractPaystackAccessCode(payment_url);
 
       if (!accessCode) {
-        // Could not parse access code from the URL — fall back to redirect.
+        // Could not parse access code — fall back to full-page redirect
         window.location.href = payment_url;
         return;
       }
 
       const PaystackPop = (window as any).PaystackPop;
       if (!PaystackPop || typeof PaystackPop.setup !== "function") {
-        // SDK not ready — fall back to redirect.
+        // SDK not ready — fall back to full-page redirect
         window.location.href = payment_url;
         return;
       }
 
       // ── Open Paystack inline modal ────────────────────────────────────────
-      // Paystack's setup() is synchronous and validates its params eagerly.
-      // We must pass `email` and `amount` alongside `access_code`; without
-      // them the SDK throws "Please enter a valid email address" even though
-      // the access_code already embeds these values server-side.
-      // `amount` is in kobo (1 NGN = 100 kobo).
       const onPaymentSuccess = (response: { reference: string }) => {
-        // Plain wrapper so typeof callback === "function" (not AsyncFunction),
-        // satisfying Paystack's internal validator.
         (async () => {
-          // IMPORTANT: Paystack's inline SDK firing this callback only means
-          // the *iframe* considers the transaction complete on its end. It is
-          // NOT proof that our backend has recorded the payment. We always
-          // gate the success UI behind an explicit, checked response from
-          // our own /payments/verify endpoint — never on the callback firing
-          // alone. Previously this call's result was discarded, which let
-          // the success modal show even when verification failed (e.g. a
-          // 404 because the backend didn't recognise the reference).
+          // ── THE KEY FIX ──────────────────────────────────────────────────
+          // response.reference = Paystack's own transaction ref (e.g. "T352654873237177")
+          // This is what Paystack's API recognises when verifying a transaction.
+          // We also pass order_id as a query param so the backend can link the
+          // verified payment to the correct order record.
+          // DO NOT pass order_id as the path param — Paystack will reject it with 400.
+          // ─────────────────────────────────────────────────────────────────
+          const paystackRef = response.reference;
+
+          console.log("[Checkout] Payment success callback received");
+          console.log("[Checkout] Paystack ref:", paystackRef);
+          console.log("[Checkout] Order ID:", order_id);
+
           setVerifyingPayment(true);
           try {
-            const verifyRes = await ApiService.verifyPayment(response.reference);
+            const verifyRes = await ApiService.verifyPayment(paystackRef, order_id);
+            console.log("[Checkout] Verify response:", verifyRes);
 
             if (!isPaymentVerifiedSuccessful(verifyRes)) {
               throw new Error(
@@ -1556,7 +1483,16 @@ export default function Checkout() {
               );
             }
 
+            // ── Clear cart after successful payment ───────────────────────
+            // The backend clears the cart server-side on checkout.
+            // We force a clean state locally: clear then refetch.
+            try {
+              await clearCart();
+            } catch {
+              // clearCart may fail if the server-side cart is already empty — that's fine
+            }
             await refetchCart();
+
             setVerifyingPayment(false);
             setPaying(false);
             setSuccessOrderId(order_id);
@@ -1568,19 +1504,14 @@ export default function Checkout() {
             console.error("Payment verification error:", verifyErr);
             setVerifyingPayment(false);
             setPaying(false);
-            await refetchCart();
-            // Verification failure client-side ≠ payment failure.
-            // We don't know for certain whether the backend will eventually
-            // reconcile this (e.g. via a delayed webhook), so we never claim
-            // success here — we send the user to their orders page where the
-            // real, authoritative status is shown instead of an artificial
-            // confirmation message.
+            // Even on verify error, try to refresh cart so it reflects reality
+            try { await refetchCart(); } catch { /* ignore */ }
             setCheckoutError(
               verifyErr?.message ??
                 "We couldn't confirm your payment yet. Redirecting you to your orders — please check the status there.",
             );
             setTimeout(() => {
-              router.push(`/orders?ref=${order_id}`);
+              router.push(`/order?ref=${order_id}`);
             }, 1500);
           }
         })();
@@ -1588,17 +1519,15 @@ export default function Checkout() {
 
       const onPaymentClose = () => {
         setPaying(false);
-        router.push(`/orders?ref=${order_id}`);
+        // Redirect to orders page so user can check status
+        router.push(`/order?ref=${order_id}`);
       };
 
       const handler = PaystackPop.setup({
         key: paystackKey,
         access_code: accessCode,
-        // email and amount are required by the Paystack JS SDK even when
-        // access_code is provided. Without email the modal shows the
-        // "Please enter a valid email address" error before the iframe loads.
         email: resolvedEmail,
-        amount: Math.round((total_amount ?? total) * 100), // convert NGN → kobo
+        amount: Math.round((total_amount ?? total) * 100), // NGN → kobo
         currency: "NGN",
         callback: onPaymentSuccess,
         onClose: onPaymentClose,
@@ -1635,7 +1564,7 @@ export default function Checkout() {
     setShowSuccess(false);
     setPaymentDone(false);
     paymentDoneRef.current = false;
-    router.push(`/orders?ref=${successOrderId}`);
+    router.push(`/order?ref=${successOrderId}`);
   };
 
   if (checkingAuth || authLoading || (cartLoading && !paymentDone)) {
@@ -1654,10 +1583,10 @@ export default function Checkout() {
   return (
     <>
       <style>{`
-        @keyframes slideIn        { from{opacity:0;transform:translateX(20px)}           to{opacity:1;transform:translateX(0)} }
-        @keyframes fadeUp         { from{opacity:0;transform:translateY(12px)}           to{opacity:1;transform:translateY(0)} }
+        @keyframes slideIn        { from{opacity:0;transform:translateX(20px)}            to{opacity:1;transform:translateX(0)} }
+        @keyframes fadeUp         { from{opacity:0;transform:translateY(12px)}            to{opacity:1;transform:translateY(0)} }
         @keyframes successSlideUp { from{opacity:0;transform:translateY(30px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
-        @keyframes successScaleIn { from{opacity:0;transform:scale(0)}                  to{opacity:1;transform:scale(1)} }
+        @keyframes successScaleIn { from{opacity:0;transform:scale(0)}                   to{opacity:1;transform:scale(1)} }
       `}</style>
 
       {showSuccess && (
@@ -1685,9 +1614,7 @@ export default function Checkout() {
           <div className="bg-white rounded-3xl p-8 text-center max-w-xs w-full">
             <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
             <p className="font-black text-gray-900 mb-1">Confirming your payment…</p>
-            <p className="text-xs text-gray-400">
-              Please don't close this window.
-            </p>
+            <p className="text-xs text-gray-400">Please don&apos;t close this window.</p>
           </div>
         </div>
       )}
@@ -1696,8 +1623,7 @@ export default function Checkout() {
         <div
           className="relative overflow-hidden py-8 md:py-11"
           style={{
-            background:
-              "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
+            background: "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
           }}
         >
           <div

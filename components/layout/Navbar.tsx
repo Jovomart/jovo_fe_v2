@@ -27,6 +27,7 @@ import {
   FiBookOpen,
   FiMapPin,
   FiHome,
+  FiSearch,
 } from "react-icons/fi";
 import { MdStorefront, MdOutlineDeliveryDining } from "react-icons/md";
 import { FaConciergeBell, FaStore } from "react-icons/fa";
@@ -517,7 +518,6 @@ export default function Navbar() {
   const [catLoading, setCatLoading] = useState(true);
   const [searchProducts, setSearchProducts] = useState<any[]>([]);
   const [profileImageBroken, setProfileImageBroken] = useState(false);
-  // Mobile: track which category is expanded
   const [expandedMobileCat, setExpandedMobileCat] = useState<string | null>(
     null,
   );
@@ -529,6 +529,9 @@ export default function Navbar() {
 
   const { user, logout, isSeller, isServiceProvider, enterSellerMode } =
     useContext(AuthContext) as any;
+
+  // Force re-render when user changes to fix the name display issue
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   const displayName =
     user?.full_name || user?.username || user?.name || "Account";
@@ -561,6 +564,13 @@ export default function Navbar() {
       };
     }
   }, []);
+
+  // Force update when user changes to refresh the display
+  useEffect(() => {
+    if (user) {
+      setForceUpdate(prev => prev + 1);
+    }
+  }, [user]);
 
   // ── Fetch categories from backend (same as HeroSection) ───────────────────
   useEffect(() => {
@@ -633,8 +643,8 @@ export default function Navbar() {
   // ── Fetch subcategories on demand (hover on desktop, expand on mobile) ────
   const fetchSubcategories = useCallback(
     async (categoryId: string) => {
-      if (subcategoriesMap[categoryId] !== undefined) return; // already fetched
-      if (loadingSubMap[categoryId]) return; // already loading
+      if (subcategoriesMap[categoryId] !== undefined) return;
+      if (loadingSubMap[categoryId]) return;
       setLoadingSubMap((prev) => ({ ...prev, [categoryId]: true }));
       try {
         const response = await apiService.getCategoryMarketspace(categoryId, {
@@ -759,6 +769,39 @@ export default function Navbar() {
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
 
+  // Helper for FiSearch icon
+  const FiSearchIcon = ({ size }: { size: number }) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+
+  const FiSettingsIcon = ({ size }: { size: number }) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+
   return (
     <>
       <header
@@ -839,7 +882,7 @@ export default function Navbar() {
                 onClick={() => commitSearch(desktopQuery)}
                 className="bg-[#B42225] hover:bg-[#9e1e20] px-5 text-white font-medium text-sm flex items-center gap-2 transition-colors"
               >
-                <FiSearch size={16} />
+                <FiSearchIcon size={16} />
                 <span>Search</span>
               </button>
             </div>
@@ -887,7 +930,7 @@ export default function Navbar() {
                     <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white shadow-md z-10" />
                   )}
                 </div>
-                <span className="hidden md:inline text-sm font-medium max-w-[90px] truncate">
+                <span className="hidden md:inline text-sm font-medium max-w-[90px] truncate" key={forceUpdate}>
                   {!mounted ? "Account" : displayName}
                 </span>
               </button>
@@ -913,17 +956,19 @@ export default function Navbar() {
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#B42225]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                          {profilePhoto ? (
+                          {profilePhoto && !profileImageBroken ? (
                             <Image
                               src={profilePhoto}
                               alt=""
                               width={40}
                               height={40}
                               className="w-10 h-10 rounded-full object-cover"
+                              unoptimized
+                              onError={() => setProfileImageBroken(true)}
                             />
                           ) : (
                             <span className="text-sm font-bold text-[#B42225]">
-                              {initials}
+                              {initials || <FiUser size={20} />}
                             </span>
                           )}
                         </div>
@@ -1044,7 +1089,7 @@ export default function Navbar() {
                           to: "/wishlist",
                         },
                         {
-                          icon: <FiSettings size={15} />,
+                          icon: <FiSettingsIcon size={15} />,
                           label: "Settings",
                           to: "/settings",
                         },
@@ -1082,14 +1127,14 @@ export default function Navbar() {
                     <Link
                       href="/login"
                       prefetch={true}
-                      className="w-full flex items-center justify-center gap-2 bg-[#B42225] hover:bg-[#9e1e20] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                      className="w-full flex items-center justify-center gap-2 bg-[#B42225] hover:bg-[#9e1e20] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors text-center"
                     >
                       <FiLogIn size={15} /> Sign In
                     </Link>
                     <Link
                       href="/register"
                       prefetch={true}
-                      className="w-full flex border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition-colors text-center"
+                      className="w-full flex items-center justify-center border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition-colors text-center"
                     >
                       Create Account
                     </Link>
@@ -1143,7 +1188,7 @@ export default function Navbar() {
                 onClick={() => commitSearch(mobileQuery)}
                 className="bg-[#FF8C00] px-4 text-white flex items-center"
               >
-                <FiSearch size={17} />
+                <FiSearchIcon size={17} />
               </button>
             </div>
             {mobileDropOpen && (
@@ -1186,13 +1231,15 @@ export default function Navbar() {
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 border-2 border-white/30 overflow-hidden">
                 {!mounted ? (
                   <FiUser size={20} className="text-white" />
-                ) : isLoggedIn && profilePhoto ? (
+                ) : isLoggedIn && profilePhoto && !profileImageBroken ? (
                   <Image
                     src={profilePhoto}
                     alt=""
                     width={40}
                     height={40}
                     className="w-10 h-10 rounded-full object-cover"
+                    unoptimized
+                    onError={() => setProfileImageBroken(true)}
                   />
                 ) : isLoggedIn && initials ? (
                   <span className="text-sm font-bold text-white">
@@ -1313,7 +1360,6 @@ export default function Navbar() {
               </p>
               <div className="space-y-0.5">
                 {catLoading ? (
-                  // Skeleton
                   Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}
@@ -1358,7 +1404,6 @@ export default function Navbar() {
                               {cat.name}
                             </span>
                           </Link>
-                          {/* Expand subcategories button */}
                           <button
                             onClick={() => {
                               const next = isExpanded ? null : cat.id;
@@ -1374,7 +1419,6 @@ export default function Navbar() {
                           </button>
                         </div>
 
-                        {/* Subcategory list */}
                         {isExpanded && (
                           <div className="ml-12 pl-3 border-l-2 border-gray-100 space-y-0.5 mb-1">
                             {isLoadingSubs ? (
@@ -1544,43 +1588,5 @@ export default function Navbar() {
         </div>
       </div>
     </>
-  );
-}
-
-// ─── Missing icon imports referenced in account dropdown ─────────────────────
-// (FiSettings was used inside the account dropdown link list but not imported at top)
-function FiSearch({ size }: { size: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
-function FiSettings({ size }: { size: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
   );
 }

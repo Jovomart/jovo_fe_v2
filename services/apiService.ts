@@ -150,7 +150,7 @@ class ApiService {
       headers["Content-Type"] = "application/json";
     }
 
-    const token = await this.getValidAccessToken();
+    let token = await this.getValidAccessToken();
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -182,13 +182,22 @@ class ApiService {
       }
 
       if (response.status === 401) {
-        if (!effectivelyPublic) {
+        // Only clear tokens for non-public endpoints that are NOT cart endpoints
+        // Cart endpoints should return empty cart instead of throwing
+        if (!effectivelyPublic && !endpoint.startsWith("/cart")) {
           const isServiceProviderEndpoint =
             endpoint.includes("/service-provider/");
           if (!isServiceProviderEndpoint) {
             this.clearTokens();
           }
         }
+        
+        // For cart endpoints, return empty cart data instead of throwing
+        if (endpoint.startsWith("/cart") || endpoint === "/cart" || endpoint.startsWith("/cart?")) {
+          console.warn("[ApiService] Cart endpoint returned 401, returning empty cart");
+          return { data: { items: [], total_items: 0, total_price: 0 } };
+        }
+        
         throw new Error(
           data?.detail?.message ||
             data?.detail ||
@@ -606,17 +615,12 @@ class ApiService {
     delivery_country: string;
     delivery_option_id: string;
     delivery_notes?: string;
-    // email is required — always pass it, never rely on the backend to infer it
     email: string;
     full_name?: string;
     phone?: string;
     user_latitude?: number;
     user_longitude?: number;
   }) {
-    // Guard here as a last line of defence — the caller should have already
-    // validated, but a missing email produces a cryptic Paystack error
-    // ("Please enter a valid email address") that is hard to trace back to
-    // this call site.
     if (!params.email?.trim()) {
       throw new Error(
         "checkout: email is required but was empty. " +
@@ -630,7 +634,6 @@ class ApiService {
     q.append("delivery_state", params.delivery_state);
     q.append("delivery_country", params.delivery_country);
     q.append("delivery_option_id", params.delivery_option_id);
-    // Always append email — never skip it
     q.append("email", params.email.trim().toLowerCase());
     if (params.delivery_notes) q.append("delivery_notes", params.delivery_notes);
     if (params.full_name)      q.append("full_name", params.full_name);
@@ -647,12 +650,13 @@ class ApiService {
 
   // ─── PAYMENTS ──────────────────────────────────────────────────────────────
 
-  async verifyPayment(reference: string) {
-    return this.makeRequest(
-      `/payments/verify/${encodeURIComponent(reference)}`,
-      { method: "GET" },
-    );
-  }
+  async verifyPayment(paystackReference: string, orderId?: string) {
+  const qs = orderId ? `?order_id=${encodeURIComponent(orderId)}` : "";
+  return this.makeRequest(
+    `/payments/verify/${encodeURIComponent(paystackReference)}${qs}`,
+    { method: "GET" },
+  );
+}
 
   // ─── USER ORDERS ───────────────────────────────────────────────────────────
 
@@ -688,13 +692,11 @@ class ApiService {
     });
   }
 
-  // ─── Add this method to ApiService inside the USER ORDERS section ──────────
-
-async trackOrder(order_id: string): Promise<any> {
-  return this.makeRequest(`/user/orders/${order_id}/tracking`, {
-    method: "GET",
-  });
-}
+  async trackOrder(order_id: string): Promise<any> {
+    return this.makeRequest(`/user/orders/${order_id}/tracking`, {
+      method: "GET",
+    });
+  }
 
   // ─── SELLER ────────────────────────────────────────────────────────────────
 

@@ -6,7 +6,6 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-# Install all deps (dev + prod) — needed for TypeScript compilation
 RUN npm ci && npm cache clean --force
 
 # Stage 2: Build the application
@@ -18,10 +17,8 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# ARG must be declared before ENV can reference it.
-# Placeholders satisfy webpack's NEXT_PUBLIC_ inlining at build time.
-# Real values are injected at runtime via --env-file or docker-compose.
 ARG NEXT_PUBLIC_API_URL=https://placeholder.build
+ARG NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=placeholder
 ARG NEXT_PUBLIC_FIREBASE_API_KEY=placeholder
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=placeholder
 ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID=placeholder
@@ -31,6 +28,7 @@ ARG NEXT_PUBLIC_FIREBASE_APP_ID=placeholder
 ARG NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=placeholder
 
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=${NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY}
 ENV NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
 ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
 ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
@@ -48,16 +46,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Only copy the standalone output — no node_modules, no source
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Set correct permissions after copy
 RUN chown -R nextjs:nodejs /app
 
 USER nextjs
