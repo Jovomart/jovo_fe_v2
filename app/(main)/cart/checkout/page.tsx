@@ -1434,7 +1434,8 @@ export default function Checkout() {
       });
 
       const order = unwrapEnvelope(checkoutRes);
-      const { order_id, total_amount, payment_url } = order;
+      // ── FIX: also destructure payment_reference from the checkout response ──
+      const { order_id, total_amount, payment_url, payment_reference } = order;
 
       if (!order_id) throw new Error("Order was not created. Please try again.");
       if (!payment_url) throw new Error("No payment URL returned. Please try again.");
@@ -1457,22 +1458,20 @@ export default function Checkout() {
       // ── Open Paystack inline modal ────────────────────────────────────────
       const onPaymentSuccess = (response: { reference: string }) => {
         (async () => {
-          // ── THE KEY FIX ──────────────────────────────────────────────────
-          // response.reference = Paystack's own transaction ref (e.g. "T352654873237177")
-          // This is what Paystack's API recognises when verifying a transaction.
-          // We also pass order_id as a query param so the backend can link the
-          // verified payment to the correct order record.
-          // DO NOT pass order_id as the path param — Paystack will reject it with 400.
+          // ── FIX: use payment_reference from checkout response, NOT
+          //    response.reference from the Paystack SDK callback.
+          //    Paystack's verify endpoint recognises the reference we got
+          //    from the backend, not the SDK's own transaction ref.
           // ─────────────────────────────────────────────────────────────────
-          const paystackRef = response.reference;
+          const refToVerify = payment_reference;
 
           console.log("[Checkout] Payment success callback received");
-          console.log("[Checkout] Paystack ref:", paystackRef);
+          console.log("[Checkout] Verifying with ref:", refToVerify);
           console.log("[Checkout] Order ID:", order_id);
 
           setVerifyingPayment(true);
           try {
-            const verifyRes = await ApiService.verifyPayment(paystackRef, order_id);
+            const verifyRes = await ApiService.verifyPayment(refToVerify, order_id);
             console.log("[Checkout] Verify response:", verifyRes);
 
             if (!isPaymentVerifiedSuccessful(verifyRes)) {
