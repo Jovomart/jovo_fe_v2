@@ -2,6 +2,8 @@
 
 import { useState, useContext, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import { AuthContext } from "@/context/AuthContext";
 import apiService from "@/services/apiService";
 import {
@@ -15,29 +17,26 @@ import {
   FiSearch,
   FiMenu,
   FiX,
-  FiBell,
   FiTrendingUp,
   FiPackage,
   FiClock,
   FiDollarSign,
   FiBarChart2,
   FiZap,
-  FiHelpCircle,
   FiTag,
   FiTruck,
+  FiUser,
+  FiChevronDown,
+  FiGrid,
 } from "react-icons/fi";
 import {
   MdOutlineInventory2,
   MdOutlineDeliveryDining,
   MdOutlineSwapHoriz,
-  MdAnalytics,
 } from "react-icons/md";
-import { FaStore, FaBullhorn, FaCrown, FaRocket } from "react-icons/fa";
-import { HiTable, HiOutlineSupport } from "react-icons/hi";
-import { GiConfirmed } from "react-icons/gi";
-import { GrProductHunt } from "react-icons/gr";
-import { VerifiedIcon, StoreIcon, PackageIcon, ClockIcon } from "lucide-react";
+import { FaStore, FaBullhorn, FaRocket, FaChartLine } from "react-icons/fa";
 import { HiWallet } from "react-icons/hi2";
+import { VerifiedIcon } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +79,8 @@ const SellerLayout = ({
   headerAction,
   stats = {},
 }: SellerLayoutProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const { user, exitSellerMode } = useContext(AuthContext) as any;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -87,58 +88,116 @@ const SellerLayout = ({
   const [greeting, setGreeting] = useState("Welcome");
   const [displayName, setDisplayName] = useState("Seller");
   const [initials, setInitials] = useState("SE");
-  const [notifications] = useState(3);
+  const [businessImage, setBusinessImage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [sellerProfile, setSellerProfile] = useState<any>(null);
 
-  // FIX: Use refs to prevent multiple state updates
   const isMountedRef = useRef(false);
-  const userDataAppliedRef = useRef(false);
+  const dataFetchedRef = useRef(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // FIX: Use setTimeout to avoid direct setState in effect
-  useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      const timer1 = setTimeout(() => setMounted(true), 0);
-      const timer2 = setTimeout(() => {
-        const h = new Date().getHours();
-        setGreeting(
-          h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening",
-        );
-      }, 0);
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
-    }
-  }, []);
+  // ─── Fetch Seller Data ──────────────────────────────────────────────────
 
-  // FIX: Use setTimeout to avoid direct setState in effect
-  useEffect(() => {
-    if (user && !userDataAppliedRef.current) {
-      userDataAppliedRef.current = true;
-      const name =
-        user?.full_name || user?.username || user?.first_name || "Seller";
-      const timer1 = setTimeout(() => setDisplayName(name), 0);
-      const timer2 = setTimeout(() => {
+  const fetchSellerData = useCallback(async () => {
+    if (dataFetchedRef.current) return;
+    dataFetchedRef.current = true;
+
+    try {
+      // Fetch dashboard data for business image
+      const dashboardRes = await apiService.getSellerDashboard();
+      const dashboard = dashboardRes?.data ?? dashboardRes;
+      if (dashboard) {
+        setDashboardData(dashboard);
+        if (dashboard.store?.business_image) {
+          setBusinessImage(dashboard.store.business_image);
+        }
+        // Update stats with real data if available
+        if (dashboard.financial_snapshot) {
+          stats.totalSales = dashboard.financial_snapshot.total_earned || 0;
+          stats.pendingOrders = dashboard.order_pipeline?.pending || 0;
+          stats.totalOrders = dashboard.order_pipeline?.total || 0;
+        }
+      }
+
+      // Fetch seller profile
+      const profileRes = await apiService.getMySellerProfile();
+      const profile = profileRes?.data ?? profileRes;
+      if (profile) {
+        setSellerProfile(profile);
+        if (profile.business_image) {
+          setBusinessImage(profile.business_image);
+        }
+        const name = profile.business_name || user?.full_name || user?.username || "Seller";
+        setDisplayName(name);
         setInitials(
           name
             .split(" ")
             .map((n: string) => n[0])
             .join("")
             .toUpperCase()
-            .slice(0, 2),
+            .slice(0, 2)
         );
-      }, 0);
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
+      }
+    } catch (error) {
+      console.error("Failed to fetch seller data:", error);
+      // Fallback to user context
+      if (user) {
+        const name = user?.full_name || user?.username || user?.first_name || "Seller";
+        setDisplayName(name);
+        setInitials(
+          name
+            .split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2)
+        );
+      }
     }
-  }, [user]);
+  }, [user, stats]);
 
-  const navigate = (p: string) => {
-    window.location.href = p;
+  // ─── Effects ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      setMounted(true);
+      
+      const h = new Date().getHours();
+      setGreeting(
+        h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
+      );
+      
+      fetchSellerData();
+    }
+  }, [fetchSellerData]);
+
+  // ─── Search Handler ─────────────────────────────────────────────────────
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    
+    // Navigate to orders page with search
+    const currentPath = pathname || "";
+    if (currentPath.includes("/orders")) {
+      // If already on orders page, update URL params
+      router.push(`/seller/orders?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      // Navigate to orders with search
+      router.push(`/seller/orders?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    
+    setShowMobileSearch(false);
+    setTimeout(() => setIsSearching(false), 500);
+  };
+
+  const navigate = (path: string) => {
+    router.push(path);
     setSidebarOpen(false);
   };
 
@@ -146,8 +205,27 @@ const SellerLayout = ({
     try {
       if (typeof exitSellerMode === "function") await exitSellerMode();
     } catch {}
-    window.location.href = "/shop";
+    router.push("/shop");
   };
+
+  const getActiveNav = () => {
+    if (activeNav) return activeNav;
+    const path = pathname || "";
+    if (path.includes("/dashboard")) return "dashboard";
+    if (path.includes("/products")) return "products";
+    if (path.includes("/analytics")) return "analytics";
+    if (path.includes("/orders")) return "orders";
+    if (path.includes("/deliveries")) return "deliveries";
+    if (path.includes("/wallet")) return "wallet";
+    if (path.includes("/promote")) return "promote";
+    if (path.includes("/profile")) return "profile";
+    if (path.includes("/settings")) return "settings";
+    return "dashboard";
+  };
+
+  const currentNav = getActiveNav();
+
+  // ─── Navigation Items ────────────────────────────────────────────────────
 
   const navItems = [
     {
@@ -196,7 +274,7 @@ const SellerLayout = ({
     },
     {
       id: "profile",
-      icon: <StoreIcon size={17} />,
+      icon: <FiUser size={17} />,
       label: "Profile",
       to: "/seller/profile",
     },
@@ -216,10 +294,10 @@ const SellerLayout = ({
         fontFamily: "'DM Sans','Plus Jakarta Sans','Segoe UI',sans-serif",
       }}
     >
-      {/* Overlay */}
+      {/* Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -267,7 +345,7 @@ const SellerLayout = ({
           </button>
         </div>
 
-        {/* Profile Card */}
+        {/* Profile Card with Business Image */}
         <div
           className="mx-4 my-4 rounded-2xl p-4 relative overflow-hidden"
           style={{
@@ -283,18 +361,28 @@ const SellerLayout = ({
           />
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 relative"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 relative overflow-hidden"
               style={{
-                background: "linear-gradient(135deg,#F97316,#DC2626)",
+                background: businessImage ? "transparent" : "linear-gradient(135deg,#F97316,#DC2626)",
                 boxShadow: "0 4px 12px rgba(249,115,22,0.35)",
               }}
             >
-              <span suppressHydrationWarning>{mounted ? initials : "SE"}</span>
+              {businessImage ? (
+                <Image
+                  src={businessImage}
+                  alt={displayName}
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span suppressHydrationWarning>{mounted ? initials : "SE"}</span>
+              )}
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center">
                 <div className="w-1.5 h-1.5 rounded-full bg-white" />
               </div>
             </div>
-            <div className="overflow-hidden">
+            <div className="overflow-hidden flex-1">
               <p
                 className="text-slate-900 text-sm font-bold truncate"
                 suppressHydrationWarning
@@ -302,14 +390,11 @@ const SellerLayout = ({
                 {mounted ? displayName : "Seller"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <FaCrown size={8} className="text-amber-500" />
+                <FaRocket size={8} className="text-amber-500" />
                 <p className="text-amber-700 text-[10px] font-bold">Seller</p>
               </div>
             </div>
-            <VerifiedIcon
-              size={12}
-              className="text-orange-500 shrink-0 ml-auto"
-            />
+            <VerifiedIcon size={12} className="text-orange-500 shrink-0" />
           </div>
           {stats.totalSales !== undefined && (
             <div
@@ -337,14 +422,14 @@ const SellerLayout = ({
               href={item.to}
               onClick={() => setSidebarOpen(false)}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left group ${
-                activeNav === item.id
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-200"
+                currentNav === item.id
+                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-200"
                   : "text-slate-500 hover:bg-orange-50 hover:text-orange-600"
               }`}
             >
               <span
                 className={`shrink-0 transition-transform duration-150 ${
-                  activeNav === item.id ? "" : "group-hover:scale-110"
+                  currentNav === item.id ? "" : "group-hover:scale-110"
                 }`}
               >
                 {item.icon}
@@ -353,7 +438,7 @@ const SellerLayout = ({
               {item.badge != null && item.badge > 0 && (
                 <span
                   className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
-                    activeNav === item.id
+                    currentNav === item.id
                       ? "bg-white/20 text-white"
                       : "bg-orange-100 text-orange-600"
                   }`}
@@ -361,7 +446,7 @@ const SellerLayout = ({
                   {item.badge}
                 </span>
               )}
-              {activeNav === item.id && <FiChevronRight size={13} />}
+              {currentNav === item.id && <FiChevronRight size={13} />}
             </Link>
           ))}
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-3.5 pt-4 pb-1.5">
@@ -373,18 +458,18 @@ const SellerLayout = ({
               href={item.to}
               onClick={() => setSidebarOpen(false)}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left group ${
-                activeNav === item.id
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-200"
+                currentNav === item.id
+                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-200"
                   : "text-slate-500 hover:bg-orange-50 hover:text-orange-600"
               }`}
             >
               <span
-                className={`shrink-0 ${activeNav === item.id ? "" : "group-hover:scale-110"}`}
+                className={`shrink-0 ${currentNav === item.id ? "" : "group-hover:scale-110"}`}
               >
                 {item.icon}
               </span>
               <span className="flex-1">{item.label}</span>
-              {activeNav === item.id && <FiChevronRight size={13} />}
+              {currentNav === item.id && <FiChevronRight size={13} />}
             </Link>
           ))}
         </nav>
@@ -396,7 +481,7 @@ const SellerLayout = ({
         >
           <button
             onClick={handleSwitchToBuyer}
-            className="w-full flex items-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90"
+            className="w-full flex items-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg"
             style={{
               background: "linear-gradient(135deg,#F97316,#EA580C)",
               boxShadow: "0 4px 14px rgba(249,115,22,0.3)",
@@ -407,7 +492,7 @@ const SellerLayout = ({
           <button
             onClick={() => {
               apiService.logout();
-              window.location.href = "/";
+              router.push("/");
             }}
             className="w-full flex items-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-50 transition"
           >
@@ -418,13 +503,13 @@ const SellerLayout = ({
 
       {/* ═══════ MAIN AREA ═══════ */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* ENHANCED RESPONSIVE TOPBAR */}
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-sm">
-          {/* Mobile Search Overlay (when search is active on mobile) */}
+        {/* ─── ULTRA PREMIUM TOPBAR ─── */}
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100/80 shadow-sm">
+          {/* Mobile Search Overlay */}
           {showMobileSearch && (
-            <div className="fixed inset-0 z-50 bg-white lg:hidden">
-              <div className="flex items-center gap-3 p-4 border-b border-slate-100">
-                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="fixed inset-0 z-50 bg-white lg:hidden animate-fade-in">
+              <form onSubmit={handleSearch} className="flex items-center gap-3 p-4 border-b border-slate-100">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-400/20 transition-all">
                   <FiSearch size={18} className="text-slate-400" />
                   <input
                     type="text"
@@ -436,6 +521,13 @@ const SellerLayout = ({
                   />
                 </div>
                 <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-red-500 disabled:opacity-50"
+                >
+                  {isSearching ? "..." : "Search"}
+                </button>
+                <button
                   onClick={() => {
                     setShowMobileSearch(false);
                     setSearchQuery("");
@@ -444,19 +536,15 @@ const SellerLayout = ({
                 >
                   Cancel
                 </button>
-              </div>
-              <div className="p-4">
-                <p className="text-xs text-slate-400 mb-2">Recent searches</p>
-                {/* Add recent searches here */}
-              </div>
+              </form>
             </div>
           )}
 
           {/* Main Topbar Row */}
           <div className="px-3 sm:px-4 md:px-6 py-2.5 md:py-3">
             <div className="flex items-center justify-between gap-2 md:gap-4">
-              {/* Left Section - Menu + Brand + Greeting */}
-              <div className="flex items-center gap-2 md:gap-3">
+              {/* Left Section */}
+              <div className="flex items-center gap-2 md:gap-3 min-w-0">
                 <button
                   onClick={() => setSidebarOpen(true)}
                   className="lg:hidden p-1.5 md:p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors text-slate-600"
@@ -464,30 +552,17 @@ const SellerLayout = ({
                   <FiMenu size={18} className="md:w-5 md:h-5" />
                 </button>
 
-                {/* Desktop Logo/Brand */}
-                <div className="hidden lg:flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                    <FaStore size={14} className="text-white" />
-                  </div>
-                  <div>
-                    <p className="font-black text-sm text-slate-900">JOVO</p>
-                    <p className="text-[9px] font-semibold text-orange-500">
-                      Seller
-                    </p>
-                  </div>
-                </div>
-
-                {/* Mobile Greeting (visible only on mobile when search not active) */}
+                {/* Mobile Greeting */}
                 {!showMobileSearch && (
-                  <div className="lg:hidden">
+                  <div className="lg:hidden min-w-0">
                     <p
-                      className="text-[10px] text-slate-400 font-medium"
+                      className="text-[10px] text-slate-400 font-medium truncate"
                       suppressHydrationWarning
                     >
                       {greeting}
                     </p>
                     <p
-                      className="text-sm font-bold text-slate-800 leading-tight"
+                      className="text-sm font-bold text-slate-800 leading-tight truncate"
                       suppressHydrationWarning
                     >
                       {displayName.split(" ")[0]}
@@ -495,22 +570,22 @@ const SellerLayout = ({
                   </div>
                 )}
 
-                {/* Desktop Page Title */}
+                {/* Page Title */}
                 {pageTitle && (
-                  <div className="hidden md:block h-6 w-px bg-slate-200 mx-2" />
-                )}
-                {pageTitle && (
-                  <h1 className="hidden md:block text-lg font-bold text-slate-800">
-                    {pageTitle}
-                  </h1>
+                  <>
+                    <div className="hidden md:block h-6 w-px bg-gradient-to-b from-transparent via-slate-300 to-transparent mx-2" />
+                    <h1 className="hidden md:block text-lg font-black text-slate-800 tracking-tight truncate">
+                      {pageTitle}
+                    </h1>
+                  </>
                 )}
               </div>
 
-              {/* Center Section - Search (Desktop full, Mobile icon) */}
+              {/* Center Section - Search Desktop */}
               <div className="hidden md:flex flex-1 max-w-md mx-4">
-                <div className="w-full relative">
+                <form onSubmit={handleSearch} className="w-full relative group">
                   <FiSearch
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-orange-500"
                     size={16}
                   />
                   <input
@@ -518,14 +593,14 @@ const SellerLayout = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search orders, products, customers..."
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-orange-300 focus:bg-white focus:ring-2 focus:ring-orange-100 transition-all"
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-400/20 transition-all placeholder:text-slate-400"
                   />
-                </div>
+                </form>
               </div>
 
               {/* Right Section - Actions */}
-              <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-                {/* Mobile Search Button */}
+              <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
+                {/* Mobile Search */}
                 <button
                   onClick={() => setShowMobileSearch(true)}
                   className="md:hidden p-1.5 md:p-2 rounded-lg hover:bg-slate-100 text-slate-600"
@@ -533,44 +608,56 @@ const SellerLayout = ({
                   <FiSearch size={18} />
                 </button>
 
-                {/* Quick Stats (Tablet+) */}
-                <div className="hidden sm:flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <FiDollarSign size={12} className="text-emerald-500" />
+                {/* Premium Stats - Desktop */}
+                <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-xl border border-slate-100/80 shadow-sm">
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                      <FiDollarSign size={12} className="text-emerald-500" />
+                    </div>
                     <div>
-                      <p className="text-[9px] text-slate-400">Revenue</p>
-                      <p className="text-xs font-bold text-slate-700">
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                        Revenue
+                      </p>
+                      <p className="text-xs font-black text-emerald-700">
                         {fmtCurrency(stats.totalSales || 0)}
                       </p>
                     </div>
                   </div>
-                  <div className="w-px h-6 bg-slate-200" />
-                  <div className="flex items-center gap-1.5">
-                    <FiPackage size={12} className="text-orange-400" />
+                  <div className="w-px h-8 bg-slate-200/60" />
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center">
+                      <FiPackage size={12} className="text-orange-400" />
+                    </div>
                     <div>
-                      <p className="text-[9px] text-slate-400">Orders</p>
-                      <p className="text-xs font-bold text-slate-700">
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                        Orders
+                      </p>
+                      <p className="text-xs font-black text-orange-700">
                         {stats.totalOrders || 0}
                       </p>
                     </div>
                   </div>
-                  <div className="w-px h-6 bg-slate-200" />
-                  <div className="flex items-center gap-1.5">
-                    <FiClock size={12} className="text-amber-500" />
+                  <div className="w-px h-8 bg-slate-200/60" />
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                      <FiClock size={12} className="text-amber-500" />
+                    </div>
                     <div>
-                      <p className="text-[9px] text-slate-400">Pending</p>
-                      <p className="text-xs font-bold text-slate-700">
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                        Pending
+                      </p>
+                      <p className="text-xs font-black text-amber-700">
                         {stats.pendingOrders || 0}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Refresh Button */}
+                {/* Refresh */}
                 {onRefresh && (
                   <button
                     onClick={onRefresh}
-                    className="p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
+                    className="p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
                     disabled={isLoading}
                   >
                     <FiRefreshCw
@@ -580,17 +667,31 @@ const SellerLayout = ({
                   </button>
                 )}
 
-                {/* Notification Bell */}
-                <button className="relative p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-600">
-                  <FiBell size={16} className="md:w-[18px] md:h-[18px]" />
-                  {notifications > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
-                      {notifications}
-                    </span>
-                  )}
-                </button>
+                {/* User Avatar */}
+                <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-slate-200">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-black overflow-hidden"
+                    style={{
+                      background: businessImage ? "transparent" : "linear-gradient(135deg,#F97316,#DC2626)",
+                      boxShadow: "0 2px 8px rgba(249,115,22,0.3)",
+                    }}
+                  >
+                    {businessImage ? (
+                      <Image
+                        src={businessImage}
+                        alt={displayName}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{mounted ? initials : "SE"}</span>
+                    )}
+                  </div>
+                  <FiChevronDown size={12} className="text-slate-400" />
+                </div>
 
-                {/* Primary Action Button */}
+                {/* Primary Action */}
                 {headerAction ?? (
                   <Link
                     href="/seller/add-product"
@@ -605,13 +706,13 @@ const SellerLayout = ({
             </div>
           </div>
 
-          {/* Mobile Stats Row (Cards) - Only on Mobile */}
+          {/* Mobile Stats Row - Enhanced */}
           <div className="sm:hidden px-3 pb-3">
             <div className="grid grid-cols-3 gap-2">
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 rounded-xl p-2.5 border border-emerald-100">
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 rounded-xl p-2.5 border border-emerald-100/50 shadow-sm">
                 <div className="flex items-center justify-between mb-1">
                   <FiDollarSign size={12} className="text-emerald-600" />
-                  <span className="text-[9px] font-bold text-emerald-600">
+                  <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-wider">
                     Revenue
                   </span>
                 </div>
@@ -619,10 +720,10 @@ const SellerLayout = ({
                   {fmtCurrency(stats.totalSales || 0)}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100/30 rounded-xl p-2.5 border border-orange-100">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100/30 rounded-xl p-2.5 border border-orange-100/50 shadow-sm">
                 <div className="flex items-center justify-between mb-1">
                   <FiPackage size={12} className="text-orange-600" />
-                  <span className="text-[9px] font-bold text-orange-600">
+                  <span className="text-[8px] font-bold text-orange-600 uppercase tracking-wider">
                     Orders
                   </span>
                 </div>
@@ -630,10 +731,10 @@ const SellerLayout = ({
                   {stats.totalOrders || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100/30 rounded-xl p-2.5 border border-amber-100">
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100/30 rounded-xl p-2.5 border border-amber-100/50 shadow-sm">
                 <div className="flex items-center justify-between mb-1">
                   <FiClock size={12} className="text-amber-600" />
-                  <span className="text-[9px] font-bold text-amber-600">
+                  <span className="text-[8px] font-bold text-amber-600 uppercase tracking-wider">
                     Pending
                   </span>
                 </div>
@@ -644,20 +745,20 @@ const SellerLayout = ({
             </div>
           </div>
 
-          {/* Quick Action Chips (Mobile Only) - All emojis replaced with icons */}
+          {/* Quick Action Chips - Mobile */}
           <div className="sm:hidden px-3 pb-3 overflow-x-auto flex gap-2 scrollbar-hide">
             <Link
               href="/seller/orders"
               className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
             >
               <FiTruck size={10} />
-              Manage Orders
+              Orders
             </Link>
             <Link
               href="/seller/analytics"
               className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
             >
-              <FiBarChart2 size={10} />
+              <FaChartLine size={9} />
               Analytics
             </Link>
             <Link
@@ -665,21 +766,21 @@ const SellerLayout = ({
               className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 active:bg-orange-200 transition flex items-center gap-1.5"
             >
               <FaRocket size={9} />
-              Boost Sales
+              Boost
             </Link>
             <Link
-              href="/seller/support"
+              href="/seller/products"
               className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
             >
-              <HiOutlineSupport size={10} />
-              Support
+              <MdOutlineInventory2 size={10} />
+              Products
             </Link>
             <Link
-              href="/seller/promotions"
+              href="/seller/wallet"
               className="whitespace-nowrap text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 active:bg-slate-200 transition flex items-center gap-1.5"
             >
-              <FiTag size={10} />
-              Promotions
+              <HiWallet size={10} />
+              Wallet
             </Link>
           </div>
         </header>
@@ -688,7 +789,7 @@ const SellerLayout = ({
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
 
-      {/* Add hide scrollbar styles */}
+      {/* Global Styles */}
       <style jsx global>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -696,6 +797,13 @@ const SellerLayout = ({
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
         }
       `}</style>
     </div>

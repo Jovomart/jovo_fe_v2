@@ -137,11 +137,13 @@ const VerifyEmailInner = () => {
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}
         >
           <Image
-            src="/images/Jovo_off_icon.png"
+            src="/images/Jovo_official_logo.png"
             alt="Jovo"
-            className="md:h-25 h-15 md:w-75 w-75 object-cover cursor-pointer"
+            className="md:h-25 h-10 md:w-35 w-36 md:ml-28 ml-12 object-cover cursor-pointer"
             width={300}
             height={100}
+            priority
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
           />
 
           {/* Icon */}

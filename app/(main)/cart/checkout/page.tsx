@@ -94,41 +94,29 @@ function unwrapEnvelope(res: any): any {
   return res?.data ?? res;
 }
 
-function extractPaystackAccessCode(paymentUrl: string): string {
-  const match = paymentUrl.match(/checkout\.paystack\.com\/([a-zA-Z0-9]+)/);
-  return match?.[1] ?? "";
-}
-
-// ── Determine whether a /payments/verify response represents a confirmed
-//    successful payment. Checks multiple response shapes defensively.
 function isPaymentVerifiedSuccessful(verifyRes: any): boolean {
   if (!verifyRes) return false;
   const payload = unwrapEnvelope(verifyRes);
-
   if (typeof verifyRes?.status === "string") {
     if (verifyRes.status.toLowerCase() === "failure") return false;
   }
-
   const paymentStatus = (payload?.payment_status ?? payload?.status ?? "")
     .toString()
     .toLowerCase();
-
   if (
     paymentStatus === "paid" ||
     paymentStatus === "success" ||
     paymentStatus === "successful"
-  ) {
+  )
     return true;
-  }
-  if (payload?.paid === true || payload?.verified === true) {
-    return true;
-  }
-
+  if (payload?.paid === true || payload?.verified === true) return true;
   return false;
 }
 
 // ─────────────────────────────────────────────────────────────
 // SUCCESS MODAL
+// onContinue navigates to /order?ref=... and STAYS there.
+// The old behaviour (push then push again) caused the redirect loop.
 // ─────────────────────────────────────────────────────────────
 function PaymentSuccessModal({
   orderId,
@@ -184,7 +172,6 @@ function PaymentSuccessModal({
         backdropFilter: "blur(8px)",
         zIndex: 999999,
       }}
-      onClick={onContinue}
     >
       <div
         style={{
@@ -296,6 +283,7 @@ function PaymentSuccessModal({
               </span>
             </div>
           </div>
+          {/* "View My Orders" — navigates and stays on /order */}
           <button
             onClick={onContinue}
             style={{
@@ -364,7 +352,13 @@ function StepBar({ current }: { current: number }) {
                 {done ? <FiCheck size={16} /> : idx}
               </div>
               <span
-                className={`text-[10px] font-bold mt-1 ${active ? "text-[#B42225]" : done ? "text-green-600" : "text-gray-400"}`}
+                className={`text-[10px] font-bold mt-1 ${
+                  active
+                    ? "text-[#B42225]"
+                    : done
+                      ? "text-green-600"
+                      : "text-gray-400"
+                }`}
               >
                 {label}
               </span>
@@ -416,10 +410,7 @@ function PickupStationPicker({
   }, [stations, query]);
 
   return (
-    <div
-      className="mt-4 rounded-2xl border-2 border-dashed border-[#B42225]/30 bg-[#B42225]/2 p-4"
-      style={{ animation: "fadeUp 0.3s ease both" }}
-    >
+    <div className="mt-4 rounded-2xl border-2 border-dashed border-[#B42225]/30 bg-[#B42225]/2 p-4">
       <p className="text-xs font-black uppercase tracking-widest text-[#B42225] mb-3 flex items-center gap-1.5">
         <MdStorefront size={14} /> Select Your Pickup Station
       </p>
@@ -506,7 +497,9 @@ function PickupStationPicker({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`text-sm font-bold leading-snug ${selected ? "text-[#B42225]" : "text-gray-800"}`}
+                    className={`text-sm font-bold leading-snug ${
+                      selected ? "text-[#B42225]" : "text-gray-800"
+                    }`}
                   >
                     {station.name}
                   </p>
@@ -589,15 +582,15 @@ function StepDelivery({
       hasPrefilledRef.current = true;
       setInfo({
         fullName:
-          user.full_name ||
-          `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+          (user as any).full_name ||
+          `${(user as any).first_name || ""} ${(user as any).last_name || ""}`.trim() ||
           "",
-        phone: user.phone || user.phone_number || "",
-        email: user.email || "",
-        address: user.address || "",
-        city: user.city || "",
-        state: user.state || "",
-        country: user.country || "Nigeria",
+        phone: (user as any).phone || (user as any).phone_number || "",
+        email: (user as any).email || "",
+        address: (user as any).address || "",
+        city: (user as any).city || "",
+        state: (user as any).state || "",
+        country: (user as any).country || "Nigeria",
         notes: "",
       });
     }
@@ -618,7 +611,6 @@ function StepDelivery({
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.email.trim()))
       e.email = "Please enter a valid email address";
     if (!selectedDeliveryId) e.delivery = "Please select a delivery method";
-
     if (isPickup) {
       if (!selectedStation) e.station = "Please select a pickup station";
     } else {
@@ -626,7 +618,6 @@ function StepDelivery({
       if (!info.city?.trim()) e.city = "City is required";
       if (!info.state?.trim()) e.state = "State is required";
     }
-
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -667,9 +658,7 @@ function StepDelivery({
   );
 
   return (
-    <div
-      style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}
-    >
+    <div>
       <div
         className="bg-white rounded-3xl p-6 md:p-8 mb-6"
         style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
@@ -685,27 +674,10 @@ function StepDelivery({
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            {Field(
-              "Full Name",
-              "fullName",
-              "Your full name",
-              <FiUser size={15} />,
-            )}
+            {Field("Full Name", "fullName", "Your full name", <FiUser size={15} />)}
           </div>
-          {Field(
-            "Phone Number",
-            "phone",
-            "08012345678",
-            <FiPhone size={15} />,
-            "tel",
-          )}
-          {Field(
-            "Email Address",
-            "email",
-            "your@email.com",
-            <FiMail size={15} />,
-            "email",
-          )}
+          {Field("Phone Number", "phone", "08012345678", <FiPhone size={15} />, "tel")}
+          {Field("Email Address", "email", "your@email.com", <FiMail size={15} />, "email")}
         </div>
       </div>
 
@@ -725,7 +697,7 @@ function StepDelivery({
 
         {deliveryLoading && (
           <div className="flex items-center justify-center py-8 gap-2 text-sm text-gray-500">
-            <FiLoader size={22} className="animate-spin text-[#B42225]" />{" "}
+            <FiLoader size={22} className="animate-spin text-[#B42225]" />
             Loading delivery options…
           </div>
         )}
@@ -772,11 +744,7 @@ function StepDelivery({
                         : "bg-gray-100 text-gray-500"
                     }`}
                   >
-                    {pickup ? (
-                      <MdStorefront size={20} />
-                    ) : (
-                      <FiTruck size={20} />
-                    )}
+                    {pickup ? <MdStorefront size={20} /> : <FiTruck size={20} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -784,7 +752,9 @@ function StepDelivery({
                         {opt.delivery_type}
                       </p>
                       <span
-                        className={`text-sm font-black shrink-0 ${opt.is_free_delivery ? "text-green-600" : "text-gray-800"}`}
+                        className={`text-sm font-black shrink-0 ${
+                          opt.is_free_delivery ? "text-green-600" : "text-gray-800"
+                        }`}
                       >
                         {opt.is_free_delivery ? "Free" : fmt(opt.delivery_cost)}
                       </span>
@@ -839,10 +809,7 @@ function StepDelivery({
       {!isPickup && (
         <div
           className="bg-white rounded-3xl p-6 md:p-8 mb-6"
-          style={{
-            boxShadow: "0 4px 30px rgba(0,0,0,0.06)",
-            animation: "fadeUp 0.3s ease both",
-          }}
+          style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
         >
           <h2
             className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2"
@@ -882,10 +849,7 @@ function StepDelivery({
       )}
 
       {isPickup && selectedStation && (
-        <div
-          className="flex items-center gap-3 p-4 mb-6 bg-green-50 border border-green-200 rounded-2xl"
-          style={{ animation: "fadeUp 0.3s ease both" }}
-        >
+        <div className="flex items-center gap-3 p-4 mb-6 bg-green-50 border border-green-200 rounded-2xl">
           <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center shrink-0">
             <FiCheck size={16} className="text-white" />
           </div>
@@ -895,13 +859,13 @@ function StepDelivery({
             </p>
             <p className="text-xs text-green-600 truncate">
               {selectedStation.name}
-              {selectedStation.landmark ? ` — ${selectedStation.landmark}` : ""}
+              {selectedStation.landmark
+                ? ` — ${selectedStation.landmark}`
+                : ""}
             </p>
           </div>
           <button
-            onClick={() =>
-              onStationSelect({ ...selectedStation, id: "" } as any)
-            }
+            onClick={() => onStationSelect({ ...selectedStation, id: "" } as any)}
             className="shrink-0 text-green-400 hover:text-red-500 transition p-1"
             title="Change station"
           >
@@ -954,9 +918,7 @@ function StepReview({
   const pickup = isPickupOption(selectedDelivery);
 
   return (
-    <div
-      style={{ animation: "slideIn 0.4s cubic-bezier(.34,1.06,.64,1) both" }}
-    >
+    <div>
       <div
         className="bg-white rounded-3xl p-6 md:p-8 mb-5"
         style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
@@ -1145,6 +1107,10 @@ export default function Checkout() {
   const [validatingCart, setValidatingCart] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
 
+  // Tracks whether this checkout session already placed an order,
+  // so we don't accidentally re-submit if the component re-renders
+  // after a network hiccup.
+  const orderPlacedRef = useRef<string | null>(null); // stores order_id once confirmed
   const paymentDoneRef = useRef(false);
   const prevDeliveryIdRef = useRef<string | null>(null);
   const authCheckDoneRef = useRef(false);
@@ -1182,7 +1148,8 @@ export default function Checkout() {
     ? 0
     : (selectedDelivery?.delivery_cost ?? 0);
   const total = subtotal + deliveryCost;
-  const currentlyPickup = !!selectedDelivery && isPickupOption(selectedDelivery);
+  const currentlyPickup =
+    !!selectedDelivery && isPickupOption(selectedDelivery);
 
   // ── Load Paystack script ────────────────────────────────────────────────────
   useEffect(() => {
@@ -1195,7 +1162,8 @@ export default function Checkout() {
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
     script.onload = () => setTimeout(() => setPaystackLoaded(true), 0);
-    script.onerror = () => console.error("Failed to load Paystack script");
+    script.onerror = () =>
+      console.error("Failed to load Paystack script");
     document.body.appendChild(script);
     return () => {
       if (script.parentNode) script.parentNode.removeChild(script);
@@ -1221,13 +1189,18 @@ export default function Checkout() {
   }, [authLoading]);
 
   // ── Check cart and redirect if empty ───────────────────────────────────────
+  // IMPORTANT: Only redirect to shop if we haven't already completed a payment.
+  // When the network was bad and the user had two items in their cart, they
+  // came back and the cart was still there (backend didn't clear it). After
+  // their second successful payment we clear the cart. We do NOT redirect
+  // mid-payment or after payment is done.
   useEffect(() => {
     if (checkingAuth || paymentDone || cartRedirectDoneRef.current) return;
     if (!user) return;
     if (cartLoading) return;
-    if (items.length === 0) {
+    if (items.length === 0 && !orderPlacedRef.current) {
       cartRedirectDoneRef.current = true;
-      setTimeout(() => setCheckoutError("Your cart is empty. Redirecting you to shop..."), 0);
+      setCheckoutError("Your cart is empty. Redirecting you to shop...");
       setTimeout(() => router.push("/shop"), 2000);
     }
   }, [items.length, cartLoading, checkingAuth, paymentDone, user, router]);
@@ -1244,7 +1217,7 @@ export default function Checkout() {
   // ── Fetch delivery options ──────────────────────────────────────────────────
   useEffect(() => {
     if (!user || items.length === 0) return;
-    const fetch = async () => {
+    const load = async () => {
       setDeliveryLoading(true);
       setDeliveryError(null);
       try {
@@ -1252,7 +1225,10 @@ export default function Checkout() {
           (acc, item) => acc + ((item as any).weight || 1) * item.quantity,
           0,
         );
-        const res = await ApiService.getAvailableDeliveryOptions(subtotal, totalWeight);
+        const res = await ApiService.getAvailableDeliveryOptions(
+          subtotal,
+          totalWeight,
+        );
         const opts: DeliveryOption[] =
           res?.data?.delivery_options ??
           res?.delivery_options ??
@@ -1260,7 +1236,9 @@ export default function Checkout() {
           (Array.isArray(res) ? res : []);
         const available = opts.filter((o) => o.is_available);
         if (!available.length) {
-          setDeliveryError("No delivery options available for your location.");
+          setDeliveryError(
+            "No delivery options available for your location.",
+          );
         } else {
           setDeliveryOptions(available);
           if (!selectedDeliveryId) setSelectedDeliveryId(available[0].id);
@@ -1271,25 +1249,28 @@ export default function Checkout() {
         setDeliveryLoading(false);
       }
     };
-    fetch();
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, subtotal, user]);
 
   // ── Fetch pickup stations ───────────────────────────────────────────────────
   useEffect(() => {
     if (!selectedDelivery || !isPickupOption(selectedDelivery)) return;
-    const schoolId = user?.school_id || user?.schoolId;
+    const schoolId =
+      (user as any)?.school_id || (user as any)?.schoolId;
     if (!schoolId) {
-      setTimeout(() => setPickupStationsError(
+      setPickupStationsError(
         "No school linked to your account. Please update your profile to select a pickup station.",
-      ), 0);
+      );
       return;
     }
-    const fetch = async () => {
+    const load = async () => {
       setPickupStationsLoading(true);
       setPickupStationsError(null);
       try {
-        const res = await ApiService.getSchoolPickupStations(schoolId, { per_page: 100 });
+        const res = await ApiService.getSchoolPickupStations(schoolId, {
+          per_page: 100,
+        });
         const stations: PickupStation[] =
           res?.data?.items ??
           res?.data?.stations ??
@@ -1298,12 +1279,14 @@ export default function Checkout() {
           (Array.isArray(res) ? res : []);
         setPickupStations(stations.filter((s) => s.is_active !== false));
       } catch (err: any) {
-        setTimeout(() => setPickupStationsError(err?.message ?? "Failed to load pickup stations"), 0);
+        setPickupStationsError(
+          err?.message ?? "Failed to load pickup stations",
+        );
       } finally {
         setPickupStationsLoading(false);
       }
     };
-    fetch();
+    load();
   }, [selectedDelivery, user]);
 
   useEffect(() => {
@@ -1313,14 +1296,26 @@ export default function Checkout() {
       setPickupStationsError(null);
       prevDeliveryIdRef.current = selectedDeliveryId;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDeliveryId]);
 
   const handleStationSelect = (station: PickupStation) => {
     setSelectedStation(station.id ? station : null);
   };
 
-  // ── handlePay ───────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // handlePay — the core checkout + payment flow
+  //
+  // Idempotency strategy (handles the "network dropped mid-payment" case):
+  //   1. Before calling /cart/checkout we check if we already have an
+  //      order_id from this session (orderPlacedRef). If we do, we skip
+  //      straight to re-opening Paystack so the user doesn't create a second
+  //      order by accident.
+  //   2. After successful verification we call clearCart() + refetchCart()
+  //      so the cart empties on all tabs/sessions.
+  //   3. We only navigate to /order once (in handleContinueShopping) and
+  //      we use router.replace() so there's no history entry that can push
+  //      the user back to checkout.
+  // ─────────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!items || items.length === 0) {
       setCheckoutError("Your cart is empty. Please add items before checkout.");
@@ -1333,206 +1328,268 @@ export default function Checkout() {
       return;
     }
 
-    // ── Resolve the Paystack public key early ──────────────────────────────
     const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-    if (!paystackKey || paystackKey === "undefined" || paystackKey.trim() === "") {
+    if (
+      !paystackKey ||
+      paystackKey === "undefined" ||
+      paystackKey.trim() === ""
+    ) {
       setCheckoutError(
         "Payment is not configured. Please contact support. (Missing NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY)",
-      );
-      console.error(
-        "[Checkout] NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is not set. " +
-        "Add it to your deployment environment variables and redeploy.",
       );
       return;
     }
 
     if (!paystackLoaded) {
-      setCheckoutError("Payment system is still loading. Please wait a moment and try again.");
+      setCheckoutError(
+        "Payment system is still loading. Please wait a moment and try again.",
+      );
       return;
     }
 
-    // ── Validate email ─────────────────────────────────────────────────────
     const resolvedEmail = info.email?.trim().toLowerCase();
     if (!resolvedEmail) {
-      setCheckoutError("An email address is required to process payment. Please go back and fill in your email.");
+      setCheckoutError(
+        "An email address is required to process payment. Please go back and fill in your email.",
+      );
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resolvedEmail)) {
-      setCheckoutError("The email address you entered is invalid. Please go back and correct it.");
+      setCheckoutError(
+        "The email address you entered is invalid. Please go back and correct it.",
+      );
       return;
     }
 
     setPaying(true);
     setCheckoutError(null);
-    setValidatingCart(true);
 
     try {
-      // ── Validate cart ─────────────────────────────────────────────────────
-      let validationResult;
-      try {
-        validationResult = await ApiService.validateCart();
-      } catch (validateErr: any) {
-        console.error("Cart validation error:", validateErr);
-        await refetchCart();
-        throw new Error("Unable to validate cart. Please refresh and try again.");
-      }
+      let order_id: string;
+      let total_amount: number;
+      let payment_reference: string;
+      let payment_url: string | undefined;
 
-      const validationData = unwrapEnvelope(validationResult);
-      const backendItems = validationData?.items ?? [];
-
-      if (backendItems.length === 0) {
-        await refetchCart();
-        throw new Error("Cart session expired. Please refresh the page and try again.");
-      }
-
-      if (validationData?.valid === false) {
-        const errors = validationData?.errors ?? [];
-        throw new Error(
-          errors.length > 0
-            ? errors.join(", ")
-            : "Your cart has issues. Please review your items.",
-        );
-      }
-
-      setValidatingCart(false);
-
-      // ── Resolve delivery destination fields ───────────────────────────────
-      let deliveryStreetAddress: string;
-      let deliveryCity: string;
-      let deliveryState: string;
-      let deliveryNotes: string | undefined;
-
-      if (currentlyPickup && selectedStation) {
-        deliveryStreetAddress =
-          selectedStation.address ||
-          selectedStation.landmark ||
-          selectedStation.name;
-        deliveryCity = selectedStation.city || user?.city || info.city || "Campus";
-        deliveryState = selectedStation.state || user?.state || info.state || "";
-        deliveryNotes = `Campus Pickup — ${selectedStation.name}${selectedStation.landmark ? ` (${selectedStation.landmark})` : ""}`;
+      // ── If we already created an order in this session (e.g. network
+      //    dropped after checkout but before/during payment), reuse it
+      //    instead of creating a duplicate.
+      if (orderPlacedRef.current) {
+        // We need to re-fetch the order to get the payment_reference back.
+        // For simplicity we re-call checkout with the same params — the
+        // backend should be idempotent for the same cart. If your backend
+        // isn't idempotent you can store payment_reference in state too.
+        // For now we stored it in a ref below.
+        order_id = orderPlacedRef.current;
+        total_amount = successTotal || total;
+        payment_reference = (window as any).__lastPaymentRef__ || "";
+        payment_url = (window as any).__lastPaymentUrl__;
       } else {
-        if (!info.address?.trim()) throw new Error("Delivery address is required");
-        if (!info.city?.trim()) throw new Error("City is required");
-        if (!info.state?.trim()) throw new Error("State is required");
-        deliveryStreetAddress = info.address;
-        deliveryCity = info.city;
-        deliveryState = info.state;
-        deliveryNotes = info.notes || undefined;
-      }
+        // ── Validate cart ───────────────────────────────────────────────────
+        setValidatingCart(true);
+        let validationResult;
+        try {
+          validationResult = await ApiService.validateCart();
+        } catch (validateErr: any) {
+          console.error("Cart validation error:", validateErr);
+          await refetchCart();
+          throw new Error(
+            "Unable to validate cart. Please refresh and try again.",
+          );
+        }
 
-      // ── Create the order ──────────────────────────────────────────────────
-      const checkoutRes = await ApiService.checkout({
-        delivery_street_address: deliveryStreetAddress,
-        delivery_city: deliveryCity,
-        delivery_state: deliveryState,
-        delivery_country: info.country || "Nigeria",
-        delivery_option_id: selectedDelivery.id,
-        delivery_notes: deliveryNotes,
-        email: resolvedEmail,
-        full_name: info.fullName,
-        phone: info.phone,
-      });
+        const validationData = unwrapEnvelope(validationResult);
+        const backendItems = validationData?.items ?? [];
 
-      const order = unwrapEnvelope(checkoutRes);
-      // ── FIX: also destructure payment_reference from the checkout response ──
-      const { order_id, total_amount, payment_url, payment_reference } = order;
+        if (backendItems.length === 0) {
+          await refetchCart();
+          throw new Error(
+            "Cart session expired. Please refresh the page and try again.",
+          );
+        }
 
-      if (!order_id) throw new Error("Order was not created. Please try again.");
-      if (!payment_url) throw new Error("No payment URL returned. Please try again.");
+        if (validationData?.valid === false) {
+          const errors = validationData?.errors ?? [];
+          throw new Error(
+            errors.length > 0
+              ? errors.join(", ")
+              : "Your cart has issues. Please review your items.",
+          );
+        }
 
-      const accessCode = extractPaystackAccessCode(payment_url);
+        setValidatingCart(false);
 
-      if (!accessCode) {
-        // Could not parse access code — fall back to full-page redirect
-        window.location.href = payment_url;
-        return;
+        // ── Resolve delivery fields ───────────────────────────────────────────
+        let deliveryStreetAddress: string;
+        let deliveryCity: string;
+        let deliveryState: string;
+        let deliveryNotes: string | undefined;
+
+        if (currentlyPickup && selectedStation) {
+          deliveryStreetAddress =
+            selectedStation.address ||
+            selectedStation.landmark ||
+            selectedStation.name;
+          deliveryCity =
+            selectedStation.city ||
+            (user as any)?.city ||
+            info.city ||
+            "Campus";
+          deliveryState =
+            selectedStation.state ||
+            (user as any)?.state ||
+            info.state ||
+            "";
+          deliveryNotes = `Campus Pickup — ${selectedStation.name}${
+            selectedStation.landmark ? ` (${selectedStation.landmark})` : ""
+          }`;
+        } else {
+          if (!info.address?.trim())
+            throw new Error("Delivery address is required");
+          if (!info.city?.trim()) throw new Error("City is required");
+          if (!info.state?.trim()) throw new Error("State is required");
+          deliveryStreetAddress = info.address;
+          deliveryCity = info.city;
+          deliveryState = info.state;
+          deliveryNotes = info.notes || undefined;
+        }
+
+        // ── Create order ──────────────────────────────────────────────────────
+        const checkoutRes = await ApiService.checkout({
+          delivery_street_address: deliveryStreetAddress,
+          delivery_city: deliveryCity,
+          delivery_state: deliveryState,
+          delivery_country: info.country || "Nigeria",
+          delivery_option_id: selectedDelivery.id,
+          delivery_notes: deliveryNotes,
+          email: resolvedEmail,
+          full_name: info.fullName,
+          phone: info.phone,
+        });
+
+        const orderData = unwrapEnvelope(checkoutRes);
+        order_id = orderData.order_id;
+        total_amount = orderData.total_amount;
+        payment_reference = orderData.payment_reference;
+        payment_url = orderData.payment_url;
+
+        if (!order_id)
+          throw new Error("Order was not created. Please try again.");
+        if (!payment_url && !payment_reference) {
+          throw new Error(
+            "No payment information returned. Please try again.",
+          );
+        }
+
+        // Stash so we can reuse if the network drops and user retries.
+        orderPlacedRef.current = order_id;
+        (window as any).__lastPaymentRef__ = payment_reference;
+        (window as any).__lastPaymentUrl__ = payment_url;
+        setSuccessOrderId(order_id);
+        setSuccessTotal(total_amount ?? total);
       }
 
       const PaystackPop = (window as any).PaystackPop;
-      if (!PaystackPop || typeof PaystackPop.setup !== "function") {
-        // SDK not ready — fall back to full-page redirect
+
+      if (
+        payment_reference &&
+        PaystackPop &&
+        typeof PaystackPop.setup === "function"
+      ) {
+        const onPaymentSuccess = (response: { reference: string }) => {
+          (async () => {
+            const refToVerify = response.reference;
+            console.log("[Checkout] Verifying with ref:", refToVerify, "order:", order_id);
+
+            setVerifyingPayment(true);
+            try {
+              const verifyRes = await ApiService.verifyPayment(
+                refToVerify,
+                order_id,
+              );
+              console.log("[Checkout] Verify response:", verifyRes);
+
+              if (!isPaymentVerifiedSuccessful(verifyRes)) {
+                throw new Error(
+                  "We received your payment but could not confirm it yet. " +
+                    "Please check your orders page — if it still shows as " +
+                    "pending, contact support with your order ID.",
+                );
+              }
+
+              // ── Clear cart ──────────────────────────────────────────────────
+              // Try server-side clear first, then force a refetch regardless.
+              try {
+                await clearCart();
+              } catch {
+                // clearCart may fail if cart is already empty server-side.
+              }
+              // Refetch so all cart UI (header badge etc.) updates immediately.
+              try {
+                await refetchCart();
+              } catch {
+                // Non-fatal.
+              }
+
+              // Clean up the session stash — payment is done.
+              orderPlacedRef.current = null;
+              delete (window as any).__lastPaymentRef__;
+              delete (window as any).__lastPaymentUrl__;
+
+              setVerifyingPayment(false);
+              setPaying(false);
+              setSuccessOrderId(order_id);
+              setSuccessTotal(total_amount ?? total);
+              setShowSuccess(true);
+              setPaymentDone(true);
+              paymentDoneRef.current = true;
+            } catch (verifyErr: any) {
+              console.error("Payment verification error:", verifyErr);
+              setVerifyingPayment(false);
+              setPaying(false);
+              try {
+                await refetchCart();
+              } catch {
+                /* ignore */
+              }
+              setCheckoutError(
+                verifyErr?.message ??
+                  "We couldn't confirm your payment yet. Redirecting you to your orders.",
+              );
+              setTimeout(() => {
+                router.replace(`/order?ref=${order_id}`);
+              }, 1500);
+            }
+          })();
+        };
+
+        const onPaymentClose = () => {
+          setPaying(false);
+          // Don't navigate away — the user just closed the modal.
+          // They can retry. The order_id is kept in orderPlacedRef so
+          // retrying won't create a duplicate order.
+        };
+
+        const handler = PaystackPop.setup({
+          key: paystackKey,
+          ref: payment_reference, // ← THE FIX: same ref the backend created
+          email: resolvedEmail,
+          amount: Math.round((total_amount ?? total) * 100), // kobo
+          currency: "NGN",
+          callback: onPaymentSuccess,
+          onClose: onPaymentClose,
+        });
+
+        handler.openIframe();
+        return;
+      }
+
+      // ── Fallback: redirect to Paystack-hosted page ──────────────────────────
+      if (payment_url) {
         window.location.href = payment_url;
         return;
       }
 
-      // ── Open Paystack inline modal ────────────────────────────────────────
-      const onPaymentSuccess = (response: { reference: string }) => {
-        (async () => {
-          // ── FIX: use payment_reference from checkout response, NOT
-          //    response.reference from the Paystack SDK callback.
-          //    Paystack's verify endpoint recognises the reference we got
-          //    from the backend, not the SDK's own transaction ref.
-          // ─────────────────────────────────────────────────────────────────
-          const refToVerify = payment_reference;
-
-          console.log("[Checkout] Payment success callback received");
-          console.log("[Checkout] Verifying with ref:", refToVerify);
-          console.log("[Checkout] Order ID:", order_id);
-
-          setVerifyingPayment(true);
-          try {
-            const verifyRes = await ApiService.verifyPayment(refToVerify, order_id);
-            console.log("[Checkout] Verify response:", verifyRes);
-
-            if (!isPaymentVerifiedSuccessful(verifyRes)) {
-              throw new Error(
-                "We received your payment but could not confirm it yet. " +
-                "Please check your orders page in a moment — if it still " +
-                "shows as pending, contact support with your order ID.",
-              );
-            }
-
-            // ── Clear cart after successful payment ───────────────────────
-            // The backend clears the cart server-side on checkout.
-            // We force a clean state locally: clear then refetch.
-            try {
-              await clearCart();
-            } catch {
-              // clearCart may fail if the server-side cart is already empty — that's fine
-            }
-            await refetchCart();
-
-            setVerifyingPayment(false);
-            setPaying(false);
-            setSuccessOrderId(order_id);
-            setSuccessTotal(total_amount ?? total);
-            setShowSuccess(true);
-            setPaymentDone(true);
-            paymentDoneRef.current = true;
-          } catch (verifyErr: any) {
-            console.error("Payment verification error:", verifyErr);
-            setVerifyingPayment(false);
-            setPaying(false);
-            // Even on verify error, try to refresh cart so it reflects reality
-            try { await refetchCart(); } catch { /* ignore */ }
-            setCheckoutError(
-              verifyErr?.message ??
-                "We couldn't confirm your payment yet. Redirecting you to your orders — please check the status there.",
-            );
-            setTimeout(() => {
-              router.push(`/order?ref=${order_id}`);
-            }, 1500);
-          }
-        })();
-      };
-
-      const onPaymentClose = () => {
-        setPaying(false);
-        // Redirect to orders page so user can check status
-        router.push(`/order?ref=${order_id}`);
-      };
-
-      const handler = PaystackPop.setup({
-        key: paystackKey,
-        access_code: accessCode,
-        email: resolvedEmail,
-        amount: Math.round((total_amount ?? total) * 100), // NGN → kobo
-        currency: "NGN",
-        callback: onPaymentSuccess,
-        onClose: onPaymentClose,
-      });
-
-      handler.openIframe();
+      throw new Error("Unable to initiate payment. Please try again.");
     } catch (err: any) {
       setPaying(false);
       setValidatingCart(false);
@@ -1548,22 +1605,27 @@ export default function Checkout() {
         err?.message?.includes("Authentication")
       ) {
         errorMsg = "Please log in again to complete your purchase.";
-        setTimeout(() => router.push("/login?redirect=/cart/checkout"), 2000);
+        setTimeout(
+          () => router.push("/login?redirect=/cart/checkout"),
+          2000,
+        );
       } else if (errorMsg.toLowerCase().includes("empty")) {
         errorMsg = "Your cart is empty. Redirecting you to shop...";
         setTimeout(() => router.push("/shop"), 2000);
       }
 
       setCheckoutError(errorMsg);
-      console.error("Checkout error details:", err);
+      console.error("Checkout error:", err);
     }
   };
 
+  // ── Navigate to orders page and STAY there ──────────────────────────────────
+  // router.replace() replaces the current history entry so pressing Back
+  // from /order doesn't loop back to checkout (which would redirect to shop
+  // because the cart is now empty).
   const handleContinueShopping = () => {
     setShowSuccess(false);
-    setPaymentDone(false);
-    paymentDoneRef.current = false;
-    router.push(`/order?ref=${successOrderId}`);
+    router.replace(`/order?ref=${successOrderId}`);
   };
 
   if (checkingAuth || authLoading || (cartLoading && !paymentDone)) {
@@ -1612,8 +1674,12 @@ export default function Checkout() {
         >
           <div className="bg-white rounded-3xl p-8 text-center max-w-xs w-full">
             <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
-            <p className="font-black text-gray-900 mb-1">Confirming your payment…</p>
-            <p className="text-xs text-gray-400">Please don&apos;t close this window.</p>
+            <p className="font-black text-gray-900 mb-1">
+              Confirming your payment…
+            </p>
+            <p className="text-xs text-gray-400">
+              Please don&apos;t close this window.
+            </p>
           </div>
         </div>
       )}
@@ -1622,7 +1688,8 @@ export default function Checkout() {
         <div
           className="relative overflow-hidden py-8 md:py-11"
           style={{
-            background: "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
+            background:
+              "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
           }}
         >
           <div
@@ -1657,20 +1724,14 @@ export default function Checkout() {
           <StepBar current={step} />
 
           {validatingCart && (
-            <div
-              className="flex items-center gap-2 p-4 mb-6 bg-blue-50 border border-blue-100 rounded-2xl text-sm text-blue-600"
-              style={{ animation: "fadeUp 0.3s ease both" }}
-            >
+            <div className="flex items-center gap-2 p-4 mb-6 bg-blue-50 border border-blue-100 rounded-2xl text-sm text-blue-600">
               <FiLoader size={16} className="animate-spin shrink-0" />
               <span>Validating your cart...</span>
             </div>
           )}
 
           {checkoutError && (
-            <div
-              className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600"
-              style={{ animation: "fadeUp 0.3s ease both" }}
-            >
+            <div className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
               <FiAlertCircle size={16} className="shrink-0" />
               <span>{checkoutError}</span>
             </div>

@@ -19,6 +19,10 @@ import {
   FiEye,
   FiToggleLeft,
   FiToggleRight,
+  FiGrid,
+  FiList,
+  FiCheckCircle,
+  FiClock,
 } from "react-icons/fi";
 import { MdOutlineInventory2 } from "react-icons/md";
 
@@ -68,17 +72,14 @@ type ActiveFilter = "all" | "active" | "inactive";
 // ─── Helper function to get approval status ───────────────────────────────────
 
 const getApprovalStatus = (product: Product): string => {
-  // If product is inactive, return inactive
   if (!product.is_active) {
     return "inactive";
   }
   
-  // If there's a rejection reason, it's rejected
   if (product.rejection_reason) {
     return "rejected";
   }
   
-  // Check multiple possible field names
   const status = product.approval_status || product.approval_state || product.status;
   
   if (status === "pending" || status === "Pending") {
@@ -93,24 +94,18 @@ const getApprovalStatus = (product: Product): string => {
     return "rejected";
   }
   
-  // Check if product has been reviewed before
-  // If it has a reviewed_at date but is_approved is false, it might be pending re-review
   if (product.reviewed_at && !product.is_approved) {
     return "pending";
   }
   
-  // Check if the product was updated recently but hasn't been reviewed
-  // This is a heuristic - if updated in last 24 hours and no reviewed_at, might be pending
   const updatedAt = new Date(product.updated_at);
   const now = new Date();
   const hoursSinceUpdate = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
   
-  // If updated in last hour and no reviewed_at timestamp, consider it pending
   if (hoursSinceUpdate < 1 && !product.reviewed_at) {
     return "pending";
   }
   
-  // Fallback to is_approved flag
   if (product.is_approved === false) {
     return "pending";
   }
@@ -129,7 +124,7 @@ const ApprovalBadge = ({ product }: { product: Product }) => {
   
   if (approvalStatus === "inactive") {
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
         Inactive
       </span>
     );
@@ -137,7 +132,7 @@ const ApprovalBadge = ({ product }: { product: Product }) => {
   
   if (approvalStatus === "pending") {
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
         Pending Review
       </span>
     );
@@ -145,7 +140,7 @@ const ApprovalBadge = ({ product }: { product: Product }) => {
   
   if (approvalStatus === "rejected") {
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">
+      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
         Rejected
       </span>
     );
@@ -153,15 +148,14 @@ const ApprovalBadge = ({ product }: { product: Product }) => {
   
   if (approvalStatus === "approved") {
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
         Approved
       </span>
     );
   }
   
-  // Default fallback
   return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
       Unknown
     </span>
   );
@@ -176,7 +170,7 @@ const ConditionBadge = ({ condition }: { condition: string }) => {
   };
   return (
     <span
-      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
         map[condition] ?? "bg-slate-50 text-slate-600"
       }`}
     >
@@ -260,8 +254,8 @@ const SellerProductsPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
-  // Use ref to prevent multiple fetch calls
   const hasFetchedRef = useRef(false);
 
   const showToast = (msg: string) => {
@@ -281,8 +275,6 @@ const SellerProductsPage = () => {
           params.approval_status = approvalFilter;
 
         const res = await apiService.getMyProducts(params);
-
-        // API response: { status, message, data: { total, page, page_size, total_pages, products: [] } }
         const body = res?.data ?? res;
         const list: Product[] =
           body?.products ??
@@ -305,7 +297,6 @@ const SellerProductsPage = () => {
     [approvalFilter, activeFilter]
   );
 
-  // Reset ref when any filter changes to allow re-fetch
   useEffect(() => {
     hasFetchedRef.current = false;
   }, [approvalFilter, activeFilter]);
@@ -348,7 +339,6 @@ const SellerProductsPage = () => {
     }
   };
 
-  // Client-side search filter
   const displayed = search.trim()
     ? products.filter((p) =>
         p.product_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -364,7 +354,6 @@ const SellerProductsPage = () => {
     { key: "rejected", label: "Rejected" },
   ];
 
-  // Calculate stats based on actual approval status
   const getStats = () => {
     const total = pagination.total;
     const active = products.filter((p) => p.is_active).length;
@@ -387,10 +376,10 @@ const SellerProductsPage = () => {
         headerAction={
           <button
             onClick={() => router.push("/seller/add-product")}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
             style={{
-              background: "linear-gradient(135deg,#F97316,#EA580C)",
-              boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
+              background: "linear-gradient(135deg, #F97316, #EA580C, #B42225)",
+              boxShadow: "0 4px 15px rgba(249,115,22,0.3)",
             }}
           >
             <FiPlus size={15} />
@@ -398,45 +387,109 @@ const SellerProductsPage = () => {
           </button>
         }
       >
-        <div className="p-5 md:p-7 space-y-5">
-          {/* Header Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-4 sm:p-5 md:p-7 space-y-5 sm:space-y-6">
+          {/* Luxurious Hero Banner */}
+          <div
+            className="relative rounded-3xl overflow-hidden"
+            style={{
+              background: "linear-gradient(145deg, #0F0A1A 0%, #1A0F1F 40%, #2D1810 100%)",
+              minHeight: 120,
+            }}
+          >
+            <div
+              className="absolute -left-16 -top-16 w-64 h-64 rounded-full opacity-20"
+              style={{
+                background: "radial-gradient(circle, #F97316 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute -right-16 -bottom-16 w-64 h-64 rounded-full opacity-15"
+              style={{
+                background: "radial-gradient(circle, #B42225 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+            
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8">
+              <div>
+                <h1 className="text-white text-2xl sm:text-3xl font-black leading-tight tracking-tight">
+                  Product Inventory
+                </h1>
+                <p className="text-slate-400 text-sm mt-1 font-medium">
+                  Manage and monitor all your product listings
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/10">
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                    Total Products
+                  </p>
+                  <p className="text-white font-black text-xl mt-0.5">
+                    {pagination.total}
+                  </p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/10">
+                  <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
+                    Active
+                  </p>
+                  <p className="text-white font-black text-xl mt-0.5">
+                    {stats.active}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {[
               {
                 label: "Total Listed",
                 value: stats.total,
                 color: "#6366F1",
                 bg: "#EEF2FF",
+                icon: <MdOutlineInventory2 size={16} />,
               },
               {
                 label: "Active",
                 value: stats.active,
                 color: "#10B981",
                 bg: "#F0FDF4",
+                icon: <FiCheckCircle size={16} />,
               },
               {
                 label: "Approved",
                 value: stats.approved,
                 color: "#F97316",
                 bg: "#FFF7ED",
+                icon: <FiCheckCircle size={16} />,
               },
               {
                 label: "Pending Review",
                 value: stats.pending,
                 color: "#F59E0B",
                 bg: "#FFFBEB",
+                icon: <FiClock size={16} />,
               },
-            ].map(({ label, value, color, bg }) => (
+            ].map(({ label, value, color, bg, icon }) => (
               <div
                 key={label}
-                className="bg-white rounded-2xl p-4 border border-slate-100"
+                className="bg-white rounded-2xl p-4 border border-slate-100/80 transition-all duration-300 hover:shadow-lg"
                 style={{ boxShadow: "0 1px 12px rgba(0,0,0,0.04)" }}
               >
                 <div
                   className="w-8 h-8 rounded-xl flex items-center justify-center mb-2"
                   style={{ background: bg }}
                 >
-                  <MdOutlineInventory2 size={16} style={{ color }} />
+                  <span style={{ color }}>{icon}</span>
                 </div>
                 <p className="text-2xl font-black text-slate-900">
                   {loading ? "—" : value}
@@ -448,9 +501,9 @@ const SellerProductsPage = () => {
             ))}
           </div>
 
-          {/* Info Banner about pending reviews */}
+          {/* Info Banner */}
           {stats.pending > 0 && (
-            <div className="flex items-center gap-3 rounded-2xl px-5 py-3 bg-amber-50 border border-amber-100">
+            <div className="flex items-center gap-3 rounded-2xl px-5 py-3.5 bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200/50">
               <FiAlertCircle size={16} className="text-amber-600 shrink-0" />
               <p className="text-amber-700 text-xs font-medium flex-1">
                 <strong>{stats.pending} product{stats.pending !== 1 ? 's are' : ' is'} pending review.</strong> Your recent changes are being reviewed by our admin team.
@@ -474,39 +527,84 @@ const SellerProductsPage = () => {
             </div>
           )}
 
-          {/* Filters & Search */}
+          {/* Filters & Search - Redesigned */}
           <div
-            className="bg-white rounded-2xl border border-slate-100 p-4"
-            style={{ boxShadow: "0 1px 12px rgba(0,0,0,0.04)" }}
+            className="bg-white rounded-3xl border border-slate-100 p-4 sm:p-5"
+            style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
           >
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Search */}
-              <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100 flex-1">
-                <FiSearch size={14} className="text-slate-400 shrink-0" />
-                <input
-                  className="bg-transparent text-sm text-slate-700 outline-none flex-1 placeholder-slate-400"
-                  placeholder="Search by name, brand, category…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+            <div className="flex flex-col gap-4">
+              {/* Search and View Toggle */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <FiSearch size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all placeholder-slate-400"
+                    placeholder="Search by name, brand, or category…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {/* View toggle */}
+                  <div className="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-2 rounded-lg transition ${
+                        viewMode === "list"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-400 hover:text-slate-600"
+                      }`}
+                    >
+                      <FiList size={16} />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-2 rounded-lg transition ${
+                        viewMode === "grid"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-400 hover:text-slate-600"
+                      }`}
+                    >
+                      <FiGrid size={16} />
+                    </button>
+                  </div>
+                  
+                  {/* Active filter */}
+                  <div className="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
+                    {(
+                      [
+                        { key: "all", label: "All" },
+                        { key: "active", label: "Active" },
+                        { key: "inactive", label: "Inactive" },
+                      ] as { key: ActiveFilter; label: string }[]
+                    ).map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setActiveFilter(key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                          activeFilter === key
+                            ? "bg-white text-slate-900 shadow-sm"
+                            : "text-slate-400 hover:text-slate-600"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Active filter */}
-              <div className="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
-                {(
-                  [
-                    { key: "all", label: "All" },
-                    { key: "active", label: "Active" },
-                    { key: "inactive", label: "Inactive" },
-                  ] as { key: ActiveFilter; label: string }[]
-                ).map(({ key, label }) => (
+              {/* Approval tabs */}
+              <div className="flex flex-wrap items-center gap-1">
+                {filterTabs.map(({ key, label }) => (
                   <button
                     key={key}
-                    onClick={() => setActiveFilter(key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                      activeFilter === key
-                        ? "bg-white text-slate-900 shadow-sm"
-                        : "text-slate-400 hover:text-slate-600"
+                    onClick={() => setApprovalFilter(key)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+                      approvalFilter === key
+                        ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md"
+                        : "text-slate-500 hover:bg-slate-50"
                     }`}
                   >
                     {label}
@@ -514,336 +612,552 @@ const SellerProductsPage = () => {
                 ))}
               </div>
             </div>
-
-            {/* Approval tabs */}
-            <div className="flex items-center gap-1 mt-3">
-              {filterTabs.map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setApprovalFilter(key)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                    approvalFilter === key
-                      ? "bg-orange-500 text-white"
-                      : "text-slate-500 hover:bg-slate-50"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
           </div>
 
-          {/* Products Table */}
-          <div
-            className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
-            style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
-          >
-            <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full min-w-[900px]">
-                <thead>
-                  <tr style={{ background: "#F8FAFC" }}>
-                    {[
-                      "Product",
-                      "Category",
-                      "Price",
-                      "Stock",
-                      "Condition",
-                      "Status",
-                      "Sales",
-                      "Actions",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3.5"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {loading ? (
-                    [...Array(6)].map((_, i) => (
-                      <tr key={i}>
-                        {[...Array(8)].map((_, j) => (
-                          <td key={j} className="px-5 py-4">
-                            <div className="h-3 rounded bg-slate-100 animate-pulse" />
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : displayed.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="py-20 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
-                          <FiPackage size={24} className="text-slate-300" />
+          {/* Products - Grid View */}
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {loading ? (
+                [...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 animate-pulse">
+                    <div className="w-full h-48 rounded-xl bg-slate-100 mb-4" />
+                    <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-slate-100 rounded w-1/2 mb-3" />
+                    <div className="flex justify-between">
+                      <div className="h-4 bg-slate-100 rounded w-1/3" />
+                      <div className="h-4 bg-slate-100 rounded w-1/4" />
+                    </div>
+                  </div>
+                ))
+              ) : displayed.length === 0 ? (
+                <div className="col-span-full py-20 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+                    <FiPackage size={24} className="text-slate-300" />
+                  </div>
+                  <p className="font-bold text-slate-600">No products found</p>
+                  <p className="text-slate-400 text-sm mt-1">
+                    {search ? "Try a different search term" : "List your first product to start selling"}
+                  </p>
+                  {!search && (
+                    <button
+                      onClick={() => router.push("/seller/add-product")}
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:shadow-2xl"
+                      style={{
+                        background: "linear-gradient(135deg, #F97316, #EA580C, #B42225)",
+                        boxShadow: "0 4px 15px rgba(249,115,22,0.3)",
+                      }}
+                    >
+                      <FiPlus size={14} /> Add Product
+                    </button>
+                  )}
+                </div>
+              ) : (
+                displayed.map((product) => (
+                  <div
+                    key={product.id}
+                    className="bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                    style={{ boxShadow: "0 1px 12px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="relative w-full h-48 bg-slate-50">
+                      {product.product_images?.[0] ? (
+                        <Image
+                          src={product.product_images[0]}
+                          alt={product.product_name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <FiPackage size={32} className="text-slate-300" />
                         </div>
-                        <p className="font-bold text-slate-600">
-                          No products found
-                        </p>
-                        <p className="text-slate-400 text-sm mt-1">
-                          {search
-                            ? "Try a different search term"
-                            : "List your first product to start selling"}
-                        </p>
-                        {!search && (
-                          <button
-                            onClick={() =>
-                              router.push("/seller/add-product")
-                            }
-                            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
-                            style={{
-                              background:
-                                "linear-gradient(135deg,#F97316,#EA580C)",
-                            }}
-                          >
-                            <FiPlus size={14} /> Add Product
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ) : (
-                    displayed.map((product) => (
-                      <tr
-                        key={product.id}
-                        className="group hover:bg-orange-50/20 transition-colors"
-                      >
-                        {/* Product */}
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center relative">
-                              {product.product_images?.[0] ? (
-                                <Image
-                                  src={product.product_images[0]}
-                                  alt={product.product_name}
-                                  width={44}
-                                  height={44}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <FiPackage
-                                  size={18}
-                                  className="text-slate-300"
-                                />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-slate-900 truncate max-w-[160px]">
-                                {product.product_name}
-                              </p>
-                              {product.brand && (
-                                <p className="text-[11px] text-slate-400 font-medium">
-                                  {product.brand}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Category */}
-                        <td className="px-5 py-4">
-                          <p className="text-xs text-slate-500 font-medium">
-                            {product.subcategory_name || "—"}
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <ApprovalBadge product={product} />
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-slate-900 text-sm truncate">
+                        {product.product_name}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {product.subcategory_name}
+                      </p>
+                      <div className="flex items-center justify-between mt-3">
+                        <div>
+                          <p className="text-lg font-black text-slate-900">
+                            {fmtCurrency(product.current_price)}
                           </p>
-                        </td>
-
-                        {/* Price */}
-                        <td className="px-5 py-4">
-                          <div>
+                          {product.is_on_sale && product.product_discount_price && (
+                            <p className="text-[10px] text-slate-400 line-through">
+                              {fmtCurrency(product.product_original_price)}
+                            </p>
+                          )}
+                        </div>
+                        <ConditionBadge condition={product.product_condition} />
+                      </div>
+                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-50">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${product.is_in_stock ? "bg-emerald-500" : "bg-red-400"}`} />
+                          <span className="text-xs font-medium text-slate-600">
+                            {product.stock_quantity} in stock
+                          </span>
+                        </div>
+                        <span className="text-xs text-slate-400">
+                          {product.sold_count} sold
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-3">
+                        <button
+                          onClick={() => router.push(`/seller/products/${product.id}/edit`)}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-600 text-xs font-bold hover:bg-blue-50 hover:text-blue-600 transition"
+                        >
+                          <FiEdit2 size={13} /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(product)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${
+                            product.is_active
+                              ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                              : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          }`}
+                        >
+                          {product.is_active ? <FiToggleRight size={13} /> : <FiToggleLeft size={13} />}
+                          {product.is_active ? "Hide" : "Publish"}
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(product)}
+                          className="px-3 py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition"
+                        >
+                          <FiTrash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            /* List View - Responsive Table */
+            <div
+              className="bg-white rounded-3xl border border-slate-100 overflow-hidden"
+              style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.05)" }}
+            >
+              {/* Mobile Card View */}
+              <div className="sm:hidden divide-y divide-slate-50">
+                {loading ? (
+                  [...Array(4)].map((_, i) => (
+                    <div key={i} className="px-4 py-4 animate-pulse">
+                      <div className="flex gap-3">
+                        <div className="w-16 h-16 rounded-xl bg-slate-100" />
+                        <div className="flex-1">
+                          <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+                          <div className="h-3 bg-slate-100 rounded w-1/2" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : displayed.length === 0 ? (
+                  <div className="py-20 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+                      <FiPackage size={24} className="text-slate-300" />
+                    </div>
+                    <p className="font-bold text-slate-600">No products found</p>
+                    <p className="text-slate-400 text-sm mt-1">
+                      {search ? "Try a different search term" : "List your first product to start selling"}
+                    </p>
+                  </div>
+                ) : (
+                  displayed.map((product) => (
+                    <div
+                      key={product.id}
+                      className="px-4 py-4 hover:bg-orange-50/30 transition-colors"
+                    >
+                      <div className="flex gap-3">
+                        <div className="w-16 h-16 rounded-xl bg-slate-50 overflow-hidden shrink-0">
+                          {product.product_images?.[0] ? (
+                            <Image
+                              src={product.product_images[0]}
+                              alt={product.product_name}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <FiPackage size={20} className="text-slate-300" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">
+                            {product.product_name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {product.subcategory_name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
                             <p className="text-sm font-black text-slate-900">
                               {fmtCurrency(product.current_price)}
                             </p>
-                            {product.is_on_sale &&
-                              product.product_discount_price && (
-                                <p className="text-[10px] text-slate-400 line-through">
-                                  {fmtCurrency(product.product_original_price)}
-                                </p>
-                              )}
+                            <ApprovalBadge product={product} />
                           </div>
-                        </td>
-
-                        {/* Stock */}
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                product.is_in_stock
-                                  ? "bg-emerald-500"
-                                  : "bg-red-400"
-                              }`}
-                            />
-                            <span
-                              className={`text-xs font-semibold ${
-                                product.is_in_stock
-                                  ? "text-slate-700"
-                                  : "text-red-500"
-                              }`}
-                            >
-                              {product.stock_quantity}
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className="text-xs text-slate-500">
+                              Stock: {product.stock_quantity}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {product.sold_count} sold
                             </span>
                           </div>
-                        </td>
-
-                        {/* Condition */}
-                        <td className="px-5 py-4">
-                          <ConditionBadge
-                            condition={product.product_condition}
-                          />
-                        </td>
-
-                        {/* Status */}
-                        <td className="px-5 py-4">
-                          <ApprovalBadge product={product} />
-                        </td>
-
-                        {/* Sales */}
-                        <td className="px-5 py-4">
-                          <div>
-                            <p className="text-xs font-bold text-slate-900">
-                              {product.sold_count} sold
-                            </p>
-                            <p className="text-[10px] text-slate-400">
-                              {product.view_count} views
-                            </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => router.push(`/seller/products/${product.id}/edit`)}
+                              className="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold hover:bg-blue-50 hover:text-blue-600 transition"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleToggleActive(product)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                                product.is_active
+                                  ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                                  : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                              }`}
+                            >
+                              {product.is_active ? "Hide" : "Publish"}
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(product)}
+                              className="px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
+                            >
+                              <FiTrash2 size={13} />
+                            </button>
                           </div>
-                        </td>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
 
-                        {/* Actions */}
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto scrollbar-hide">
+                <style jsx>{`
+                  .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                  }
+                  .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                  }
+                `}</style>
+                <table className="w-full min-w-[900px]">
+                  <thead>
+                    <tr style={{ background: "#F8FAFC" }}>
+                      {[
+                        "Product",
+                        "Category",
+                        "Price",
+                        "Stock",
+                        "Condition",
+                        "Status",
+                        "Sales",
+                        "Actions",
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3.5"
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {loading ? (
+                      [...Array(6)].map((_, i) => (
+                        <tr key={i}>
+                          {[...Array(8)].map((_, j) => (
+                            <td key={j} className="px-5 py-4">
+                              <div className="h-3 rounded bg-slate-100 animate-pulse" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : displayed.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-20 text-center">
+                          <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+                            <FiPackage size={24} className="text-slate-300" />
+                          </div>
+                          <p className="font-bold text-slate-600">
+                            No products found
+                          </p>
+                          <p className="text-slate-400 text-sm mt-1">
+                            {search
+                              ? "Try a different search term"
+                              : "List your first product to start selling"}
+                          </p>
+                          {!search && (
                             <button
                               onClick={() =>
-                                router.push(
-                                                  `/seller/products/${product.id}/edit`
-                                                )
-                                              }
-                                              className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition"
-                                              title="Edit product"
-                                            >
-                                              <FiEdit2 size={13} />
-                                            </button>
-                                            <button
-                                              onClick={() => handleToggleActive(product)}
-                                              className={`p-2 rounded-lg transition ${
-                                                product.is_active
-                                                  ? "bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600"
-                                                  : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                                              }`}
-                                              title={
-                                                product.is_active
-                                                  ? "Hide product"
-                                                  : "Re-publish product"
-                                              }
-                                            >
-                                              {product.is_active ? (
-                                                <FiToggleRight size={13} />
-                                              ) : (
-                                                <FiToggleLeft size={13} />
-                                              )}
-                                            </button>
-                                            <button
-                                              onClick={() => setDeleteTarget(product)}
-                                              className="p-2 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition"
-                                              title="Remove product"
-                                            >
-                                              <FiTrash2 size={13} />
-                                            </button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    ))
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-
-                            {/* Pagination */}
-                            {!loading && pagination.total_pages > 1 && (
-                              <div
-                                className="flex items-center justify-between px-6 py-4"
-                                style={{ borderTop: "1px solid #F8FAFC" }}
-                              >
-                                <p className="text-xs text-slate-400 font-medium">
-                                  Showing {(pagination.page - 1) * pagination.page_size + 1}–
-                                  {Math.min(
-                                    pagination.page * pagination.page_size,
-                                    pagination.total
-                                  )}{" "}
-                                  of {pagination.total} products
-                                </p>
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => fetchProducts(pagination.page - 1)}
-                                    disabled={pagination.page <= 1}
-                                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                                  >
-                                    <FiChevronLeft size={14} />
-                                  </button>
-                                  {[...Array(pagination.total_pages)].map((_, i) => {
-                                    const p = i + 1;
-                                    if (
-                                      p === 1 ||
-                                      p === pagination.total_pages ||
-                                      Math.abs(p - pagination.page) <= 1
-                                    ) {
-                                      return (
-                                        <button
-                                          key={p}
-                                          onClick={() => fetchProducts(p)}
-                                          className={`w-8 h-8 rounded-lg text-xs font-bold transition ${
-                                            p === pagination.page
-                                              ? "bg-orange-500 text-white"
-                                              : "border border-slate-200 text-slate-500 hover:bg-slate-50"
-                                          }`}
-                                        >
-                                          {p}
-                                        </button>
-                                      );
-                                    }
-                                    if (Math.abs(p - pagination.page) === 2) {
-                                      return (
-                                        <span key={p} className="text-slate-400 text-xs">
-                                          …
-                                        </span>
-                                      );
-                                    }
-                                    return null;
-                                  })}
-                                  <button
-                                    onClick={() => fetchProducts(pagination.page + 1)}
-                                    disabled={pagination.page >= pagination.total_pages}
-                                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                                  >
-                                    <FiChevronRight size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </SellerLayout>
-
-                      {/* Delete Modal */}
-                      {deleteTarget && (
-                        <DeleteModal
-                          product={deleteTarget}
-                          onConfirm={handleDelete}
-                          onCancel={() => setDeleteTarget(null)}
-                          loading={deleting}
-                        />
-                      )}
-
-                      {/* Toast */}
-                      {toastMsg && (
-                        <div
-                          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"
-                          style={{ background: "linear-gradient(135deg,#0F172A,#1E293B)" }}
+                                router.push("/seller/add-product")
+                              }
+                              className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:shadow-2xl"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #F97316, #EA580C, #B42225)",
+                                boxShadow: "0 4px 15px rgba(249,115,22,0.3)",
+                              }}
+                            >
+                              <FiPlus size={14} /> Add Product
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ) : (
+                      displayed.map((product) => (
+                        <tr
+                          key={product.id}
+                          className="group hover:bg-orange-50/20 transition-colors"
                         >
-                          {toastMsg}
-                        </div>
-                      )}
-                    </>
-                  );
-                };
+                          {/* Product */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                                {product.product_images?.[0] ? (
+                                  <Image
+                                    src={product.product_images[0]}
+                                    alt={product.product_name}
+                                    width={44}
+                                    height={44}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <FiPackage
+                                    size={18}
+                                    className="text-slate-300"
+                                  />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-slate-900 truncate max-w-[160px]">
+                                  {product.product_name}
+                                </p>
+                                {product.brand && (
+                                  <p className="text-[11px] text-slate-400 font-medium">
+                                    {product.brand}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
 
-                export default SellerProductsPage;
+                          {/* Category */}
+                          <td className="px-5 py-4">
+                            <p className="text-xs text-slate-500 font-medium">
+                              {product.subcategory_name || "—"}
+                            </p>
+                          </td>
+
+                          {/* Price */}
+                          <td className="px-5 py-4">
+                            <div>
+                              <p className="text-sm font-black text-slate-900">
+                                {fmtCurrency(product.current_price)}
+                              </p>
+                              {product.is_on_sale &&
+                                product.product_discount_price && (
+                                  <p className="text-[10px] text-slate-400 line-through">
+                                    {fmtCurrency(product.product_original_price)}
+                                  </p>
+                                )}
+                            </div>
+                          </td>
+
+                          {/* Stock */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-1.5">
+                              <div
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  product.is_in_stock
+                                    ? "bg-emerald-500"
+                                    : "bg-red-400"
+                                }`}
+                              />
+                              <span
+                                className={`text-xs font-semibold ${
+                                  product.is_in_stock
+                                    ? "text-slate-700"
+                                    : "text-red-500"
+                                }`}
+                              >
+                                {product.stock_quantity}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Condition */}
+                          <td className="px-5 py-4">
+                            <ConditionBadge
+                              condition={product.product_condition}
+                            />
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-5 py-4">
+                            <ApprovalBadge product={product} />
+                          </td>
+
+                          {/* Sales */}
+                          <td className="px-5 py-4">
+                            <div>
+                              <p className="text-xs font-bold text-slate-900">
+                                {product.sold_count} sold
+                              </p>
+                              <p className="text-[10px] text-slate-400">
+                                {product.view_count} views
+                              </p>
+                            </div>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() =>
+                                  router.push(
+                                    `/seller/products/${product.id}/edit`
+                                  )
+                                }
+                                className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition"
+                                title="Edit product"
+                              >
+                                <FiEdit2 size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleToggleActive(product)}
+                                className={`p-2 rounded-lg transition ${
+                                  product.is_active
+                                    ? "bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600"
+                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                }`}
+                                title={
+                                  product.is_active
+                                    ? "Hide product"
+                                    : "Re-publish product"
+                                }
+                              >
+                                {product.is_active ? (
+                                  <FiToggleRight size={13} />
+                                ) : (
+                                  <FiToggleLeft size={13} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => setDeleteTarget(product)}
+                                className="p-2 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition"
+                                title="Remove product"
+                              >
+                                <FiTrash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {!loading && pagination.total_pages > 1 && (
+                <div
+                  className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4"
+                  style={{ borderTop: "1px solid #F8FAFC" }}
+                >
+                  <p className="text-xs text-slate-400 font-medium">
+                    Showing {(pagination.page - 1) * pagination.page_size + 1}–
+                    {Math.min(
+                      pagination.page * pagination.page_size,
+                      pagination.total
+                    )}{" "}
+                    of {pagination.total} products
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => fetchProducts(pagination.page - 1)}
+                      disabled={pagination.page <= 1}
+                      className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <FiChevronLeft size={14} />
+                    </button>
+                    {[...Array(pagination.total_pages)].map((_, i) => {
+                      const p = i + 1;
+                      if (
+                        p === 1 ||
+                        p === pagination.total_pages ||
+                        Math.abs(p - pagination.page) <= 1
+                      ) {
+                        return (
+                          <button
+                            key={p}
+                            onClick={() => fetchProducts(p)}
+                            className={`w-8 h-8 rounded-lg text-xs font-bold transition ${
+                              p === pagination.page
+                                ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md"
+                                : "border border-slate-200 text-slate-500 hover:bg-slate-50"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        );
+                      }
+                      if (Math.abs(p - pagination.page) === 2) {
+                        return (
+                          <span key={p} className="text-slate-400 text-xs">
+                            …
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => fetchProducts(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.total_pages}
+                      className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <FiChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </SellerLayout>
+
+      {/* Delete Modal */}
+      {deleteTarget && (
+        <DeleteModal
+          product={deleteTarget}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
+
+      {/* Toast */}
+      {toastMsg && (
+        <div
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl text-white text-sm font-semibold shadow-2xl"
+          style={{ background: "linear-gradient(145deg, #0F0A1A, #1A0F1F)" }}
+        >
+          {toastMsg}
+        </div>
+      )}
+    </>
+  );
+};
+
+export default SellerProductsPage;

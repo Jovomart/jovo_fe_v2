@@ -1,5 +1,12 @@
 "use client";
-import { useState, useEffect, useContext, useCallback, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -29,9 +36,7 @@ import Footer from "@/components/layout/Footer";
 
 const fmt = (n: number) => `₦${n.toLocaleString()}`;
 
-// ── Safe date formatting — never throws, never renders "Invalid Date" raw.
-// Backend timestamps are not guaranteed to always be present/well-formed,
-// and this keeps a bad value from blowing up the whole order card.
+// ── Safe date formatting ────────────────────────────────────────────────────
 function safeFormatDate(
   value: string | undefined | null,
   options: Intl.DateTimeFormatOptions,
@@ -61,9 +66,12 @@ export interface OrderItem {
 
 export interface TrackingEvent {
   status: string;
+  label?: string;
+  message?: string;
   timestamp: string;
   note?: string;
-  location?: string;
+  location?: string | null;
+  set_by?: string;
 }
 
 export interface Order {
@@ -91,31 +99,24 @@ export interface Order {
   updated_at?: string;
 }
 
-// ─── Parse the list response — backend schema is opaque ("string") so we
-//     handle every shape we've seen in the wild. ────────────────────────────
+// ─── Parse list response ────────────────────────────────────────────────────
 function parseOrdersResponse(res: any): Order[] {
-  // unwrap common envelope shapes
   const payload = res?.data ?? res;
-
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.orders)) return payload.orders;
   if (Array.isArray(payload?.results)) return payload.results;
   if (Array.isArray(payload?.items)) return payload.items;
-
-  // some backends return { data: { orders: [...], total: N } }
   const inner = payload?.data ?? payload;
   if (Array.isArray(inner)) return inner;
   if (Array.isArray(inner?.orders)) return inner.orders;
   if (Array.isArray(inner?.results)) return inner.results;
-
   return [];
 }
 
-// ─── Parse a single order — same defensive unwrapping. ───────────────────
+// ─── Parse single order ─────────────────────────────────────────────────────
 function parseOrder(res: any): Order | null {
   const payload = res?.data ?? res;
   if (!payload || typeof payload !== "object") return null;
-  // sometimes the order is nested one more level
   if (payload.id) return payload as Order;
   const inner = payload?.order ?? payload?.data;
   if (inner?.id) return inner as Order;
@@ -169,11 +170,29 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const TIMELINE = ["Order Placed", "Confirmed", "Shipped", "Delivered"];
+const TIMELINE_LABELS = ["Order Placed", "Confirmed", "Shipped", "Delivered"];
 
 // ─────────────────────────────────────────────────────────────
 // TRACKING PANEL
+// Deduplicates events that share the same status + same-second timestamp
+// (the backend occasionally fires two identical events for the same status
+//  transition — e.g. the two "pending / Order Placed" entries in the
+//  tracking response you shared).
 // ─────────────────────────────────────────────────────────────
+function dedupeTrackingEvents(events: TrackingEvent[]): TrackingEvent[] {
+  const seen = new Set<string>();
+  return events.filter((ev) => {
+    // Round timestamp to the nearest second so near-duplicate fires collapse.
+    const ts = ev.timestamp
+      ? new Date(ev.timestamp).toISOString().slice(0, 19)
+      : "";
+    const key = `${(ev.status ?? "").toLowerCase()}|${ts}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function TrackingPanel({ orderId }: { orderId: string }) {
   const [events, setEvents] = useState<TrackingEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,18 +208,38 @@ function TrackingPanel({ orderId }: { orderId: string }) {
           `/user/orders/${orderId}/tracking`,
           { method: "GET" },
         );
+        // Backend returns: { data: { items: [{ timeline: [...] }] } }
+        // Handle every known shape defensively.
         const payload = res?.data ?? res;
-        // handle various shapes: array at root, or nested under events/timeline
-        const list: TrackingEvent[] = Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload?.events)
-            ? payload.events
-            : Array.isArray(payload?.timeline)
-              ? payload.timeline
-              : Array.isArray(payload?.tracking)
-                ? payload.tracking
-                : [];
-        if (!cancelled) setEvents(list);
+
+        let rawList: TrackingEvent[] = [];
+
+        if (Array.isArray(payload)) {
+          rawList = payload;
+        } else if (Array.isArray(payload?.events)) {
+          rawList = payload.events;
+        } else if (Array.isArray(payload?.timeline)) {
+          rawList = payload.timeline;
+        } else if (Array.isArray(payload?.tracking)) {
+          rawList = payload.tracking;
+        } else if (Array.isArray(payload?.items)) {
+          // e.g. { items: [{ timeline: [...] }] }
+          payload.items.forEach((item: any) => {
+            if (Array.isArray(item?.timeline)) {
+              rawList.push(...item.timeline);
+            }
+          });
+        }
+
+        // Normalise: backend uses `label` + `message` — map to what the UI
+        // expects (status / note).
+        const normalised: TrackingEvent[] = rawList.map((ev) => ({
+          ...ev,
+          status: ev.label ?? ev.status ?? "Update",
+          note: ev.message ?? ev.note,
+        }));
+
+        if (!cancelled) setEvents(dedupeTrackingEvents(normalised));
       } catch (err: any) {
         if (!cancelled) setError(err?.message ?? "Failed to load tracking");
       } finally {
@@ -241,8 +280,10 @@ function TrackingPanel({ orderId }: { orderId: string }) {
   return (
     <div className="relative pl-5 border-l-2 border-dashed border-gray-200 space-y-4">
       {events.map((ev, i) => (
-        <div key={`${ev.status}-${ev.timestamp}-${i}`} className="relative">
-          {/* dot on the timeline */}
+        <div
+          key={`${ev.status}-${ev.timestamp}-${i}`}
+          className="relative"
+        >
           <div
             className="absolute -left-[1.35rem] top-0.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center"
             style={{
@@ -298,47 +339,40 @@ function OrderCard({
   const [order, setOrder] = useState<Order>(initialOrder);
   const [copied, setCopied] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [showTracking, setShowTracking] = useState(false);
   const detailFetchedRef = useRef(false);
 
-  // Use useMemo to update order state when initialOrder changes
-  // This is more performant than useEffect with setState
-  const updatedOrder = useMemo(() => {
-    // Only update if there's actually a difference
-    if (initialOrder.id !== order.id || initialOrder.order_status !== order.order_status) {
-      return initialOrder;
-    }
-    return order;
-  }, [initialOrder, order]);
+  // Keep local state in sync when parent list refreshes.
+  useEffect(() => {
+    setOrder(initialOrder);
+  }, [initialOrder]);
 
-  // Use the updated order if it changed, otherwise keep current
-  const currentOrder = updatedOrder.id !== order.id ? updatedOrder : order;
+  const cfg = STATUS_CONFIG[order.order_status] ?? STATUS_CONFIG.pending;
 
-  const cfg = STATUS_CONFIG[currentOrder.order_status] ?? STATUS_CONFIG.pending;
-
-  // Fetch full order detail (includes items + delivery_info) on first open
+  // Fetch full detail (items + delivery_info) on first open.
   useEffect(() => {
     if (!open || detailFetchedRef.current) return;
     detailFetchedRef.current = true;
     const load = async () => {
       setLoadingDetail(true);
       try {
-        const res = await ApiService.getOrderById(currentOrder.id);
+        const res = await ApiService.getOrderById(order.id);
         const parsed = parseOrder(res);
         if (parsed) setOrder(parsed);
       } catch {
-        // silently fail — we still show whatever was in the list response
+        // Silently fall back to list data.
       } finally {
         setLoadingDetail(false);
       }
     };
     load();
-  }, [open, currentOrder.id]);
+  }, [open, order.id]);
 
   const copyRef = () => {
-    const ref = currentOrder.payment_reference || currentOrder.order_number;
+    const ref = order.payment_reference || order.order_number;
     if (!ref) return;
     navigator.clipboard.writeText(ref).then(() => {
       setCopied(true);
@@ -348,27 +382,32 @@ function OrderCard({
 
   const handleCancel = async () => {
     setCancelling(true);
+    setCancelError(null);
     try {
-      await onCancel(currentOrder.id);
+      await onCancel(order.id);
       setConfirmCancel(false);
+    } catch (err: any) {
+      setCancelError(err?.message ?? "Failed to cancel order. Please try again.");
     } finally {
       setCancelling(false);
     }
   };
 
-  const dateStr = safeFormatDate(currentOrder.created_at, {
+  const dateStr = safeFormatDate(order.created_at, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
+  // Allow cancellation for pending payment OR confirmed-but-not-yet-shipped.
   const canCancel =
-    currentOrder.order_status === "pending" && currentOrder.payment_status === "pending";
+    order.order_status === "pending" ||
+    (order.order_status === "confirmed" && order.payment_status === "paid");
 
   const canTrack =
-    currentOrder.order_status === "confirmed" ||
-    currentOrder.order_status === "shipped" ||
-    currentOrder.order_status === "delivered";
+    order.order_status === "confirmed" ||
+    order.order_status === "shipped" ||
+    order.order_status === "delivered";
 
   return (
     <div
@@ -379,7 +418,9 @@ function OrderCard({
         boxShadow: isHighlighted
           ? "0 8px 40px rgba(180,34,37,0.18)"
           : "0 4px 30px rgba(0,0,0,0.06)",
-        animation: "fadeUp 0.5s ease both",
+        animationName: "fadeUp",
+        animationDuration: "0.5s",
+        animationFillMode: "both",
       }}
     >
       <button
@@ -397,19 +438,19 @@ function OrderCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-black text-gray-900">
-              {currentOrder.order_number}
+              {order.order_number}
             </p>
             <span
               className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.color}`}
             >
               {cfg.icon} {cfg.label}
             </span>
-            {currentOrder.payment_status === "paid" && (
+            {order.payment_status === "paid" && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-50 border border-green-200 text-green-700">
                 <FiCheck size={11} /> Paid
               </span>
             )}
-            {currentOrder.payment_status === "failed" && (
+            {order.payment_status === "failed" && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-red-700">
                 <FiXCircle size={11} /> Payment Failed
               </span>
@@ -420,24 +461,32 @@ function OrderCard({
               <FiCalendar size={11} /> {dateStr}
             </span>
             <span className="text-xs text-gray-400">
-              {currentOrder.item_count} item{currentOrder.item_count !== 1 ? "s" : ""}
+              {order.item_count} item{order.item_count !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
 
         <div className="text-right shrink-0">
           <p className="text-base font-black text-[#B42225]">
-            {fmt(currentOrder.total_amount)}
+            {fmt(order.total_amount)}
           </p>
           <FiChevronDown
             size={16}
-            className={`text-gray-400 mt-1 transition-transform duration-300 ${open ? "rotate-180" : ""} ml-auto`}
+            className={`text-gray-400 mt-1 transition-transform duration-300 ${
+              open ? "rotate-180" : ""
+            } ml-auto`}
           />
         </div>
       </button>
 
       {open && (
-        <div style={{ animation: "slideDown 0.3s ease both" }}>
+        <div
+          style={{
+            animationName: "slideDown",
+            animationDuration: "0.3s",
+            animationFillMode: "both",
+          }}
+        >
           <div className="border-t border-gray-100" />
 
           {loadingDetail && (
@@ -448,17 +497,20 @@ function OrderCard({
           )}
 
           {/* Progress timeline */}
-          {currentOrder.order_status !== "cancelled" && (
+          {order.order_status !== "cancelled" && (
             <div className="px-5 md:px-6 py-5">
               <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">
                 Order Progress
               </p>
               <div className="flex items-start gap-0">
-                {TIMELINE.map((label, i) => {
+                {TIMELINE_LABELS.map((label, i) => {
                   const step = i + 1;
                   const done = cfg.step >= step;
                   return (
-                    <div key={label} className="flex-1 flex flex-col items-center">
+                    <div
+                      key={label}
+                      className="flex-1 flex flex-col items-center"
+                    >
                       <div className="flex items-center w-full">
                         {i > 0 && (
                           <div
@@ -492,7 +544,7 @@ function OrderCard({
                         >
                           {done ? <FiCheck size={13} /> : step}
                         </div>
-                        {i < TIMELINE.length - 1 && (
+                        {i < TIMELINE_LABELS.length - 1 && (
                           <div
                             className="flex-1 h-0.5"
                             style={
@@ -507,7 +559,9 @@ function OrderCard({
                         )}
                       </div>
                       <p
-                        className={`text-[10px] font-bold mt-2 text-center leading-tight ${done ? "text-[#B42225]" : "text-gray-400"}`}
+                        className={`text-[10px] font-bold mt-2 text-center leading-tight ${
+                          done ? "text-[#B42225]" : "text-gray-400"
+                        }`}
                       >
                         {label}
                       </p>
@@ -519,13 +573,13 @@ function OrderCard({
           )}
 
           {/* Items */}
-          {currentOrder.items && currentOrder.items.length > 0 && (
+          {order.items && order.items.length > 0 && (
             <div className="px-5 md:px-6 pb-3">
               <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
                 Items Ordered
               </p>
               <div className="space-y-3">
-                {currentOrder.items.map((item) => (
+                {order.items.map((item) => (
                   <div
                     key={item.product_id}
                     className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50"
@@ -564,44 +618,44 @@ function OrderCard({
 
           {/* Delivery + payment summary */}
           <div className="grid sm:grid-cols-2 gap-4 px-5 md:px-6 py-4">
-            {currentOrder.delivery_info && (
+            {order.delivery_info && (
               <div className="bg-gray-50 rounded-2xl p-4">
                 <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
                   Delivery Info
                 </p>
-                {currentOrder.delivery_info.recipient_name && (
+                {order.delivery_info.recipient_name && (
                   <p className="text-sm font-bold text-gray-800">
-                    {currentOrder.delivery_info.recipient_name}
+                    {order.delivery_info.recipient_name}
                   </p>
                 )}
-                {currentOrder.delivery_info.recipient_phone && (
+                {order.delivery_info.recipient_phone && (
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     <FiPhone size={11} />{" "}
-                    {currentOrder.delivery_info.recipient_phone}
+                    {order.delivery_info.recipient_phone}
                   </p>
                 )}
-                {currentOrder.delivery_info.recipient_email && (
+                {order.delivery_info.recipient_email && (
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     <FiMail size={11} />{" "}
-                    {currentOrder.delivery_info.recipient_email}
+                    {order.delivery_info.recipient_email}
                   </p>
                 )}
-                {(currentOrder.delivery_info.street_address ||
-                  currentOrder.delivery_info.city) && (
+                {(order.delivery_info.street_address ||
+                  order.delivery_info.city) && (
                   <p className="text-xs text-gray-500 mt-0.5 flex items-start gap-1">
                     <FiMapPin size={11} className="mt-0.5 shrink-0" />
                     {[
-                      currentOrder.delivery_info.street_address,
-                      currentOrder.delivery_info.city,
-                      currentOrder.delivery_info.state,
+                      order.delivery_info.street_address,
+                      order.delivery_info.city,
+                      order.delivery_info.state,
                     ]
                       .filter(Boolean)
                       .join(", ")}
                   </p>
                 )}
-                {currentOrder.delivery_info.notes && (
+                {order.delivery_info.notes && (
                   <p className="text-xs text-gray-400 mt-1 italic">
-                    &quot;{currentOrder.delivery_info.notes}&quot;
+                    &quot;{order.delivery_info.notes}&quot;
                   </p>
                 )}
               </div>
@@ -612,28 +666,28 @@ function OrderCard({
                 Payment Summary
               </p>
               <div className="space-y-1.5">
-                {currentOrder.subtotal != null && (
+                {order.subtotal != null && (
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Subtotal</span>
                     <span className="font-bold text-gray-700">
-                      {fmt(currentOrder.subtotal)}
+                      {fmt(order.subtotal)}
                     </span>
                   </div>
                 )}
-                {currentOrder.delivery_cost != null && (
+                {order.delivery_cost != null && (
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Delivery</span>
                     <span className="font-bold text-gray-700">
-                      {currentOrder.delivery_cost === 0
+                      {order.delivery_cost === 0
                         ? "Free"
-                        : fmt(currentOrder.delivery_cost)}
+                        : fmt(order.delivery_cost)}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm border-t border-gray-200 pt-1.5 mt-1.5">
                   <span className="font-black text-gray-900">Total</span>
                   <span className="font-black text-[#B42225]">
-                    {fmt(currentOrder.total_amount)}
+                    {fmt(order.total_amount)}
                   </span>
                 </div>
               </div>
@@ -652,21 +706,23 @@ function OrderCard({
                 {showTracking ? "Hide" : "Show"} delivery tracking
                 <FiChevronDown
                   size={12}
-                  className={`transition-transform ${showTracking ? "rotate-180" : ""}`}
+                  className={`transition-transform ${
+                    showTracking ? "rotate-180" : ""
+                  }`}
                 />
               </button>
-              {showTracking && <TrackingPanel orderId={currentOrder.id} />}
+              {showTracking && <TrackingPanel orderId={order.id} />}
             </div>
           )}
 
           {/* Reference */}
-          {(currentOrder.payment_reference || currentOrder.order_number) && (
+          {(order.payment_reference || order.order_number) && (
             <div className="px-5 md:px-6 pb-3">
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl">
                 <p className="text-xs text-gray-500 flex-1 min-w-0">
                   Ref:{" "}
                   <span className="font-mono text-gray-700 font-bold truncate">
-                    {currentOrder.payment_reference || currentOrder.order_number}
+                    {order.payment_reference || order.order_number}
                   </span>
                 </p>
                 <button
@@ -689,12 +745,20 @@ function OrderCard({
           )}
 
           {/* Cancel */}
-          {canCancel && (
+          {canCancel && order.order_status !== "cancelled" && (
             <div className="px-5 md:px-6 pb-5">
+              {cancelError && (
+                <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                  <FiAlertCircle size={12} /> {cancelError}
+                </p>
+              )}
               {!confirmCancel ? (
                 <button
                   type="button"
-                  onClick={() => setConfirmCancel(true)}
+                  onClick={() => {
+                    setCancelError(null);
+                    setConfirmCancel(true);
+                  }}
                   className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1.5 transition"
                 >
                   <FiXCircle size={13} /> Cancel this order
@@ -702,16 +766,23 @@ function OrderCard({
               ) : (
                 <div
                   className="flex items-center gap-3 p-3 bg-red-50 rounded-2xl border border-red-100"
-                  style={{ animation: "fadeUp 0.25s ease both" }}
+                  style={{
+                    animationName: "fadeUp",
+                    animationDuration: "0.25s",
+                    animationFillMode: "both",
+                  }}
                 >
                   <FiAlertCircle size={16} className="text-red-500 shrink-0" />
                   <p className="text-xs text-red-700 flex-1 font-medium">
-                    Cancel this order and restore stock?
+                    Are you sure you want to cancel this order?
                   </p>
                   <div className="flex gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => setConfirmCancel(false)}
+                      onClick={() => {
+                        setConfirmCancel(false);
+                        setCancelError(null);
+                      }}
                       disabled={cancelling}
                       className="text-xs font-bold text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-xl hover:bg-gray-100 transition flex items-center gap-1"
                     >
@@ -748,13 +819,20 @@ function EmptyOrders() {
   return (
     <div
       className="flex flex-col items-center justify-center py-24 text-center"
-      style={{ animation: "fadeUp 0.6s ease both" }}
+      style={{
+        animationName: "fadeUp",
+        animationDuration: "0.6s",
+        animationFillMode: "both",
+      }}
     >
       <div
         className="w-32 h-32 rounded-full flex items-center justify-center mb-6"
         style={{
           background: "linear-gradient(135deg,#FEF2F2,#FFF7ED)",
-          animation: "floatBounce 3s ease-in-out infinite",
+          animationName: "floatBounce",
+          animationDuration: "3s",
+          animationTimingFunction: "ease-in-out",
+          animationIterationCount: "infinite",
         }}
       >
         <FiShoppingBag size={52} className="text-[#B42225] opacity-60" />
@@ -784,19 +862,8 @@ function EmptyOrders() {
 
 // ─────────────────────────────────────────────────────────────
 // POST-CHECKOUT BANNER
+// Status-aware: never claims success just because ?ref= is in the URL.
 // ─────────────────────────────────────────────────────────────
-// Renders a different message depending on the *actual* status of the
-// order the user just came from, instead of always celebrating just
-// because a `?ref=` param is present in the URL. `?ref=` only tells us
-// the user was redirected from checkout — it says nothing about whether
-// the payment was ever confirmed by the backend.
-//
-//   matchedOrder === undefined  → still loading orders, show a neutral
-//                                  "checking your order" state
-//   matchedOrder === null       → orders loaded but no match found
-//                                  (don't show anything; avoids a false
-//                                  claim about an order we can't verify)
-//   matchedOrder is an Order    → branch on its real payment/order status
 function PostCheckoutBanner({
   matchedOrder,
 }: {
@@ -808,7 +875,11 @@ function PostCheckoutBanner({
     return (
       <div
         className="flex items-center gap-3 p-4 mb-6 rounded-2xl border border-gray-200 bg-white"
-        style={{ animation: "fadeUp 0.5s ease both" }}
+        style={{
+          animationName: "fadeUp",
+          animationDuration: "0.5s",
+          animationFillMode: "both",
+        }}
       >
         <FiLoader size={20} className="animate-spin text-[#B42225] shrink-0" />
         <div className="flex-1">
@@ -827,7 +898,9 @@ function PostCheckoutBanner({
         className="flex items-center gap-3 p-4 mb-6 rounded-2xl border border-green-200"
         style={{
           background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
-          animation: "fadeUp 0.5s ease both",
+          animationName: "fadeUp",
+          animationDuration: "0.5s",
+          animationFillMode: "both",
         }}
       >
         <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center shrink-0">
@@ -849,7 +922,11 @@ function PostCheckoutBanner({
     return (
       <div
         className="flex items-center gap-3 p-4 mb-6 rounded-2xl border border-red-200 bg-red-50"
-        style={{ animation: "fadeUp 0.5s ease both" }}
+        style={{
+          animationName: "fadeUp",
+          animationDuration: "0.5s",
+          animationFillMode: "both",
+        }}
       >
         <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center shrink-0">
           <FiXCircle size={20} className="text-white" />
@@ -858,21 +935,22 @@ function PostCheckoutBanner({
           <p className="font-black text-red-800">Payment was not confirmed</p>
           <p className="text-xs text-red-600 mt-0.5">
             We couldn&apos;t verify this payment. If you were charged, please
-            contact support with your order number — otherwise, feel free to
-            try again.
+            contact support with your order number — otherwise, feel free to try
+            again.
           </p>
         </div>
       </div>
     );
   }
 
-  // payment_status === "pending" (or anything else we don't explicitly
-  // recognise) — don't claim success, just acknowledge we're still
-  // waiting on confirmation.
   return (
     <div
       className="flex items-center gap-3 p-4 mb-6 rounded-2xl border border-amber-200 bg-amber-50"
-      style={{ animation: "fadeUp 0.5s ease both" }}
+      style={{
+        animationName: "fadeUp",
+        animationDuration: "0.5s",
+        animationFillMode: "both",
+      }}
     >
       <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
         <FiClock size={20} className="text-white" />
@@ -882,12 +960,39 @@ function PostCheckoutBanner({
           Order placed — confirming payment
         </p>
         <p className="text-xs text-amber-700 mt-0.5">
-          We&apos;re still confirming your payment. This page will reflect
-          the latest status — feel free to refresh in a moment.
+          We&apos;re still confirming your payment. This page will reflect the
+          latest status — feel free to refresh in a moment.
         </p>
       </div>
     </div>
   );
+}
+
+// ─────────────────────────────────────────────────────────────
+// KEYFRAME CSS
+// Injected as a plain string constant — never rendered on the server,
+// only appended once to <head> on the client. This eliminates the
+// hydration mismatch caused by a <style> tag inside the component tree.
+// ─────────────────────────────────────────────────────────────
+const KEYFRAMES_CSS = `
+@keyframes fadeUp      { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes floatBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+@keyframes slideDown   { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+`;
+
+function useInjectKeyframes() {
+  useEffect(() => {
+    const id = "orders-keyframes";
+    if (document.getElementById(id)) return;
+    const el = document.createElement("style");
+    el.id = id;
+    el.textContent = KEYFRAMES_CSS;
+    document.head.appendChild(el);
+    return () => {
+      const existing = document.getElementById(id);
+      if (existing) existing.remove();
+    };
+  }, []);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -896,8 +1001,9 @@ function PostCheckoutBanner({
 export default function OrdersClient() {
   const { user } = useContext(AuthContext);
   const params = useSearchParams();
-  // ?ref= is the order_id UUID passed from checkout redirect
   const newOrderRef = params.get("ref");
+
+  useInjectKeyframes(); // ← client-only, no hydration mismatch
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -925,42 +1031,30 @@ export default function OrdersClient() {
     }
   }, []);
 
-  // Use a ref to track initial fetch
-  const initialFetchDone = useRef(false);
+  const fetchedRef = useRef(false);
 
-  // Handle data fetching - use a separate function that's not called directly in effect
-  const performInitialFetch = useCallback(() => {
-    if (!user || initialFetchDone.current) return;
-    initialFetchDone.current = true;
+  useEffect(() => {
+    if (!user || fetchedRef.current) return;
+    fetchedRef.current = true;
     fetchOrders(1, false);
   }, [user, fetchOrders]);
 
-  // This effect only runs on the client side to trigger the initial fetch
+  // If the user object changes (e.g. re-login), re-fetch.
+  const prevUserIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    // This is safe because we're using a ref to prevent multiple calls
-    // and we're not directly calling setState in the effect body
-    if (typeof window !== 'undefined') {
-      performInitialFetch();
+    const uid = (user as any)?.id ?? (user as any)?.user_id;
+    if (uid && uid !== prevUserIdRef.current) {
+      prevUserIdRef.current = uid;
+      fetchedRef.current = false;
+      fetchOrders(1, false);
     }
-  }, [performInitialFetch]);
-
-  // Also fetch when user changes (e.g., after login)
-  useEffect(() => {
-    if (user) {
-      // Reset the ref so we can fetch again if user changes
-      initialFetchDone.current = false;
-      performInitialFetch();
-    }
-  }, [user, performInitialFetch]);
+  }, [user, fetchOrders]);
 
   const handleCancel = async (order_id: string) => {
-    try {
-      await ApiService.cancelOrder(order_id);
-      // re-fetch from page 1 so statuses are fresh
-      await fetchOrders(1, false);
-    } catch (err: any) {
-      alert(err?.message ?? "Failed to cancel order");
-    }
+    await ApiService.cancelOrder(order_id);
+    // Re-fetch so the status badge updates immediately.
+    fetchedRef.current = false;
+    await fetchOrders(1, false);
   };
 
   const loadMore = () => {
@@ -977,10 +1071,6 @@ export default function OrdersClient() {
     [filter, orders],
   );
 
-  // The order the post-checkout banner should describe, if any.
-  //   undefined → orders haven't loaded yet (still checking)
-  //   null      → orders loaded, no `ref` present, or no match found
-  //   Order     → the matched order to report on
   const matchedOrder: Order | null | undefined = useMemo(() => {
     if (!newOrderRef) return null;
     if (loading && orders.length === 0) return undefined;
@@ -991,18 +1081,6 @@ export default function OrdersClient() {
     );
   }, [newOrderRef, orders, loading]);
 
-  // On the server, render loading state to prevent hydration mismatch
-  if (typeof window === 'undefined') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#B42225] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Loading your orders…</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50 p-4 text-center">
@@ -1011,7 +1089,7 @@ export default function OrdersClient() {
           Sign in to view your orders
         </h2>
         <Link
-          href="/login?redirect=/orders"
+          href="/login?redirect=/order"
           className="px-6 py-3 rounded-2xl font-black text-white text-sm"
           style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}
         >
@@ -1022,202 +1100,196 @@ export default function OrdersClient() {
   }
 
   return (
-    <>
-      <style>{`
-        @keyframes fadeUp      { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes floatBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
-        @keyframes slideDown   { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
-
-      <div className="min-h-screen" style={{ background: "#F7F8FC" }}>
-        {/* Header */}
+    <div className="min-h-screen" style={{ background: "#F7F8FC" }}>
+      {/* Header */}
+      <div
+        className="relative overflow-hidden py-8 md:py-11"
+        style={{
+          background:
+            "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
+        }}
+      >
         <div
-          className="relative overflow-hidden py-8 md:py-11"
+          className="absolute inset-0 opacity-[0.05]"
           style={{
-            background:
-              "linear-gradient(135deg,#0d0d0d 0%,#1c0202 45%,#B42225 100%)",
+            backgroundImage:
+              "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
+            backgroundSize: "28px 28px",
           }}
-        >
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
-              backgroundSize: "28px 28px",
-            }}
-          />
-          <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10">
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors"
-            >
-              <FiArrowLeft size={14} /> Back to Profile
-            </Link>
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h1
-                  className="text-3xl md:text-4xl font-black text-white"
-                  style={{ fontFamily: "'Georgia',serif" }}
-                >
-                  My Orders
-                </h1>
-                <p className="text-white/50 text-sm mt-1">
-                  {loading
-                    ? "Loading…"
-                    : `${orders.length} order${orders.length !== 1 ? "s" : ""} total`}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  initialFetchDone.current = false;
-                  fetchOrders(1, false);
-                }}
-                disabled={loading}
-                className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs font-bold transition disabled:opacity-40"
-                title="Refresh"
+        />
+        <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10">
+          <Link
+            href="/profile"
+            className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-4 transition-colors"
+          >
+            <FiArrowLeft size={14} /> Back to Profile
+          </Link>
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1
+                className="text-3xl md:text-4xl font-black text-white"
+                style={{ fontFamily: "'Georgia',serif" }}
               >
-                <FiRefreshCw size={14} className={loading ? "animate-spin" : ""} />
-                Refresh
-              </button>
+                My Orders
+              </h1>
+              <p className="text-white/50 text-sm mt-1">
+                {loading
+                  ? "Loading…"
+                  : `${orders.length} order${orders.length !== 1 ? "s" : ""} total`}
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                fetchedRef.current = false;
+                fetchOrders(1, false);
+              }}
+              disabled={loading}
+              className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs font-bold transition disabled:opacity-40"
+              title="Refresh"
+            >
+              <FiRefreshCw
+                size={14}
+                className={loading ? "animate-spin" : ""}
+              />
+              Refresh
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-8">
-          {/* Success / pending / failed banner when coming from checkout —
-              status-aware, never assumes success just because `?ref=` is present. */}
-          {newOrderRef && <PostCheckoutBanner matchedOrder={matchedOrder} />}
+      <div className="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-8">
+        {/* Post-checkout status banner */}
+        {newOrderRef && <PostCheckoutBanner matchedOrder={matchedOrder} />}
 
-          {/* Error */}
-          {error && (
-            <div className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
-              <FiAlertCircle size={15} className="shrink-0" />
-              <span>{error}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  initialFetchDone.current = false;
-                  fetchOrders(1, false);
-                }}
-                className="ml-auto text-xs font-bold underline"
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600">
+            <FiAlertCircle size={15} className="shrink-0" />
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => {
+                fetchedRef.current = false;
+                fetchOrders(1, false);
+              }}
+              className="ml-auto text-xs font-bold underline"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Skeleton */}
+        {loading && orders.length === 0 ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-3xl p-6 animate-pulse"
+                style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
               >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* Skeleton */}
-          {loading && orders.length === 0 ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-3xl p-6 animate-pulse"
-                  style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-200" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-1/3" />
-                      <div className="h-3 bg-gray-100 rounded w-1/4" />
-                    </div>
-                    <div className="h-5 bg-gray-200 rounded w-20" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/3" />
+                    <div className="h-3 bg-gray-100 rounded w-1/4" />
                   </div>
+                  <div className="h-5 bg-gray-200 rounded w-20" />
                 </div>
+              </div>
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
+          <EmptyOrders />
+        ) : (
+          <>
+            {/* Filter tabs */}
+            <div className="flex gap-2 flex-wrap mb-5 overflow-x-auto pb-1">
+              {(
+                [
+                  "all",
+                  "pending",
+                  "confirmed",
+                  "shipped",
+                  "delivered",
+                  "cancelled",
+                ] as const
+              ).map((f) => (
+                <button
+                  type="button"
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all capitalize shrink-0 ${
+                    filter === f
+                      ? "text-white shadow-md"
+                      : "text-gray-500 bg-white hover:bg-gray-100 border border-gray-200"
+                  }`}
+                  style={
+                    filter === f
+                      ? {
+                          background:
+                            "linear-gradient(135deg,#B42225,#FF8C00)",
+                        }
+                      : {}
+                  }
+                >
+                  {f === "all"
+                    ? `All (${orders.length})`
+                    : STATUS_CONFIG[f].label}
+                </button>
               ))}
             </div>
-          ) : orders.length === 0 ? (
-            <EmptyOrders />
-          ) : (
-            <>
-              {/* Filter tabs */}
-              <div className="flex gap-2 flex-wrap mb-5 overflow-x-auto pb-1">
-                {(
-                  [
-                    "all",
-                    "pending",
-                    "confirmed",
-                    "shipped",
-                    "delivered",
-                    "cancelled",
-                  ] as const
-                ).map((f) => (
-                  <button
-                    type="button"
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all capitalize shrink-0 ${
-                      filter === f
-                        ? "text-white shadow-md"
-                        : "text-gray-500 bg-white hover:bg-gray-100 border border-gray-200"
-                    }`}
-                    style={
-                      filter === f
-                        ? { background: "linear-gradient(135deg,#B42225,#FF8C00)" }
-                        : {}
-                    }
-                  >
-                    {f === "all"
-                      ? `All (${orders.length})`
-                      : STATUS_CONFIG[f].label}
-                  </button>
-                ))}
-              </div>
 
-              {filtered.length === 0 ? (
-                <p className="text-center text-gray-400 py-16 font-medium">
-                  No orders with this status.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {filtered.map((order, i) => {
-                    // Match by order_id (UUID from ?ref=) OR order_number
-                    const isHighlighted =
-                      !!newOrderRef &&
-                      (order.id === newOrderRef ||
-                        order.order_number === newOrderRef);
-                    const noMatchInList =
-                      !!newOrderRef &&
-                      !filtered.some(
-                        (o) =>
-                          o.id === newOrderRef ||
-                          o.order_number === newOrderRef,
-                      );
-                    return (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        // Auto-open the order that came from checkout, or the first one
-                        defaultOpen={isHighlighted || (i === 0 && noMatchInList)}
-                        isHighlighted={isHighlighted}
-                        onCancel={handleCancel}
-                      />
+            {filtered.length === 0 ? (
+              <p className="text-center text-gray-400 py-16 font-medium">
+                No orders with this status.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {filtered.map((order, i) => {
+                  const isHighlighted =
+                    !!newOrderRef &&
+                    (order.id === newOrderRef ||
+                      order.order_number === newOrderRef);
+                  const noMatchInList =
+                    !!newOrderRef &&
+                    !filtered.some(
+                      (o) =>
+                        o.id === newOrderRef || o.order_number === newOrderRef,
                     );
-                  })}
-                </div>
-              )}
+                  return (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      defaultOpen={isHighlighted || (i === 0 && noMatchInList)}
+                      isHighlighted={isHighlighted}
+                      onCancel={handleCancel}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
-              {hasMore && filter === "all" && (
-                <div className="flex justify-center mt-6">
-                  <button
-                    type="button"
-                    onClick={loadMore}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border-2 border-gray-200 hover:border-gray-300 transition-all disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <FiLoader size={15} className="animate-spin" />
-                    ) : null}
-                    Load more orders
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            {hasMore && filter === "all" && (
+              <div className="flex justify-center mt-6">
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border-2 border-gray-200 hover:border-gray-300 transition-all disabled:opacity-50"
+                >
+                  {loading ? (
+                    <FiLoader size={15} className="animate-spin" />
+                  ) : null}
+                  Load more orders
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
       <Footer />
-    </>
+    </div>
   );
 }

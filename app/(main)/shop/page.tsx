@@ -1,4 +1,3 @@
-'use client'
 import HeroSection from "@/components/home/HeroSection";
 import FlashSales from "@/components/layout/FlashSales";
 import TopSellers from "@/components/layout/TopSellers";
