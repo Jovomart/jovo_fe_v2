@@ -94,6 +94,7 @@ const SellerLayout = ({
   const [isSearching, setIsSearching] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [sellerProfile, setSellerProfile] = useState<any>(null);
+  const [localStats, setLocalStats] = useState<SellerStats>(stats);
 
   const isMountedRef = useRef(false);
   const dataFetchedRef = useRef(false);
@@ -116,9 +117,12 @@ const SellerLayout = ({
         }
         // Update stats with real data if available
         if (dashboard.financial_snapshot) {
-          stats.totalSales = dashboard.financial_snapshot.total_earned || 0;
-          stats.pendingOrders = dashboard.order_pipeline?.pending || 0;
-          stats.totalOrders = dashboard.order_pipeline?.total || 0;
+          setLocalStats((prev) => ({
+            ...prev,
+            totalSales: dashboard.financial_snapshot.total_earned || 0,
+            pendingOrders: dashboard.order_pipeline?.pending || 0,
+            totalOrders: dashboard.order_pipeline?.total || 0,
+          }));
         }
       }
 
@@ -157,7 +161,7 @@ const SellerLayout = ({
         );
       }
     }
-  }, [user, stats]);
+  }, [user]);
 
   // ─── Effects ─────────────────────────────────────────────────────────────
 
@@ -239,7 +243,7 @@ const SellerLayout = ({
       icon: <MdOutlineInventory2 size={17} />,
       label: "Products",
       to: "/seller/products",
-      badge: stats.totalProducts,
+      badge: localStats.totalProducts,
     },
     {
       id: "analytics",
@@ -252,7 +256,7 @@ const SellerLayout = ({
       icon: <FiShoppingBag size={17} />,
       label: "Orders",
       to: "/seller/orders",
-      badge: stats.pendingOrders,
+      badge: localStats.pendingOrders,
     },
     {
       id: "deliveries",
@@ -396,7 +400,7 @@ const SellerLayout = ({
             </div>
             <VerifiedIcon size={12} className="text-orange-500 shrink-0" />
           </div>
-          {stats.totalSales !== undefined && (
+          {localStats.totalSales !== undefined && (
             <div
               className="mt-3 pt-3"
               style={{ borderTop: "1px solid rgba(249,115,22,0.15)" }}
@@ -404,7 +408,7 @@ const SellerLayout = ({
               <div className="flex justify-between text-[10px]">
                 <span className="text-amber-700 font-semibold">Revenue</span>
                 <span className="font-black text-slate-900">
-                  {fmtCurrency(stats.totalSales || 0)}
+                  {fmtCurrency(localStats.totalSales || 0)}
                 </span>
               </div>
             </div>
@@ -619,7 +623,7 @@ const SellerLayout = ({
                         Revenue
                       </p>
                       <p className="text-xs font-black text-emerald-700">
-                        {fmtCurrency(stats.totalSales || 0)}
+                        {fmtCurrency(localStats.totalSales || 0)}
                       </p>
                     </div>
                   </div>
@@ -633,7 +637,7 @@ const SellerLayout = ({
                         Orders
                       </p>
                       <p className="text-xs font-black text-orange-700">
-                        {stats.totalOrders || 0}
+                        {localStats.totalOrders || 0}
                       </p>
                     </div>
                   </div>
@@ -647,7 +651,7 @@ const SellerLayout = ({
                         Pending
                       </p>
                       <p className="text-xs font-black text-amber-700">
-                        {stats.pendingOrders || 0}
+                        {localStats.pendingOrders || 0}
                       </p>
                     </div>
                   </div>
@@ -717,7 +721,7 @@ const SellerLayout = ({
                   </span>
                 </div>
                 <p className="text-sm font-black text-emerald-700">
-                  {fmtCurrency(stats.totalSales || 0)}
+                  {fmtCurrency(localStats.totalSales || 0)}
                 </p>
               </div>
               <div className="bg-gradient-to-br from-orange-50 to-orange-100/30 rounded-xl p-2.5 border border-orange-100/50 shadow-sm">
@@ -728,7 +732,7 @@ const SellerLayout = ({
                   </span>
                 </div>
                 <p className="text-sm font-black text-orange-700">
-                  {stats.totalOrders || 0}
+                  {localStats.totalOrders || 0}
                 </p>
               </div>
               <div className="bg-gradient-to-br from-amber-50 to-amber-100/30 rounded-xl p-2.5 border border-amber-100/50 shadow-sm">
@@ -739,7 +743,7 @@ const SellerLayout = ({
                   </span>
                 </div>
                 <p className="text-sm font-black text-amber-700">
-                  {stats.pendingOrders || 0}
+                  {localStats.pendingOrders || 0}
                 </p>
               </div>
             </div>

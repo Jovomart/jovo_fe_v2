@@ -336,7 +336,11 @@ function OrderCard({
   isHighlighted?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
-  const [order, setOrder] = useState<Order>(initialOrder);
+  // Keep enriched detail (items + delivery_info) separate from the parent prop.
+  // When the parent list refreshes, we merge: prefer local enriched data for
+  // fields the list endpoint doesn't return (items, delivery_info), but always
+  // take status/amounts from the refreshed parent.
+  const [detailOverride, setDetailOverride] = useState<Partial<Order> | null>(null);
   const [copied, setCopied] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -345,10 +349,11 @@ function OrderCard({
   const [showTracking, setShowTracking] = useState(false);
   const detailFetchedRef = useRef(false);
 
-  // Keep local state in sync when parent list refreshes.
-  useEffect(() => {
-    setOrder(initialOrder);
-  }, [initialOrder]);
+  // Merge parent (always up-to-date status) with local enriched detail.
+  const order: Order = useMemo(
+    () => (detailOverride ? { ...initialOrder, ...detailOverride } : initialOrder),
+    [initialOrder, detailOverride],
+  );
 
   const cfg = STATUS_CONFIG[order.order_status] ?? STATUS_CONFIG.pending;
 
@@ -361,7 +366,15 @@ function OrderCard({
       try {
         const res = await ApiService.getOrderById(order.id);
         const parsed = parseOrder(res);
-        if (parsed) setOrder(parsed);
+        if (parsed) {
+          // Only store the enriched fields, not status — parent owns status.
+          setDetailOverride({
+            items: parsed.items,
+            delivery_info: parsed.delivery_info,
+            subtotal: parsed.subtotal,
+            delivery_cost: parsed.delivery_cost,
+          });
+        }
       } catch {
         // Silently fall back to list data.
       } finally {

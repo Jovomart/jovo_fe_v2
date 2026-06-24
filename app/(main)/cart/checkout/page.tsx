@@ -1256,15 +1256,17 @@ export default function Checkout() {
   // ── Fetch pickup stations ───────────────────────────────────────────────────
   useEffect(() => {
     if (!selectedDelivery || !isPickupOption(selectedDelivery)) return;
+
     const schoolId =
       (user as any)?.school_id || (user as any)?.schoolId;
-    if (!schoolId) {
-      setPickupStationsError(
-        "No school linked to your account. Please update your profile to select a pickup station.",
-      );
-      return;
-    }
+
     const load = async () => {
+      if (!schoolId) {
+        setPickupStationsError(
+          "No school linked to your account. Please update your profile to select a pickup station.",
+        );
+        return;
+      }
       setPickupStationsLoading(true);
       setPickupStationsError(null);
       try {
@@ -1286,6 +1288,7 @@ export default function Checkout() {
         setPickupStationsLoading(false);
       }
     };
+
     load();
   }, [selectedDelivery, user]);
 
