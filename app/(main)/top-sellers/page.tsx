@@ -46,7 +46,7 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         {/* Rank badge */}
         {rankStyle && (
           <div
-            className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-white text-[10px] font-black shadow-lg"
+            className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-white text-[10px] font-semibold shadow-lift"
             style={{ background: rankStyle.bg }}
           >
             {rankStyle.icon} {rankStyle.label}
@@ -56,7 +56,7 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         {/* Discount badge */}
         {discount && (
           <div
-            className="absolute top-3 right-10 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
+            className="absolute top-3 right-10 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-semibold text-white"
             style={{ background: "linear-gradient(135deg,#ea580c,#c2410c)" }}
           >
             <FiZap size={9} /> -{discount}%
@@ -66,16 +66,16 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         {/* Wishlist */}
         <button
           onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-soft transition-transform duration-200 hover:scale-110"
         >
           {wishlisted
             ? <FaHeart className="text-red-500" size={13} />
-            : <FiHeart className="text-gray-400" size={13} />}
+            : <FiHeart className="text-ink/40" size={13} />}
         </button>
 
         {/* Slide-up add to cart */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-orange-600 hover:text-white transition-colors duration-200">
+          <button className="w-full flex items-center justify-center gap-2 bg-white text-ink py-2.5 rounded-xl text-xs font-bold shadow-lift hover:bg-orange-600 hover:text-white transition-colors duration-200">
             <FiShoppingBag size={13} /> Add to Cart
           </button>
         </div>
@@ -83,15 +83,15 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
 
       {/* Info */}
       <div className="p-3.5">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2 leading-snug">
           {product.name}
         </h3>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-sm md:text-base font-black text-orange-600">
+          <span className="text-sm md:text-base font-semibold text-orange-600">
             ₦{product.price.toLocaleString()}
           </span>
           {product.oldPrice && (
-            <span className="text-[11px] text-gray-400 line-through">
+            <span className="text-[11px] text-ink/40 line-through">
               ₦{product.oldPrice.toLocaleString()}
             </span>
           )}
@@ -100,7 +100,7 @@ const ProductCard = ({ product, rank, wishlisted, onWishlist }) => {
         {/* Sold count */}
         <div className="mt-2 flex items-center gap-1.5">
           <FiTrendingUp size={11} className="text-orange-500" />
-          <span className="text-[10px] text-gray-400 font-medium">
+          <span className="text-[10px] text-ink/40 font-medium">
             {(Math.floor(Math.random() * 900) + 100).toLocaleString()} sold this week
           </span>
         </div>
@@ -128,8 +128,8 @@ const SuggestedCard = ({ product }) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       <div className="p-3">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
-        <p className="text-orange-600 font-black mt-1.5 text-sm md:text-base">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2">{product.name}</h3>
+        <p className="text-orange-600 font-semibold mt-1.5 text-sm md:text-base">
           ₦{product.price.toLocaleString()}
         </p>
       </div>
@@ -185,18 +185,18 @@ const TopSellersPage = () => {
               </div>
 
               <div className="flex items-center gap-4">
-                <FaTrophy className="text-[#FFD700] text-4xl md:text-5xl drop-shadow-lg" />
+                <FaTrophy className="text-[#FFD700] text-4xl md:text-5xl drop-shadow-lift" />
                 <div>
                   <h1
-                    className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(234,88,12,0.4)" }}
+                    className="text-4xl md:text-6xl font-semibold text-white leading-none tracking-tight"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(234,88,12,0.4)" }}
                   >
                     TOP
                   </h1>
                   <h1
-                    className="text-4xl md:text-6xl font-black leading-none tracking-tight"
+                    className="text-4xl md:text-6xl font-semibold leading-none tracking-tight"
                     style={{
-                      fontFamily: "'Georgia', serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       background: "linear-gradient(90deg,#fb923c,#fde68a)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
@@ -230,7 +230,7 @@ const TopSellersPage = () => {
                 >
                   <span className="text-orange-300">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-semibold text-sm leading-none">{val}</p>
                     <p className="text-white/50 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -249,8 +249,8 @@ const TopSellersPage = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(180deg,#fb923c,#ea580c)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">Best Selling Products</h2>
-          <span className="hidden md:inline text-sm text-gray-400 font-medium">({topProducts.length} items)</span>
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">Best Selling Products</h2>
+          <span className="hidden md:inline text-sm text-ink/40 font-medium">({topProducts.length} items)</span>
         </div>
 
         {topProducts.length > 0 ? (
@@ -266,7 +266,7 @@ const TopSellersPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-400">
+          <div className="text-center py-20 text-ink/40">
             <FaTrophy size={48} className="mx-auto mb-4 opacity-20" />
             <p className="font-semibold">No top sellers yet.</p>
           </div>
@@ -285,11 +285,11 @@ const TopSellersPage = () => {
           }} />
           <div className="relative z-10">
             <p className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-1">Sell more</p>
-            <h3 className="text-white text-xl md:text-2xl font-black">Join Jovo's Seller Network</h3>
+            <h3 className="text-white text-xl md:text-2xl font-semibold">Join Jovo's Seller Network</h3>
             <p className="text-white/55 text-sm mt-1">List your products and reach millions of buyers today.</p>
           </div>
           <Link href="/become-seller"
-            className="relative z-10 shrink-0 bg-white text-gray-900 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-orange-500 hover:text-white transition-colors duration-200 shadow-lg"
+            className="relative z-10 shrink-0 bg-white text-ink px-6 py-3 rounded-2xl font-bold text-sm hover:bg-orange-500 hover:text-white transition-colors duration-200 shadow-lift"
           >
             Start Selling →
           </Link>
@@ -300,7 +300,7 @@ const TopSellersPage = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(180deg,#fb923c,#ea580c)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">You May Also Like</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">You May Also Like</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {suggestedProducts.map((product) => (

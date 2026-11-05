@@ -25,9 +25,9 @@ const ServicesSection = () => {
 
         {/* Glow orbs */}
         <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full pointer-events-none opacity-20"
-          style={{ background: "radial-gradient(circle,#FF8C00,transparent 65%)" }} />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full pointer-events-none opacity-10"
           style={{ background: "radial-gradient(circle,#B42225,transparent 65%)" }} />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full pointer-events-none opacity-10"
+          style={{ background: "radial-gradient(circle,#0E0E10,transparent 65%)" }} />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4 px-6 md:px-10 py-7 md:py-9">
@@ -35,21 +35,21 @@ const ServicesSection = () => {
             <div className="inline-flex items-center gap-2 bg-white/8 border border-white/10 text-white/40 text-[10px] font-bold px-3 py-1 rounded-full mb-3 tracking-[3px] uppercase">
               ⚙️ Campus Services
             </div>
-            <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-white mb-1.5"
+            <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white mb-1.5"
               style={{ fontFamily: "'arial',serif" }}>
               Need a Service?{" "}
-              <span style={{ background: "linear-gradient(90deg,#FF8C00,#FFB347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <span style={{ background: "linear-gradient(90deg,#B42225,#FFB347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 We've Got You.
               </span>
             </h3>
             <p className="text-white/35 text-xs md:text-sm max-w-md leading-relaxed">
-              Cleaning, barbing, laundry, repairs, tutoring and more — book trusted campus service providers instantly via WhatsApp.
+              Cleaning, barbing, laundry, repairs, tutoring and more - book trusted campus service providers instantly via WhatsApp.
             </p>
           </div>
 
           <div
-            className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-black text-sm text-white shrink-0 transition-all group-hover:scale-105"
-            style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 6px 24px rgba(180,34,37,0.4)" }}
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-semibold text-sm text-white shrink-0 transition-all group-hover:scale-105"
+            style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)", boxShadow: "0 6px 24px rgba(180,34,37,0.4)" }}
           >
             Visit Services <FiArrowRight size={15} />
           </div>

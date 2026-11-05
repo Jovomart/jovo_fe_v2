@@ -18,13 +18,13 @@ const LimitedStockDeals = () => {
   }, []);
 
   return (
-    <div className="w-full mt-5 bg-[#F5F6F7] rounded-xl">
+    <div className="w-full mt-5 bg-[#FBEFE3] rounded-xl">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg,#B42225 0%,#d63a1a 50%,#e85d04 100%)",
+            "linear-gradient(135deg,#0E0E10 0%,#B42225 50%,#e85d04 100%)",
         }}
       >
         {/* Background dot texture */}
@@ -51,7 +51,7 @@ const LimitedStockDeals = () => {
             <FaExclamationTriangle size={16} className="text-yellow-300" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Limited Stock Deals
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -63,7 +63,7 @@ const LimitedStockDeals = () => {
 
         <button
           onClick={() => router.push("/limited-deals")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -85,7 +85,7 @@ const LimitedStockDeals = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden"
+                  className="bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 group cursor-pointer overflow-hidden"
                 >
                   <div className="relative h-36 md:h-48 overflow-hidden">
                     <img
@@ -102,25 +102,25 @@ const LimitedStockDeals = () => {
                   </div>
 
                   <div className="p-3 md:p-4">
-                    <p className="font-semibold text-sm md:text-base truncate text-gray-800">
+                    <p className="font-semibold text-sm md:text-base truncate text-ink">
                       {product.name}
                     </p>
                     <div className="mt-2">
-                      <span className="text-gray-900 font-bold text-base md:text-lg">
+                      <span className="text-ink font-bold text-base md:text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-xs md:text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-xs md:text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>
                     <div className="mt-3">
-                      <div className="w-full bg-gray-200 h-2 rounded-full">
+                      <div className="w-full bg-ink/10 h-2 rounded-full">
                         <div
-                          className="bg-[#B42225] h-2 rounded-full transition-all duration-500"
+                          className="bg-[#0E0E10] h-2 rounded-full transition-all duration-500"
                           style={{ width: `${stockPercent}%` }}
                         />
                       </div>
-                      <p className="text-xs mt-1 text-gray-500">
+                      <p className="text-xs mt-1 text-ink/50">
                         Only {product.stock} left in stock
                       </p>
                     </div>

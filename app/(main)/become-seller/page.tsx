@@ -60,10 +60,10 @@ const steps = [
   {
     number: "01",
     icon: <FiUsers size={22} />,
-    color: "#B42225",
+    color: "#0E0E10",
     title: "Create Your Seller Account",
     subtitle: "2 minutes to get started",
-    desc: "Sign up with your business name, email, and phone number. Existing Jovo buyers can upgrade their account instantly — no new registration needed.",
+    desc: "Sign up with your business name, email, and phone number. Existing Jovo buyers can upgrade their account instantly - no new registration needed.",
     details: [
       "Business name & contact info",
       "Valid passport for verification",
@@ -118,7 +118,7 @@ const steps = [
 const benefits = [
   {
     icon: <FiUsers size={20} />,
-    color: "#B42225",
+    color: "#0E0E10",
     bg: "#FEF2F2",
     title: "30,000+ Buyers",
     desc: "Reach a ready audience of FUTO students, staff, and the wider Owerri community actively shopping on Jovo.",
@@ -190,7 +190,7 @@ const testimonials = [
     name: "Chidinma O.",
     role: "Fashion Seller · FUTO Alumni",
     avatar: "C",
-    color: "#B42225",
+    color: "#0E0E10",
     text: "I started selling on Jovo with just 5 dresses. Within 3 months I had over 200 orders and hired two assistants. The weekly payouts are always on time.",
     rating: 5,
     sales: "₦1.2M+ in sales",
@@ -258,7 +258,7 @@ const StepCard = ({ step, isLast }) => (
     {/* Number circle */}
     <div className="relative z-10 shrink-0">
       <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg"
+        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-semibold text-lg shadow-lift"
         style={{
           background: `linear-gradient(135deg, ${step.color}, ${step.color}cc)`,
           boxShadow: `0 8px 24px ${step.color}33`,
@@ -277,18 +277,18 @@ const StepCard = ({ step, isLast }) => (
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span
-              className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
+              className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
               style={{ background: step.color }}
             >
               Step {step.number}
             </span>
-            <span className="text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="text-[10px] text-ink/40 flex items-center gap-1">
               <FiClock size={9} /> {step.subtitle}
             </span>
           </div>
           <h3
-            className="text-lg md:text-xl font-black text-gray-900 leading-snug"
-            style={{ fontFamily: "'Georgia', serif" }}
+            className="text-lg md:text-xl font-semibold text-ink leading-snug"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}
           >
             {step.title}
           </h3>
@@ -300,12 +300,12 @@ const StepCard = ({ step, isLast }) => (
           {step.icon}
         </div>
       </div>
-      <p className="text-sm text-gray-500 leading-relaxed mb-4">{step.desc}</p>
+      <p className="text-sm text-ink/50 leading-relaxed mb-4">{step.desc}</p>
       <div className="grid sm:grid-cols-2 gap-2">
         {step.details.map((d) => (
           <div
             key={d}
-            className="flex items-center gap-2 text-xs text-gray-600"
+            className="flex items-center gap-2 text-xs text-ink/60"
           >
             <div
               className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
@@ -355,15 +355,15 @@ const BecomeSeller = () => {
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{
-              background: "linear-gradient(135deg,#B42225,#FF8C00)",
+              background: "linear-gradient(135deg,#0E0E10,#B42225)",
             }}
           >
             <FiUsers size={24} className="text-white" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-3">
+          <h2 className="text-2xl font-semibold text-ink mb-3">
             Account Required
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-ink/60 mb-6">
             You need a user account before applying as a seller. Let's get you
             logged in!
           </p>
@@ -372,19 +372,19 @@ const BecomeSeller = () => {
               onClick={() => router.push("/login")}
               className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
               style={{
-                background: "linear-gradient(135deg,#B42225,#FF8C00)",
+                background: "linear-gradient(135deg,#0E0E10,#B42225)",
               }}
             >
               Go to Login
             </button>
             <button
               onClick={() => router.push("/")}
-              className="w-full py-3 rounded-xl text-sm font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all"
+              className="w-full py-3 rounded-xl text-sm font-bold text-ink/60 border border-ink/10 hover:bg-ink/5 transition-all"
             >
               Back to Home
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="text-xs text-ink/40 mt-4">
             Redirecting in 3 seconds...
           </p>
         </div>
@@ -411,7 +411,7 @@ const BecomeSeller = () => {
           className="relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(135deg,#0a0a0a 0%,#150505 30%,#2d0a0a 60%,#B42225 100%)",
+              "linear-gradient(135deg,#0a0a0a 0%,#150505 30%,#2d0a0a 60%,#0E0E10 100%)",
             minHeight: "560px",
           }}
         >
@@ -425,7 +425,7 @@ const BecomeSeller = () => {
           <div
             className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full opacity-10 pointer-events-none"
             style={{
-              background: "radial-gradient(circle,#B42225,transparent 70%)",
+              background: "radial-gradient(circle,#0E0E10,transparent 70%)",
             }}
           />
           {/* Dot pattern */}
@@ -449,12 +449,12 @@ const BecomeSeller = () => {
                     border: "1px solid rgba(255,107,0,0.3)",
                   }}
                 >
-                  <FaRocket size={11} /> Open to All Sellers — Free to Join
+                  <FaRocket size={11} /> Open to All Sellers - Free to Join
                 </div>
                 <h1
-                  className="text-4xl md:text-6xl font-black text-white leading-tight mb-5"
+                  className="text-4xl md:text-6xl font-semibold text-white leading-tight mb-5"
                   style={{
-                    fontFamily: "'Georgia', serif",
+                    fontFamily: "'Instrument Sans',sans-serif",
                     textShadow: "0 4px 40px rgba(180,34,37,0.5)",
                   }}
                 >
@@ -473,7 +473,7 @@ const BecomeSeller = () => {
                 </h1>
                 <p className="text-white/50 text-sm md:text-base leading-relaxed max-w-md mb-8">
                   Join 5,000+ sellers already growing their businesses on Jovo
-                  Marketplace. No upfront fees, no monthly charges — just sales,
+                  Marketplace. No upfront fees, no monthly charges - just sales,
                   payouts, and growth.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-8">
@@ -497,9 +497,9 @@ const BecomeSeller = () => {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <button
-                    className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
                     style={{
-                      background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                      background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                       boxShadow: "0 8px 30px rgba(180,34,37,0.4)",
                     }}
                   >
@@ -517,7 +517,7 @@ const BecomeSeller = () => {
                 </div>
               </div>
 
-              {/* Right — floating stat cards */}
+              {/* Right - floating stat cards */}
               <div className="hidden lg:flex items-center justify-center">
                 <div className="relative w-80 h-80">
                   {/* Centre circle */}
@@ -547,10 +547,10 @@ const BecomeSeller = () => {
                           animation: `float ${4 + i * 0.5}s ease-in-out ${i * 0.5}s infinite`,
                         }}
                       >
-                        <p className="text-base font-black text-gray-900">
+                        <p className="text-base font-semibold text-ink">
                           {value}
                         </p>
-                        <p className="text-[10px] text-gray-400 whitespace-nowrap">
+                        <p className="text-[10px] text-ink/40 whitespace-nowrap">
                           {label}
                         </p>
                       </div>
@@ -571,7 +571,7 @@ const BecomeSeller = () => {
                     border: "1px solid rgba(255,255,255,0.12)",
                   }}
                 >
-                  <p className="text-xl font-black text-white">{value}</p>
+                  <p className="text-xl font-semibold text-white">{value}</p>
                   <p className="text-[10px] text-white/40 mt-0.5">{label}</p>
                 </div>
               ))}
@@ -596,16 +596,16 @@ const BecomeSeller = () => {
             <div className="flex items-center gap-3 mb-8">
               <div
                 className="w-1 h-8 rounded-full"
-                style={{ background: "linear-gradient(#B42225,#FF6B00)" }}
+                style={{ background: "linear-gradient(#0E0E10,#FF6B00)" }}
               />
               <div>
                 <h2
-                  className="text-2xl md:text-3xl font-black text-gray-900"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-2xl md:text-3xl font-semibold text-ink"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   How It Works
                 </h2>
-                <p className="text-sm text-gray-400 mt-0.5">
+                <p className="text-sm text-ink/40 mt-0.5">
                   Start selling in under 24 hours
                 </p>
               </div>
@@ -624,16 +624,16 @@ const BecomeSeller = () => {
           {/* ══════════ BENEFITS ══════════ */}
           <div>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#B42225] bg-red-50 px-4 py-2 rounded-full mb-3">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#0E0E10] bg-red-50 px-4 py-2 rounded-full mb-3">
                 <FiStar size={11} /> Why Sellers Choose Jovo
               </div>
               <h2
-                className="text-2xl md:text-3xl font-black text-gray-900"
-                style={{ fontFamily: "'Georgia', serif" }}
+                className="text-2xl md:text-3xl font-semibold text-ink"
+                style={{ fontFamily: "'Instrument Sans',sans-serif" }}
               >
                 Everything you need to grow
               </h2>
-              <p className="text-sm text-gray-400 mt-2 max-w-md mx-auto">
+              <p className="text-sm text-ink/40 mt-2 max-w-md mx-auto">
                 Built specifically for Nigerian campus sellers and SMEs, Jovo
                 gives you the tools to build a real business.
               </p>
@@ -651,10 +651,10 @@ const BecomeSeller = () => {
                   >
                     {icon}
                   </div>
-                  <h3 className="text-sm font-black text-gray-900 mb-2">
+                  <h3 className="text-sm font-semibold text-ink mb-2">
                     {title}
                   </h3>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs text-ink/50 leading-relaxed">
                     {desc}
                   </p>
                 </div>
@@ -677,12 +677,12 @@ const BecomeSeller = () => {
               </div>
               <div>
                 <h2
-                  className="text-xl font-black text-gray-900"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-xl font-semibold text-ink"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   What Can You Sell?
                 </h2>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-ink/40">
                   Popular categories on Jovo
                 </p>
               </div>
@@ -691,21 +691,21 @@ const BecomeSeller = () => {
               {categories.map(({ label, icon, count }) => (
                 <div
                   key={label}
-                  className="group flex items-center gap-3 p-4 rounded-2xl bg-gray-50 hover:bg-[#B42225]/4 hover:border-[#B42225]/20 border border-transparent transition-all cursor-pointer"
+                  className="group flex items-center gap-3 p-4 rounded-2xl bg-sand hover:bg-[#0E0E10]/4 hover:border-[#0E0E10]/20 border border-transparent transition-all cursor-pointer"
                 >
-                  <span className="text-gray-600 shrink-0">{icon}</span>
+                  <span className="text-ink/60 shrink-0">{icon}</span>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-800 group-hover:text-[#B42225] transition-colors leading-tight">
+                    <p className="text-xs font-bold text-ink group-hover:text-[#0E0E10] transition-colors leading-tight">
                       {label}
                     </p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">
+                    <p className="text-[10px] text-ink/40 mt-0.5">
                       {count} listings
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-400 text-center mt-4">
+            <p className="text-xs text-ink/40 text-center mt-4">
               + many more categories available
             </p>
           </div>
@@ -713,12 +713,12 @@ const BecomeSeller = () => {
           {/* ══════════ TESTIMONIALS ══════════ */}
           <div>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#B42225] bg-red-50 px-4 py-2 rounded-full mb-3">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#0E0E10] bg-red-50 px-4 py-2 rounded-full mb-3">
                 <FaHandshake size={12} /> Seller Stories
               </div>
               <h2
-                className="text-2xl md:text-3xl font-black text-gray-900"
-                style={{ fontFamily: "'Georgia', serif" }}
+                className="text-2xl md:text-3xl font-semibold text-ink"
+                style={{ fontFamily: "'Instrument Sans',sans-serif" }}
               >
                 Real sellers, real results
               </h2>
@@ -733,7 +733,7 @@ const BecomeSeller = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0"
+                        className="w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0"
                         style={{
                           background: `linear-gradient(135deg,${color},${color}99)`,
                         }}
@@ -741,10 +741,10 @@ const BecomeSeller = () => {
                         {avatar}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-gray-900">
+                        <p className="text-sm font-semibold text-ink">
                           {name}
                         </p>
-                        <p className="text-[10px] text-gray-400">{role}</p>
+                        <p className="text-[10px] text-ink/40">{role}</p>
                       </div>
                       <MdVerified
                         size={16}
@@ -761,7 +761,7 @@ const BecomeSeller = () => {
                         />
                       ))}
                     </div>
-                    <p className="text-sm text-gray-600 leading-relaxed flex-1">
+                    <p className="text-sm text-ink/60 leading-relaxed flex-1">
                       "{text}"
                     </p>
                     <div
@@ -781,12 +781,12 @@ const BecomeSeller = () => {
             className="bg-white rounded-3xl overflow-hidden"
             style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}
           >
-            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
               <div className="flex items-center gap-3">
-                <div className="w-1 h-7 rounded-full bg-[#B42225]" />
+                <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
                 <h2
-                  className="text-xl font-black text-gray-900"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-xl font-semibold text-ink"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   Seller FAQs
                 </h2>
@@ -798,39 +798,39 @@ const BecomeSeller = () => {
                   key={i}
                   className={`rounded-2xl border overflow-hidden transition-all ${
                     openFaq === i
-                      ? "border-[#B42225]/25"
-                      : "border-gray-100 hover:border-gray-200"
+                      ? "border-[#0E0E10]/25"
+                      : "border-ink/10 hover:border-ink/10"
                   }`}
                 >
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     className={`w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors ${
                       openFaq === i
-                        ? "bg-[#B42225]/3"
-                        : "bg-white hover:bg-gray-50"
+                        ? "bg-[#0E0E10]/3"
+                        : "bg-white hover:bg-ink/5"
                     }`}
                   >
                     <p
-                      className={`text-sm font-bold ${openFaq === i ? "text-[#B42225]" : "text-gray-800"}`}
+                      className={`text-sm font-bold ${openFaq === i ? "text-[#0E0E10]" : "text-ink"}`}
                     >
                       {q}
                     </p>
                     <div
                       className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                         openFaq === i
-                          ? "bg-[#B42225] text-white"
-                          : "bg-gray-100 text-gray-400"
+                          ? "bg-[#0E0E10] text-white"
+                          : "bg-sand text-ink/40"
                       }`}
                     >
-                      <span className="text-sm font-black">
+                      <span className="text-sm font-semibold">
                         {openFaq === i ? "−" : "+"}
                       </span>
                     </div>
                   </button>
                   {openFaq === i && (
                     <div className="px-5 pb-5 bg-white border-t border-gray-50">
-                      <div className="w-8 h-0.5 rounded-full bg-[#B42225] mt-3 mb-3" />
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <div className="w-8 h-0.5 rounded-full bg-[#0E0E10] mt-3 mb-3" />
+                      <p className="text-sm text-ink/60 leading-relaxed">
                         {a}
                       </p>
                     </div>
@@ -845,7 +845,7 @@ const BecomeSeller = () => {
             className="relative rounded-3xl overflow-hidden p-8 md:p-12 text-white text-center"
             style={{
               background:
-                "linear-gradient(135deg,#0a0a0a 0%,#150505 40%,#B42225 100%)",
+                "linear-gradient(135deg,#0a0a0a 0%,#150505 40%,#0E0E10 100%)",
             }}
           >
             <div
@@ -864,12 +864,12 @@ const BecomeSeller = () => {
             />
 
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-orange-300 bg-orange-400/20 border border-orange-400/30 px-4 py-2 rounded-full mb-5">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-orange-300 bg-orange-400/20 border border-orange-400/30 px-4 py-2 rounded-full mb-5">
                 <FiZap size={11} /> Limited seller slots available this month
               </div>
               <h2
-                className="text-3xl md:text-5xl font-black mb-4 leading-tight"
-                style={{ fontFamily: "'Georgia', serif" }}
+                className="text-3xl md:text-5xl font-semibold mb-4 leading-tight"
+                style={{ fontFamily: "'Instrument Sans',sans-serif" }}
               >
                 Ready to start earning?
               </h2>
@@ -879,13 +879,13 @@ const BecomeSeller = () => {
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link href="/seller-application"
-                  className="flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                    background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                     boxShadow: "0 8px 30px rgba(180,34,37,0.5)",
                   }}
                 >
-                  <FaStore size={16} /> Apply to Become a Seller — Free
+                  <FaStore size={16} /> Apply to Become a Seller - Free
                   <FiArrowRight size={15} />
                 </Link>
                 <Link href="/help"

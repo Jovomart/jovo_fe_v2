@@ -78,7 +78,7 @@ const LogisticsPage = () => {
   const handleEstimate = (e) => {
     e.preventDefault();
     if (!pickup.trim() || !dropoff.trim()) return;
-    // Simple mock — pick a zone based on dropoff keyword
+    // Simple mock - pick a zone based on dropoff keyword
     const d = dropoff.toLowerCase();
     let zone = zones[0];
     if (d.includes("owerri") && !d.includes("ihiagwa")) zone = zones[2];
@@ -102,21 +102,21 @@ const LogisticsPage = () => {
         <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 rounded-full opacity-15 pointer-events-none"
           style={{ background: "radial-gradient(circle,#22c55e,transparent 65%)" }} />
         <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#FF8C00,transparent 65%)" }} />
+          style={{ background: "radial-gradient(circle,#B42225,transparent 65%)" }} />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16 lg:py-20">
           <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-white/60 text-[10px] md:text-xs font-bold px-3 md:px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase">
             🏍️ Campus Logistics
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 leading-tight"
-            style={{ fontFamily: "'Georgia',serif" }}>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white mb-3 leading-tight"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             Send Anything,<br />
             <span style={{ background: "linear-gradient(90deg,#86efac,#22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Anywhere on Campus
             </span>
           </h1>
           <p className="text-white/40 text-sm md:text-base max-w-xl mb-8 leading-relaxed">
-            Fast, affordable dispatch riders ready to pick up and deliver your packages within FUTO and across Owerri. No app needed — just WhatsApp.
+            Fast, affordable dispatch riders ready to pick up and deliver your packages within FUTO and across Owerri. No app needed - just WhatsApp.
           </p>
 
           {/* Stats */}
@@ -130,7 +130,7 @@ const LogisticsPage = () => {
               <div key={label} className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <span>{icon}</span>
-                <span className="text-green-400 font-black text-xs md:text-sm">{num}</span>
+                <span className="text-green-400 font-semibold text-xs md:text-sm">{num}</span>
                 <span className="text-white/40 text-[10px] md:text-xs">{label}</span>
               </div>
             ))}
@@ -143,7 +143,7 @@ const LogisticsPage = () => {
 
           {/* ── How it works ── */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400 mb-4">How It Works</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[3px] text-ink/40 mb-4">How It Works</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {steps.map((s, i) => (
                 <div key={i} className="bg-white rounded-2xl p-5 flex gap-4 items-start"
@@ -153,8 +153,8 @@ const LogisticsPage = () => {
                     {s.icon}
                   </div>
                   <div>
-                    <p className="text-sm font-black text-gray-900 mb-1">{s.title}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
+                    <p className="text-sm font-semibold text-ink mb-1">{s.title}</p>
+                    <p className="text-xs text-ink/50 leading-relaxed">{s.desc}</p>
                   </div>
                 </div>
               ))}
@@ -165,40 +165,40 @@ const LogisticsPage = () => {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-3xl p-6 md:p-7"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-              <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400 mb-4">Price Estimator</p>
-              <h3 className="text-lg font-black text-gray-900 mb-1" style={{ fontFamily: "'Georgia',serif" }}>Get a Quick Quote</h3>
-              <p className="text-xs text-gray-500 mb-5">Enter your locations to estimate the delivery cost.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[3px] text-ink/40 mb-4">Price Estimator</p>
+              <h3 className="text-lg font-semibold text-ink mb-1" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Get a Quick Quote</h3>
+              <p className="text-xs text-ink/50 mb-5">Enter your locations to estimate the delivery cost.</p>
 
               <form onSubmit={handleEstimate} className="space-y-3">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-1.5">Pickup Location</label>
-                  <div className="flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
+                  <label className="block text-[10px] font-semibold uppercase tracking-[2px] text-ink/40 mb-1.5">Pickup Location</label>
+                  <div className="flex items-center gap-2 border border-ink/10 rounded-2xl px-4 py-3 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
                     <FiMapPin size={15} className="text-green-500 shrink-0" />
                     <input type="text" placeholder="e.g. SEET Building, FUTO" value={pickup}
                       onChange={(e) => { setPickup(e.target.value); setSubmitted(false); }}
-                      className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0" />
+                      className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-1.5">Drop-off Location</label>
-                  <div className="flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-                    <FiMapPin size={15} className="text-[#B42225] shrink-0" />
+                  <label className="block text-[10px] font-semibold uppercase tracking-[2px] text-ink/40 mb-1.5">Drop-off Location</label>
+                  <div className="flex items-center gap-2 border border-ink/10 rounded-2xl px-4 py-3 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100 transition-all">
+                    <FiMapPin size={15} className="text-[#0E0E10] shrink-0" />
                     <input type="text" placeholder="e.g. Female Hostel / Owerri Town" value={dropoff}
                       onChange={(e) => { setDropoff(e.target.value); setSubmitted(false); }}
-                      className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0" />
+                      className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-1.5">Item Description <span className="text-gray-300 font-normal normal-case">(optional)</span></label>
-                  <div className="flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 focus-within:border-green-400 transition-all">
-                    <FiPackage size={15} className="text-gray-400 shrink-0" />
+                  <label className="block text-[10px] font-semibold uppercase tracking-[2px] text-ink/40 mb-1.5">Item Description <span className="text-ink/25 font-normal normal-case">(optional)</span></label>
+                  <div className="flex items-center gap-2 border border-ink/10 rounded-2xl px-4 py-3 focus-within:border-green-400 transition-all">
+                    <FiPackage size={15} className="text-ink/40 shrink-0" />
                     <input type="text" placeholder="e.g. Documents, food, phone" value={item}
                       onChange={(e) => setItem(e.target.value)}
-                      className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0" />
+                      className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0" />
                   </div>
                 </div>
                 <button type="submit"
-                  className="w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:opacity-90 active:scale-95"
+                  className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95"
                   style={{ background: "linear-gradient(135deg,#15803d,#22c55e)", boxShadow: "0 6px 20px rgba(34,197,94,0.3)" }}>
                   Estimate Price
                 </button>
@@ -208,14 +208,14 @@ const LogisticsPage = () => {
                 <div className="mt-4 rounded-2xl p-4"
                   style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-black text-gray-900">{estimated.label}</p>
-                    <span className="text-xl font-black text-green-600">₦{estimated.price.toLocaleString()}</span>
+                    <p className="text-sm font-semibold text-ink">{estimated.label}</p>
+                    <span className="text-xl font-semibold text-green-600">₦{estimated.price.toLocaleString()}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <div className="flex items-center gap-3 text-xs text-ink/50">
                     <span className="flex items-center gap-1"><FiClock size={11} className="text-green-500" /> ETA: {estimated.eta}</span>
                     <span className="flex items-center gap-1"><FiCheckCircle size={11} className="text-green-500" /> Pay on delivery</span>
                   </div>
-                  <p className="text-[10px] text-gray-400 mt-2">💡 Contact any available rider below to proceed with your delivery.</p>
+                  <p className="text-[10px] text-ink/40 mt-2">💡 Contact any available rider below to proceed with your delivery.</p>
                 </div>
               )}
             </div>
@@ -223,19 +223,19 @@ const LogisticsPage = () => {
             {/* ── Pricing table ── */}
             <div className="bg-white rounded-3xl p-6 md:p-7"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-              <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400 mb-4">Pricing Zones</p>
-              <h3 className="text-lg font-black text-gray-900 mb-5" style={{ fontFamily: "'Georgia',serif" }}>Flat Rate Delivery</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-[3px] text-ink/40 mb-4">Pricing Zones</p>
+              <h3 className="text-lg font-semibold text-ink mb-5" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Flat Rate Delivery</h3>
               <div className="space-y-3">
                 {zones.map((z, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-sand border border-ink/10">
                     <span className="text-2xl shrink-0">{z.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800">{z.label}</p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                      <p className="text-sm font-bold text-ink">{z.label}</p>
+                      <p className="text-xs text-ink/40 flex items-center gap-1 mt-0.5">
                         <FiClock size={10} /> {z.eta}
                       </p>
                     </div>
-                    <span className="text-base font-black text-green-600 shrink-0">₦{z.price.toLocaleString()}</span>
+                    <span className="text-base font-semibold text-green-600 shrink-0">₦{z.price.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -252,8 +252,8 @@ const LogisticsPage = () => {
           <div>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400">Dispatch Riders</p>
-                <h3 className="text-xl font-black text-gray-900 mt-0.5" style={{ fontFamily: "'Georgia',serif" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-[3px] text-ink/40">Dispatch Riders</p>
+                <h3 className="text-xl font-semibold text-ink mt-0.5" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Available Now
                 </h3>
               </div>
@@ -265,7 +265,7 @@ const LogisticsPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {riders.map((rider) => (
                 <div key={rider.id} className={`bg-white rounded-2xl p-5 flex gap-4 border transition-all ${
-                  rider.available ? "border-gray-100 hover:border-green-200 hover:shadow-md" : "border-gray-100 opacity-60"
+                  rider.available ? "border-ink/10 hover:border-green-200 hover:shadow-soft" : "border-ink/10 opacity-60"
                 }`} style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
                   <div className="relative shrink-0">
                     <img src={rider.image} alt={rider.name}
@@ -274,32 +274,32 @@ const LogisticsPage = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className="text-sm font-black text-gray-900 truncate">{rider.name}</p>
-                      <MdVerified size={14} className="text-[#B42225] shrink-0" />
+                      <p className="text-sm font-semibold text-ink truncate">{rider.name}</p>
+                      <MdVerified size={14} className="text-[#0E0E10] shrink-0" />
                     </div>
-                    <p className="text-[10px] text-gray-400">"{rider.nickname}" · {rider.bike}</p>
+                    <p className="text-[10px] text-ink/40">"{rider.nickname}" · {rider.bike}</p>
                     <div className="flex items-center gap-1.5 mt-1">
                       <FaStar size={10} className="text-yellow-400" />
-                      <span className="text-xs font-bold text-gray-700">{rider.rating}</span>
-                      <span className="text-[10px] text-gray-400">· {rider.trips} trips</span>
+                      <span className="text-xs font-bold text-ink/70">{rider.rating}</span>
+                      <span className="text-[10px] text-ink/40">· {rider.trips} trips</span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2 mb-3">
                       {rider.tags.slice(0,2).map((t) => (
-                        <span key={t} className="text-[9px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">{t}</span>
+                        <span key={t} className="text-[9px] font-semibold text-ink/50 bg-sand px-1.5 py-0.5 rounded-full">{t}</span>
                       ))}
                     </div>
                     <div className="flex gap-1.5">
                       <a href={`https://wa.me/${rider.whatsapp}?text=Hi ${rider.name}, I found you on JOVO Logistics. I need a dispatch rider.`}
                         target="_blank" rel="noopener noreferrer"
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-[10px] font-black text-white transition-all ${
+                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-[10px] font-semibold text-white transition-all ${
                           rider.available ? "hover:opacity-90" : "pointer-events-none opacity-50"
                         }`}
                         style={{ background: "#25D366" }}>
                         <FaWhatsapp size={11} /> Chat
                       </a>
                       <a href={`tel:${rider.phone}`}
-                        className={`flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-[10px] font-black text-gray-700 bg-gray-100 transition-all ${
-                          rider.available ? "hover:bg-gray-200" : "pointer-events-none opacity-50"
+                        className={`flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-[10px] font-semibold text-ink/70 bg-sand transition-all ${
+                          rider.available ? "hover:bg-ink/10" : "pointer-events-none opacity-50"
                         }`}>
                         <FiPhone size={11} /> Call
                       </a>
@@ -319,7 +319,7 @@ const LogisticsPage = () => {
             }} />
             <div className="relative z-10">
               <FaMotorcycle size={40} className="text-green-300 mx-auto mb-4" />
-              <h3 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "'Georgia',serif" }}>
+              <h3 className="text-2xl md:text-3xl font-semibold text-white mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 Become a JOVO Rider
               </h3>
               <p className="text-white/50 text-sm md:text-base max-w-md mx-auto mb-6">
@@ -327,7 +327,7 @@ const LogisticsPage = () => {
               </p>
               <a href="https://wa.me/2348000000000?text=I want to register as a JOVO dispatch rider"
                 target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:opacity-90"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:opacity-90"
                 style={{ background: "#25D366", boxShadow: "0 6px 20px rgba(37,211,102,0.35)" }}>
                 <FaWhatsapp size={16} /> Register as a Rider
               </a>

@@ -41,13 +41,13 @@ const Tv_Audio_Deals = () => {
   }, []);
 
   return (
-    <div className="w-full mt-5 bg-[#F5F6F7]">
+    <div className="w-full mt-5 bg-[#FBEFE3]">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg,#8B0000 0%,#B42225 50%,#cd5c5c 100%)",
+            "linear-gradient(135deg,#8B0000 0%,#0E0E10 50%,#cd5c5c 100%)",
         }}
       >
         {/* Background dot texture */}
@@ -75,7 +75,7 @@ const Tv_Audio_Deals = () => {
             <FiMusic size={12} className="text-yellow-300" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               TV & Audio Deals
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -88,7 +88,7 @@ const Tv_Audio_Deals = () => {
 
         <button
           onClick={() => router.push("/tv-audio-deals")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -103,7 +103,7 @@ const Tv_Audio_Deals = () => {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-44 md:min-w-64 h-80 bg-gray-100 rounded-xl animate-pulse"
+                className="min-w-44 md:min-w-64 h-80 bg-sand rounded-xl animate-pulse"
               />
             ))
           : tvAudio.map((product) => {
@@ -115,7 +115,7 @@ const Tv_Audio_Deals = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-44 md:min-w-64 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                  className="min-w-44 md:min-w-64 snap-start bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 group cursor-pointer"
                 >
                   <div className="relative h-44 md:h-56 overflow-hidden rounded-t-xl">
                     <img
@@ -123,7 +123,7 @@ const Tv_Audio_Deals = () => {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
-                    <div className="absolute top-2 left-2 bg-[#B42225] text-white text-xs px-2 py-1 rounded-full font-bold shadow">
+                    <div className="absolute top-2 left-2 bg-[#0E0E10] text-white text-xs px-2 py-1 rounded-full font-bold shadow">
                       -{discount}%
                     </div>
                   </div>
@@ -134,7 +134,7 @@ const Tv_Audio_Deals = () => {
                       <span className="font-bold text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>

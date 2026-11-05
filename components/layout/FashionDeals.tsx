@@ -42,7 +42,7 @@ const FashionDeals = () => {
   }, []);
 
   return (
-    <div className="w-full mt-5 bg-[#F5F6F7]">
+    <div className="w-full mt-5 bg-[#FBEFE3]">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
@@ -75,7 +75,7 @@ const FashionDeals = () => {
             <FiUser size={16} className="text-purple-200" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Men & Women Fashion
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -88,7 +88,7 @@ const FashionDeals = () => {
 
         <button
           onClick={() => router.push("/fashion-deals")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -103,7 +103,7 @@ const FashionDeals = () => {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-44 md:min-w-64 h-80 bg-gray-100 rounded-xl animate-pulse"
+                className="min-w-44 md:min-w-64 h-80 bg-sand rounded-xl animate-pulse"
               />
             ))
           : fashion.map((product) => {
@@ -115,7 +115,7 @@ const FashionDeals = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-44 md:min-w-70 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                  className="min-w-44 md:min-w-70 snap-start bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 group cursor-pointer"
                 >
                   <div className="relative h-44 md:h-56 overflow-hidden rounded-t-xl">
                     <img
@@ -134,7 +134,7 @@ const FashionDeals = () => {
                       <span className="font-bold text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>

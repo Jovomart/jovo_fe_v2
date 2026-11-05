@@ -45,7 +45,7 @@ const TopSellers = () => {
   }, []);
 
   return (
-    <div className="w-full bg-[#F5F6F7]">
+    <div className="w-full bg-[#FBEFE3]">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
@@ -78,7 +78,7 @@ const TopSellers = () => {
             <FaTrophy size={16} className="text-yellow-300" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Top Sellers
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -92,7 +92,7 @@ const TopSellers = () => {
 
         <button
           onClick={() => router.push("/top-sellers")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -118,7 +118,7 @@ const TopSellers = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-45 md:min-w-60 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  className="min-w-45 md:min-w-60 snap-start bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 cursor-pointer"
                 >
                   <div className="relative h-40 md:h-52 overflow-hidden rounded-t-xl">
                     <img
@@ -126,7 +126,7 @@ const TopSellers = () => {
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-2 left-2 bg-[#FF8C00] text-white text-xs px-2 py-1 rounded-full font-bold">
+                    <div className="absolute top-2 left-2 bg-[#B42225] text-white text-xs px-2 py-1 rounded-full font-bold">
                       -{discount}%
                     </div>
                   </div>
@@ -137,22 +137,22 @@ const TopSellers = () => {
                     </p>
 
                     <div className="mt-2">
-                      <span className="text-[#FF8C00] font-bold text-lg">
+                      <span className="text-[#B42225] font-bold text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>
 
                     <div className="mt-3">
-                      <div className="w-full bg-gray-200 h-2 rounded-full">
+                      <div className="w-full bg-ink/10 h-2 rounded-full">
                         <div
-                          className="bg-[#FF8C00] h-2 rounded-full"
+                          className="bg-[#B42225] h-2 rounded-full"
                           style={{ width: `${product.stock}%` }}
                         />
                       </div>
-                      <p className="text-xs mt-1 text-gray-500">
+                      <p className="text-xs mt-1 text-ink/50">
                         {product.stock}% remaining
                       </p>
                     </div>

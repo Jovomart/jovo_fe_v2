@@ -98,7 +98,7 @@ const ApplicationStatus = () => {
       try {
         const res: ApiResponse = await apiService.getApplicationStatus();
 
-        // Unwrap response — handle single or double nesting
+        // Unwrap response - handle single or double nesting
         let d: ApplicationData = res?.data || res;
         // Check for nested data property (API response wrapper)
         if (d && (d as any).data && typeof (d as any).data === "object") {
@@ -158,7 +158,7 @@ const ApplicationStatus = () => {
           d?.seller_document ||
           (d && Object.keys(d).length > 0)
         ) {
-          // Has data but no recognisable status — assume pending
+          // Has data but no recognisable status - assume pending
           computed = "pending";
         }
 
@@ -241,7 +241,7 @@ const ApplicationStatus = () => {
       pill: "bg-emerald-100 text-emerald-700 border-emerald-200",
       pillText: "✓ Approved",
       title: "You're a Verified Seller!",
-      desc: "Congratulations! Your application has been approved. Your seller dashboard is now active — start listing products and reach thousands of buyers on JOVO.",
+      desc: "Congratulations! Your application has been approved. Your seller dashboard is now active - start listing products and reach thousands of buyers on JOVO.",
       steps: [
         { done: true, label: "Application Submitted" },
         { done: true, label: "Reviewed by Team" },
@@ -273,7 +273,7 @@ const ApplicationStatus = () => {
       pill: "bg-indigo-100 text-indigo-700 border-indigo-200",
       pillText: "No Application",
       title: "No Application Found",
-      desc: "You haven't applied to become a seller on JOVO yet. Apply now — it's free and takes less than 5 minutes.",
+      desc: "You haven't applied to become a seller on JOVO yet. Apply now - it's free and takes less than 5 minutes.",
       steps: [],
     },
     success: {
@@ -284,7 +284,7 @@ const ApplicationStatus = () => {
       pill: "bg-indigo-100 text-indigo-700 border-indigo-200",
       pillText: "No Application",
       title: "No Application Found",
-      desc: "You haven't applied to become a seller on JOVO yet. Apply now — it's free and takes less than 5 minutes.",
+      desc: "You haven't applied to become a seller on JOVO yet. Apply now - it's free and takes less than 5 minutes.",
       steps: [],
     },
   };
@@ -307,7 +307,7 @@ const ApplicationStatus = () => {
             >
               <FiHome size={14} /> Home
             </Link>
-            <span className="text-white text-xs font-black tracking-wide">
+            <span className="text-white text-xs font-semibold tracking-wide">
               Application Status
             </span>
             <button
@@ -328,8 +328,8 @@ const ApplicationStatus = () => {
           {/* Loading */}
           {loading && (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="w-10 h-10 border-2 border-[#B42225]/20 border-t-[#B42225] rounded-full animate-spin" />
-              <p className="text-sm text-gray-400 font-semibold">
+              <div className="w-10 h-10 border-2 border-[#0E0E10]/20 border-t-[#0E0E10] rounded-full animate-spin" />
+              <p className="text-sm text-ink/40 font-semibold">
                 Checking your application status...
               </p>
             </div>
@@ -344,7 +344,7 @@ const ApplicationStatus = () => {
                   className="text-red-500 shrink-0 mt-0.5"
                 />
                 <div className="flex-1">
-                  <p className="text-red-700 text-sm font-black mb-1">
+                  <p className="text-red-700 text-sm font-semibold mb-1">
                     Error Loading Status
                   </p>
                   <p className="text-red-600 text-sm mb-4">{error}</p>
@@ -358,7 +358,7 @@ const ApplicationStatus = () => {
               <button
                 onClick={() => fetchStatus(true)}
                 disabled={refreshing}
-                className="w-full flex items-center justify-center gap-2 bg-[#B42225] hover:bg-[#9e1e20] text-white py-3 rounded-xl font-black text-sm transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-[#0E0E10] hover:bg-[#2A2A2A] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
               >
                 <FiRefreshCw
                   size={15}
@@ -376,15 +376,15 @@ const ApplicationStatus = () => {
                 <FiAlertCircle size={24} className="text-amber-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm text-gray-700 font-black mb-1">
+                <p className="text-sm text-ink/70 font-semibold mb-1">
                   Unable to Load Status
                 </p>
-                <p className="text-xs text-gray-400 mb-4">
+                <p className="text-xs text-ink/40 mb-4">
                   Please refresh or try again
                 </p>
                 <button
                   onClick={() => fetchStatus(true)}
-                  className="px-6 py-2.5 bg-[#B42225] text-white rounded-xl text-sm font-black hover:bg-[#9e1e20] transition-colors"
+                  className="px-6 py-2.5 bg-[#0E0E10] text-white rounded-xl text-sm font-semibold hover:bg-[#2A2A2A] transition-colors"
                 >
                   Refresh
                 </button>
@@ -408,18 +408,18 @@ const ApplicationStatus = () => {
                 </div>
 
                 <span
-                  className={`text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full border ${c.pill}`}
+                  className={`text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full border ${c.pill}`}
                 >
                   {c.pillText}
                 </span>
 
                 <h2
-                  className="text-2xl md:text-3xl font-black text-gray-900 mt-5 mb-3"
-                  style={{ fontFamily: "'Georgia',serif" }}
+                  className="text-2xl md:text-3xl font-semibold text-ink mt-5 mb-3"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   {c.title}
                 </h2>
-                <p className="text-sm text-gray-500 leading-relaxed max-w-md mx-auto">
+                <p className="text-sm text-ink/50 leading-relaxed max-w-md mx-auto">
                   {c.desc}
                 </p>
 
@@ -433,7 +433,7 @@ const ApplicationStatus = () => {
                             size={14}
                             className="text-red-600 shrink-0"
                           />
-                          <p className="text-xs font-black text-red-700 uppercase tracking-wide">
+                          <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">
                             Reason for Rejection
                           </p>
                         </div>
@@ -465,7 +465,7 @@ const ApplicationStatus = () => {
                 {/* Auto-redirect countdown */}
                 {status === "approved" && !dismissRedirect && (
                   <div className="mt-5 mx-auto max-w-sm px-4 py-3 rounded-2xl bg-emerald-100 border border-emerald-200">
-                    <p className="text-xs font-black text-emerald-700 mb-0.5">
+                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">
                       Redirecting to your dashboard in{" "}
                       <span className="text-lg">{countdown}</span>s
                     </p>
@@ -483,13 +483,13 @@ const ApplicationStatus = () => {
                   {status === "approved" && (
                     <>
                       <button onClick={() => router.push("/seller/dashboard")}
-                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105"
                         style={{ background: "linear-gradient(135deg,#059669,#10B981)", boxShadow: "0 8px 24px rgba(16,185,129,0.3)" }}>
                         <FaStore size={14} /> Go to Dashboard <FiArrowRight size={13} />
                       </button>
                       {!dismissRedirect && (
                         <button onClick={() => setDismissRedirect(true)}
-                          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all">
+                          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all">
                           Stay Here
                         </button>
                       )}
@@ -498,8 +498,8 @@ const ApplicationStatus = () => {
                   
                   {status === "rejected" && (
                     <button onClick={() => router.push("/seller-application")}
-                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
-                      style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 8px 24px rgba(180,34,37,0.3)" }}>
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105"
+                      style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)", boxShadow: "0 8px 24px rgba(180,34,37,0.3)" }}>
                       <FaRocket size={14} /> Reapply Now <FiArrowRight size={13} />
                     </button>
                   )}
@@ -507,12 +507,12 @@ const ApplicationStatus = () => {
                   {(status === "not_applied" || status === "success") && (
                     <>
                       <button onClick={() => router.push("/seller-application")}
-                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
-                        style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 8px 24px rgba(180,34,37,0.3)" }}>
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105"
+                        style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)", boxShadow: "0 8px 24px rgba(180,34,37,0.3)" }}>
                         <FaRocket size={14} /> Start Application <FiArrowRight size={13} />
                       </button>
                       <Link href="/"
-                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all">
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all">
                         Back to Home
                       </Link>
                     </>
@@ -520,7 +520,7 @@ const ApplicationStatus = () => {
                   
                   {status === "pending" && (
                     <Link href="/"
-                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all">
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all">
                       Back to Home
                     </Link>
                   )}
@@ -530,24 +530,24 @@ const ApplicationStatus = () => {
               {/* Progress steps */}
               {c.steps.length > 0 && (
                 <div
-                  className="bg-white rounded-3xl p-6 md:p-7 border border-gray-100"
+                  className="bg-white rounded-3xl p-6 md:p-7 border border-ink/10"
                   style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
                 >
-                  <p className="text-xs font-black uppercase tracking-[3px] text-gray-400 mb-5">
+                  <p className="text-xs font-semibold uppercase tracking-[3px] text-ink/40 mb-5">
                     Application Progress
                   </p>
                   <div className="space-y-4">
                     {c.steps.map((step: any, i: number) => (
                       <div key={i} className="flex items-center gap-4">
                         <div
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm font-black ${
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm font-semibold ${
                             step.error
                               ? "bg-red-100 text-red-600"
                               : step.done
                                 ? "text-white"
                                 : step.active
                                   ? "text-white"
-                                  : "bg-gray-100 text-gray-400"
+                                  : "bg-sand text-ink/40"
                           }`}
                           style={
                             step.done && !step.error
@@ -570,10 +570,10 @@ const ApplicationStatus = () => {
                             step.error
                               ? "text-red-600"
                               : step.done
-                                ? "text-gray-800"
+                                ? "text-ink"
                                 : step.active
                                   ? "text-amber-700"
-                                  : "text-gray-400"
+                                  : "text-ink/40"
                           }`}
                         >
                           {step.label}
@@ -590,36 +590,36 @@ const ApplicationStatus = () => {
               {/* Application details */}
               {data?.business_name && status !== "not_applied" && (
                 <div
-                  className="bg-white rounded-3xl p-6 border border-gray-100"
+                  className="bg-white rounded-3xl p-6 border border-ink/10"
                   style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
                 >
-                  <p className="text-xs font-black uppercase tracking-[3px] text-gray-400 mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-[3px] text-ink/40 mb-4">
                     Your Application
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {data.business_name && (
                       <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
+                        <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-0.5">
                           Business Name
                         </p>
-                        <p className="text-sm font-bold text-gray-800">
+                        <p className="text-sm font-bold text-ink">
                           {data.business_name}
                         </p>
                       </div>
                     )}
                     {data.business_address && (
                       <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
+                        <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-0.5">
                           Business Address
                         </p>
-                        <p className="text-sm font-bold text-gray-800">
+                        <p className="text-sm font-bold text-ink">
                           {data.business_address}
                         </p>
                       </div>
                     )}
                     {data.business_category && data.business_category.length > 0 && (
                       <div className="sm:col-span-2">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2">
+                        <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-2">
                           Categories
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -629,7 +629,7 @@ const ApplicationStatus = () => {
                               className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white"
                               style={{
                                 background:
-                                  "linear-gradient(135deg,#B42225,#FF6B00)",
+                                  "linear-gradient(135deg,#0E0E10,#FF6B00)",
                               }}
                             >
                               {cat}

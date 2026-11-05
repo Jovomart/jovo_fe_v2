@@ -42,7 +42,7 @@ const Contact = () => {
   };
 
   const contactMethods = [
-    { icon: <MdEmail size={20} />, title: "Email Us", details: "support@jovomarketplace.com", sub: "We respond within 24 hours", color: "#B42225", bg: "#FEF2F2", action: "mailto:support@jovomarketplace.com" },
+    { icon: <MdEmail size={20} />, title: "Email Us", details: "support@jovomarketplace.com", sub: "We respond within 24 hours", color: "#0E0E10", bg: "#FEF2F2", action: "mailto:support@jovomarketplace.com" },
     { icon: <FaWhatsapp size={20} />, title: "WhatsApp", details: "+234 801 234 5678", sub: "Chat with our team", color: "#25D366", bg: "#E8F5E9", action: "https://wa.me/2348012345678" },
     { icon: <MdPhone size={20} />, title: "Call Us", details: "+234 801 234 5678", sub: "Mon–Fri, 8am–6pm", color: "#2563EB", bg: "#EFF6FF", action: "tel:+2348012345678" },
     { icon: <FiGlobe size={20} />, title: "Visit Us", details: "ICT Centre, FUTO", sub: "Drop-off & pickup point", color: "#D97706", bg: "#FFFBEB", action: "#" },
@@ -66,10 +66,10 @@ const Contact = () => {
 
         {/* ══════════ HERO ══════════ */}
         <div className="relative overflow-hidden" style={{
-          background: "linear-gradient(135deg,#0a0a0a 0%,#1a0303 35%,#2d0808 65%,#B42225 100%)",
+          background: "linear-gradient(135deg,#0a0a0a 0%,#1a0303 35%,#2d0808 65%,#0E0E10 100%)",
         }}>
           <div className="absolute -top-16 right-1/4 w-80 h-80 rounded-full opacity-20 pointer-events-none"
-            style={{ background: "radial-gradient(circle,#B42225,transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle,#0E0E10,transparent 70%)" }} />
           <div className="absolute bottom-0 left-1/3 w-60 h-60 rounded-full opacity-10 pointer-events-none"
             style={{ background: "radial-gradient(circle,#FF6B00,transparent 70%)" }} />
           <div className="absolute inset-0 opacity-[0.05]" style={{
@@ -91,13 +91,13 @@ const Contact = () => {
               </div>
               <div>
                 <div className="flex items-center gap-3 flex-wrap mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-300/70 px-3 py-1.5 rounded-full"
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-red-300/70 px-3 py-1.5 rounded-full"
                     style={{ background: "rgba(180,34,37,0.2)", border: "1px solid rgba(252,165,165,0.2)" }}>
                     We're Here to Help
                   </span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight"
-                  style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(180,34,37,0.4)" }}>
+                <h1 className="text-4xl md:text-5xl font-semibold text-white mb-4 leading-tight"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(180,34,37,0.4)" }}>
                   Get in<br />
                   <span style={{ background: "linear-gradient(90deg,#fca5a5,#fdba74,#fca5a5)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     Touch
@@ -133,12 +133,12 @@ const Contact = () => {
           {/* ══════════ CONTACT METHODS ══════════ */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(#B42225,#FF6B00)" }} />
+              <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(#0E0E10,#FF6B00)" }} />
               <div>
-                <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <h2 className="text-2xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Ways to Reach Us
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">Choose the channel that works best for you</p>
+                <p className="text-xs text-ink/40 mt-0.5">Choose the channel that works best for you</p>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -155,9 +155,9 @@ const Contact = () => {
                     style={{ background: bg, color }}>
                     {icon}
                   </div>
-                  <h3 className="text-sm font-black text-gray-900 mb-1">{title}</h3>
-                  <p className="text-sm font-bold text-gray-800">{details}</p>
-                  <p className="text-xs text-gray-400 mt-1">{sub}</p>
+                  <h3 className="text-sm font-semibold text-ink mb-1">{title}</h3>
+                  <p className="text-sm font-bold text-ink">{details}</p>
+                  <p className="text-xs text-ink/40 mt-1">{sub}</p>
                 </a>
               ))}
             </div>
@@ -168,14 +168,14 @@ const Contact = () => {
             {/* Contact Form */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-3xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-                <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+                <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-1 h-7 rounded-full bg-[#B42225]" />
-                    <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                    <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
+                    <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                       Send us a Message
                     </h2>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1 ml-4">Fill out the form and we'll get back to you within 24 hours</p>
+                  <p className="text-xs text-ink/40 mt-1 ml-4">Fill out the form and we'll get back to you within 24 hours</p>
                 </div>
 
                 <div className="p-6 md:p-8">
@@ -184,21 +184,21 @@ const Contact = () => {
                       <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
                         <FaRegCheckCircle size={32} className="text-green-500" />
                       </div>
-                      <h3 className="text-xl font-black text-gray-900 mb-2">Message Sent!</h3>
-                      <p className="text-sm text-gray-500">Thank you for reaching out. Our team will respond within 24 hours.</p>
+                      <h3 className="text-xl font-semibold text-ink mb-2">Message Sent!</h3>
+                      <p className="text-sm text-ink/50">Thank you for reaching out. Our team will respond within 24 hours.</p>
                     </div>
                   ) : (
                     <>
                       <div className="grid sm:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                            Your Name <span className="text-[#B42225]">*</span>
+                          <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                            Your Name <span className="text-[#0E0E10]">*</span>
                           </label>
                           <input
                             type="text"
                             placeholder="John Doe"
-                            className={`w-full rounded-2xl border px-4 py-3 text-sm text-gray-700 outline-none transition-all ${
-                              errors.name ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                            className={`w-full rounded-2xl border px-4 py-3 text-sm text-ink/70 outline-none transition-all ${
+                              errors.name ? "border-red-400 bg-red-50" : "border-ink/10 bg-sand focus:border-[#0E0E10] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
                             }`}
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -206,14 +206,14 @@ const Contact = () => {
                           {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                            Email Address <span className="text-[#B42225]">*</span>
+                          <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                            Email Address <span className="text-[#0E0E10]">*</span>
                           </label>
                           <input
                             type="email"
                             placeholder="hello@jovo.com"
-                            className={`w-full rounded-2xl border px-4 py-3 text-sm text-gray-700 outline-none transition-all ${
-                              errors.email ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                            className={`w-full rounded-2xl border px-4 py-3 text-sm text-ink/70 outline-none transition-all ${
+                              errors.email ? "border-red-400 bg-red-50" : "border-ink/10 bg-sand focus:border-[#0E0E10] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
                             }`}
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -222,14 +222,14 @@ const Contact = () => {
                         </div>
                       </div>
                       <div className="mb-5">
-                        <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                          Your Message <span className="text-[#B42225]">*</span>
+                        <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                          Your Message <span className="text-[#0E0E10]">*</span>
                         </label>
                         <textarea
                           rows={5}
                           placeholder="How can we help you?"
-                          className={`w-full rounded-2xl border px-4 py-3 text-sm text-gray-700 outline-none resize-none transition-all ${
-                            errors.message ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                          className={`w-full rounded-2xl border px-4 py-3 text-sm text-ink/70 outline-none resize-none transition-all ${
+                            errors.message ? "border-red-400 bg-red-50" : "border-ink/10 bg-sand focus:border-[#0E0E10] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
                           }`}
                           value={formData.message}
                           onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -238,8 +238,8 @@ const Contact = () => {
                       </div>
                       <button
                         onClick={handleSubmit}
-                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99]"
-                        style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 6px 24px rgba(180,34,37,0.35)" }}>
+                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)", boxShadow: "0 6px 24px rgba(180,34,37,0.35)" }}>
                         <FiSend size={16} /> Send Message
                       </button>
                     </>
@@ -255,26 +255,26 @@ const Contact = () => {
                   <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
                     <FiClock size={16} className="text-purple-600" />
                   </div>
-                  <h3 className="font-black text-gray-900">Office Hours</h3>
+                  <h3 className="font-semibold text-ink">Office Hours</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Monday – Friday</span>
-                    <span className="font-semibold text-gray-800">8:00 AM – 6:00 PM</span>
+                    <span className="text-ink/50">Monday – Friday</span>
+                    <span className="font-semibold text-ink">8:00 AM – 6:00 PM</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Saturday</span>
-                    <span className="font-semibold text-gray-800">10:00 AM – 2:00 PM</span>
+                    <span className="text-ink/50">Saturday</span>
+                    <span className="font-semibold text-ink">10:00 AM – 2:00 PM</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Sunday</span>
-                    <span className="font-semibold text-gray-800">Closed</span>
+                    <span className="text-ink/50">Sunday</span>
+                    <span className="font-semibold text-ink">Closed</span>
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="mt-4 pt-4 border-t border-ink/10">
                   <div className="flex items-start gap-3">
                     <FiZap size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-gray-500">Response time for emails: <strong className="text-gray-700">within 24 hours</strong></p>
+                    <p className="text-xs text-ink/50">Response time for emails: <strong className="text-ink/70">within 24 hours</strong></p>
                   </div>
                 </div>
               </div>
@@ -284,9 +284,9 @@ const Contact = () => {
                   <div className="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center">
                     <FaWhatsapp size={16} className="text-green-600" />
                   </div>
-                  <h3 className="font-black text-gray-900">Emergency Support</h3>
+                  <h3 className="font-semibold text-ink">Emergency Support</h3>
                 </div>
-                <p className="text-sm text-gray-500 mb-4">For urgent issues, reach us on WhatsApp for faster response.</p>
+                <p className="text-sm text-ink/50 mb-4">For urgent issues, reach us on WhatsApp for faster response.</p>
                 <a href="https://wa.me/2348012345678" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm text-white transition-all hover:scale-105"
                   style={{ background: "#25D366", boxShadow: "0 4px 16px rgba(37,211,102,0.3)" }}>
@@ -298,24 +298,24 @@ const Contact = () => {
 
           {/* ══════════ FAQs ══════════ */}
           <div className="bg-white rounded-3xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
-            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
               <div className="flex items-center gap-3">
-                <div className="w-1 h-7 rounded-full bg-[#B42225]" />
-                <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
+                <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Frequently Asked Questions
                 </h2>
               </div>
             </div>
             <div className="p-5 md:p-7 space-y-3 fade-up">
               {faqs.map(({ q, a }, i) => (
-                <div key={i} className="rounded-2xl border border-gray-100 p-5 hover:border-gray-200 transition-all">
+                <div key={i} className="rounded-2xl border border-ink/10 p-5 hover:border-ink/10 transition-all">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-[#B42225]/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <FiMessageCircle size={12} className="text-[#B42225]" />
+                    <div className="w-6 h-6 rounded-full bg-[#0E0E10]/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <FiMessageCircle size={12} className="text-[#0E0E10]" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-800 mb-2">{q}</p>
-                      <p className="text-xs text-gray-500 leading-relaxed">{a}</p>
+                      <p className="text-sm font-bold text-ink mb-2">{q}</p>
+                      <p className="text-xs text-ink/50 leading-relaxed">{a}</p>
                     </div>
                   </div>
                 </div>
@@ -325,7 +325,7 @@ const Contact = () => {
 
           {/* ══════════ LOCATION / MAP CTA ══════════ */}
           <div className="relative rounded-3xl overflow-hidden p-7 md:p-10 text-white"
-            style={{ background: "linear-gradient(135deg,#0a0a0a 0%,#1a0303 50%,#B42225 100%)" }}>
+            style={{ background: "linear-gradient(135deg,#0a0a0a 0%,#1a0303 50%,#0E0E10 100%)" }}>
             <div className="absolute inset-0 opacity-[0.05]" style={{
               backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
               backgroundSize: "26px 26px",
@@ -336,7 +336,7 @@ const Contact = () => {
                   <MdLocationOn size={18} className="text-red-300" />
                   <span className="text-xs font-bold text-red-300 uppercase tracking-widest">Visit Our Location</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-black mb-2" style={{ fontFamily: "'Georgia', serif" }}>
+                <h3 className="text-xl md:text-2xl font-semibold mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   ICT Centre, FUTO
                 </h3>
                 <p className="text-white/40 text-sm max-w-md">
@@ -350,7 +350,7 @@ const Contact = () => {
           </div>
 
           {/* bottom note */}
-          <div className="flex flex-wrap items-center justify-center gap-4 py-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 py-2 text-xs text-ink/40">
             <span className="flex items-center gap-1.5"><MdVerified size={12} className="text-green-400" /> Verified Support Team</span>
             <span className="hidden sm:block w-1 h-1 rounded-full bg-gray-300" />
             <span className="flex items-center gap-1.5"><FiShield size={11} /> Secure & Confidential</span>

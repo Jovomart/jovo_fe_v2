@@ -11,7 +11,7 @@ import { FaWhatsapp, FaStar, FaStarHalfAlt, FaRegStar, FaBroom, FaCut, FaTshirt,
 
 // Service Categories Data (moved inline to avoid missing module)
 const serviceCategories = [
-  { id: "cleaning", name: "Cleaning", icon: "FaBroom", gradient: "linear-gradient(135deg,#B42225,#FF6B00)" },
+  { id: "cleaning", name: "Cleaning", icon: "FaBroom", gradient: "linear-gradient(135deg,#0E0E10,#FF6B00)" },
   { id: "salon", name: "Salon & Barber", icon: "FaCut", gradient: "linear-gradient(135deg,#7C3AED,#A78BFA)" },
   { id: "laundry", name: "Laundry", icon: "FaTshirt", gradient: "linear-gradient(135deg,#0891B2,#06B6D4)" },
   { id: "electrical", name: "Electrical", icon: "FaBolt", gradient: "linear-gradient(135deg,#D97706,#F59E0B)" },
@@ -186,7 +186,7 @@ const Stars = ({ rating }: { rating: number }) => (
     {[1, 2, 3, 4, 5].map((s) => {
       if (rating >= s) return <FaStar key={s} size={11} className="text-yellow-400" />;
       if (rating >= s - 0.5) return <FaStarHalfAlt key={s} size={11} className="text-yellow-400" />;
-      return <FaRegStar key={s} size={11} className="text-gray-300" />;
+      return <FaRegStar key={s} size={11} className="text-ink/25" />;
     })}
   </div>
 );
@@ -205,13 +205,13 @@ const ProviderCard = ({ provider }: { provider: Provider }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         {/* Category badge */}
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-black px-2.5 py-1 rounded-full"
-          style={{ background: cat?.gradient || "#B42225" }}>
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full"
+          style={{ background: cat?.gradient || "#0E0E10" }}>
           <span>{iconMap[cat?.icon as keyof typeof iconMap]}</span> {cat?.name}
         </div>
 
         {/* Availability */}
-        <div className={`absolute top-3 right-3 text-[10px] font-black px-2.5 py-1 rounded-full ${
+        <div className={`absolute top-3 right-3 text-[10px] font-semibold px-2.5 py-1 rounded-full ${
           provider.available ? "bg-green-500 text-white" : "bg-gray-400 text-white"
         }`}>
           {provider.available ? "● Available" : "● Busy"}
@@ -222,46 +222,46 @@ const ProviderCard = ({ provider }: { provider: Provider }) => {
       <div className="p-4 md:p-5 flex flex-col flex-1 gap-3">
         <div>
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-black text-gray-900 text-sm md:text-base leading-tight"
-              style={{ fontFamily: "'Georgia',serif" }}>
+            <h3 className="font-semibold text-ink text-sm md:text-base leading-tight"
+              style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
               {provider.name}
             </h3>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-            <FiMapPin size={10} className="text-[#B42225] shrink-0" /> {provider.location}
+          <p className="text-xs text-ink/50 mt-0.5 flex items-center gap-1">
+            <FiMapPin size={10} className="text-[#0E0E10] shrink-0" /> {provider.location}
           </p>
         </div>
 
         {/* Rating */}
         <div className="flex items-center gap-2">
           <Stars rating={provider.rating} />
-          <span className="text-xs font-black text-gray-800">{provider.rating}</span>
-          <span className="text-xs text-gray-400">({provider.reviews} reviews)</span>
+          <span className="text-xs font-semibold text-ink">{provider.rating}</span>
+          <span className="text-xs text-ink/40">({provider.reviews} reviews)</span>
         </div>
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5">
           {provider.tags.map((t) => (
-            <span key={t} className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{t}</span>
+            <span key={t} className="text-[10px] font-semibold text-ink/50 bg-sand px-2 py-0.5 rounded-full">{t}</span>
           ))}
         </div>
 
         {/* Description */}
-        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{provider.description}</p>
+        <p className="text-xs text-ink/50 leading-relaxed line-clamp-2">{provider.description}</p>
 
         {/* Price */}
-        <p className="text-sm font-black text-[#B42225]">{provider.priceLabel}</p>
+        <p className="text-sm font-semibold text-[#0E0E10]">{provider.priceLabel}</p>
 
         {/* CTA buttons */}
-        <div className="flex gap-2 mt-auto pt-2 border-t border-gray-100">
+        <div className="flex gap-2 mt-auto pt-2 border-t border-ink/10">
           <a href={`https://wa.me/${provider.whatsapp}?text=Hi, I found you on JOVO and I'd like to book your ${cat?.name} service.`}
             target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black text-white transition-all hover:opacity-90"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold text-white transition-all hover:opacity-90"
             style={{ background: "#25D366" }}>
             <FaWhatsapp size={14} /> WhatsApp
           </a>
           <a href={`tel:${provider.phone}`}
-            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all">
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-ink/70 bg-sand hover:bg-ink/10 transition-all">
             <FiPhone size={13} /> Call
           </a>
         </div>
@@ -313,16 +313,16 @@ const ServicesPage = () => {
           backgroundSize: "28px 28px",
         }} />
         <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 rounded-full opacity-15 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#FF8C00,transparent 65%)" }} />
+          style={{ background: "radial-gradient(circle,#B42225,transparent 65%)" }} />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16 lg:py-20">
           <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-white/60 text-[10px] md:text-xs font-bold px-3 md:px-4 py-1.5 md:py-2 rounded-full mb-4 tracking-widest uppercase">
             <FiTool size={12} /> Campus Services
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 leading-tight"
-            style={{ fontFamily: "'Georgia',serif" }}>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white mb-3 leading-tight"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             Trusted Services,<br />
-            <span style={{ background: "linear-gradient(90deg,#FF8C00,#FFB347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "linear-gradient(90deg,#B42225,#FFB347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Booked Instantly
             </span>
           </h1>
@@ -333,11 +333,11 @@ const ServicesPage = () => {
           {/* Search */}
           <div className="flex items-center gap-3 bg-white rounded-2xl px-4 md:px-5 py-3 md:py-4 max-w-xl"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
-            <FiSearch size={16} className="text-gray-400 shrink-0" />
+            <FiSearch size={16} className="text-ink/40 shrink-0" />
             <input type="text" placeholder="Search services, providers, skills..."
               value={search} onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0" />
-            {search && <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 shrink-0"><FiX size={15} /></button>}
+              className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0" />
+            {search && <button onClick={() => setSearch("")} className="text-ink/40 hover:text-ink shrink-0"><FiX size={15} /></button>}
           </div>
 
           {/* Stats */}
@@ -349,8 +349,8 @@ const ServicesPage = () => {
             ].map(({ num, label, icon }) => (
               <div key={label} className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <span className="text-[#FF8C00] text-xs">{icon}</span>
-                <span className="text-[#FF8C00] font-black text-xs md:text-sm">{num}</span>
+                <span className="text-[#B42225] text-xs">{icon}</span>
+                <span className="text-[#B42225] font-semibold text-xs md:text-sm">{num}</span>
                 <span className="text-white/40 text-[10px] md:text-xs">{label}</span>
               </div>
             ))}
@@ -367,15 +367,15 @@ const ServicesPage = () => {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
             <button onClick={() => setCategory("all")}
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
-                activeCategory === "all" ? "text-white" : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                activeCategory === "all" ? "text-white" : "bg-white text-ink/60 hover:bg-ink/5 border border-ink/10"
               }`}
-              style={activeCategory === "all" ? { background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 4px 12px rgba(180,34,37,0.3)" } : {}}>
+              style={activeCategory === "all" ? { background: "linear-gradient(135deg,#0E0E10,#B42225)", boxShadow: "0 4px 12px rgba(180,34,37,0.3)" } : {}}>
               <FiGrid size={12} className="inline mr-1" /> All Services
             </button>
             {serviceCategories.map((cat) => (
               <button key={cat.id} onClick={() => setCategory(cat.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
-                  activeCategory === cat.id ? "text-white" : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  activeCategory === cat.id ? "text-white" : "bg-white text-ink/60 hover:bg-ink/5 border border-ink/10"
                 }`}
                 style={activeCategory === cat.id ? { background: cat.gradient, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" } : {}}>
                 {iconMap[cat.icon as keyof typeof iconMap]} {cat.name}
@@ -386,12 +386,12 @@ const ServicesPage = () => {
           {/* Filters row */}
           <div className="flex items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-xs text-gray-500 font-semibold">
-                <span className="text-gray-900 font-black">{filtered.length}</span> provider{filtered.length !== 1 ? "s" : ""} found
+              <p className="text-xs text-ink/50 font-semibold">
+                <span className="text-ink font-semibold">{filtered.length}</span> provider{filtered.length !== 1 ? "s" : ""} found
               </p>
               <button onClick={() => setShowAvailable(!showAvailable)}
                 className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
-                  showAvailable ? "border-green-400 bg-green-50 text-green-700" : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+                  showAvailable ? "border-green-400 bg-green-50 text-green-700" : "border-ink/10 bg-white text-ink/50 hover:border-ink/20"
                 }`}>
                 <FiCheckCircle size={12} /> Available Now
               </button>
@@ -400,7 +400,7 @@ const ServicesPage = () => {
             {/* Sort */}
             <div className="relative">
               <button onClick={() => setShowSort(!showSort)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:border-gray-300 transition-all">
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white border border-ink/10 text-ink/60 hover:border-ink/20 transition-all">
                 <FiFilter size={12} />
                 <span className="hidden sm:inline">
                   {sortBy === "rating" ? "Top Rated" : sortBy === "reviews" ? "Most Reviewed" : "Lowest Price"}
@@ -408,7 +408,7 @@ const ServicesPage = () => {
                 <FiChevronDown size={12} className={`transition-transform ${showSort ? "rotate-180" : ""}`} />
               </button>
               {showSort && (
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl border border-gray-100 overflow-hidden z-20 w-44"
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl border border-ink/10 overflow-hidden z-20 w-44"
                   style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
                   {[
                     { key: "rating",  label: "Top Rated" },
@@ -416,7 +416,7 @@ const ServicesPage = () => {
                     { key: "price",   label: "Lowest Price" },
                   ].map(({ key, label }) => (
                     <button key={key} onClick={() => { setSortBy(key); setShowSort(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-gray-50 ${sortBy === key ? "text-[#B42225] bg-red-50" : "text-gray-600"}`}>
+                      className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-ink/5 ${sortBy === key ? "text-[#0E0E10] bg-red-50" : "text-ink/60"}`}>
                       {label}
                     </button>
                   ))}
@@ -429,13 +429,13 @@ const ServicesPage = () => {
           {filtered.length === 0 ? (
             <div className="text-center py-16 md:py-20">
               <div className="text-5xl mb-4 flex justify-center">
-                <FiSearch size={48} className="text-gray-300" />
+                <FiSearch size={48} className="text-ink/25" />
               </div>
-              <p className="font-black text-gray-700 text-lg">No providers found</p>
-              <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or search term</p>
+              <p className="font-semibold text-ink/70 text-lg">No providers found</p>
+              <p className="text-ink/40 text-sm mt-1">Try adjusting your filters or search term</p>
               <button onClick={() => { setSearch(""); setCategory("all"); setShowAvailable(false); }}
-                className="mt-4 px-6 py-2.5 rounded-xl text-sm font-black text-white"
-                style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+                className="mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}>
                 Clear Filters
               </button>
             </div>

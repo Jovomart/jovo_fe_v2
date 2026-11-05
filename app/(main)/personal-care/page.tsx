@@ -10,7 +10,7 @@ import Footer from "@/components/layout/Footer";
 const personalKeywords = ["skincare", "skin", "lotion", "cream", "shampoo", "conditioner", "soap", "toothbrush", "toothpaste", "deodorant", "perfume", "cologne", "hair", "body wash", "razor", "sanitary"];
 
 const PersonalBadge = () => (
-  <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black text-white"
+  <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-semibold text-white"
     style={{ background: "linear-gradient(135deg,#6d28d9,#7c3aed)", boxShadow: "0 2px 8px rgba(124,58,237,0.45)" }}>
     <FaSpa size={9} /> CARE
   </div>
@@ -42,27 +42,27 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         <PersonalBadge />
         {discount && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
+          <div className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-semibold text-white"
             style={{ background: "linear-gradient(135deg,#6d28d9,#7c3aed)" }}>
             <FiZap size={9} /> -{discount}%
           </div>
         )}
         <button onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:scale-110 transition shadow-md">
-          {wishlisted ? <FaHeart size={14} className="text-violet-600" /> : <FiHeart size={14} className="text-gray-400" />}
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:scale-110 transition shadow-soft">
+          {wishlisted ? <FaHeart size={14} className="text-violet-600" /> : <FiHeart size={14} className="text-ink/40" />}
         </button>
       </div>
       <div className="p-3 md:p-4">
         <p className="text-[10px] text-violet-600 font-bold uppercase tracking-wide">{product.brand || "Personal Care"}</p>
-        <h3 className="text-xs md:text-sm font-bold text-gray-800 mt-0.5 line-clamp-2 leading-snug">{product.name}</h3>
+        <h3 className="text-xs md:text-sm font-bold text-ink mt-0.5 line-clamp-2 leading-snug">{product.name}</h3>
         <Stars count={Math.round(product.rating || 4)} />
         <div className="flex items-center justify-between mt-2.5">
           <div>
-            <span className="text-sm md:text-base font-black text-gray-900">₦{product.price?.toLocaleString()}</span>
-            {product.oldPrice && <span className="text-xs text-gray-400 line-through ml-1.5">₦{product.oldPrice?.toLocaleString()}</span>}
+            <span className="text-sm md:text-base font-semibold text-ink">₦{product.price?.toLocaleString()}</span>
+            {product.oldPrice && <span className="text-xs text-ink/40 line-through ml-1.5">₦{product.oldPrice?.toLocaleString()}</span>}
           </div>
           <button onClick={() => navigate(`/product/${product.id}`)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-black text-white transition-all hover:opacity-90"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-white transition-all hover:opacity-90"
             style={{ background: "linear-gradient(135deg,#6d28d9,#7c3aed)" }}>
             <FiShoppingBag size={11} /> Add
           </button>
@@ -106,36 +106,36 @@ const PersonalCarePage = () => {
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/70 text-[10px] md:text-xs font-bold px-3 md:px-4 py-1.5 md:py-2 rounded-full mb-4 tracking-widest uppercase">
             🧴 Personal Care
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight" style={{ fontFamily: "'Georgia',serif" }}>
+          <h1 className="text-3xl md:text-5xl font-semibold text-white mb-3 leading-tight" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             Personal Care &<br />
             <span style={{ background: "linear-gradient(90deg,#c4b5fd,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Wellness Essentials
             </span>
           </h1>
           <p className="text-white/50 text-sm md:text-base max-w-xl mb-6">
-            Everything for your daily self-care routine — skincare, hair care, hygiene and wellness products.
+            Everything for your daily self-care routine - skincare, hair care, hygiene and wellness products.
           </p>
           <div className="flex items-center gap-3 bg-white rounded-2xl px-4 md:px-5 py-3 md:py-4 max-w-xl"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
-            <FiSearch size={16} className="text-gray-400 shrink-0" />
+            <FiSearch size={16} className="text-ink/40 shrink-0" />
             <input type="text" placeholder="Search personal care products..." value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0" />
-            {search && <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 shrink-0"><FiX size={15} /></button>}
+              className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0" />
+            {search && <button onClick={() => setSearch("")} className="text-ink/40 hover:text-ink shrink-0"><FiX size={15} /></button>}
           </div>
         </div>
       </div>
 
       <div style={{ background: "#F4F5F9" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-          <p className="text-sm font-bold text-gray-700 mb-5">
-            <span className="text-gray-900 font-black">{filtered.length}</span> products found
+          <p className="text-sm font-bold text-ink/70 mb-5">
+            <span className="text-ink font-semibold">{filtered.length}</span> products found
           </p>
           {filtered.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-5xl mb-4">🧴</div>
-              <p className="font-black text-gray-700 text-lg">No products found</p>
-              <button onClick={() => setSearch("")} className="mt-4 px-6 py-2.5 rounded-xl text-sm font-black text-white"
+              <p className="font-semibold text-ink/70 text-lg">No products found</p>
+              <button onClick={() => setSearch("")} className="mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
                 style={{ background: "linear-gradient(135deg,#6d28d9,#7c3aed)" }}>Clear Search</button>
             </div>
           ) : (

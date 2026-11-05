@@ -67,7 +67,7 @@ const faqs = [
 const tips = [
   { icon: <FiPackage size={18} />, text: "Keep the original packaging until you're completely satisfied with your order." },
   { icon: <FiCamera size={18} />, text: "Take photos of the product immediately upon delivery if it appears damaged." },
-  { icon: <FiFileText size={18} />, text: "Save your order confirmation email — you'll need the order ID to initiate a return." },
+  { icon: <FiFileText size={18} />, text: "Save your order confirmation email - you'll need the order ID to initiate a return." },
   { icon: <FiTruck size={18} />, text: "Track your return shipment to confirm it reaches us safely before the deadline." },
 ];
 
@@ -80,7 +80,7 @@ const ReturnPolicy = () => {
   return (
     <>
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg,#0a0a0a 0%,#1a0303 40%,#B42225 100%)" }}>
+      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg,#0a0a0a 0%,#1a0303 40%,#0E0E10 100%)" }}>
         <div className="absolute inset-0 opacity-[0.05]" style={{
           backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
           backgroundSize: "28px 28px",
@@ -91,7 +91,7 @@ const ReturnPolicy = () => {
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/70 text-xs font-semibold px-4 py-2 rounded-full mb-6 tracking-widest uppercase">
             <FiPackage size={12} /> Return Policy
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-5 leading-tight" style={{ fontFamily: "'Georgia',serif" }}>
+          <h1 className="text-4xl md:text-5xl font-semibold text-white mb-5 leading-tight" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             Hassle-Free <span style={{ background: "linear-gradient(90deg,#fca5a5,#fdba74)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Returns</span>
           </h1>
           <p className="text-white/50 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
@@ -123,25 +123,25 @@ const ReturnPolicy = () => {
             { num: "100%", unit: "", label: "Free on defective items", icon: <FiPercent size={16} /> },
             { num: "24/7", unit: "", label: "Support available", icon: <FaHeadset size={16} /> },
           ].map(({ num, unit, label, icon }) => (
-            <div key={label} className="bg-white rounded-2xl p-5 text-center border border-gray-100"
+            <div key={label} className="bg-white rounded-2xl p-5 text-center border border-ink/10"
               style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-              <div className="text-[#B42225] flex justify-center mb-2">{icon}</div>
-              <p className="font-black text-2xl text-[#B42225]" style={{ fontFamily: "'Georgia',serif" }}>
+              <div className="text-[#0E0E10] flex justify-center mb-2">{icon}</div>
+              <p className="font-semibold text-2xl text-[#0E0E10]" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 {num}<span className="text-base ml-0.5">{unit}</span>
               </p>
-              <p className="text-xs text-gray-500 mt-1 font-medium">{label}</p>
+              <p className="text-xs text-ink/50 mt-1 font-medium">{label}</p>
             </div>
           ))}
         </div>
 
         {/* Return process timeline */}
         <div className="mb-16">
-          <h2 className="text-2xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Georgia',serif" }}>How to Return an Item</h2>
-          <p className="text-gray-500 text-sm mb-10">Follow these 4 simple steps to complete your return.</p>
+          <h2 className="text-2xl font-semibold text-ink mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>How to Return an Item</h2>
+          <p className="text-ink/50 text-sm mb-10">Follow these 4 simple steps to complete your return.</p>
 
           <div className="relative">
             {/* Connecting line */}
-            <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#B42225] to-[#FF6B00] hidden md:block" />
+            <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-linear-to-b from-[#0E0E10] to-[#FF6B00] hidden md:block" />
 
             <div className="space-y-6">
               {[
@@ -177,20 +177,20 @@ const ReturnPolicy = () => {
                 <div key={i} className="flex gap-5">
                   <div className="flex flex-col items-center shrink-0">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white z-10 shrink-0"
-                      style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 4px 16px rgba(180,34,37,0.35)" }}>
+                      style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)", boxShadow: "0 4px 16px rgba(180,34,37,0.35)" }}>
                       {step.icon}
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl p-5 flex-1 border border-gray-100"
+                  <div className="bg-white rounded-2xl p-5 flex-1 border border-ink/10"
                     style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <span className="text-[10px] font-black text-[#B42225] tracking-widest uppercase">Step {step.step}</span>
-                        <h3 className="font-black text-gray-900 text-base mt-0.5" style={{ fontFamily: "'Georgia',serif" }}>{step.title}</h3>
+                        <span className="text-[10px] font-semibold text-[#0E0E10] tracking-widest uppercase">Step {step.step}</span>
+                        <h3 className="font-semibold text-ink text-base mt-0.5" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>{step.title}</h3>
                       </div>
-                      <span className="text-[11px] font-semibold text-gray-400 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">{step.time}</span>
+                      <span className="text-[11px] font-semibold text-ink/40 bg-sand px-3 py-1 rounded-full whitespace-nowrap">{step.time}</span>
                     </div>
-                    <p className="text-sm text-gray-500 leading-relaxed mt-2">{step.desc}</p>
+                    <p className="text-sm text-ink/50 leading-relaxed mt-2">{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -200,15 +200,15 @@ const ReturnPolicy = () => {
 
         {/* Eligibility */}
         <div className="mb-16">
-          <h2 className="text-2xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Georgia',serif" }}>Return Eligibility</h2>
-          <p className="text-gray-500 text-sm mb-8">Check if your item qualifies for a return before submitting a request.</p>
+          <h2 className="text-2xl font-semibold text-ink mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Return Eligibility</h2>
+          <p className="text-ink/50 text-sm mb-8">Check if your item qualifies for a return before submitting a request.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {eligibilitySections.map(({ icon, color, title, items, type }) => (
               <div key={title} className={`bg-white rounded-2xl border p-6 ${type === "success" ? "border-green-100" : "border-red-100"}`}
                 style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
                 <div className="flex items-center gap-3 mb-5">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
-                  <h3 className="font-black text-gray-900 text-base" style={{ fontFamily: "'Georgia',serif" }}>{title}</h3>
+                  <h3 className="font-semibold text-ink text-base" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>{title}</h3>
                 </div>
                 <div className="space-y-3">
                   {items.map((item, i) => (
@@ -220,7 +220,7 @@ const ReturnPolicy = () => {
                           ? <FiCheck size={11} className="text-green-600" />
                           : <FiX size={11} className="text-red-500" />}
                       </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">{item}</p>
+                      <p className="text-sm text-ink/60 leading-relaxed">{item}</p>
                     </div>
                   ))}
                 </div>
@@ -231,27 +231,27 @@ const ReturnPolicy = () => {
 
         {/* FAQs */}
         <div className="mb-16">
-          <h2 className="text-2xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Georgia',serif" }}>Frequently Asked Questions</h2>
-          <p className="text-gray-500 text-sm mb-8">Everything you need to know about returns and refunds.</p>
+          <h2 className="text-2xl font-semibold text-ink mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Frequently Asked Questions</h2>
+          <p className="text-ink/50 text-sm mb-8">Everything you need to know about returns and refunds.</p>
           <div className="space-y-3">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              <div key={index} className="bg-white rounded-2xl border border-ink/10 overflow-hidden"
                 style={{ boxShadow: openFaq === index ? "0 8px 32px rgba(180,34,37,0.1)" : "0 2px 8px rgba(0,0,0,0.04)" }}>
                 <button onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full flex items-center gap-4 p-5 text-left hover:bg-gray-50 transition-colors">
-                  <div className="w-8 h-8 rounded-xl bg-[#B42225]/10 flex items-center justify-center shrink-0">
-                    <FiHelpCircle size={15} className="text-[#B42225]" />
+                  className="w-full flex items-center gap-4 p-5 text-left hover:bg-ink/5 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-[#0E0E10]/10 flex items-center justify-center shrink-0">
+                    <FiHelpCircle size={15} className="text-[#0E0E10]" />
                   </div>
-                  <span className="flex-1 font-bold text-gray-800 text-sm">{faq.question}</span>
+                  <span className="flex-1 font-bold text-ink text-sm">{faq.question}</span>
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-                    openFaq === index ? "rotate-180 bg-[#B42225] text-white" : "bg-gray-100 text-gray-400"
+                    openFaq === index ? "rotate-180 bg-[#0E0E10] text-white" : "bg-sand text-ink/40"
                   }`}>
                     <FiChevronDown size={15} />
                   </div>
                 </button>
                 <div className={`transition-all duration-300 overflow-hidden ${openFaq === index ? "max-h-60" : "max-h-0"}`}>
                   <div className="px-5 pb-5 pt-1 border-t border-gray-50">
-                    <p className="text-sm text-gray-600 leading-relaxed pl-12">{faq.answer}</p>
+                    <p className="text-sm text-ink/60 leading-relaxed pl-12">{faq.answer}</p>
                   </div>
                 </div>
               </div>
@@ -261,7 +261,7 @@ const ReturnPolicy = () => {
 
         {/* Tips */}
         <div className="rounded-3xl p-8 mb-16" style={{ background: "linear-gradient(135deg,#0a0a0a,#1a0303,#2d0808)" }}>
-          <h2 className="text-xl font-black text-white mb-6 flex items-center gap-2" style={{ fontFamily: "'Georgia',serif" }}>
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             <FaRegLightbulb size={20} /> Tips for a Smooth Return
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,18 +275,18 @@ const ReturnPolicy = () => {
         </div>
 
         {/* Contact banner */}
-        <div className="rounded-3xl p-8 text-center" style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 8px 32px rgba(180,34,37,0.3)" }}>
-          <h2 className="text-2xl font-black text-white mb-3" style={{ fontFamily: "'Georgia',serif" }}>Need Help With a Return?</h2>
+        <div className="rounded-3xl p-8 text-center" style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)", boxShadow: "0 8px 32px rgba(180,34,37,0.3)" }}>
+          <h2 className="text-2xl font-semibold text-white mb-3" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Need Help With a Return?</h2>
           <p className="text-white/70 text-sm mb-6 max-w-md mx-auto">
             Our support team is available 24/7 to assist you with returns, refunds, and exchanges.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a href="mailto:support@jovomart.com"
-              className="inline-flex items-center gap-2 bg-white text-[#B42225] font-black text-sm px-6 py-3.5 rounded-full hover:shadow-lg transition-all">
+              className="inline-flex items-center gap-2 bg-white text-[#0E0E10] font-semibold text-sm px-6 py-3.5 rounded-full hover:shadow-lift transition-all">
               <FiMail size={16} /> Email Support
             </a>
             <a href="/help"
-              className="inline-flex items-center gap-2 bg-white/15 border border-white/30 text-white font-black text-sm px-6 py-3.5 rounded-full hover:bg-white/20 transition-all">
+              className="inline-flex items-center gap-2 bg-white/15 border border-white/30 text-white font-semibold text-sm px-6 py-3.5 rounded-full hover:bg-white/20 transition-all">
               <FiHelpCircle size={16} /> Help Center
             </a>
           </div>

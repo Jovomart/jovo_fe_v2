@@ -23,7 +23,7 @@ const AccommodationDeals = () => {
         </h2>
         <button
           onClick={() => router.push("/accommodations")}
-          className="text-xl md:text-3xl font-light text-[#FF8C00] hover:underline"
+          className="text-xl md:text-3xl font-light text-[#B42225] hover:underline"
         >
           See All
         </button>
@@ -38,7 +38,7 @@ const AccommodationDeals = () => {
           : accommodations.slice(0, 4).map((place) => (
               <div
                 key={place.id}
-                className="relative group rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition duration-500 cursor-pointer"
+                className="relative group rounded-2xl overflow-hidden shadow-lift hover:scale-[1.02] transition duration-500 cursor-pointer"
                 onClick={() => navigate(`/accommodation/${place.id}`)}
               >
                 {/* IMAGE */}
@@ -57,14 +57,14 @@ const AccommodationDeals = () => {
                     <span className="bg-white text-black text-xs px-2 py-1 rounded-full font-bold">
                       ⭐ {place.rating}
                     </span>
-                    <span className="text-xs text-gray-300">({place.reviews} reviews)</span>
+                    <span className="text-xs text-ink/25">({place.reviews} reviews)</span>
                   </div>
                   <h3 className="text-sm md:text-xl font-bold">{place.name}</h3>
-                  <p className="text-xs md:text-sm text-gray-300 mt-1">📍 {place.location}</p>
+                  <p className="text-xs md:text-sm text-ink/25 mt-1">📍 {place.location}</p>
                   <div className="mt-3 md:mt-4 flex justify-between items-center">
                     <div>
                       <span className="text-lg md:text-2xl font-bold">₦{place.price.toLocaleString()}</span>
-                      <span className="text-xs md:text-sm text-gray-300"> /year</span>
+                      <span className="text-xs md:text-sm text-ink/25"> /year</span>
                     </div>
                     <button className="bg-yellow-400 text-black text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full font-semibold hover:bg-yellow-300 transition">
                       Book

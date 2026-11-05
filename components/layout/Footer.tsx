@@ -14,11 +14,10 @@ import {
 } from "react-icons/fi";
 import { useContext } from 'react'
 import { AuthContext } from '@/context/AuthContext'
- // your logo path
 
 export default function Footer() {
   const { isSeller } = useContext(AuthContext);
-  
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.currentTarget;
     target.style.display = "none";
@@ -26,61 +25,41 @@ export default function Footer() {
       target.nextSibling.style.display = "block";
     }
   };
-  
+
   return (
-    <footer className="relative bg-[#0f0f0f] text-white overflow-hidden">
-      {/* ── Decorative top accent line ── */}
-      <div className="h-1 w-full bg-linear-to-r from-[#B42225] via-[#FF8C00] to-[#B42225]" />
-
-      {/* ── Subtle grid background ── */}
-      <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      {/* ── Glow blobs ── */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#B42225]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[#FF8C00]/8 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-10">
-        {/* ── Top section: Logo + Newsletter ── */}
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-10 pb-12 border-b border-white/10">
-          {/* Logo & tagline */}
-          <div className="flex flex-col gap-4 max-w-xs">
-            {/* ── LOGO SLOT ── replace src with your logo variable if needed */}
-            <img
-              src="/images/Jovo_off_logo2.png"
-              alt="Jovo Marketplace"
-              className="md:h-12 md:w-35 w-40 h-10 object-cover"
-              onError={handleImageError}
-            />
-            <span
-              className="text-2xl font-black tracking-tight text-white hidden"
-              style={{ fontFamily: "'Georgia', serif" }}
-            >
+    <footer className="relative mt-16 overflow-hidden rounded-t-[36px] bg-ink text-cream">
+      <div className="relative mx-auto max-w-7xl px-5 pb-8 pt-14 sm:px-8">
+        {/* Logo + newsletter */}
+        <div className="flex flex-col justify-between gap-10 border-b border-cream/10 pb-12 lg:flex-row lg:items-start">
+          <div className="flex max-w-sm flex-col gap-4">
+            <div className="inline-flex w-fit items-center rounded-[16px] bg-cream p-2">
+              <img
+                src="/images/Jovo_official_logo.png"
+                alt="Jovo Marketplace"
+                className="h-9 w-9 object-cover"
+                onError={handleImageError}
+              />
+            </div>
+            <span className="hidden font-display text-2xl font-semibold tracking-tight text-cream">
               JOVO
             </span>
 
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Nigeria's smartest marketplace. Find the best deals across
+            <p className="text-[13px] leading-relaxed text-cream/55">
+              Nigeria's smartest campus marketplace. Find the best deals across
               electronics, fashion, beauty, and more.
             </p>
 
-            {/* Social icons */}
-            <div className="flex items-center gap-3 mt-2">
+            <div className="mt-1 flex items-center gap-2.5">
               {[
-                { icon: <FiInstagram size={16} />, href: "#" },
-                { icon: <FiTwitter size={16} />, href: "#" },
-                { icon: <FiFacebook size={16} />, href: "#" },
-                { icon: <FiYoutube size={16} />, href: "#" },
+                { icon: <FiInstagram size={14} />, href: "#" },
+                { icon: <FiTwitter size={14} />, href: "#" },
+                { icon: <FiFacebook size={14} />, href: "#" },
+                { icon: <FiYoutube size={14} />, href: "#" },
               ].map(({ icon, href }, i) => (
                 <a
                   key={i}
                   href={href}
-                  className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center text-gray-400 hover:text-white hover:border-[#FF8C00] hover:bg-[#FF8C00]/10 transition-all duration-200"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-cream/10 text-cream/70 transition-colors duration-200 hover:bg-cream hover:text-ink"
                 >
                   {icon}
                 </a>
@@ -90,83 +69,72 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div className="w-full lg:max-w-sm">
-            <p className="text-xs uppercase tracking-widest text-[#FF8C00] font-semibold mb-2">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-mint">
               Newsletter
             </p>
-            <h4 className="text-xl font-bold mb-1">
+            <h4 className="mb-1 text-xl font-semibold tracking-tight text-cream">
               Get the best deals first.
             </h4>
-            <p className="text-gray-400 text-sm mb-4">
-              Flash sales, new arrivals, and exclusive offers — straight to your
+            <p className="mb-4 text-[13px] text-cream/50">
+              Flash sales, new arrivals, and exclusive offers - straight to your
               inbox.
             </p>
-            <div className="flex gap-0 rounded-xl overflow-hidden border border-white/10 focus-within:border-[#FF8C00]/50 transition-all">
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="flex items-center gap-1 rounded-full bg-cream/10 p-1 pl-4"
+            >
               <input
                 type="email"
                 placeholder="your@email.com"
-                className="flex-1 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none"
+                aria-label="Email address"
+                className="min-w-0 flex-1 bg-transparent text-[13px] text-cream placeholder-cream/35"
               />
-              <button className="bg-[#B42225] hover:bg-[#FF8C00] px-5 text-white transition-colors duration-200 flex items-center gap-1 font-medium text-sm whitespace-nowrap">
-                Subscribe <FiArrowRight size={14} />
+              <button
+                type="submit"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-cream px-4 py-2.5 text-[12px] font-semibold text-ink transition-transform duration-200 hover:scale-[1.03]"
+              >
+                Subscribe <FiArrowRight size={13} />
               </button>
-            </div>
+            </form>
           </div>
         </div>
 
-        {/* ── Middle section: Links ── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 py-12 border-b border-white/10">
-          {/* Support */}
+        {/* Links */}
+        <div className="grid grid-cols-2 gap-8 border-b border-cream/10 py-11 md:grid-cols-3">
           <div>
-            <p className="text-xs uppercase tracking-widest text-[#FF8C00] font-semibold mb-4">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-mint">
               Support
             </p>
             <ul className="space-y-3">
               {[
-                {
-                  icon: <FiMessageCircle size={14} />,
-                  label: "Chat with us",
-                  to: "/contact",
-                },
-                {
-                  icon: <FiHelpCircle size={14} />,
-                  label: "Help Center",
-                  to: "/help",
-                },
-                {
-                  icon: <FiMail size={14} />,
-                  label: "Contact Us",
-                  to: "/contact",
-                },
+                { icon: <FiMessageCircle size={14} />, label: "Chat with us", to: "/contact" },
+                { icon: <FiHelpCircle size={14} />, label: "Help Center", to: "/help" },
+                { icon: <FiMail size={14} />, label: "Contact Us", to: "/contact" },
               ].map(({ icon, label, to }) => (
                 <li key={label}>
                   <Link
                     href={to}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors duration-150 group"
+                    className="flex items-center gap-2 text-[13px] text-cream/55 transition-colors duration-150 hover:text-cream"
                   >
-                    <span className="text-[#B42225] group-hover:text-[#FF8C00] transition-colors">
-                      {icon}
-                    </span>
+                    <span className="text-cream/40">{icon}</span>
                     {label}
                   </Link>
                 </li>
               ))}
-              <li className="flex items-center gap-2 text-gray-400 text-sm">
-                <FiPhone size={14} className="text-[#B42225]" />
+              <li className="flex items-center gap-2 text-[13px] text-cream/55">
+                <FiPhone size={14} className="text-cream/40" />
                 +234 801 234 5678
               </li>
             </ul>
           </div>
 
-          {/* Marketplace */}
           <div>
-            <p className="text-xs uppercase tracking-widest text-[#FF8C00] font-semibold mb-4">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-mint">
               Marketplace
             </p>
             <ul className="space-y-3">
               {[
-                ...(isSeller
-                  ? []
-                  : [{ label: "Become a Seller", to: "/become-seller" }]),
+                ...(isSeller ? [] : [{ label: "Become a Seller", to: "/become-seller" }]),
                 { label: "Report a Product", to: "/report-product" },
                 { label: "Flash Sales", to: "/flash-sales" },
                 { label: "Top Sellers", to: "/top-sellers" },
@@ -174,7 +142,7 @@ export default function Footer() {
                 <li key={label}>
                   <Link
                     href={to}
-                    className="text-gray-400 hover:text-white text-sm transition-colors duration-150 hover:translate-x-0.5 inline-block"
+                    className="inline-block text-[13px] text-cream/55 transition-colors duration-150 hover:text-cream"
                   >
                     {label}
                   </Link>
@@ -183,9 +151,8 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Policies */}
           <div>
-            <p className="text-xs uppercase tracking-widest text-[#FF8C00] font-semibold mb-4">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-mint">
               Legal
             </p>
             <ul className="space-y-3">
@@ -199,7 +166,7 @@ export default function Footer() {
                 <li key={label}>
                   <Link
                     href={to}
-                    className="text-gray-400 hover:text-white text-sm transition-colors duration-150 hover:translate-x-0.5 inline-block"
+                    className="inline-block text-[13px] text-cream/55 transition-colors duration-150 hover:text-cream"
                   >
                     {label}
                   </Link>
@@ -209,15 +176,12 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── Bottom bar ── */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-3 mb-3 text-xs text-gray-500">
-          <p>
-            &copy; {new Date().getFullYear()} Jovo Marketplace. All rights
-            reserved.
-          </p>
+        {/* Bottom bar */}
+        <div className="flex flex-col items-center justify-between gap-3 pt-7 text-[11px] text-cream/40 md:flex-row">
+          <p>&copy; {new Date().getFullYear()} Jovo Marketplace. All rights reserved.</p>
           <div className="flex items-center gap-1">
             <span>Made with</span>
-            <span className="text-[#B42225] mx-1">♥</span>
+            <span className="mx-1 text-brand-red">♥</span>
             <span>in Nigeria</span>
           </div>
         </div>

@@ -48,7 +48,7 @@ const faqCategories = [
     key: "orders",
     label: "Orders & Checkout",
     icon: <FaBoxOpen size={18} />,
-    color: "#B42225",
+    color: "#0E0E10",
     faqs: [
       {
         q: "How do I place an order on Jovo?",
@@ -56,7 +56,7 @@ const faqCategories = [
       },
       {
         q: "Can I edit or cancel an order after placing it?",
-        a: "Yes — but only before the order is processed by the seller. Go to Profile → My Orders, find the order, and click 'Cancel' or 'Edit'. Once the order is marked as 'Processing' or 'Shipped', cancellation is no longer possible and you would need to initiate a return.",
+        a: "Yes - but only before the order is processed by the seller. Go to Profile → My Orders, find the order, and click 'Cancel' or 'Edit'. Once the order is marked as 'Processing' or 'Shipped', cancellation is no longer possible and you would need to initiate a return.",
       },
       {
         q: "Why was my order cancelled automatically?",
@@ -116,7 +116,7 @@ const faqCategories = [
       },
       {
         q: "How long does a refund take?",
-        a: "Refunds are processed within 3–5 business days once we receive and inspect the returned item. The amount is returned to your original payment method — bank transfer, card, or Jovo wallet.",
+        a: "Refunds are processed within 3–5 business days once we receive and inspect the returned item. The amount is returned to your original payment method - bank transfer, card, or Jovo wallet.",
       },
       {
         q: "What if I receive a damaged or wrong item?",
@@ -144,7 +144,7 @@ const faqCategories = [
       },
       {
         q: "I was charged but my order wasn't placed. What do I do?",
-        a: "This can happen due to network issues. Check your order history first — the order may have gone through. If no order appears, the charge will automatically reverse within 24–48 hours. Contact support if it persists beyond 48 hours.",
+        a: "This can happen due to network issues. Check your order history first - the order may have gone through. If no order appears, the charge will automatically reverse within 24–48 hours. Contact support if it persists beyond 48 hours.",
       },
       {
         q: "How does the Jovo Wallet work?",
@@ -235,7 +235,7 @@ const supportChannels = [
     sub: "Within 24 hours",
     detail: "support@jovo.ng",
     action: "Send Email",
-    color: "#B42225",
+    color: "#0E0E10",
     href: "mailto:support@jovo.ng",
   },
   {
@@ -287,7 +287,7 @@ const quickLinks = [
     icon: <FiShield size={16} />,
     label: "Safety & Security",
     href: "/help",  // Changed from 'to' to 'href'
-    color: "#B42225",
+    color: "#0E0E10",
   },
   {
     icon: <MdStorefront size={16} />,
@@ -312,34 +312,34 @@ const FAQItem = ({ faq, index, isOpen, onToggle, showCategory }) => (
   <div
     className={`rounded-2xl border overflow-hidden transition-all duration-200 ${
       isOpen
-        ? "border-[#B42225]/30 shadow-sm"
-        : "border-gray-100 hover:border-gray-200"
+        ? "border-[#0E0E10]/30 shadow-soft"
+        : "border-ink/10 hover:border-ink/10"
     }`}
   >
     <button
       onClick={() => onToggle(index)}
       className={`w-full flex items-start justify-between gap-4 px-5 py-4 text-left transition-colors ${
-        isOpen ? "bg-[#B42225]/3" : "bg-white hover:bg-gray-50"
+        isOpen ? "bg-[#0E0E10]/3" : "bg-white hover:bg-ink/5"
       }`}
     >
       <div className="flex-1">
         {showCategory && (
           <span
-            className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full text-white mb-2 inline-block"
+            className="text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full text-white mb-2 inline-block"
             style={{ background: faq.color }}
           >
             {faq.categoryLabel}
           </span>
         )}
         <p
-          className={`text-sm font-bold leading-snug ${isOpen ? "text-[#B42225]" : "text-gray-800"}`}
+          className={`text-sm font-bold leading-snug ${isOpen ? "text-[#0E0E10]" : "text-ink"}`}
         >
           {faq.q}
         </p>
       </div>
       <div
         className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors mt-0.5 ${
-          isOpen ? "bg-[#B42225] text-white" : "bg-gray-100 text-gray-500"
+          isOpen ? "bg-[#0E0E10] text-white" : "bg-sand text-ink/50"
         }`}
       >
         {isOpen ? <FiChevronUp size={13} /> : <FiChevronDown size={13} />}
@@ -347,8 +347,8 @@ const FAQItem = ({ faq, index, isOpen, onToggle, showCategory }) => (
     </button>
     {isOpen && (
       <div className="px-5 pb-5 bg-white">
-        <div className="w-8 h-0.5 rounded-full bg-[#B42225] mb-3" />
-        <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
+        <div className="w-8 h-0.5 rounded-full bg-[#0E0E10] mb-3" />
+        <p className="text-sm text-ink/60 leading-relaxed">{faq.a}</p>
       </div>
     )}
   </div>
@@ -418,7 +418,7 @@ const Help = () => {
           className="relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(135deg,#0a0a0a 0%,#1a0505 40%,#3d0808 70%,#B42225 100%)",
+              "linear-gradient(135deg,#0a0a0a 0%,#1a0505 40%,#3d0808 70%,#0E0E10 100%)",
           }}
         >
           {/* Orbs */}
@@ -431,7 +431,7 @@ const Help = () => {
           <div
             className="absolute bottom-0 left-1/3 w-64 h-64 rounded-full opacity-10 pointer-events-none"
             style={{
-              background: "radial-gradient(circle,#B42225,transparent 70%)",
+              background: "radial-gradient(circle,#0E0E10,transparent 70%)",
             }}
           />
           {/* Dot grid */}
@@ -456,9 +456,9 @@ const Help = () => {
             </div>
 
             <h1
-              className="text-4xl md:text-6xl font-black text-white mb-4 leading-tight"
+              className="text-4xl md:text-6xl font-semibold text-white mb-4 leading-tight"
               style={{
-                fontFamily: "'Georgia', serif",
+                fontFamily: "'Instrument Sans',sans-serif",
                 textShadow: "0 4px 30px rgba(180,34,37,0.5)",
               }}
             >
@@ -475,7 +475,7 @@ const Help = () => {
               </span>
             </h1>
             <p className="text-white/50 text-sm md:text-base mb-10 max-w-md mx-auto">
-              Search our help articles, browse FAQs, or reach our support team —
+              Search our help articles, browse FAQs, or reach our support team -
               we've got you covered.
             </p>
 
@@ -485,18 +485,18 @@ const Help = () => {
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-200 ${
                   searchFocused
                     ? "shadow-[0_0_0_3px_rgba(255,107,0,0.3)]"
-                    : "shadow-2xl"
+                    : "shadow-lift"
                 }`}
                 style={{ background: "rgba(255,255,255,0.98)" }}
               >
                 <GiMagnifyingGlass
                   size={18}
-                  className={searchFocused ? "text-[#B42225]" : "text-gray-400"}
+                  className={searchFocused ? "text-[#0E0E10]" : "text-ink/40"}
                 />
                 <input
                   type="text"
                   placeholder="Search for answers e.g. 'track order', 'return item'..."
-                  className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400"
+                  className="flex-1 text-sm text-ink/70 outline-none bg-transparent placeholder-gray-400"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
@@ -504,7 +504,7 @@ const Help = () => {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="text-gray-400 hover:text-gray-600 transition"
+                    className="text-ink/40 hover:text-ink transition"
                   >
                     <FiX size={16} />
                   </button>
@@ -512,7 +512,7 @@ const Help = () => {
                 <div
                   className="hidden sm:flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-bold text-white shrink-0"
                   style={{
-                    background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                    background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                   }}
                 >
                   Search
@@ -522,12 +522,12 @@ const Help = () => {
               {/* Search dropdown */}
               {searchFocused && searchQuery.trim().length > 0 && (
                 <div
-                  className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-gray-100 overflow-hidden z-50 text-left"
+                  className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-ink/10 overflow-hidden z-50 text-left"
                   style={{ boxShadow: "0 20px 50px rgba(0,0,0,0.15)" }}
                 >
                   {searchResults.length > 0 ? (
                     <>
-                      <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold px-4 pt-3 pb-1">
+                      <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold px-4 pt-3 pb-1">
                         {searchResults.length} result
                         {searchResults.length > 1 ? "s" : ""}
                       </p>
@@ -538,7 +538,7 @@ const Help = () => {
                             setSearchFocused(false);
                             setActiveCat("all");
                           }}
-                          className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-t border-gray-50"
+                          className="flex items-start gap-3 px-4 py-3 hover:bg-ink/5 cursor-pointer transition-colors border-t border-gray-50"
                         >
                           <div
                             className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-white"
@@ -547,10 +547,10 @@ const Help = () => {
                             <FiZap size={10} />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-gray-800">
+                            <p className="text-xs font-bold text-ink">
                               {f.q}
                             </p>
-                            <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">
+                            <p className="text-[10px] text-ink/40 mt-0.5 line-clamp-1">
                               {f.a}
                             </p>
                           </div>
@@ -561,12 +561,12 @@ const Help = () => {
                     <div className="px-4 py-6 text-center">
                       <GiMagnifyingGlass
                         size={24}
-                        className="text-gray-300 mx-auto mb-2"
+                        className="text-ink/25 mx-auto mb-2"
                       />
-                      <p className="text-sm font-bold text-gray-500">
+                      <p className="text-sm font-bold text-ink/50">
                         No results found
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-ink/40 mt-1">
                         Try "return", "payment", or "delivery"
                       </p>
                     </div>
@@ -580,8 +580,8 @@ const Help = () => {
               {stats.map(({ value, label }) => (
                 <div key={label} className="text-center">
                   <p
-                    className="text-2xl font-black text-white"
-                    style={{ fontFamily: "'Georgia', serif" }}
+                    className="text-2xl font-semibold text-white"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                   >
                     {value}
                   </p>
@@ -606,7 +606,7 @@ const Help = () => {
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-10">
           {/* ══════════ QUICK LINKS ══════════ */}
           <div>
-            <h2 className="text-base font-black text-gray-400 uppercase tracking-widest mb-4">
+            <h2 className="text-base font-semibold text-ink/40 uppercase tracking-widest mb-4">
               Quick Access
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -623,7 +623,7 @@ const Help = () => {
                   >
                     {icon}
                   </div>
-                  <span className="text-xs font-bold text-gray-700 leading-tight">
+                  <span className="text-xs font-bold text-ink/70 leading-tight">
                     {label}
                   </span>
                 </Link>
@@ -637,12 +637,12 @@ const Help = () => {
             style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.07)" }}
           >
             {/* Header */}
-            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-1 h-7 rounded-full bg-[#B42225]" />
+                <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
                 <h2
-                  className="text-xl font-black text-gray-900"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-xl font-semibold text-ink"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   Frequently Asked Questions
                 </h2>
@@ -661,8 +661,8 @@ const Help = () => {
                   }}
                   className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     activeCategory === "all" && !isSearching
-                      ? "bg-[#B42225] text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-[#0E0E10] text-white shadow-soft"
+                      : "bg-sand text-ink/60 hover:bg-ink/10"
                   }`}
                 >
                   All Topics
@@ -677,8 +677,8 @@ const Help = () => {
                     }}
                     className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       activeCategory === key && !isSearching
-                        ? "text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        ? "text-white shadow-soft"
+                        : "bg-sand text-ink/60 hover:bg-ink/10"
                     }`}
                     style={
                       activeCategory === key && !isSearching
@@ -695,7 +695,7 @@ const Help = () => {
             {/* FAQ list */}
             <div className="p-6 md:p-8">
               {isSearching && (
-                <div className="flex items-center gap-2 mb-5 text-sm text-gray-500">
+                <div className="flex items-center gap-2 mb-5 text-sm text-ink/50">
                   <GiMagnifyingGlass size={14} />
                   <span>
                     {searchResults.length} result
@@ -704,7 +704,7 @@ const Help = () => {
                   </span>
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="ml-auto text-xs font-bold text-[#B42225] hover:underline"
+                    className="ml-auto text-xs font-bold text-[#0E0E10] hover:underline"
                   >
                     Clear
                   </button>
@@ -726,11 +726,11 @@ const Help = () => {
                 </div>
               ) : (
                 <div className="text-center py-14">
-                  <GiMagnifyingGlass size={40} className="text-gray-300 mx-auto mb-3" />
-                  <p className="font-bold text-gray-500">
+                  <GiMagnifyingGlass size={40} className="text-ink/25 mx-auto mb-3" />
+                  <p className="font-bold text-ink/50">
                     No results for "{searchQuery}"
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-ink/40 mt-1">
                     Try different keywords or browse a category above
                   </p>
                 </div>
@@ -743,11 +743,11 @@ const Help = () => {
             <div className="flex items-center gap-3 mb-5">
               <div
                 className="w-1 h-7 rounded-full"
-                style={{ background: "linear-gradient(#B42225,#FF6B00)" }}
+                style={{ background: "linear-gradient(#0E0E10,#FF6B00)" }}
               />
               <h2
-                className="text-xl font-black text-gray-900"
-                style={{ fontFamily: "'Georgia', serif" }}
+                className="text-xl font-semibold text-ink"
+                style={{ fontFamily: "'Instrument Sans',sans-serif" }}
               >
                 Still Need Help?
               </h2>
@@ -770,13 +770,13 @@ const Help = () => {
                       {icon}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-gray-900">
+                      <p className="text-sm font-semibold text-ink">
                         {label}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{detail}</p>
+                      <p className="text-xs text-ink/40 mt-0.5">{detail}</p>
                     </div>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                      <span className="text-[10px] font-bold text-ink/40 bg-sand px-2 py-1 rounded-full">
                         {sub}
                       </span>
                       <div
@@ -815,8 +815,8 @@ const Help = () => {
                   <FiMail size={18} className="text-red-300" />
                 </div>
                 <h3
-                  className="text-xl font-black text-white mb-3"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-xl font-semibold text-white mb-3"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   Send us a Message
                 </h3>
@@ -865,10 +865,10 @@ const Help = () => {
                     <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
                       <FiCheck size={28} className="text-green-500" />
                     </div>
-                    <h4 className="text-lg font-black text-gray-900">
+                    <h4 className="text-lg font-semibold text-ink">
                       Message Sent!
                     </h4>
-                    <p className="text-sm text-gray-500 max-w-xs">
+                    <p className="text-sm text-ink/50 max-w-xs">
                       We've received your message and will respond within 24
                       hours. Check your email for confirmation.
                     </p>
@@ -891,7 +891,7 @@ const Help = () => {
                         },
                       ].map(({ key, label, placeholder, type }) => (
                         <div key={key}>
-                          <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+                          <label className="block text-xs font-bold text-ink/50 mb-1.5 uppercase tracking-wide">
                             {label}
                           </label>
                           <input
@@ -905,13 +905,13 @@ const Help = () => {
                               })
                             }
                             required
-                            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none bg-gray-50 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)] transition-all placeholder-gray-400"
+                            className="w-full border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink/70 outline-none bg-sand focus:border-[#0E0E10] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)] transition-all placeholder-gray-400"
                           />
                         </div>
                       ))}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+                      <label className="block text-xs font-bold text-ink/50 mb-1.5 uppercase tracking-wide">
                         Subject
                       </label>
                       <select
@@ -923,7 +923,7 @@ const Help = () => {
                           })
                         }
                         required
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none bg-gray-50 focus:border-[#B42225] focus:bg-white transition-all"
+                        className="w-full border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink/70 outline-none bg-sand focus:border-[#0E0E10] focus:bg-white transition-all"
                       >
                         <option value="">Select a topic</option>
                         {faqCategories.map((c) => (
@@ -935,7 +935,7 @@ const Help = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+                      <label className="block text-xs font-bold text-ink/50 mb-1.5 uppercase tracking-wide">
                         Message
                       </label>
                       <textarea
@@ -949,14 +949,14 @@ const Help = () => {
                           })
                         }
                         required
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none bg-gray-50 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)] transition-all resize-none placeholder-gray-400"
+                        className="w-full border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink/70 outline-none bg-sand focus:border-[#0E0E10] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)] transition-all resize-none placeholder-gray-400"
                       />
                     </div>
                     <button
                       type="submit"
                       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm text-white transition-all hover:scale-[1.01] active:scale-95"
                       style={{
-                        background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                        background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                         boxShadow: "0 4px 20px rgba(180,34,37,0.3)",
                       }}
                     >
@@ -999,20 +999,20 @@ const Help = () => {
               >
                 <div className="shrink-0" style={{ color: iconColor }}>{icon}</div>
                 <div>
-                  <p className="text-sm font-black text-gray-800 mb-1">
+                  <p className="text-sm font-semibold text-ink mb-1">
                     {title}
                   </p>
-                  <p className="text-xs text-gray-600 leading-relaxed">{tip}</p>
+                  <p className="text-xs text-ink/60 leading-relaxed">{tip}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* ══════════ FOOTER NOTE ══════════ */}
-          <div className="flex items-center justify-center gap-2 py-4 text-xs text-gray-400">
+          <div className="flex items-center justify-center gap-2 py-4 text-xs text-ink/40">
             <FiSmile size={14} />
             <span>
-              Jovo Support — Here for you, every step of your shopping journey.
+              Jovo Support - Here for you, every step of your shopping journey.
             </span>
             <MdVerified size={14} className="text-green-400" />
           </div>

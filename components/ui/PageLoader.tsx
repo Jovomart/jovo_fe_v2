@@ -19,9 +19,8 @@ export default function PageLoader() {
 
   return (
     <div
-      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-cream"
       style={{
-        background: '#000',
         opacity: fading ? 0 : 1,
         transition: 'opacity 0.4s ease',
         pointerEvents: fading ? 'none' : 'all',
@@ -29,37 +28,30 @@ export default function PageLoader() {
     >
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.12), transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(220,203,246,0.5), transparent 70%)' }}
       />
-      <div className="relative z-10 flex flex-col items-center gap-6">
-        <img
-          src="/images/Jovo_off_logo2.png"
-          alt="JOVO"
-          className="object-cover"
-          style={{
-            width: '200px', height: '80px', objectFit: 'cover',
-            animation: 'jovo-pulse 1s ease-in-out infinite',
-            filter: 'drop-shadow(0 0 20px rgba(255,140,0,0.4))',
-          }}
-        />
-        <p className="text-white/30 text-xs font-medium tracking-widest uppercase">Your Campus Marketplace</p>
-        <div className="w-40 h-1 bg-white/10 rounded-full overflow-hidden">
+      <div className="relative z-10 flex flex-col items-center gap-5">
+        <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-white/70 ring-1 ring-ink/[.06]">
+          <img
+            src="/images/Jovo_official_logo.png"
+            alt="JOVO"
+            style={{ width: '52px', height: '52px', objectFit: 'cover', animation: 'jovo-pulse 1s ease-in-out infinite' }}
+          />
+        </div>
+        <p className="font-display text-[13px] font-semibold tracking-[0.32em] uppercase text-ink/45">JOVO</p>
+        <div className="w-36 h-[3px] bg-ink/10 rounded-full overflow-hidden">
           <div
-            className="h-full rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, #B42225, #FF8C00)',
-              animation: 'jovo-bar 1s ease-out forwards',
-              boxShadow: '0 0 8px rgba(255,140,0,0.6)',
-            }}
+            className="h-full rounded-full bg-ink"
+            style={{ animation: 'jovo-bar 1s ease-out forwards' }}
           />
         </div>
         <div className="flex items-center gap-2">
           {[
-            { anim: 'jovo-dot1 1s ease-in-out infinite', color: '#B42225' },
-            { anim: 'jovo-dot2 1s ease-in-out infinite', color: '#FF8C00' },
-            { anim: 'jovo-dot3 1s ease-in-out infinite', color: '#B42225' },
+            { anim: 'jovo-dot1 1s ease-in-out infinite', color: '#0E0E10' },
+            { anim: 'jovo-dot2 1s ease-in-out infinite', color: '#C6ACEF' },
+            { anim: 'jovo-dot3 1s ease-in-out infinite', color: '#0E0E10' },
           ].map(({ anim, color }, i) => (
-            <div key={i} className="w-2 h-2 rounded-full" style={{ background: color, animation: anim }} />
+            <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: color, animation: anim }} />
           ))}
         </div>
       </div>

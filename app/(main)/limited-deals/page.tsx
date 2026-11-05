@@ -12,9 +12,9 @@ import Footer from "@/components/layout/Footer";
 // ─── Limited Badge ────────────────────────────────────────────────────────
 const LimitedBadge = () => (
   <div
-    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black text-white"
+    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-semibold text-white"
     style={{
-      background: "linear-gradient(135deg,#B42225 0%,#d63a1a 50%,#e85d04 100%)",
+      background: "linear-gradient(135deg,#0E0E10 0%,#B42225 50%,#e85d04 100%)",
       boxShadow: "0 2px 8px rgba(216, 58, 26, 0.45)",
     }}
   >
@@ -25,20 +25,20 @@ const LimitedBadge = () => (
 // ─── Stock Bar ────────────────────────────────────────────────────────────
 const StockBar = ({ pct }) => {
   const color = pct <= 20
-    ? "linear-gradient(90deg,#B42225,#d63a1a)"
+    ? "linear-gradient(90deg,#0E0E10,#B42225)"
     : pct <= 50
-    ? "linear-gradient(90deg,#d63a1a,#e85d04)"
-    : "linear-gradient(90deg,#B42225,#d63a1a)";
+    ? "linear-gradient(90deg,#B42225,#e85d04)"
+    : "linear-gradient(90deg,#0E0E10,#B42225)";
 
   return (
     <div className="mt-2.5">
       <div className="flex justify-between text-[10px] mb-1">
-        <span className={pct <= 20 ? "text-red-500 font-bold" : "text-gray-400"}>
+        <span className={pct <= 20 ? "text-red-500 font-bold" : "text-ink/40"}>
           {pct <= 20 ? "⚠️ Almost gone!" : pct <= 50 ? "⏳ Selling fast" : "✅ In stock"}
         </span>
-        <span className="text-gray-400">{pct}% left</span>
+        <span className="text-ink/40">{pct}% left</span>
       </div>
-      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-sand rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
@@ -62,7 +62,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
       {/* Top accent */}
       <div
         className="absolute top-0 left-0 right-0 h-0.5 z-10"
-        style={{ background: "linear-gradient(90deg,transparent,#d63a1a,transparent)" }}
+        style={{ background: "linear-gradient(90deg,transparent,#B42225,transparent)" }}
       />
 
       {/* Image */}
@@ -82,8 +82,8 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
         {discount && (
           <div
-            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
-            style={{ background: "linear-gradient(135deg,#B42225,#d63a1a)" }}
+            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-semibold text-white"
+            style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}
           >
             <FiZap size={9} /> -{discount}%
           </div>
@@ -92,18 +92,18 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         {/* Wishlist */}
         <button
           onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-soft transition-transform duration-200 hover:scale-110"
         >
           {wishlisted
             ? <FaHeart className="text-red-500" size={13} />
-            : <FiHeart className="text-gray-400" size={13} />}
+            : <FiHeart className="text-ink/40" size={13} />}
         </button>
 
         {/* Slide-up CTA */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-colors duration-200 text-white"
-            style={{ background: "linear-gradient(135deg,#B42225 0%,#d63a1a 50%,#e85d04 100%)" }}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lift transition-colors duration-200 text-white"
+            style={{ background: "linear-gradient(135deg,#0E0E10 0%,#B42225 50%,#e85d04 100%)" }}
           >
             <FiShoppingBag size={13} /> Add to Cart
           </button>
@@ -112,15 +112,15 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
       {/* Info */}
       <div className="p-3.5">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2 leading-snug">
           {product.name}
         </h3>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-sm md:text-base font-black text-gray-900">
+          <span className="text-sm md:text-base font-semibold text-ink">
             ₦{product.price.toLocaleString()}
           </span>
           {product.oldPrice && (
-            <span className="text-[11px] text-gray-400 line-through">
+            <span className="text-[11px] text-ink/40 line-through">
               ₦{product.oldPrice.toLocaleString()}
             </span>
           )}
@@ -150,8 +150,8 @@ const SuggestedCard = ({ product }) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       <div className="p-3">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
-        <p className="text-gray-900 font-black mt-1.5 text-sm md:text-base">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2">{product.name}</h3>
+        <p className="text-ink font-semibold mt-1.5 text-sm md:text-base">
           ₦{product.price.toLocaleString()}
         </p>
       </div>
@@ -170,13 +170,13 @@ const LimitedStockDealsPage = () => {
     setWishlist((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
 
   return (
-    <div className="min-h-screen" style={{ background: "#F5F6F7" }}>
+    <div className="min-h-screen" style={{ background: "#FBEFE3" }}>
 
       {/* ══════════ HERO ══════════ */}
       <div
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg,#B42225 0%,#d63a1a 50%,#e85d04 100%)",
+          background: "linear-gradient(135deg,#0E0E10 0%,#B42225 50%,#e85d04 100%)",
           minHeight: "320px",
         }}
       >
@@ -195,7 +195,7 @@ const LimitedStockDealsPage = () => {
         <div className="absolute -bottom-10 right-10 w-72 h-72 rounded-full opacity-10 pointer-events-none"
           style={{ background: "radial-gradient(circle,#e85d04,transparent 70%)" }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 rounded-full opacity-[0.05] pointer-events-none"
-          style={{ background: "radial-gradient(circle,#FF8C00,transparent 60%)" }} />
+          style={{ background: "radial-gradient(circle,#B42225,transparent 60%)" }} />
 
         {/* Diagonal texture */}
         <div className="absolute inset-0 opacity-[0.035] pointer-events-none" style={{
@@ -228,15 +228,15 @@ const LimitedStockDealsPage = () => {
                 </div>
                 <div>
                   <h1
-                    className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(216,58,26,0.4)" }}
+                    className="text-4xl md:text-6xl font-semibold text-white leading-none tracking-tight"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(216,58,26,0.4)" }}
                   >
                     LIMITED
                   </h1>
                   <h1
-                    className="text-4xl md:text-6xl font-black leading-none tracking-tight"
+                    className="text-4xl md:text-6xl font-semibold leading-none tracking-tight"
                     style={{
-                      fontFamily: "'Georgia', serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       background: "linear-gradient(90deg,#FFB347,#FFD699,#FFB347)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
@@ -248,7 +248,7 @@ const LimitedStockDealsPage = () => {
               </div>
 
               <p className="mt-3 text-white/45 text-sm md:text-base max-w-sm">
-                These won't last. Grab yours before stock runs out — no restocks guaranteed.
+                These won't last. Grab yours before stock runs out - no restocks guaranteed.
               </p>
             </div>
 
@@ -270,7 +270,7 @@ const LimitedStockDealsPage = () => {
                 >
                   <span className="text-yellow-300">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-semibold text-sm leading-none">{val}</p>
                     <p className="text-white/40 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -281,7 +281,7 @@ const LimitedStockDealsPage = () => {
 
         {/* Wave */}
         <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
-          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#F5F6F7" />
+          <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#FBEFE3" />
         </svg>
       </div>
 
@@ -289,9 +289,9 @@ const LimitedStockDealsPage = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full"
-            style={{ background: "linear-gradient(180deg,#d63a1a,#B42225)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">Limited Stock Items</h2>
-          <span className="hidden md:inline text-sm text-gray-400 font-medium">({limited.length} items)</span>
+            style={{ background: "linear-gradient(180deg,#B42225,#0E0E10)" }} />
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">Limited Stock Items</h2>
+          <span className="hidden md:inline text-sm text-ink/40 font-medium">({limited.length} items)</span>
         </div>
 
         {limited.length > 0 ? (
@@ -306,7 +306,7 @@ const LimitedStockDealsPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-400">
+          <div className="text-center py-20 text-ink/40">
             <MdOutlineInventory2 size={48} className="mx-auto mb-4 opacity-20" />
             <p className="font-semibold">No limited stock items right now.</p>
           </div>
@@ -317,7 +317,7 @@ const LimitedStockDealsPage = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <div
           className="relative overflow-hidden rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ background: "linear-gradient(120deg,#B42225 0%,#d63a1a 55%,#e85d04 100%)" }}
+          style={{ background: "linear-gradient(120deg,#0E0E10 0%,#B42225 55%,#e85d04 100%)" }}
         >
           <div className="absolute inset-0 opacity-[0.05]" style={{
             backgroundImage: `radial-gradient(circle at 30% 50%, rgba(255,255,255,0.8) 1px, transparent 1px)`,
@@ -327,12 +327,12 @@ const LimitedStockDealsPage = () => {
             style={{ background: "linear-gradient(90deg,transparent,#FFB347,transparent)" }} />
           <div className="relative z-10">
             <p className="text-yellow-300/70 text-xs font-semibold tracking-widest uppercase mb-1">Don't miss out</p>
-            <h3 className="text-white text-xl md:text-2xl font-black">Set a Restock Alert</h3>
+            <h3 className="text-white text-xl md:text-2xl font-semibold">Set a Restock Alert</h3>
             <p className="text-white/45 text-sm mt-1">Get notified the moment items are back in stock.</p>
           </div>
           <button
-            className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-lg hover:scale-105 text-white"
-            style={{ background: "linear-gradient(135deg,#B42225 0%,#d63a1a 50%,#e85d04 100%)" }}
+            className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-lift hover:scale-105 text-white"
+            style={{ background: "linear-gradient(135deg,#0E0E10 0%,#B42225 50%,#e85d04 100%)" }}
           >
             Notify Me →
           </button>
@@ -343,8 +343,8 @@ const LimitedStockDealsPage = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full"
-            style={{ background: "linear-gradient(180deg,#d63a1a,#B42225)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">You May Also Like</h2>
+            style={{ background: "linear-gradient(180deg,#B42225,#0E0E10)" }} />
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">You May Also Like</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {suggestedProducts.map((product) => (

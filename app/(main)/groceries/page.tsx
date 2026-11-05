@@ -25,7 +25,7 @@ const groceryKeywords = [
 
 const GroceryBadge = () => (
   <div
-    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black text-white"
+    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-semibold text-white"
     style={{
       background: "linear-gradient(135deg,#15803d,#16a34a)",
       boxShadow: "0 2px 8px rgba(22,163,74,0.45)",
@@ -79,7 +79,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         <GroceryBadge />
         {discount && (
           <div
-            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
+            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-semibold text-white"
             style={{ background: "linear-gradient(135deg,#15803d,#16a34a)" }}
           >
             <FiZap size={9} /> -{discount}%
@@ -90,12 +90,12 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
             e.stopPropagation();
             onWishlist(product.id);
           }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110 shadow-md"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center transition-transform hover:scale-110 shadow-soft"
         >
           {wishlisted ? (
             <FaHeart size={14} className="text-green-600" />
           ) : (
-            <FiHeart size={14} className="text-gray-400" />
+            <FiHeart size={14} className="text-ink/40" />
           )}
         </button>
       </div>
@@ -103,24 +103,24 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         <p className="text-[10px] text-green-600 font-bold uppercase tracking-wide">
           {product.brand || "Fresh"}
         </p>
-        <h3 className="text-xs md:text-sm font-bold text-gray-800 mt-0.5 line-clamp-2 leading-snug">
+        <h3 className="text-xs md:text-sm font-bold text-ink mt-0.5 line-clamp-2 leading-snug">
           {product.name}
         </h3>
         <Stars count={Math.round(product.rating || 4)} />
         <div className="flex items-center justify-between mt-2.5">
           <div>
-            <span className="text-sm md:text-base font-black text-gray-900">
+            <span className="text-sm md:text-base font-semibold text-ink">
               ₦{product.price?.toLocaleString()}
             </span>
             {product.oldPrice && (
-              <span className="text-xs text-gray-400 line-through ml-1.5">
+              <span className="text-xs text-ink/40 line-through ml-1.5">
                 ₦{product.oldPrice?.toLocaleString()}
               </span>
             )}
           </div>
           <button
             onClick={() => navigate(`/product/${product.id}`)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-black text-white transition-all hover:opacity-90"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-white transition-all hover:opacity-90"
             style={{ background: "linear-gradient(135deg,#15803d,#16a34a)" }}
           >
             <FiShoppingBag size={11} /> Add
@@ -193,8 +193,8 @@ const GroceriesPage = () => {
             🛒 Groceries & Snacks
           </div>
           <h1
-            className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight"
-            style={{ fontFamily: "'Georgia',serif" }}
+            className="text-3xl md:text-5xl font-semibold text-white mb-3 leading-tight"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}
           >
             Fresh Groceries &<br />
             <span
@@ -215,18 +215,18 @@ const GroceriesPage = () => {
             className="flex items-center gap-3 bg-white rounded-2xl px-4 md:px-5 py-3 md:py-4 max-w-xl"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}
           >
-            <FiSearch size={16} className="text-gray-400 shrink-0" />
+            <FiSearch size={16} className="text-ink/40 shrink-0" />
             <input
               type="text"
               placeholder="Search groceries, snacks, beverages..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0"
+              className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="text-gray-400 hover:text-gray-600 shrink-0"
+                className="text-ink/40 hover:text-ink shrink-0"
               >
                 <FiX size={15} />
               </button>
@@ -239,8 +239,8 @@ const GroceriesPage = () => {
       <div style={{ background: "#F4F5F9" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
           <div className="flex items-center justify-between mb-5">
-            <p className="text-sm font-bold text-gray-700">
-              <span className="text-gray-900 font-black">
+            <p className="text-sm font-bold text-ink/70">
+              <span className="text-ink font-semibold">
                 {filtered.length}
               </span>{" "}
               items found
@@ -249,10 +249,10 @@ const GroceriesPage = () => {
           {filtered.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-5xl mb-4">🛒</div>
-              <p className="font-black text-gray-700 text-lg">No items found</p>
+              <p className="font-semibold text-ink/70 text-lg">No items found</p>
               <button
                 onClick={() => setSearch("")}
-                className="mt-4 px-6 py-2.5 rounded-xl text-sm font-black text-white"
+                className="mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
                 style={{
                   background: "linear-gradient(135deg,#15803d,#16a34a)",
                 }}

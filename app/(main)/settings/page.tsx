@@ -239,7 +239,7 @@ const Settings = () => {
   const initials = (form.first_name?.[0] || "") + (form.last_name?.[0] || "");
 
   const tabs = [
-    { id: "profile", label: "Profile Information", icon: FiUser, color: "#B42225" },
+    { id: "profile", label: "Profile Information", icon: FiUser, color: "#0E0E10" },
     { id: "notifications", label: "Notifications", icon: FiBell, color: "#10B981" },
     { id: "security", label: "Security", icon: FiLock, color: "#F59E0B" },
     { id: "preferences", label: "Preferences", icon: FiGlobe, color: "#8B5CF6" },
@@ -249,7 +249,7 @@ const Settings = () => {
     `w-full rounded-2xl border px-5 py-3.5 text-sm transition-all duration-200 ${
       errors[field]
         ? "border-red-400 bg-red-50 focus:border-red-500"
-        : "border-gray-200 bg-gray-50 focus:border-[#B42225] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B42225]/20"
+        : "border-ink/10 bg-sand focus:border-[#0E0E10] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0E0E10]/20"
     }`;
 
   return (
@@ -257,13 +257,13 @@ const Settings = () => {
       <div className="min-h-screen" style={{ background: "#F4F5F9" }}>
         
         {/* Hero Section with Gradient */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-[#0a0a0a] via-[#1a0303] to-[#B42225]">
+        <div className="relative overflow-hidden bg-gradient-to-r from-[#0a0a0a] via-[#1a0303] to-[#0E0E10]">
           <div className="absolute inset-0 opacity-10" style={{
             backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }} />
-          <div className="absolute top-20 right-20 w-64 h-64 bg-[#FF8C00]/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#B42225]/30 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-20 w-64 h-64 bg-[#B42225]/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#0E0E10]/30 rounded-full blur-3xl" />
           
           <div className="max-w-6xl mx-auto px-6 py-12 relative z-10">
             <button
@@ -281,7 +281,7 @@ const Settings = () => {
                 <FiSettings size={28} className="text-white" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-black text-white" style={{ fontFamily: "'Playfair Display',serif" }}>
+                <h1 className="text-3xl md:text-4xl font-semibold text-white" style={{ fontFamily: "'Playfair Display',serif" }}>
                   Settings
                 </h1>
                 <p className="text-white/50 text-sm mt-1">Manage your account preferences</p>
@@ -293,7 +293,7 @@ const Settings = () => {
         <div className="max-w-6xl mx-auto px-6 mt-5 pb-16">
           
           {/* Tabs Navigation - Modern Card Style */}
-          <div className="bg-white rounded-2xl shadow-lg p-2 mb-8 flex flex-wrap gap-2">
+          <div className="bg-white rounded-2xl shadow-lift p-2 mb-8 flex flex-wrap gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -303,10 +303,10 @@ const Settings = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                     isActive
-                      ? "text-white shadow-md"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      ? "text-white shadow-soft"
+                      : "text-ink/50 hover:text-ink hover:bg-ink/5"
                   }`}
-                  style={isActive ? { background: `linear-gradient(135deg, #B42225, #FF8C00)` } : {}}
+                  style={isActive ? { background: `linear-gradient(135deg, #0E0E10, #B42225)` } : {}}
                 >
                   <Icon size={16} />
                   {tab.label}
@@ -318,16 +318,16 @@ const Settings = () => {
           {/* Profile Tab - Enhanced Form */}
           {activeTab === "profile" && (
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-gray-100">
+              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-ink/10">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#B42225] to-[#FF8C00] flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0E0E10] to-[#B42225] flex items-center justify-center shadow-lift">
                     <FiUser size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Playfair Display',serif" }}>
+                    <h2 className="text-2xl font-semibold text-ink" style={{ fontFamily: "'Playfair Display',serif" }}>
                       Profile Information
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Update your personal details</p>
+                    <p className="text-sm text-ink/50 mt-0.5">Update your personal details</p>
                   </div>
                 </div>
               </div>
@@ -354,7 +354,7 @@ const Settings = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Name Section */}
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-3">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-3">
                       Personal Information
                     </label>
                     <div className="grid md:grid-cols-2 gap-4">
@@ -384,11 +384,11 @@ const Settings = () => {
                   {/* Username & Phone */}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-2">
                         Username
                       </label>
                       <div className="relative">
-                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">@</span>
+                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink/40 font-bold">@</span>
                         <input
                           type="text"
                           value={form.username}
@@ -400,7 +400,7 @@ const Settings = () => {
                       {errors.username && <p className="text-xs text-red-500 mt-1 ml-1">{errors.username}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-2">
                         Phone Number
                       </label>
                       <input
@@ -416,7 +416,7 @@ const Settings = () => {
 
                   {/* Gender */}
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-3">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-3">
                       Gender
                     </label>
                     <div className="flex gap-4">
@@ -427,8 +427,8 @@ const Settings = () => {
                           onClick={() => handleFieldChange("gender", g)}
                           className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${
                             form.gender === g
-                              ? "border-[#B42225] text-[#B42225] bg-[#B42225]/5 shadow-md"
-                              : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300"
+                              ? "border-[#0E0E10] text-[#0E0E10] bg-[#0E0E10]/5 shadow-soft"
+                              : "border-ink/10 bg-sand text-ink/50 hover:border-ink/20"
                           }`}
                         >
                           <span className="text-xl">{g === "MALE" ? "👨" : "👩"}</span>
@@ -441,7 +441,7 @@ const Settings = () => {
 
                   {/* Location Section */}
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-3">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-3">
                       Location
                     </label>
                     <div className="grid md:grid-cols-3 gap-4">
@@ -480,7 +480,7 @@ const Settings = () => {
 
                   {/* School Section */}
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-2">
                       School / Institution <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -490,12 +490,12 @@ const Settings = () => {
                         className={`w-full flex items-center justify-between rounded-2xl border px-5 py-3.5 text-sm transition-all ${
                           errors.school
                             ? "border-red-400 bg-red-50"
-                            : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                            : "border-ink/10 bg-sand hover:border-ink/20"
                         }`}
                       >
                         <span className="flex items-center gap-2">
-                          <FiBriefcase className="text-gray-400" size={16} />
-                          <span className={selectedSchoolId ? "text-gray-800" : "text-gray-400"}>
+                          <FiBriefcase className="text-ink/40" size={16} />
+                          <span className={selectedSchoolId ? "text-ink" : "text-ink/40"}>
                             {selectedSchoolId
                               ? schools.find(s => (s.id || s._id) === selectedSchoolId)?.school_name ||
                                 schools.find(s => (s.id || s._id) === selectedSchoolId)?.name ||
@@ -509,10 +509,10 @@ const Settings = () => {
                       </button>
 
                       {schoolDropdownOpen && (
-                        <div className="absolute z-50 left-0 right-0 mt-2 rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
-                          <div className="p-4 border-b border-gray-100 bg-gray-50">
-                            <div className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-2.5 bg-white">
-                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="absolute z-50 left-0 right-0 mt-2 rounded-2xl border border-ink/10 bg-white shadow-xl overflow-hidden">
+                          <div className="p-4 border-b border-ink/10 bg-sand">
+                            <div className="flex items-center gap-3 rounded-xl border border-ink/10 px-4 py-2.5 bg-white">
+                              <svg className="w-4 h-4 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                               </svg>
                               <input
@@ -528,12 +528,12 @@ const Settings = () => {
                           <div className="max-h-56 overflow-y-auto">
                             {loadingSchools ? (
                               <div className="flex items-center justify-center py-12">
-                                <div className="w-6 h-6 border-2 border-gray-300 border-t-[#B42225] rounded-full animate-spin" />
+                                <div className="w-6 h-6 border-2 border-gray-300 border-t-[#0E0E10] rounded-full animate-spin" />
                               </div>
                             ) : filteredSchools.length === 0 ? (
                               <div className="text-center py-12">
-                                <FiBriefcase size={40} className="text-gray-300 mx-auto mb-3" />
-                                <p className="text-gray-400 text-sm">No schools found</p>
+                                <FiBriefcase size={40} className="text-ink/25 mx-auto mb-3" />
+                                <p className="text-ink/40 text-sm">No schools found</p>
                               </div>
                             ) : (
                               filteredSchools.map((school) => {
@@ -548,19 +548,19 @@ const Settings = () => {
                                       setSchoolSearch("");
                                       setErrors(prev => ({ ...prev, school: "" }));
                                     }}
-                                    className={`w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50 transition ${
-                                      isSelected ? "bg-[#B42225]/5" : ""
+                                    className={`w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-ink/5 transition ${
+                                      isSelected ? "bg-[#0E0E10]/5" : ""
                                     }`}
                                   >
                                     <div>
-                                      <p className={`text-sm font-medium ${isSelected ? "text-[#B42225]" : "text-gray-700"}`}>
+                                      <p className={`text-sm font-medium ${isSelected ? "text-[#0E0E10]" : "text-ink/70"}`}>
                                         {school.school_name || school.name}
                                       </p>
                                       {school.school_code && (
-                                        <p className="text-xs text-gray-400 mt-0.5">Code: {school.school_code}</p>
+                                        <p className="text-xs text-ink/40 mt-0.5">Code: {school.school_code}</p>
                                       )}
                                     </div>
-                                    {isSelected && <FiCheck size={16} className="text-[#B42225]" />}
+                                    {isSelected && <FiCheck size={16} className="text-[#0E0E10]" />}
                                   </button>
                                 );
                               })
@@ -574,13 +574,13 @@ const Settings = () => {
 
                   {/* Address */}
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
-                      Address <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-ink/40 mb-2">
+                      Address <span className="text-ink/40 font-normal normal-case">(optional)</span>
                     </label>
                     <textarea
                       value={form.address}
                       onChange={(e) => handleFieldChange("address", e.target.value)}
-                      className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-sm focus:border-[#B42225] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B42225]/20 resize-none"
+                      className="w-full rounded-2xl border border-ink/10 bg-sand px-5 py-3.5 text-sm focus:border-[#0E0E10] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0E0E10]/20 resize-none"
                       rows={2}
                       placeholder="Your street address"
                     />
@@ -590,8 +590,8 @@ const Settings = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 rounded-2xl font-black text-white transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 text-base shadow-lg hover:shadow-xl"
-                    style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}
+                    className="w-full py-4 rounded-2xl font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 text-base shadow-lift hover:shadow-lift"
+                    style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}
                   >
                     {loading ? (
                       <>
@@ -613,53 +613,53 @@ const Settings = () => {
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-gray-100">
+              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-ink/10">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#10B981] to-[#34D399] flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#10B981] to-[#34D399] flex items-center justify-center shadow-lift">
                     <FiBell size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Playfair Display',serif" }}>
+                    <h2 className="text-2xl font-semibold text-ink" style={{ fontFamily: "'Playfair Display',serif" }}>
                       Notification Preferences
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Choose how you want to be notified</p>
+                    <p className="text-sm text-ink/50 mt-0.5">Choose how you want to be notified</p>
                   </div>
                 </div>
               </div>
               <div className="p-8 space-y-4">
-                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all">
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-ink/10 hover:shadow-soft transition-all">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
                       <FiMail size={18} className="text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800">Email Notifications</p>
-                      <p className="text-xs text-gray-400">Receive updates about orders and promotions</p>
+                      <p className="font-bold text-ink">Email Notifications</p>
+                      <p className="text-xs text-ink/40">Receive updates about orders and promotions</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setPreferences(prev => ({ ...prev, emailNotifications: !prev.emailNotifications }))}
-                    className={`w-14 h-7 rounded-full transition-all ${preferences.emailNotifications ? "bg-gradient-to-r from-[#B42225] to-[#FF8C00]" : "bg-gray-300"}`}
+                    className={`w-14 h-7 rounded-full transition-all ${preferences.emailNotifications ? "bg-gradient-to-r from-[#0E0E10] to-[#B42225]" : "bg-gray-300"}`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-all ${preferences.emailNotifications ? "translate-x-8" : "translate-x-1"} mt-1`} />
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-soft transition-all ${preferences.emailNotifications ? "translate-x-8" : "translate-x-1"} mt-1`} />
                   </button>
                 </div>
                 
-                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all">
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-ink/10 hover:shadow-soft transition-all">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
                       <FiSmartphone size={18} className="text-purple-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800">Push Notifications</p>
-                      <p className="text-xs text-gray-400">Get real-time alerts on your device</p>
+                      <p className="font-bold text-ink">Push Notifications</p>
+                      <p className="text-xs text-ink/40">Get real-time alerts on your device</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setPreferences(prev => ({ ...prev, pushNotifications: !prev.pushNotifications }))}
-                    className={`w-14 h-7 rounded-full transition-all ${preferences.pushNotifications ? "bg-gradient-to-r from-[#B42225] to-[#FF8C00]" : "bg-gray-300"}`}
+                    className={`w-14 h-7 rounded-full transition-all ${preferences.pushNotifications ? "bg-gradient-to-r from-[#0E0E10] to-[#B42225]" : "bg-gray-300"}`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-all ${preferences.pushNotifications ? "translate-x-8" : "translate-x-1"} mt-1`} />
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-soft transition-all ${preferences.pushNotifications ? "translate-x-8" : "translate-x-1"} mt-1`} />
                   </button>
                 </div>
               </div>
@@ -669,50 +669,50 @@ const Settings = () => {
           {/* Security Tab */}
           {activeTab === "security" && (
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-gray-100">
+              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-ink/10">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F59E0B] to-[#FBBF24] flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F59E0B] to-[#FBBF24] flex items-center justify-center shadow-lift">
                     <FiLock size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Playfair Display',serif" }}>
+                    <h2 className="text-2xl font-semibold text-ink" style={{ fontFamily: "'Playfair Display',serif" }}>
                       Security
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Protect your account</p>
+                    <p className="text-sm text-ink/50 mt-0.5">Protect your account</p>
                   </div>
                 </div>
               </div>
               <div className="p-8 space-y-4">
                 <button 
                   onClick={() => router.push("/settings/change-password")}
-                  className="w-full flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all group"
+                  className="w-full flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-ink/10 hover:shadow-soft transition-all group"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
                       <FiLock size={18} className="text-red-600" />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-gray-800 group-hover:text-[#B42225] transition">Change Password</p>
-                      <p className="text-xs text-gray-400">Update your password regularly to keep your account secure</p>
+                      <p className="font-bold text-ink group-hover:text-[#0E0E10] transition">Change Password</p>
+                      <p className="text-xs text-ink/40">Update your password regularly to keep your account secure</p>
                     </div>
                   </div>
-                  <FiChevronRight size={18} className="text-gray-300 group-hover:text-[#B42225] transition" />
+                  <FiChevronRight size={18} className="text-ink/25 group-hover:text-[#0E0E10] transition" />
                 </button>
                 
                 <button 
                   onClick={() => router.push("/settings/2fa")}
-                  className="w-full flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all group"
+                  className="w-full flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-ink/10 hover:shadow-soft transition-all group"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
                       <FiShield size={18} className="text-green-600" />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-gray-800 group-hover:text-[#B42225] transition">Two-Factor Authentication</p>
-                      <p className="text-xs text-gray-400">Add an extra layer of security to your account</p>
+                      <p className="font-bold text-ink group-hover:text-[#0E0E10] transition">Two-Factor Authentication</p>
+                      <p className="text-xs text-ink/40">Add an extra layer of security to your account</p>
                     </div>
                   </div>
-                  <FiChevronRight size={18} className="text-gray-300 group-hover:text-[#B42225] transition" />
+                  <FiChevronRight size={18} className="text-ink/25 group-hover:text-[#0E0E10] transition" />
                 </button>
               </div>
             </div>
@@ -721,52 +721,52 @@ const Settings = () => {
           {/* Preferences Tab */}
           {activeTab === "preferences" && (
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-gray-100">
+              <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-ink/10">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center shadow-lift">
                     <FiGlobe size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Playfair Display',serif" }}>
+                    <h2 className="text-2xl font-semibold text-ink" style={{ fontFamily: "'Playfair Display',serif" }}>
                       Preferences
                     </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Customize your experience</p>
+                    <p className="text-sm text-ink/50 mt-0.5">Customize your experience</p>
                   </div>
                 </div>
               </div>
               <div className="p-8 space-y-4">
-                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all">
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-ink/10 hover:shadow-soft transition-all">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
                       {preferences.darkMode ? <FiMoon size={18} className="text-indigo-600" /> : <FiSun size={18} className="text-indigo-600" />}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800">Dark Mode</p>
-                      <p className="text-xs text-gray-400">Switch between light and dark theme</p>
+                      <p className="font-bold text-ink">Dark Mode</p>
+                      <p className="text-xs text-ink/40">Switch between light and dark theme</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setPreferences(prev => ({ ...prev, darkMode: !prev.darkMode }))}
-                    className={`w-14 h-7 rounded-full transition-all ${preferences.darkMode ? "bg-gradient-to-r from-[#B42225] to-[#FF8C00]" : "bg-gray-300"}`}
+                    className={`w-14 h-7 rounded-full transition-all ${preferences.darkMode ? "bg-gradient-to-r from-[#0E0E10] to-[#B42225]" : "bg-gray-300"}`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-all ${preferences.darkMode ? "translate-x-8" : "translate-x-1"} mt-1`} />
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-soft transition-all ${preferences.darkMode ? "translate-x-8" : "translate-x-1"} mt-1`} />
                   </button>
                 </div>
                 
-                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow-md transition-all">
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-ink/10 hover:shadow-soft transition-all">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center">
                       <FiGlobe size={18} className="text-cyan-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800">Language</p>
-                      <p className="text-xs text-gray-400">Choose your preferred language</p>
+                      <p className="font-bold text-ink">Language</p>
+                      <p className="text-xs text-ink/40">Choose your preferred language</p>
                     </div>
                   </div>
                   <select
                     value={preferences.language}
                     onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
-                    className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium focus:border-[#B42225] focus:outline-none"
+                    className="px-4 py-2 rounded-xl border border-ink/10 bg-white text-sm font-medium focus:border-[#0E0E10] focus:outline-none"
                   >
                     <option value="English">English</option>
                     <option value="French">Français</option>
@@ -783,7 +783,7 @@ const Settings = () => {
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-red-500 bg-white border-2 border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 disabled:opacity-50 shadow-lg"
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-red-500 bg-white border-2 border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 disabled:opacity-50 shadow-lift"
             >
               <FiLogOut size={18} />
               {loggingOut ? "Logging out..." : "Sign Out"}

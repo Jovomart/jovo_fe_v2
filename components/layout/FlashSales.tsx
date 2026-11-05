@@ -122,45 +122,22 @@ const FlashSales = () => {
   };
 
   return (
-    <div className="w-full md:mt-0  bg-[#F5F6F7]">
+    <div className="w-full bg-cream md:mt-0">
       {/* HEADER */}
-      <div
-        className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg,#7f0d0f 0%,#B42225 50%,#d63a1a 100%)",
-        }}
-      >
-        {/* Background dot texture */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
-            backgroundSize: "16px 16px",
-          }}
-        />
-        {/* Glow orb */}
-        <div
-          className="absolute -top-6 -right-6 w-32 h-32 rounded-full pointer-events-none opacity-20"
-          style={{
-            background: "radial-gradient(circle,#FF8C00,transparent 65%)",
-          }}
-        />
-
+      <div className="relative mb-6 flex items-center justify-between overflow-hidden rounded-[24px] bg-lilac px-4 py-4 ring-1 ring-ink/[.04] md:px-6">
         <div className="relative z-10 flex items-center gap-3">
           {/* Icon badge */}
-          <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
-            <FaFire size={16} className="text-yellow-300" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-white/70">
+            <FaFire size={16} className="text-brand" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="font-display text-base font-semibold leading-none tracking-tight text-ink md:text-lg">
               Flash Sales
             </h2>
-            <div className="flex items-center gap-1.5 mt-1">
-              <FiZap size={10} className="text-yellow-300" />
-              <span className="text-xs font-bold text-white/70">Ends in:</span>
-              <span className="text-xs font-black text-yellow-300 tracking-wider">
+            <div className="mt-1 flex items-center gap-1.5">
+              <FiZap size={10} className="text-ink/35" />
+              <span className="text-xs font-semibold text-ink/45">Ends in:</span>
+              <span className="text-xs font-semibold tracking-wider text-brand">
                 {formatTime(timeLeft)}
               </span>
             </div>
@@ -169,7 +146,7 @@ const FlashSales = () => {
 
         <button
           onClick={() => router.push("/flash-sales")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 rounded-full bg-white/70 px-3.5 py-2 text-xs font-semibold text-ink transition-all active:scale-95 hover:bg-white"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -189,15 +166,15 @@ const FlashSales = () => {
             <div
               key={product.id}
               onClick={() => navigate(`/product/${product.id}`)}
-              className="min-w-45 md:min-w-60 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition cursor-pointer"
+              className="min-w-[180px] md:min-w-[240px] snap-start cursor-pointer rounded-[20px] bg-white ring-1 ring-ink/[.05] transition hover:shadow-soft"
             >
-              <div className="relative h-40 md:h-52 overflow-hidden rounded-t-xl">
+              <div className="relative h-40 md:h-52 overflow-hidden rounded-t-[20px]">
                 <img
                   src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-2 left-2 bg-[#d60404] text-white text-xs px-2 py-1 rounded-full font-bold">
+                <div className="absolute left-2 top-2 rounded-full bg-ink px-2 py-1 text-xs font-semibold text-cream">
                   -{discount}%
                 </div>
               </div>
@@ -206,22 +183,22 @@ const FlashSales = () => {
                 <p className="font-semibold truncate">{product.name}</p>
 
                 <div className="mt-2">
-                  <span className="text-[#B42225] font-bold text-lg">
+                  <span className="text-lg font-semibold text-ink">
                     ₦{product.price.toLocaleString()}
                   </span>
-                  <span className="text-gray-400 line-through ml-2 text-sm">
+                  <span className="text-ink/40 line-through ml-2 text-sm">
                     ₦{product.oldPrice.toLocaleString()}
                   </span>
                 </div>
 
                 <div className="mt-3">
-                  <div className="w-full bg-gray-200 h-2 rounded-full">
+                  <div className="w-full bg-ink/10 h-2 rounded-full">
                     <div
-                      className="bg-[#B42225] h-2 rounded-full"
+                      className="bg-[#0E0E10] h-2 rounded-full"
                       style={{ width: `${product.stock}%` }}
                     />
                   </div>
-                  <p className="text-xs mt-1 text-gray-500">
+                  <p className="text-xs mt-1 text-ink/50">
                     {product.stock}% remaining
                   </p>
                 </div>

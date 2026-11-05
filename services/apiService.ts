@@ -1,5 +1,5 @@
 // services/apiService.ts
-// Exact port of apiService.js — all logic preserved
+// Exact port of apiService.js - all logic preserved
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 

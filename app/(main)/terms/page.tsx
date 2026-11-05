@@ -35,7 +35,7 @@ const termsSections: Section[] = [
   {
     id: "intro",
     icon: <FaRegFileAlt size={17} />,
-    color: "#B42225",
+    color: "#0E0E10",
     title: "Introduction & Acceptance",
     summary: "Your agreement to use Jovo Marketplace.",
     content: [
@@ -53,7 +53,7 @@ const termsSections: Section[] = [
     content: [
       "You must be at least 18 years of age to create an account and use our services. By registering, you represent and warrant that you meet this age requirement and have the legal capacity to enter into binding contracts.",
       "When registering, you agree to provide accurate, current, and complete information. You are solely responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. Notify us immediately at support@jovo.ng if you suspect unauthorised access.",
-      "Jovo reserves the right to suspend, deactivate, or permanently ban any account found to be in violation of these Terms, involved in fraudulent activity, or detrimental to the platform community — without prior notice.",
+      "Jovo reserves the right to suspend, deactivate, or permanently ban any account found to be in violation of these Terms, involved in fraudulent activity, or detrimental to the platform community - without prior notice.",
     ],
   },
   {
@@ -124,7 +124,7 @@ const termsSections: Section[] = [
     summary: "The extent of Jovo's legal responsibility.",
     content: [
       "The Jovo Platform is provided on an 'as-is' and 'as-available' basis. We make no warranties, express or implied, regarding the accuracy, reliability, completeness, or fitness for a particular purpose of any content or services provided through the Platform.",
-      "To the maximum extent permitted by applicable law, Jovo shall not be liable for any indirect, incidental, special, consequential, or punitive damages — including loss of profits, goodwill, or data — arising out of your use of the Platform, even if we have been advised of the possibility of such damages.",
+      "To the maximum extent permitted by applicable law, Jovo shall not be liable for any indirect, incidental, special, consequential, or punitive damages - including loss of profits, goodwill, or data - arising out of your use of the Platform, even if we have been advised of the possibility of such damages.",
       "Jovo's total aggregate liability to you for any cause of action shall not exceed the total amount paid by you to Jovo in the three (3) months preceding the event giving rise to the claim. Nothing in these Terms limits liability for fraud, death, or personal injury caused by gross negligence.",
     ],
   },
@@ -135,7 +135,7 @@ const termsSections: Section[] = [
     title: "Intellectual Property",
     summary: "Ownership of content, logos, and trademarks.",
     content: [
-      "All content on the Jovo Platform — including but not limited to logos, trade names, graphics, UI designs, software, and editorial content — is the exclusive property of Jovo Technologies Ltd. or its licensed partners and is protected by Nigerian and international intellectual property law.",
+      "All content on the Jovo Platform - including but not limited to logos, trade names, graphics, UI designs, software, and editorial content - is the exclusive property of Jovo Technologies Ltd. or its licensed partners and is protected by Nigerian and international intellectual property law.",
       "You are granted a limited, non-exclusive, non-transferable licence to access and use the Platform for personal, non-commercial purposes only. You may not copy, reproduce, distribute, modify, create derivative works of, or publicly display any Platform content without prior written permission from Jovo.",
       "By uploading product images, descriptions, or reviews to the Platform, you grant Jovo a worldwide, royalty-free, non-exclusive licence to use, display, and distribute that content solely for the purpose of operating and improving the Platform.",
     ],
@@ -170,7 +170,7 @@ const highlights = [
   { icon: <FiShield size={16} />, label: "SSL Secured",      sub: "All data encrypted",          color: "#059669" },
   { icon: <MdVerified size={16} />, label: "NDPR Compliant", sub: "Nigerian data law",           color: "#2563EB" },
   { icon: <FaBalanceScale size={14} />, label: "Fair Policy", sub: "Buyer & seller protection",  color: "#7C3AED" },
-  { icon: <MdSecurity size={16} />, label: "Fraud Protected", sub: "24/7 monitoring",            color: "#B42225" },
+  { icon: <MdSecurity size={16} />, label: "Fraud Protected", sub: "24/7 monitoring",            color: "#0E0E10" },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -187,17 +187,17 @@ const TermsSection = ({ section, index, isOpen, onToggle }: TermsSectionProps) =
   <div
     id={section.id}
     className={`rounded-2xl border overflow-hidden transition-all duration-200 ${
-      isOpen ? "border-[#B42225]/25 shadow-sm" : "border-gray-100 hover:border-gray-200"
+      isOpen ? "border-[#0E0E10]/25 shadow-soft" : "border-ink/10 hover:border-ink/10"
     }`}
   >
     <button
       onClick={() => onToggle(index)}
       className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${
-        isOpen ? "bg-[#B42225]/3" : "bg-white hover:bg-gray-50"
+        isOpen ? "bg-[#0E0E10]/3" : "bg-white hover:bg-ink/5"
       }`}
     >
       {/* Number */}
-      <span className="text-xs font-black text-gray-300 w-5 shrink-0">
+      <span className="text-xs font-semibold text-ink/25 w-5 shrink-0">
         {String(index + 1).padStart(2, "0")}
       </span>
 
@@ -211,16 +211,16 @@ const TermsSection = ({ section, index, isOpen, onToggle }: TermsSectionProps) =
 
       {/* Title + summary */}
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-black leading-snug ${isOpen ? "text-[#B42225]" : "text-gray-800"}`}>
+        <p className={`text-sm font-semibold leading-snug ${isOpen ? "text-[#0E0E10]" : "text-ink"}`}>
           {section.title}
         </p>
-        <p className="text-[11px] text-gray-400 mt-0.5 hidden sm:block">{section.summary}</p>
+        <p className="text-[11px] text-ink/40 mt-0.5 hidden sm:block">{section.summary}</p>
       </div>
 
       {/* Chevron */}
       <div
         className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-          isOpen ? "bg-[#B42225] text-white" : "bg-gray-100 text-gray-400"
+          isOpen ? "bg-[#0E0E10] text-white" : "bg-sand text-ink/40"
         }`}
       >
         {isOpen ? <FiChevronUp size={13} /> : <FiChevronDown size={13} />}
@@ -232,7 +232,7 @@ const TermsSection = ({ section, index, isOpen, onToggle }: TermsSectionProps) =
         <div className="w-8 h-0.5 rounded-full mt-4 mb-4" style={{ background: section.color }} />
         <div className="space-y-3 pl-0 md:pl-14">
           {section.content.map((para, i) => (
-            <p key={i} className="text-sm text-gray-600 leading-relaxed">{para}</p>
+            <p key={i} className="text-sm text-ink/60 leading-relaxed">{para}</p>
           ))}
         </div>
       </div>
@@ -273,7 +273,7 @@ const Terms = () => {
           <div className="absolute top-0 right-1/3 w-72 h-72 rounded-full opacity-15 pointer-events-none"
             style={{ background: "radial-gradient(circle,#7C3AED,transparent 70%)" }} />
           <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full opacity-10 pointer-events-none"
-            style={{ background: "radial-gradient(circle,#B42225,transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle,#0E0E10,transparent 70%)" }} />
           {/* Grid */}
           <div className="absolute inset-0 opacity-[0.04]" style={{
             backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)",
@@ -295,15 +295,15 @@ const Terms = () => {
               </div>
               <div>
                 <div className="flex items-center gap-3 flex-wrap mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-300/70 px-3 py-1 rounded-full"
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-300/70 px-3 py-1 rounded-full"
                     style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(167,139,250,0.2)" }}>
                     Legal Document
                   </span>
                   <span className="text-[10px] text-white/30">Effective: {effectiveDate}</span>
                   <span className="text-[10px] text-white/30">Last updated: {lastUpdated}</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-white leading-tight mb-3"
-                  style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(124,58,237,0.3)" }}>
+                <h1 className="text-4xl md:text-5xl font-semibold text-white leading-tight mb-3"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(124,58,237,0.3)" }}>
                   Terms &<br />
                   <span style={{ background: "linear-gradient(90deg,#c4b5fd,#a78bfa,#c4b5fd)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     Conditions
@@ -342,12 +342,12 @@ const Terms = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-1 h-6 rounded-full bg-[#7C3AED]" />
-                <h2 className="text-base font-black text-gray-900">Table of Contents</h2>
+                <h2 className="text-base font-semibold text-ink">Table of Contents</h2>
               </div>
               <button
                 onClick={handleExpandAll}
                 className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all"
-                style={{ color: "#B42225", background: "rgba(180,34,37,0.06)" }}>
+                style={{ color: "#0E0E10", background: "rgba(180,34,37,0.06)" }}>
                 {allOpen ? "Collapse All" : "Expand All"}
               </button>
             </div>
@@ -356,19 +356,19 @@ const Terms = () => {
                 <button
                   key={s.id}
                   onClick={() => { setOpenSection(i); setAllOpen(false); document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "center" }); }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors group text-left"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-ink/5 transition-colors group text-left"
                 >
-                  <span className="text-[10px] font-black text-gray-300 w-5 shrink-0">
+                  <span className="text-[10px] font-semibold text-ink/25 w-5 shrink-0">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white"
                     style={{ background: s.color, opacity: 0.85 }}>
                     <span style={{ transform: "scale(0.75)", display: "block" }}>{s.icon}</span>
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 group-hover:text-[#B42225] transition-colors flex-1 truncate">
+                  <span className="text-xs font-semibold text-ink/70 group-hover:text-[#0E0E10] transition-colors flex-1 truncate">
                     {s.title}
                   </span>
-                  <FiChevronRight size={12} className="text-gray-300 group-hover:text-[#B42225] shrink-0 transition-colors" />
+                  <FiChevronRight size={12} className="text-ink/25 group-hover:text-[#0E0E10] shrink-0 transition-colors" />
                 </button>
               ))}
             </div>
@@ -376,13 +376,13 @@ const Terms = () => {
 
           {/* ══════════ TERMS ACCORDION ══════════ */}
           <div className="bg-white rounded-3xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
-            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
               <div className="flex items-center gap-3">
-                <div className="w-1 h-7 rounded-full bg-[#B42225]" />
-                <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
+                <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Full Terms
                 </h2>
-                <span className="text-sm text-gray-400 ml-1">({termsSections.length} sections)</span>
+                <span className="text-sm text-ink/40 ml-1">({termsSections.length} sections)</span>
               </div>
             </div>
 
@@ -403,7 +403,7 @@ const Terms = () => {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-1 h-6 rounded-full bg-amber-400" />
-              <h2 className="text-lg font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+              <h2 className="text-lg font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 Key Reminders
               </h2>
             </div>
@@ -434,8 +434,8 @@ const Terms = () => {
                 <div key={title} className={`flex gap-4 p-5 rounded-2xl border ${color}`}>
                   <div className="shrink-0" style={{ color: iconColor }}>{icon}</div>
                   <div>
-                    <p className="text-sm font-black text-gray-800 mb-1">{title}</p>
-                    <p className="text-xs text-gray-600 leading-relaxed">{tip}</p>
+                    <p className="text-sm font-semibold text-ink mb-1">{title}</p>
+                    <p className="text-xs text-ink/60 leading-relaxed">{tip}</p>
                   </div>
                 </div>
               ))}
@@ -445,8 +445,8 @@ const Terms = () => {
           {/* ══════════ RELATED POLICIES ══════════ */}
           <div className="bg-white rounded-3xl p-6" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-1 h-6 rounded-full" style={{ background: "linear-gradient(#B42225,#7C3AED)" }} />
-              <h2 className="text-base font-black text-gray-900">Related Policies</h2>
+              <div className="w-1 h-6 rounded-full" style={{ background: "linear-gradient(#0E0E10,#7C3AED)" }} />
+              <h2 className="text-base font-semibold text-ink">Related Policies</h2>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-4 gap-3">
               {[
@@ -456,16 +456,16 @@ const Terms = () => {
                 { icon: <MdStorefront size={18} />,  label: "Seller Guidelines",    sub: "Rules for vendors",             color: "#D97706", href: "/become-seller" },
               ].map(({ icon, label, sub, color, href }) => (
                 <Link key={label} href={href}
-                  className="group flex items-center gap-3 p-4 rounded-2xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 transition-all">
+                  className="group flex items-center gap-3 p-4 rounded-2xl bg-sand hover:bg-white border border-transparent hover:border-ink/10 transition-all">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0"
                     style={{ background: color }}>
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-800 group-hover:text-[#B42225] transition-colors">{label}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+                    <p className="text-xs font-bold text-ink group-hover:text-[#0E0E10] transition-colors">{label}</p>
+                    <p className="text-[10px] text-ink/40 mt-0.5">{sub}</p>
                   </div>
-                  <FiChevronRight size={12} className="text-gray-300 group-hover:text-[#B42225] transition-colors shrink-0" />
+                  <FiChevronRight size={12} className="text-ink/25 group-hover:text-[#0E0E10] transition-colors shrink-0" />
                 </Link>
               ))}
             </div>
@@ -484,7 +484,7 @@ const Terms = () => {
                   <FiCheck size={16} className="text-green-400" />
                   <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Agreement</span>
                 </div>
-                <h3 className="text-xl font-black mb-2" style={{ fontFamily: "'Georgia', serif" }}>
+                <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   By using Jovo, you accept these Terms
                 </h3>
                 <p className="text-white/40 text-sm max-w-md">
@@ -494,7 +494,7 @@ const Terms = () => {
               <div className="flex flex-col gap-3 shrink-0">
                 <a href="mailto:legal@jovo.ng"
                   className="flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm text-white transition-all hover:scale-105"
-                  style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 4px 20px rgba(180,34,37,0.4)" }}>
+                  style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)", boxShadow: "0 4px 20px rgba(180,34,37,0.4)" }}>
                   <FiMail size={15} /> legal@jovo.ng
                 </a>
                 <Link href="/help"
@@ -506,7 +506,7 @@ const Terms = () => {
           </div>
 
           {/* Doc info footer */}
-          <div className="flex flex-wrap items-center justify-center gap-4 py-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 py-2 text-xs text-ink/40">
             <span className="flex items-center gap-1.5"><FaRegFileAlt size={12} /> Document version: v3.2</span>
             <span className="hidden sm:block w-1 h-1 rounded-full bg-gray-300" />
             <span className="flex items-center gap-1.5"><FiRefreshCw size={11} /> Last updated: {lastUpdated}</span>

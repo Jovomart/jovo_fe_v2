@@ -48,39 +48,39 @@ const SearchDropdown = ({ query, onSelect }: any) => {
   const hasResults = results.length > 0
 
   return (
-    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl border border-gray-100 overflow-hidden z-[100]"
+    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl border border-ink/10 overflow-hidden z-[100]"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
       {hasResults && (
         <>
           <div className="px-4 pt-3 pb-1">
-            <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Products ({results.length})</p>
+            <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold">Products ({results.length})</p>
           </div>
           <div>
             {results.map((product: any) => {
               const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : null
               return (
                 <button key={product.id} onMouseDown={() => onSelect(product)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group text-left">
-                  <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-gray-100 border border-gray-100">
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-ink/5 transition-colors group text-left">
+                  <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-sand border border-ink/10">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-[#B42225] transition-colors leading-tight">{product.name}</p>
+                    <p className="text-sm font-semibold text-ink truncate group-hover:text-[#0E0E10] transition-colors leading-tight">{product.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-bold text-[#B42225]">₦{product.price?.toLocaleString()}</span>
-                      {product.oldPrice && <span className="text-[11px] text-gray-400 line-through">₦{product.oldPrice?.toLocaleString()}</span>}
+                      <span className="text-xs font-bold text-[#0E0E10]">₦{product.price?.toLocaleString()}</span>
+                      {product.oldPrice && <span className="text-[11px] text-ink/40 line-through">₦{product.oldPrice?.toLocaleString()}</span>}
                       {discount && <span className="text-[10px] font-bold bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full">-{discount}%</span>}
                     </div>
                   </div>
-                  <span className="hidden sm:inline text-[10px] text-gray-400 bg-gray-100 px-2 py-1 rounded-full capitalize shrink-0">{product.category}</span>
-                  <FiArrowRight size={14} className="text-gray-300 group-hover:text-[#B42225] shrink-0 transition-colors" />
+                  <span className="hidden sm:inline text-[10px] text-ink/40 bg-sand px-2 py-1 rounded-full capitalize shrink-0">{product.category}</span>
+                  <FiArrowRight size={14} className="text-ink/25 group-hover:text-[#0E0E10] shrink-0 transition-colors" />
                 </button>
               )
             })}
           </div>
-          <div className="border-t border-gray-100 px-4 py-2.5">
+          <div className="border-t border-ink/10 px-4 py-2.5">
             <button onMouseDown={() => onSelect(null, query)}
-              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#B42225] hover:bg-[#B42225]/5 py-2 rounded-xl transition-colors">
+              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#0E0E10] hover:bg-[#0E0E10]/5 py-2 rounded-xl transition-colors">
               <FiSearch size={13} /> See all results for &quot;{query.trim()}&quot; <FiChevronRight size={13} />
             </button>
           </div>
@@ -88,42 +88,42 @@ const SearchDropdown = ({ query, onSelect }: any) => {
       )}
       {!hasResults && q.length > 0 && (
         <div className="px-4 py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"><FiSearch size={20} className="text-gray-400" /></div>
-          <p className="text-sm font-semibold text-gray-700">No results for &quot;{query.trim()}&quot;</p>
-          <p className="text-xs text-gray-400 mt-1">Try a different keyword or browse categories below</p>
+          <div className="w-12 h-12 rounded-full bg-sand flex items-center justify-center mx-auto mb-3"><FiSearch size={20} className="text-ink/40" /></div>
+          <p className="text-sm font-semibold text-ink/70">No results for &quot;{query.trim()}&quot;</p>
+          <p className="text-xs text-ink/40 mt-1">Try a different keyword or browse categories below</p>
         </div>
       )}
       {q.length === 0 && (
         <div className="p-4">
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">Browse Categories</p>
+          <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold mb-3">Browse Categories</p>
           <div className="grid grid-cols-4 gap-2">
             {categories.map(({ name, icon, to, color }) => (
               <button key={name} onMouseDown={() => onSelect(null, null, to)}
-                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center">
+                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-ink/5 transition text-center">
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>{icon}</div>
-                <span className="text-[10px] text-gray-600 font-medium leading-tight">{name}</span>
+                <span className="text-[10px] text-ink/60 font-medium leading-tight">{name}</span>
               </button>
             ))}
           </div>
-          <div className="border-t border-gray-100 mt-3 pt-3">
-            <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">More</p>
+          <div className="border-t border-ink/10 mt-3 pt-3">
+            <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold mb-3">More</p>
             <div className="grid grid-cols-4 gap-2">
               {moreCategories.map(({ name, icon, to, color }) => (
                 <button key={name} onMouseDown={() => onSelect(null, null, to)}
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center">
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-ink/5 transition text-center">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>{icon}</div>
-                  <span className="text-[10px] text-gray-600 font-medium leading-tight">{name}</span>
+                  <span className="text-[10px] text-ink/60 font-medium leading-tight">{name}</span>
                 </button>
               ))}
               <button onMouseDown={() => onSelect(null, null, '/services')}
-                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center">
+                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-ink/5 transition text-center">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-100 text-orange-600"><FaConciergeBell size={15} /></div>
-                <span className="text-[10px] text-gray-600 font-medium leading-tight">Services</span>
+                <span className="text-[10px] text-ink/60 font-medium leading-tight">Services</span>
               </button>
               <button onMouseDown={() => onSelect(null, null, '/logistics')}
-                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-gray-50 transition text-center">
+                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-ink/5 transition text-center">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-green-100 text-green-600"><MdOutlineDeliveryDining size={17} /></div>
-                <span className="text-[10px] text-gray-600 font-medium leading-tight">Logistics</span>
+                <span className="text-[10px] text-ink/60 font-medium leading-tight">Logistics</span>
               </button>
             </div>
           </div>
@@ -213,31 +213,30 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`sticky top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl shadow-[0_2px_20px_rgba(0,0,0,0.08)]' : 'bg-white shadow-sm'}`}>
-        <div className="h-0.5 w-full" style={{ background: 'linear-gradient(to right, #B42225, #FF8C00, #B42225)' }} />
+      <header className={`sticky top-0 left-0 w-full z-50 border-b border-ink/[.06] transition-all duration-300 ${scrolled ? 'bg-cream/90 backdrop-blur-xl shadow-[0_2px_20px_rgba(14,14,16,0.06)]' : 'bg-cream'}`}>
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center gap-0">
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-700" onClick={() => setMobileOpen(true)}>
+          <button className="md:hidden p-2 rounded-lg hover:bg-ink/5 transition text-ink/70" onClick={() => setMobileOpen(true)}>
             <FiMenu size={22} />
           </button>
           <img src="/images/Jovo_official_logo.png" alt="Jovo" onClick={() => router.push('/')}
-            className="md:h-12 md:w-55 w-36 h-10 object-cover cursor-pointer shrink-0" />
+            className="md:h-12 md:w-[200px] w-36 h-10 object-cover cursor-pointer shrink-0" />
 
           {/* Desktop search */}
           <div className="hidden md:flex flex-1 max-w-3xl mx-4 relative" ref={desktopSearchRef}>
-            <div className={`flex w-full rounded-xl overflow-hidden border transition-all duration-200 ${desktopOpen ? 'border-[#B42225] shadow-[0_0_0_3px_rgba(180,34,37,0.1)]' : 'border-gray-200 hover:border-gray-300'}`}>
+            <div className={`flex w-full overflow-hidden rounded-full transition-all duration-200 ${desktopOpen ? 'bg-white shadow-[0_0_0_4px_rgba(14,14,16,0.05)] ring-1 ring-ink/20' : 'bg-white ring-1 ring-ink/[.06] hover:ring-ink/15'}`}>
               <input type="text" placeholder="Search products, brands and categories..."
-                className="flex-1 px-4 py-2.5 text-sm text-gray-700 outline-none bg-white placeholder-gray-400"
+                className="flex-1 bg-transparent px-5 py-2.5 text-sm text-ink/80 placeholder-ink/35"
                 value={desktopQuery}
                 onChange={e => { setDesktopQuery(e.target.value); setDesktopOpen(true) }}
                 onFocus={() => setDesktopOpen(true)}
                 onKeyDown={e => { if (e.key === 'Enter') commitSearch(desktopQuery); if (e.key === 'Escape') setDesktopOpen(false) }}
                 autoComplete="off" />
               {desktopQuery && (
-                <button onClick={() => { setDesktopQuery(''); setDesktopOpen(false) }} className="px-2 text-gray-400 hover:text-gray-600 transition bg-white">
+                <button onClick={() => { setDesktopQuery(''); setDesktopOpen(false) }} className="px-2 text-ink/40 hover:text-ink transition bg-white">
                   <FiX size={15} />
                 </button>
               )}
-              <button onClick={() => commitSearch(desktopQuery)} className="bg-[#B42225] hover:bg-[#9e1e20] px-5 text-white font-medium text-sm flex items-center gap-2 transition-colors">
+              <button onClick={() => commitSearch(desktopQuery)} className="flex items-center gap-2 bg-ink px-5 text-sm font-medium text-cream transition-colors hover:bg-ink/90">
                 <FiSearch size={16} /><span>Search</span>
               </button>
             </div>
@@ -248,30 +247,30 @@ export default function Navbar() {
           <div className="ml-auto md:ml-0 flex items-center gap-1 md:gap-2">
             <div className="relative" ref={accountRef}>
               <button onClick={() => setAccountOpen(o => !o)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition text-gray-700">
-                <div className="relative w-8 h-8 rounded-full bg-[#B42225]/10 flex items-center justify-center shrink-0">
+                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-ink/5 transition text-ink/70">
+                <div className="relative w-8 h-8 rounded-full bg-[#0E0E10]/10 flex items-center justify-center shrink-0">
                   {user?.photoURL
                     ? <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full object-cover" />
-                    : initials ? <span className="text-xs font-bold text-[#B42225]">{initials}</span>
-                    : <FiUser size={20} className="text-[#B42225]" />}
+                    : initials ? <span className="text-xs font-bold text-[#0E0E10]">{initials}</span>
+                    : <FiUser size={20} className="text-[#0E0E10]" />}
                   {isSeller && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />}
                 </div>
                 <span className="hidden md:inline text-sm font-medium max-w-[90px] truncate">{displayName}</span>
               </button>
 
-              <div className={`absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 transition-all duration-200 origin-top-right z-[200] ${accountOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'}`}>
+              <div className={`absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-lift border border-ink/10 transition-all duration-200 origin-top-right z-[200] ${accountOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'}`}>
                 {user ? (
                   <>
-                    <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="px-4 py-3 border-b border-ink/10">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#B42225]/10 flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#0E0E10]/10 flex items-center justify-center shrink-0">
                           {user.photoURL
                             ? <img src={user.photoURL} alt="" className="w-10 h-10 rounded-full object-cover" />
-                            : <span className="text-sm font-bold text-[#B42225]">{initials}</span>}
+                            : <span className="text-sm font-bold text-[#0E0E10]">{initials}</span>}
                         </div>
                         <div className="overflow-hidden">
-                          <p className="font-semibold text-sm text-gray-900 truncate">{displayName}</p>
-                          <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                          <p className="font-semibold text-sm text-ink truncate">{displayName}</p>
+                          <p className="text-xs text-ink/40 truncate">{user.email}</p>
                           {isSeller && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-0.5">
                               <FaStore size={8} /> Verified Seller
@@ -282,17 +281,17 @@ export default function Navbar() {
                     </div>
                     <div className="py-1.5">
                       <button onClick={() => goTo('/seller/application-status')}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
-                        <FiClock size={15} className="text-gray-400 group-hover:text-blue-600" />
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink/70 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                        <FiClock size={15} className="text-ink/40 group-hover:text-blue-600" />
                         <span className="flex-1 text-left">Seller Status</span>
-                        <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-blue-600" />
+                        <FiChevronRight size={13} className="ml-auto text-ink/25 group-hover:text-blue-600" />
                       </button>
                       {isSeller && !sellerMode && (
                         <button onClick={handleEnterSellerMode}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors group">
-                          <FaStore size={15} className="text-gray-400 group-hover:text-green-600" />
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink/70 hover:bg-green-50 hover:text-green-600 transition-colors group">
+                          <FaStore size={15} className="text-ink/40 group-hover:text-green-600" />
                           <span className="flex-1 text-left">Switch to Seller</span>
-                          <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-green-600" />
+                          <FiChevronRight size={13} className="ml-auto text-ink/25 group-hover:text-green-600" />
                         </button>
                       )}
                       {[
@@ -302,14 +301,14 @@ export default function Navbar() {
                         { icon: <FiSettings size={15} />, label: 'Settings', to: '/settings' },
                       ].map(({ icon, label, to }) => (
                         <button key={label} onClick={() => goTo(to)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#B42225] transition-colors group">
-                          <span className="text-gray-400 group-hover:text-[#B42225] transition-colors">{icon}</span>
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink/70 hover:bg-ink/5 hover:text-[#0E0E10] transition-colors group">
+                          <span className="text-ink/40 group-hover:text-[#0E0E10] transition-colors">{icon}</span>
                           {label}
-                          <FiChevronRight size={13} className="ml-auto text-gray-300 group-hover:text-[#B42225] transition-colors" />
+                          <FiChevronRight size={13} className="ml-auto text-ink/25 group-hover:text-[#0E0E10] transition-colors" />
                         </button>
                       ))}
                     </div>
-                    <div className="p-3 border-t border-gray-100">
+                    <div className="p-3 border-t border-ink/10">
                       <button onClick={handleLogout}
                         className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-200">
                         <FiLogOut size={15} /> Logout
@@ -318,13 +317,13 @@ export default function Navbar() {
                   </>
                 ) : (
                   <div className="p-4 space-y-2">
-                    <p className="text-xs text-gray-400 text-center mb-3 font-medium uppercase tracking-wide">Your Account</p>
+                    <p className="text-xs text-ink/40 text-center mb-3 font-medium uppercase tracking-wide">Your Account</p>
                     <button onClick={() => goTo('/login')}
-                      className="w-full flex items-center justify-center gap-2 bg-[#B42225] hover:bg-[#9e1e20] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                      className="w-full flex items-center justify-center gap-2 bg-[#0E0E10] hover:bg-[#2A2A2A] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
                       <FiLogIn size={15} /> Sign In
                     </button>
                     <button onClick={() => goTo('/register')}
-                      className="w-full border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition-colors">
+                      className="w-full border border-[#0E0E10] text-[#0E0E10] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#0E0E10]/5 transition-colors">
                       Create Account
                     </button>
                   </div>
@@ -333,9 +332,9 @@ export default function Navbar() {
             </div>
 
             <button onClick={() => router.push('/cart')}
-              className="relative flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition text-gray-700 group">
-              <FiShoppingCart size={22} className="group-hover:text-[#B42225] transition-colors" />
-              <span className="hidden md:inline text-sm font-medium group-hover:text-[#B42225] transition-colors">Cart</span>
+              className="relative flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-ink/5 transition text-ink/70 group">
+              <FiShoppingCart size={22} className="group-hover:text-[#0E0E10] transition-colors" />
+              <span className="hidden md:inline text-sm font-medium group-hover:text-[#0E0E10] transition-colors">Cart</span>
             </button>
           </div>
         </div>
@@ -343,7 +342,7 @@ export default function Navbar() {
         {/* Mobile search */}
         <div className="md:hidden px-4 pb-3">
           <div className="relative" ref={mobileSearchRef}>
-            <div className={`flex rounded-xl overflow-hidden border transition-all duration-200 ${mobileDropOpen ? 'border-[#B42225] shadow-[0_0_0_3px_rgba(180,34,37,0.1)]' : 'border-gray-200'}`}>
+            <div className={`flex rounded-xl overflow-hidden border transition-all duration-200 ${mobileDropOpen ? 'border-[#0E0E10] shadow-[0_0_0_3px_rgba(180,34,37,0.1)]' : 'border-ink/10'}`}>
               <input type="text" placeholder="Search products, categories..."
                 className="flex-1 px-3 py-2.5 text-sm outline-none bg-white placeholder-gray-400"
                 value={mobileQuery}
@@ -352,9 +351,9 @@ export default function Navbar() {
                 onKeyDown={e => { if (e.key === 'Enter') commitSearch(mobileQuery); if (e.key === 'Escape') setMobileDropOpen(false) }}
                 autoComplete="off" />
               {mobileQuery && (
-                <button onClick={() => { setMobileQuery(''); setMobileDropOpen(false) }} className="px-2 bg-white text-gray-400"><FiX size={15} /></button>
+                <button onClick={() => { setMobileQuery(''); setMobileDropOpen(false) }} className="px-2 bg-white text-ink/40"><FiX size={15} /></button>
               )}
-              <button onClick={() => commitSearch(mobileQuery)} className="bg-[#FF8C00] px-4 text-white flex items-center">
+              <button onClick={() => commitSearch(mobileQuery)} className="bg-[#B42225] px-4 text-white flex items-center">
                 <FiSearch size={17} />
               </button>
             </div>
@@ -367,9 +366,9 @@ export default function Navbar() {
       <div className={`fixed inset-0 z-[60] flex transition-all duration-300 ${mobileOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         <div onClick={() => setMobileOpen(false)}
           className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${mobileOpen ? 'opacity-100' : 'opacity-0'}`} />
-        <div className={`relative flex flex-col bg-white w-[320px] h-full shadow-2xl transform transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`relative flex flex-col bg-white w-[320px] h-full shadow-lift transform transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           {/* Sidebar header */}
-          <div className="flex items-center justify-between px-5 py-4 bg-[#B42225]">
+          <div className="flex items-center justify-between px-5 py-4 bg-[#0E0E10]">
             <div className="flex items-center gap-3">
               {user ? (
                 <>
@@ -382,7 +381,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-white font-semibold text-sm leading-tight">{displayName}</p>
                       {isSeller && (
-                        <span className="inline-flex items-center gap-1 text-[9px] font-black bg-white/20 text-white px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold bg-white/20 text-white px-1.5 py-0.5 rounded-full">
                           <FaStore size={7} /> Seller
                         </span>
                       )}
@@ -406,16 +405,16 @@ export default function Navbar() {
           </div>
 
           {!user && (
-            <div className="px-4 py-3 flex gap-2 border-b border-gray-100">
-              <button onClick={() => goTo('/login')} className="flex-1 bg-[#B42225] text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-[#9e1e20] transition">Sign In</button>
-              <button onClick={() => goTo('/register')} className="flex-1 border border-[#B42225] text-[#B42225] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#B42225]/5 transition">Register</button>
+            <div className="px-4 py-3 flex gap-2 border-b border-ink/10">
+              <button onClick={() => goTo('/login')} className="flex-1 bg-[#0E0E10] text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-[#2A2A2A] transition">Sign In</button>
+              <button onClick={() => goTo('/register')} className="flex-1 border border-[#0E0E10] text-[#0E0E10] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#0E0E10]/5 transition">Register</button>
             </div>
           )}
 
           <div className="flex-1 overflow-y-auto">
             {user && (
-              <div className="px-4 py-3 border-b border-gray-100">
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">My Account</p>
+              <div className="px-4 py-3 border-b border-ink/10">
+                <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold mb-2 px-1">My Account</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { icon: <FiBox size={18} />, label: 'Orders', to: '/orders' },
@@ -423,7 +422,7 @@ export default function Navbar() {
                     { icon: <FiUser size={18} />, label: 'Profile', to: '/profile' },
                   ].map(({ icon, label, to }) => (
                     <button key={label} onClick={() => goTo(to)}
-                      className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl bg-gray-50 hover:bg-[#B42225]/5 hover:text-[#B42225] transition text-gray-600 text-xs font-medium">
+                      className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl bg-sand hover:bg-[#0E0E10]/5 hover:text-[#0E0E10] transition text-ink/60 text-xs font-medium">
                       {icon}{label}
                     </button>
                   ))}
@@ -432,30 +431,30 @@ export default function Navbar() {
             )}
 
             <div className="px-4 pt-3 pb-2">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">Shop by Category</p>
+              <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold mb-2 px-1">Shop by Category</p>
               <div className="space-y-0.5">
                 {categories.map(({ name, icon, to, color }) => (
                   <button key={name} onClick={() => goTo(to)}
-                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left">
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-ink/5 transition group text-left">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-[#B42225] transition-colors flex-1">{name}</span>
-                    <FiChevronRight size={14} className="text-gray-300 group-hover:text-[#B42225] transition-colors" />
+                    <span className="text-sm font-medium text-ink/70 group-hover:text-[#0E0E10] transition-colors flex-1">{name}</span>
+                    <FiChevronRight size={14} className="text-ink/25 group-hover:text-[#0E0E10] transition-colors" />
                   </button>
                 ))}
                 <button onClick={() => setMoreOpen(o => !o)}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100 text-gray-500"><MdStorefront size={18} /></div>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-[#B42225] transition-colors flex-1">More Categories</span>
-                  <FiChevronDown size={14} className={`text-gray-300 group-hover:text-[#B42225] transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-ink/5 transition group text-left">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-sand text-ink/50"><MdStorefront size={18} /></div>
+                  <span className="text-sm font-medium text-ink/70 group-hover:text-[#0E0E10] transition-colors flex-1">More Categories</span>
+                  <FiChevronDown size={14} className={`text-ink/25 group-hover:text-[#0E0E10] transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {moreOpen && (
-                  <div className="ml-3 pl-3 border-l-2 border-gray-100 space-y-0.5">
+                  <div className="ml-3 pl-3 border-l-2 border-ink/10 space-y-0.5">
                     {moreCategories.map(({ name, icon, to, color }) => (
                       <button key={name} onClick={() => goTo(to)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition group text-left">
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-ink/5 transition group text-left">
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
-                        <span className="text-sm font-medium text-gray-600 group-hover:text-[#B42225] transition-colors flex-1">{name}</span>
-                        <FiChevronRight size={13} className="text-gray-300 group-hover:text-[#B42225] transition-colors" />
+                        <span className="text-sm font-medium text-ink/60 group-hover:text-[#0E0E10] transition-colors flex-1">{name}</span>
+                        <FiChevronRight size={13} className="text-ink/25 group-hover:text-[#0E0E10] transition-colors" />
                       </button>
                     ))}
                   </div>
@@ -463,24 +462,24 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className="px-4 py-3 border-t border-gray-100">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">Services & Logistics</p>
+            <div className="px-4 py-3 border-t border-ink/10">
+              <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold mb-2 px-1">Services & Logistics</p>
               <div className="space-y-0.5">
-                <button onClick={() => goTo('/services')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left">
+                <button onClick={() => goTo('/services')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-ink/5 transition group text-left">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-orange-100 text-orange-600"><FaConciergeBell size={16} /></div>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-[#B42225] transition-colors flex-1">Campus Services</span>
-                  <FiChevronRight size={14} className="text-gray-300 group-hover:text-[#B42225] transition-colors" />
+                  <span className="text-sm font-medium text-ink/70 group-hover:text-[#0E0E10] transition-colors flex-1">Campus Services</span>
+                  <FiChevronRight size={14} className="text-ink/25 group-hover:text-[#0E0E10] transition-colors" />
                 </button>
-                <button onClick={() => goTo('/logistics')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition group text-left">
+                <button onClick={() => goTo('/logistics')} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-ink/5 transition group text-left">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-green-100 text-green-600"><MdOutlineDeliveryDining size={20} /></div>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-[#B42225] transition-colors flex-1">Logistics & Delivery</span>
-                  <FiChevronRight size={14} className="text-gray-300 group-hover:text-[#B42225] transition-colors" />
+                  <span className="text-sm font-medium text-ink/70 group-hover:text-[#0E0E10] transition-colors flex-1">Logistics & Delivery</span>
+                  <FiChevronRight size={14} className="text-ink/25 group-hover:text-[#0E0E10] transition-colors" />
                 </button>
               </div>
             </div>
 
-            <div className="px-4 py-3 border-t border-gray-100 mt-1">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2 px-1">More</p>
+            <div className="px-4 py-3 border-t border-ink/10 mt-1">
+              <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold mb-2 px-1">More</p>
               {[
                 { label: 'Flash Sales', to: '/flash-sales' },
                 ...(isSeller && !sellerMode ? [{ label: 'Switch to Seller', action: handleEnterSellerMode }] : []),
@@ -488,7 +487,7 @@ export default function Navbar() {
                 { label: 'Help Center', to: '/help' },
               ].map(({ label, to, action }: any) => (
                 <button key={label} onClick={() => action ? action() : goTo(to)}
-                  className="w-full text-left px-3 py-2.5 text-sm text-gray-600 hover:text-[#B42225] hover:bg-gray-50 rounded-xl transition">
+                  className="w-full text-left px-3 py-2.5 text-sm text-ink/60 hover:text-[#0E0E10] hover:bg-ink/5 rounded-xl transition">
                   {label}
                 </button>
               ))}
@@ -496,7 +495,7 @@ export default function Navbar() {
           </div>
 
           {user && (
-            <div className="px-4 py-4 border-t border-gray-100 bg-gray-50/50">
+            <div className="px-4 py-4 border-t border-ink/10 bg-sand/50">
               <button onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white py-3 rounded-xl text-sm font-semibold transition-all duration-200">
                 <FiLogOut size={16} /> Logout

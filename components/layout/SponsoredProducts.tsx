@@ -43,7 +43,7 @@ const SponsoredProducts = () => {
   }, []);
 
   return (
-    <div className="w-full mt-8 bg-[#F5F6F7]">
+    <div className="w-full mt-8 bg-[#FBEFE3]">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
@@ -76,7 +76,7 @@ const SponsoredProducts = () => {
             <FiTrendingUp size={16} className="text-yellow-400" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Sponsored Products
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -90,7 +90,7 @@ const SponsoredProducts = () => {
 
         <button
           onClick={() => router.push("/sponsored-products")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -105,7 +105,7 @@ const SponsoredProducts = () => {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-44 md:min-w-60 h-75 bg-gray-100 rounded-xl animate-pulse"
+                className="min-w-44 md:min-w-60 h-75 bg-sand rounded-xl animate-pulse"
               />
             ))
           : sponsored.map((product) => {
@@ -117,7 +117,7 @@ const SponsoredProducts = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-44 md:min-w-60 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                  className="min-w-44 md:min-w-60 snap-start bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 cursor-pointer group"
                 >
                   <div className="relative h-40 md:h-52 overflow-hidden rounded-t-xl">
                     <img
@@ -144,19 +144,19 @@ const SponsoredProducts = () => {
                       <span className="text-black font-bold text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>
 
                     <div className="mt-3">
-                      <div className="w-full bg-gray-200 h-2 rounded-full">
+                      <div className="w-full bg-ink/10 h-2 rounded-full">
                         <div
                           className="bg-gray-900 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${product.stock}%` }}
                         />
                       </div>
-                      <p className="text-xs mt-1 text-gray-500">
+                      <p className="text-xs mt-1 text-ink/50">
                         {product.stock}% remaining
                       </p>
                     </div>

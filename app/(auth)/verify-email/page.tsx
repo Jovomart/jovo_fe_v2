@@ -141,20 +141,20 @@ const VerifyEmail = () => {
             <FiMail
               size={22}
               className="sm:w-7 sm:h-7"
-              style={{ color: "#B42225" }}
+              style={{ color: "#0E0E10" }}
             />
           </div>
 
           <h1
-            className="text-xl sm:text-2xl font-black text-gray-900 mb-2"
-            style={{ fontFamily: "'Georgia',serif" }}
+            className="text-xl sm:text-2xl font-semibold text-ink mb-2"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}
           >
             Verify Your Email
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mb-1">
+          <p className="text-xs sm:text-sm text-ink/50 mb-1">
             We sent a 6-digit code to
           </p>
-          <p className="text-xs sm:text-sm font-black text-gray-800 mb-4 sm:mb-6 break-all">
+          <p className="text-xs sm:text-sm font-semibold text-ink mb-4 sm:mb-6 break-all">
             {email || "your email address"}
           </p>
 
@@ -198,10 +198,10 @@ const VerifyEmail = () => {
                   onChange={(e) => handleChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   disabled={loading}
-                  className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-black rounded-xl sm:rounded-2xl border-2 outline-none transition-all ${
+                  className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-semibold rounded-xl sm:rounded-2xl border-2 outline-none transition-all ${
                     digit
-                      ? "border-[#B42225] bg-red-50 text-[#B42225]"
-                      : "border-gray-200 bg-gray-50 text-gray-700 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                      ? "bg-red-50 ring-1 ring-brand/30 text-ink"
+                      : "bg-sand text-ink/70 focus:bg-white focus:ring-1 focus:ring-ink/15"
                   }`}
                 />
               ))}
@@ -210,11 +210,11 @@ const VerifyEmail = () => {
             {/* Timer */}
             <div className="text-center mb-4 sm:mb-5">
               {timeLeft > 0 ? (
-                <p className="text-[11px] sm:text-xs text-gray-500">
+                <p className="text-[11px] sm:text-xs text-ink/50">
                   Code expires in{" "}
                   <span
-                    className={`font-black ${timeLeft <= 60 ? "text-red-500" : ""}`}
-                    style={timeLeft > 60 ? { color: "#B42225" } : {}}
+                    className={`font-semibold ${timeLeft <= 60 ? "text-red-500" : ""}`}
+                    style={timeLeft > 60 ? { color: "#0E0E10" } : {}}
                   >
                     {fmt(timeLeft)}
                   </span>
@@ -229,10 +229,10 @@ const VerifyEmail = () => {
             <button
               type="submit"
               disabled={loading || code.join("").length !== 6 || timeLeft <= 0}
-              className="w-full flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm text-cream transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: "linear-gradient(135deg,#B42225,#FF6B00)",
-                boxShadow: "0 6px 24px rgba(180,34,37,0.3)",
+                background: "#0E0E10",
+                boxShadow: "none",
               }}
             >
               {loading ? (
@@ -248,14 +248,14 @@ const VerifyEmail = () => {
 
           {/* Resend */}
           <div className="flex items-center justify-center gap-2 mt-4 sm:mt-5">
-            <p className="text-xs sm:text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-ink/50">
               Didn't receive it?
             </p>
             <button
               onClick={handleResend}
               disabled={resending || timeLeft > 540}
-              className="flex items-center gap-1 text-xs sm:text-sm font-black hover:underline disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              style={{ color: "#B42225" }}
+              className="flex items-center gap-1 text-xs sm:text-sm font-semibold hover:underline disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              style={{ color: "#0E0E10" }}
             >
               <FiRefreshCw
                 size={11}
@@ -267,7 +267,7 @@ const VerifyEmail = () => {
 
           <div className="text-center mt-4">
             <Link href="/login"
-              className="text-[11px] sm:text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-[11px] sm:text-xs text-ink/40 hover:text-ink transition-colors"
             >
               ← Back to Sign In
             </Link>

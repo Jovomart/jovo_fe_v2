@@ -11,10 +11,10 @@ import { AuthContext } from "@/context/AuthContext";
 const JovoLogo = () => (
   <div className="flex items-center gap-3 mb-8">
     <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-      style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)" }}>
-      <span className="text-white font-black text-lg" style={{ fontFamily: "'Georgia',serif" }}>J</span>
+      style={{ background: "#0E0E10" }}>
+      <span className="text-cream font-semibold text-lg" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>J</span>
     </div>
-    <span className="font-black text-2xl text-gray-900 tracking-tight" style={{ fontFamily: "'Georgia',serif" }}>JOVO</span>
+    <span className="font-semibold text-2xl text-ink tracking-tight" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>JOVO</span>
   </div>
 );
 
@@ -22,7 +22,7 @@ const JovoLogo = () => (
 // ✅ FIX 1: Made `error` optional (error?) so Field can be used with or without it
 const Field = ({ label, error, children }: { label?: string; error?: string; children: React.ReactNode }) => (
   <div>
-    {label && <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-1.5">{label}</label>}
+    {label && <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-1.5">{label}</label>}
     {children}
     {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
   </div>
@@ -32,11 +32,11 @@ const inputBox = (hasError: boolean) =>
   `flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all ${
     hasError
       ? "border-red-400 bg-red-50"
-      : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+      : "bg-sand focus-within:bg-white focus-within:ring-1 focus-within:ring-ink/15"
   }`;
 
 /* ════════════════════════════════════════════════════════════
-   STEP 1 — Email
+   STEP 1 - Email
 ═════════════════════════════════════════════════════════════ */
 const StepEmail = ({ onNext }: { onNext: (email: string) => void }) => {
   const { forgotPassword } = useContext(AuthContext);
@@ -59,11 +59,11 @@ const StepEmail = ({ onNext }: { onNext: (email: string) => void }) => {
   return (
     <div className="space-y-6">
       <div className="w-16 h-16 rounded-3xl bg-red-50 flex items-center justify-center mb-2">
-        <FiMail size={28} style={{ color: "#B42225" }} />
+        <FiMail size={28} style={{ color: "#0E0E10" }} />
       </div>
       <div>
-        <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "'Georgia',serif" }}>Forgot Password?</h1>
-        <p className="text-sm text-gray-500">Enter your email and we'll send you a 6-digit reset code.</p>
+        <h1 className="text-2xl font-semibold text-ink mb-1" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Forgot Password?</h1>
+        <p className="text-sm text-ink/50">Enter your email and we'll send you a 6-digit reset code.</p>
       </div>
 
       {error && (
@@ -76,15 +76,15 @@ const StepEmail = ({ onNext }: { onNext: (email: string) => void }) => {
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Field label="Email Address" error={undefined}>
           <div className={inputBox(!!error)}>
-            <FiMail size={15} className="text-gray-400" />
+            <FiMail size={15} className="text-ink/40" />
             <input type="email" placeholder="your@email.com" value={email}
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
-              className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400" />
+              className="flex-1 text-sm text-ink/70 outline-none bg-transparent placeholder-ink/30" />
           </div>
         </Field>
         <button type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 6px 24px rgba(180,34,37,0.3)" }}>
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm text-cream transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
+          style={{ background: "#0E0E10", boxShadow: "none" }}>
           {loading
             ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending code...</>
             : "Send Reset Code"}
@@ -92,14 +92,14 @@ const StepEmail = ({ onNext }: { onNext: (email: string) => void }) => {
       </form>
 
       <p className="text-center text-sm">
-        <Link href="/login" className="font-bold hover:underline" style={{ color: "#B42225" }}>← Back to Sign In</Link>
+        <Link href="/login" className="font-semibold hover:underline" style={{ color: "#0E0E10" }}>← Back to Sign In</Link>
       </p>
     </div>
   );
 };
 
 /* ════════════════════════════════════════════════════════════
-   STEP 2 — Enter code
+   STEP 2 - Enter code
 ═════════════════════════════════════════════════════════════ */
 const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: string) => void; onBack: () => void }) => {
   const { forgotPassword } = useContext(AuthContext);
@@ -140,7 +140,7 @@ const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: str
     if (timeLeft <= 0)          { setError("Code expired. Please request a new one."); return; }
     setLoading(true); setError("");
     try {
-      // We just pass the code forward — backend verifies during reset
+      // We just pass the code forward - backend verifies during reset
       onNext(fullCode);
     } catch (err: any) {
       setError(err.message || "Invalid code.");
@@ -160,18 +160,18 @@ const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: str
 
   return (
     <div className="space-y-6">
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-ink/50 hover:text-ink transition-colors">
         <FiArrowLeft size={15} /> Back
       </button>
 
       <div className="w-16 h-16 rounded-3xl bg-red-50 flex items-center justify-center">
-        <FiMail size={28} style={{ color: "#B42225" }} />
+        <FiMail size={28} style={{ color: "#0E0E10" }} />
       </div>
 
       <div>
-        <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "'Georgia',serif" }}>Check Your Email</h1>
-        <p className="text-sm text-gray-500">
-          We sent a 6-digit code to <strong className="text-gray-800">{email}</strong>
+        <h1 className="text-2xl font-semibold text-ink mb-1" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Check Your Email</h1>
+        <p className="text-sm text-ink/50">
+          We sent a 6-digit code to <strong className="text-ink">{email}</strong>
         </p>
       </div>
 
@@ -193,10 +193,10 @@ const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: str
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               disabled={loading}
-              className={`w-12 h-14 text-center text-xl font-black rounded-2xl border-2 outline-none transition-all ${
+              className={`w-12 h-14 text-center text-xl font-semibold rounded-2xl border-2 outline-none transition-all ${
                 digit
-                  ? "border-[#B42225] bg-red-50 text-[#B42225]"
-                  : "border-gray-200 bg-gray-50 focus:border-[#B42225] focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                  ? "bg-red-50 ring-1 ring-brand/30 text-ink"
+                  : "bg-sand focus:bg-white focus:ring-1 focus:ring-ink/15"
               }`}
             />
           ))}
@@ -204,17 +204,17 @@ const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: str
 
         <div className="text-center mb-5">
           {timeLeft > 0
-            ? <p className="text-xs text-gray-500">Expires in{" "}
-                <span className={`font-black ${timeLeft <= 60 ? "text-red-500" : ""}`}
-                  style={timeLeft > 60 ? { color: "#B42225" } : {}}>{fmt(timeLeft)}</span>
+            ? <p className="text-xs text-ink/50">Expires in{" "}
+                <span className={`font-semibold ${timeLeft <= 60 ? "text-red-500" : ""}`}
+                  style={timeLeft > 60 ? { color: "#0E0E10" } : {}}>{fmt(timeLeft)}</span>
               </p>
             : <p className="text-xs text-red-500 font-semibold">Code has expired.</p>
           }
         </div>
 
         <button type="submit" disabled={loading || code.join("").length !== 6 || timeLeft <= 0}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.01] disabled:opacity-50"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 6px 24px rgba(180,34,37,0.3)" }}>
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm text-cream transition-all hover:scale-[1.01] disabled:opacity-50"
+          style={{ background: "#0E0E10", boxShadow: "none" }}>
           {loading
             ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Verifying...</>
             : "Verify Code"}
@@ -222,10 +222,10 @@ const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: str
       </form>
 
       <div className="flex items-center justify-center gap-2">
-        <p className="text-sm text-gray-500">Didn't get it?</p>
+        <p className="text-sm text-ink/50">Didn't get it?</p>
         <button onClick={handleResend} disabled={resending || timeLeft > 540}
-          className="flex items-center gap-1 text-sm font-black hover:underline disabled:opacity-40"
-          style={{ color: "#B42225" }}>
+          className="flex items-center gap-1 text-sm font-semibold hover:underline disabled:opacity-40"
+          style={{ color: "#0E0E10" }}>
           <FiRefreshCw size={13} className={resending ? "animate-spin" : ""} />
           {resending ? "Sending..." : "Resend code"}
         </button>
@@ -235,7 +235,7 @@ const StepCode = ({ email, onNext, onBack }: { email: string; onNext: (code: str
 };
 
 /* ════════════════════════════════════════════════════════════
-   STEP 3 — New password
+   STEP 3 - New password
 ═════════════════════════════════════════════════════════════ */
 
 // ✅ FIX 3: Explicit type for errors state so TS knows its valid keys
@@ -286,17 +286,17 @@ const StepNewPassword = ({ email, code, onBack, onSuccess }: { email: string; co
 
   return (
     <div className="space-y-6">
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-ink/50 hover:text-ink transition-colors">
         <FiArrowLeft size={15} /> Back
       </button>
 
       <div className="w-16 h-16 rounded-3xl bg-red-50 flex items-center justify-center">
-        <FiLock size={28} style={{ color: "#B42225" }} />
+        <FiLock size={28} style={{ color: "#0E0E10" }} />
       </div>
 
       <div>
-        <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "'Georgia',serif" }}>New Password</h1>
-        <p className="text-sm text-gray-500">Create a strong new password for <strong className="text-gray-800">{email}</strong></p>
+        <h1 className="text-2xl font-semibold text-ink mb-1" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>New Password</h1>
+        <p className="text-sm text-ink/50">Create a strong new password for <strong className="text-ink">{email}</strong></p>
       </div>
 
       {errors.general && (
@@ -308,45 +308,45 @@ const StepNewPassword = ({ email, code, onBack, onSuccess }: { email: string; co
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-1.5">New Password</label>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-1.5">New Password</label>
           <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all ${
-            errors.newPassword ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+            errors.newPassword ? "border-red-400 bg-red-50" : "bg-sand focus-within:bg-white focus-within:ring-1 focus-within:ring-ink/15"
           }`}>
-            <FiLock size={15} className="text-gray-400" />
+            <FiLock size={15} className="text-ink/40" />
             <input type={showPw ? "text" : "password"} placeholder="Min. 8 characters" value={form.newPassword}
               onChange={(e) => { setForm((p) => ({ ...p, newPassword: e.target.value })); setErrors((p) => ({ ...p, newPassword: "" })); }}
-              className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400" />
-            <button type="button" onClick={() => setShowPw(!showPw)} tabIndex={-1} className="text-gray-400 hover:text-gray-600">
+              className="flex-1 text-sm text-ink/70 outline-none bg-transparent placeholder-ink/30" />
+            <button type="button" onClick={() => setShowPw(!showPw)} tabIndex={-1} className="text-ink/40 hover:text-ink">
               {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
           {strength && (
             <div className="mt-2 flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-ink/10 rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all" style={{ width: strength.w, background: strength.color }} />
               </div>
-              <span className="text-[10px] font-bold" style={{ color: strength.color }}>{strength.label}</span>
+              <span className="text-[10px] font-semibold" style={{ color: strength.color }}>{strength.label}</span>
             </div>
           )}
           {errors.newPassword && <p className="text-xs text-red-500 mt-1">{errors.newPassword}</p>}
         </div>
 
         <div>
-          <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-1.5">Confirm Password</label>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-1.5">Confirm Password</label>
           <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all ${
-            errors.confirmPassword ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+            errors.confirmPassword ? "border-red-400 bg-red-50" : "bg-sand focus-within:bg-white focus-within:ring-1 focus-within:ring-ink/15"
           }`}>
-            <FiLock size={15} className="text-gray-400" />
+            <FiLock size={15} className="text-ink/40" />
             <input type={showPw ? "text" : "password"} placeholder="Repeat your password" value={form.confirmPassword}
               onChange={(e) => { setForm((p) => ({ ...p, confirmPassword: e.target.value })); setErrors((p) => ({ ...p, confirmPassword: "" })); }}
-              className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400" />
+              className="flex-1 text-sm text-ink/70 outline-none bg-transparent placeholder-ink/30" />
           </div>
           {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
         </div>
 
         <button type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.01] disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)", boxShadow: "0 6px 24px rgba(180,34,37,0.3)" }}>
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm text-cream transition-all hover:scale-[1.01] disabled:opacity-60"
+          style={{ background: "#0E0E10", boxShadow: "none" }}>
           {loading
             ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Updating...</>
             : "Update Password"}
@@ -380,13 +380,13 @@ const ForgotPassword = () => {
               const s = i + 1;
               return (
                 <div key={s} className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                    step > s ? "text-white" : step === s ? "text-white" : "bg-gray-100 text-gray-400"
-                  }`} style={step >= s ? { background: "linear-gradient(135deg,#B42225,#FF6B00)" } : {}}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                    step > s ? "text-cream" : step === s ? "text-cream" : "bg-sand text-ink/40"
+                  }`} style={step >= s ? { background: "#0E0E10" } : {}}>
                     {step > s ? <Check size={12} /> : s}
                   </div>
-                  {i < 2 && <div className={`w-8 h-0.5 rounded-full ${step > s ? "" : "bg-gray-200"}`}
-                    style={step > s ? { background: "linear-gradient(90deg,#B42225,#FF6B00)" } : {}} />}
+                  {i < 2 && <div className={`w-8 h-0.5 rounded-full ${step > s ? "" : "bg-ink/10"}`}
+                    style={step > s ? { background: "#0E0E10" } : {}} />}
                 </div>
               );
             })}

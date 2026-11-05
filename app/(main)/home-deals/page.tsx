@@ -12,7 +12,7 @@ import Footer from "@/components/layout/Footer";
 // ─── Home Badge ──────────────────────────────────────────────────────────
 const HomeBadge = () => (
   <div
-    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black text-white"
+    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-semibold text-white"
     style={{
       background: "linear-gradient(135deg,#713f12,#a16207)",
       boxShadow: "0 2px 12px rgba(161,98,7,0.5)",
@@ -28,7 +28,7 @@ const Stars = ({ count = 4 }) => (
     {[1,2,3,4,5].map((s) => (
       <FaStar key={s} size={10} style={{ color: s <= count ? "#d97706" : "#e5e7eb" }} />
     ))}
-    <span className="text-[10px] text-gray-400 ml-1">
+    <span className="text-[10px] text-ink/40 ml-1">
       ({Math.floor(Math.random() * 700) + 100})
     </span>
   </div>
@@ -69,7 +69,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
         {discount && (
           <div
-            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
+            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-semibold text-white"
             style={{ background: "linear-gradient(135deg,#713f12,#92400e)" }}
           >
             <FiZap size={9} /> -{discount}%
@@ -78,16 +78,16 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
         <button
           onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-soft transition-transform duration-200 hover:scale-110"
         >
           {wishlisted
             ? <FaHeart className="text-red-500" size={13} />
-            : <FiHeart className="text-gray-400" size={13} />}
+            : <FiHeart className="text-ink/40" size={13} />}
         </button>
 
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lg text-white transition-all duration-200"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lift text-white transition-all duration-200"
             style={{ background: "linear-gradient(135deg,#713f12,#b45309)" }}
           >
             <FiShoppingBag size={13} /> Add to Cart
@@ -96,15 +96,15 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
       </div>
 
       <div className="p-3.5">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2 leading-snug">
           {product.name}
         </h3>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-sm md:text-base font-black text-amber-700">
+          <span className="text-sm md:text-base font-semibold text-amber-700">
             ₦{product.price.toLocaleString()}
           </span>
           {product.oldPrice && (
-            <span className="text-[11px] text-gray-400 line-through">
+            <span className="text-[11px] text-ink/40 line-through">
               ₦{product.oldPrice.toLocaleString()}
             </span>
           )}
@@ -134,8 +134,8 @@ const SuggestedCard = ({ product }) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       <div className="p-3">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
-        <p className="text-amber-700 font-black mt-1.5 text-sm md:text-base">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2">{product.name}</h3>
+        <p className="text-amber-700 font-semibold mt-1.5 text-sm md:text-base">
           ₦{product.price.toLocaleString()}
         </p>
       </div>
@@ -156,7 +156,7 @@ const HomeDealsPage = () => {
   return (
     <div className="min-h-screen" style={{ background: "#FFFBF0" }}>
 
-      {/* ══════════ HERO — LUXURIOUS BROWN/CREAM ══════════ */}
+      {/* ══════════ HERO - LUXURIOUS BROWN/CREAM ══════════ */}
       <div
         className="relative overflow-hidden"
         style={{
@@ -216,15 +216,15 @@ const HomeDealsPage = () => {
                 </div>
                 <div>
                   <h1
-                    className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(217,119,6,0.4)" }}
+                    className="text-4xl md:text-6xl font-semibold text-white leading-none tracking-tight"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(217,119,6,0.4)" }}
                   >
                     HOME
                   </h1>
                   <h1
-                    className="text-4xl md:text-6xl font-black leading-none tracking-tight"
+                    className="text-4xl md:text-6xl font-semibold leading-none tracking-tight"
                     style={{
-                      fontFamily: "'Georgia', serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       background: "linear-gradient(90deg,#fcd34d,#fef3c7,#fcd34d)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
@@ -258,7 +258,7 @@ const HomeDealsPage = () => {
                 >
                   <span className="text-amber-300">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-semibold text-sm leading-none">{val}</p>
                     <p className="text-white/40 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -267,7 +267,7 @@ const HomeDealsPage = () => {
           </div>
         </div>
 
-        {/* Wave — warm cream background */}
+        {/* Wave - warm cream background */}
         <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 40" preserveAspectRatio="none">
           <path d="M0,40 L0,20 Q360,0 720,20 Q1080,40 1440,20 L1440,40 Z" fill="#FFFBF0" />
         </svg>
@@ -278,8 +278,8 @@ const HomeDealsPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full"
             style={{ background: "linear-gradient(180deg,#fcd34d,#b45309)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">Home & Living Deals</h2>
-          <span className="hidden md:inline text-sm text-gray-400 font-medium">({homeProducts.length} items)</span>
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">Home & Living Deals</h2>
+          <span className="hidden md:inline text-sm text-ink/40 font-medium">({homeProducts.length} items)</span>
         </div>
 
         {homeProducts.length > 0 ? (
@@ -294,14 +294,14 @@ const HomeDealsPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-400">
+          <div className="text-center py-20 text-ink/40">
             <FiHome size={48} className="mx-auto mb-4 opacity-20" />
             <p className="font-semibold">No home deals right now.</p>
           </div>
         )}
       </div>
 
-      {/* ══════════ BANNER — LUXURY SELLER ══════════ */}
+      {/* ══════════ BANNER - LUXURY SELLER ══════════ */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <div
           className="relative overflow-hidden rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-4"
@@ -315,11 +315,11 @@ const HomeDealsPage = () => {
             style={{ background: "linear-gradient(90deg,transparent,#fcd34d,transparent)" }} />
           <div className="relative z-10">
             <p className="text-amber-300/70 text-xs font-semibold tracking-widest uppercase mb-1">Partner with us</p>
-            <h3 className="text-white text-xl md:text-2xl font-black">Sell Home & Living on Jovo</h3>
+            <h3 className="text-white text-xl md:text-2xl font-semibold">Sell Home & Living on Jovo</h3>
             <p className="text-white/45 text-sm mt-1">Reach discerning homeowners looking for quality pieces.</p>
           </div>
           <Link href="/become-seller"
-            className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm shadow-lg hover:scale-105 transition-all duration-200 text-white"
+            className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm shadow-lift hover:scale-105 transition-all duration-200 text-white"
             style={{ background: "linear-gradient(135deg,#b45309,#713f12)" }}
           >
             Start Selling →
@@ -332,7 +332,7 @@ const HomeDealsPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full"
             style={{ background: "linear-gradient(180deg,#fcd34d,#b45309)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">You May Also Like</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">You May Also Like</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {suggestedProducts.map((product) => (

@@ -22,7 +22,7 @@ try {
     auth = getAuth(app)
     googleProvider = new GoogleAuthProvider()
   } else {
-    console.warn('⚠️ Firebase not configured — Google Sign-In disabled. Set NEXT_PUBLIC_FIREBASE_* in .env.local')
+    console.warn('⚠️ Firebase not configured - Google Sign-In disabled. Set NEXT_PUBLIC_FIREBASE_* in .env.local')
   }
 } catch (err: any) {
   console.warn('⚠️ Firebase init failed:', err.message)

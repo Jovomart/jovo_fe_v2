@@ -27,8 +27,8 @@ const AnnouncementBar = () => {
   }, []);
 
   return (
-    <div className="announcement-bar w-full bg-[#B42225] text-white py-2 px-2 md:px-4 flex items-center justify-center gap-2 flex-wrap">
-      <FiPhoneCall className="icon" />
+    <div className="announcement-bar w-full bg-ink text-cream py-2 px-3 md:px-4 flex items-center justify-center gap-2 flex-wrap">
+      <FiPhoneCall className="icon text-peach" size={13} />
       <span className={`announcement-message ${fade ? "fade-in" : "fade-out"}`}>
         {messages[current]}
       </span>

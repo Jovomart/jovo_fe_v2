@@ -42,7 +42,7 @@ export default function GoogleButton({ isSignUp = false }: { isSignUp?: boolean 
         onClick={handle}
         disabled={loading || !firebaseReady}
         title={!firebaseReady ? 'Google Sign-In not configured yet' : ''}
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-bold text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-ink/10 bg-white hover:bg-ink/5 hover:border-ink/20 transition-all text-sm font-bold text-ink/70 disabled:opacity-40 disabled:cursor-not-allowed"
         style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
       >
         {loading

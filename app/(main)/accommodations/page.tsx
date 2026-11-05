@@ -36,52 +36,52 @@ const AccomCard = ({ place, onClick }) => (
       <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
         {place.type}
       </div>
-      <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/90 text-gray-900 text-xs font-black px-2 py-1 rounded-full">
+      <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/90 text-ink text-xs font-semibold px-2 py-1 rounded-full">
         <FiStar size={11} className="text-yellow-500 fill-yellow-500" />
         {place.rating}
       </div>
     </div>
 
     <div className="p-4 md:p-5">
-      <h3 className="font-black text-gray-900 text-sm md:text-base leading-tight mb-1.5 group-hover:text-[#B42225] transition-colors"
-        style={{ fontFamily: "'Georgia',serif" }}>
+      <h3 className="font-semibold text-ink text-sm md:text-base leading-tight mb-1.5 group-hover:text-[#0E0E10] transition-colors"
+        style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
         {place.name}
       </h3>
-      <p className="flex items-center gap-1 text-xs text-gray-500 mb-3">
-        <FiMapPin size={11} className="text-[#B42225] shrink-0" />
+      <p className="flex items-center gap-1 text-xs text-ink/50 mb-3">
+        <FiMapPin size={11} className="text-[#0E0E10] shrink-0" />
         <span className="truncate">{place.location}</span>
       </p>
 
       <div className="flex items-center gap-2 md:gap-3 mb-3 flex-wrap">
-        <span className="flex items-center gap-1 text-xs text-gray-500">
-          <FaBed size={11} className="text-gray-400 shrink-0" /> {place.beds} bed{place.beds > 1 ? "s" : ""}
+        <span className="flex items-center gap-1 text-xs text-ink/50">
+          <FaBed size={11} className="text-ink/40 shrink-0" /> {place.beds} bed{place.beds > 1 ? "s" : ""}
         </span>
-        <span className="flex items-center gap-1 text-xs text-gray-500">
-          <FaBath size={11} className="text-gray-400 shrink-0" /> {place.baths} bath{place.baths > 1 ? "s" : ""}
+        <span className="flex items-center gap-1 text-xs text-ink/50">
+          <FaBath size={11} className="text-ink/40 shrink-0" /> {place.baths} bath{place.baths > 1 ? "s" : ""}
         </span>
-        <span className="text-xs text-gray-400 hidden sm:inline">({place.reviews} reviews)</span>
+        <span className="text-xs text-ink/40 hidden sm:inline">({place.reviews} reviews)</span>
       </div>
 
       <div className="flex flex-wrap gap-1 md:gap-1.5 mb-3 md:mb-4">
         {place.amenities.slice(0, 3).map((a) => (
-          <span key={a} className="flex items-center gap-1 text-[9px] md:text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
+          <span key={a} className="flex items-center gap-1 text-[9px] md:text-[10px] font-semibold text-ink/50 bg-sand px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
             {amenityIcon(a)} {a}
           </span>
         ))}
         {place.amenities.length > 3 && (
-          <span className="text-[9px] md:text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
+          <span className="text-[9px] md:text-[10px] font-semibold text-ink/40 bg-sand px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
             +{place.amenities.length - 3}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-3 border-t border-ink/10">
         <div>
-          <span className="text-base md:text-xl font-black text-gray-900">₦{place.price.toLocaleString()}</span>
-          <span className="text-[10px] md:text-xs text-gray-400"> /yr</span>
+          <span className="text-base md:text-xl font-semibold text-ink">₦{place.price.toLocaleString()}</span>
+          <span className="text-[10px] md:text-xs text-ink/40"> /yr</span>
         </div>
-        <button className="px-3 ml-2 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-black text-white transition-all hover:opacity-90 active:scale-95"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 4px 14px rgba(180,34,37,0.3)" }}>
+        <button className="px-3 ml-2 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+          style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)", boxShadow: "0 4px 14px rgba(180,34,37,0.3)" }}>
           Book Now
         </button>
       </div>
@@ -91,7 +91,7 @@ const AccomCard = ({ place, onClick }) => (
 
 /* ── List Row ── */
 const AccomRow = ({ place, onClick }) => (
-  <div onClick={onClick} className="group bg-white rounded-2xl overflow-hidden flex transition-all duration-200 hover:shadow-lg cursor-pointer"
+  <div onClick={onClick} className="group bg-white rounded-2xl overflow-hidden flex transition-all duration-200 hover:shadow-lift cursor-pointer"
     style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
     <div className="relative w-28 sm:w-40 md:w-52 shrink-0 overflow-hidden">
       <img src={place.image} alt={place.name}
@@ -101,34 +101,34 @@ const AccomRow = ({ place, onClick }) => (
     <div className="flex-1 p-3 sm:p-4 md:p-5 flex flex-col justify-between min-w-0">
       <div>
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-black text-gray-900 text-sm md:text-base group-hover:text-[#B42225] transition-colors leading-tight"
-            style={{ fontFamily: "'Georgia',serif" }}>
+          <h3 className="font-semibold text-ink text-sm md:text-base group-hover:text-[#0E0E10] transition-colors leading-tight"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             {place.name}
           </h3>
-          <div className="flex items-center gap-1 shrink-0 bg-yellow-50 text-yellow-700 text-[10px] md:text-xs font-black px-2 py-1 rounded-full">
+          <div className="flex items-center gap-1 shrink-0 bg-yellow-50 text-yellow-700 text-[10px] md:text-xs font-semibold px-2 py-1 rounded-full">
             <FiStar size={9} className="fill-yellow-500 text-yellow-500" /> {place.rating}
           </div>
         </div>
-        <p className="flex items-center gap-1 text-xs text-gray-500 mt-1 mb-1.5">
-          <FiMapPin size={10} className="text-[#B42225] shrink-0" />
+        <p className="flex items-center gap-1 text-xs text-ink/50 mt-1 mb-1.5">
+          <FiMapPin size={10} className="text-[#0E0E10] shrink-0" />
           <span className="truncate">{place.location}</span>
         </p>
-        <p className="text-xs text-gray-400 line-clamp-2 hidden sm:block">{place.description}</p>
+        <p className="text-xs text-ink/40 line-clamp-2 hidden sm:block">{place.description}</p>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2 md:mt-3">
         <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-          <span className="flex items-center gap-1 text-xs text-gray-500"><FaBed size={10} /> {place.beds} beds</span>
-          <span className="flex items-center gap-1 text-xs text-gray-500"><FaBath size={10} /> {place.baths} baths</span>
-          <span className="text-xs text-gray-400 hidden md:inline">({place.reviews} reviews)</span>
+          <span className="flex items-center gap-1 text-xs text-ink/50"><FaBed size={10} /> {place.beds} beds</span>
+          <span className="flex items-center gap-1 text-xs text-ink/50"><FaBath size={10} /> {place.baths} baths</span>
+          <span className="text-xs text-ink/40 hidden md:inline">({place.reviews} reviews)</span>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
           <div className="shrink-0">
-            <span className="text-sm md:text-lg font-black text-gray-900">₦{place.price.toLocaleString()}</span>
-            <span className="text-[10px] md:text-xs text-gray-400"> /yr</span>
+            <span className="text-sm md:text-lg font-semibold text-ink">₦{place.price.toLocaleString()}</span>
+            <span className="text-[10px] md:text-xs text-ink/40"> /yr</span>
           </div>
-          <button className="px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-black text-white transition-all hover:opacity-90 shrink-0"
-            style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+          <button className="px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-semibold text-white transition-all hover:opacity-90 shrink-0"
+            style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}>
             Book
           </button>
         </div>
@@ -176,16 +176,16 @@ const AccommodationsPage = () => {
           backgroundSize: "28px 28px",
         }} />
         <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 rounded-full opacity-15 pointer-events-none"
-          style={{ background: "radial-gradient(circle,#FF8C00,transparent 65%)" }} />
+          style={{ background: "radial-gradient(circle,#B42225,transparent 65%)" }} />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-12 md:py-16 lg:py-20">
           <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-white/60 text-[10px] md:text-xs font-bold px-3 md:px-4 py-1.5 md:py-2 rounded-full mb-4 md:mb-5 tracking-widest uppercase">
             🏠 Accommodation Deals
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 md:mb-4 leading-tight"
-            style={{ fontFamily: "'Georgia',serif" }}>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white mb-3 md:mb-4 leading-tight"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             Find Your Perfect<br />
-            <span style={{ background: "linear-gradient(90deg,#FF8C00,#FFB347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "linear-gradient(90deg,#B42225,#FFB347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Home Away From Home
             </span>
           </h1>
@@ -196,12 +196,12 @@ const AccommodationsPage = () => {
           {/* Search */}
           <div className="flex items-center gap-3 bg-white rounded-2xl px-4 md:px-5 py-3 md:py-4 max-w-xl"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
-            <FiSearch size={16} className="text-gray-400 shrink-0" />
+            <FiSearch size={16} className="text-ink/40 shrink-0" />
             <input type="text" placeholder="Search by name, location or type..."
               value={search} onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400 bg-transparent min-w-0" />
+              className="flex-1 text-sm text-ink/70 outline-none placeholder-gray-400 bg-transparent min-w-0" />
             {search && (
-              <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 transition shrink-0">
+              <button onClick={() => setSearch("")} className="text-ink/40 hover:text-ink transition shrink-0">
                 <FiX size={15} />
               </button>
             )}
@@ -216,7 +216,7 @@ const AccommodationsPage = () => {
             ].map(({ num, label }) => (
               <div key={label} className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <span className="text-[#FF8C00] font-black text-xs md:text-sm">{num}</span>
+                <span className="text-[#B42225] font-semibold text-xs md:text-sm">{num}</span>
                 <span className="text-white/40 text-[10px] md:text-xs">{label}</span>
               </div>
             ))}
@@ -236,9 +236,9 @@ const AccommodationsPage = () => {
               {TYPES.map((type) => (
                 <button key={type} onClick={() => setType(type)}
                   className={`px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
-                    activeType === type ? "text-white" : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                    activeType === type ? "text-white" : "bg-white text-ink/60 hover:bg-ink/5 border border-ink/10"
                   }`}
-                  style={activeType === type ? { background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 4px 12px rgba(180,34,37,0.3)" } : {}}>
+                  style={activeType === type ? { background: "linear-gradient(135deg,#0E0E10,#B42225)", boxShadow: "0 4px 12px rgba(180,34,37,0.3)" } : {}}>
                   {type}
                 </button>
               ))}
@@ -246,8 +246,8 @@ const AccommodationsPage = () => {
 
             {/* Sort + View */}
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-gray-500 font-semibold">
-                <span className="text-gray-900 font-black">{filtered.length}</span> result{filtered.length !== 1 ? "s" : ""}
+              <p className="text-xs text-ink/50 font-semibold">
+                <span className="text-ink font-semibold">{filtered.length}</span> result{filtered.length !== 1 ? "s" : ""}
                 {activeType !== "All" ? ` · ${activeType}` : ""}
                 {search ? ` · "${search}"` : ""}
               </p>
@@ -256,18 +256,18 @@ const AccommodationsPage = () => {
                 {/* Sort */}
                 <div className="relative">
                   <button onClick={() => setShowSort(!showSort)}
-                    className="flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:border-gray-300 transition-all">
+                    className="flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold bg-white border border-ink/10 text-ink/60 hover:border-ink/20 transition-all">
                     <FiFilter size={12} />
                     <span className="hidden sm:inline">{sortBy}</span>
                     <span className="sm:hidden">Sort</span>
                     <FiChevronDown size={12} className={`transition-transform ${showSort ? "rotate-180" : ""}`} />
                   </button>
                   {showSort && (
-                    <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl border border-gray-100 overflow-hidden z-20 w-44 md:w-52"
+                    <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl border border-ink/10 overflow-hidden z-20 w-44 md:w-52"
                       style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
                       {SORT_OPTS.map((opt) => (
                         <button key={opt} onClick={() => { setSortBy(opt); setShowSort(false); }}
-                          className={`w-full text-left px-4 py-2.5 md:py-3 text-xs font-semibold transition-colors hover:bg-gray-50 ${sortBy === opt ? "text-[#B42225] bg-red-50" : "text-gray-600"}`}>
+                          className={`w-full text-left px-4 py-2.5 md:py-3 text-xs font-semibold transition-colors hover:bg-ink/5 ${sortBy === opt ? "text-[#0E0E10] bg-red-50" : "text-ink/60"}`}>
                           {opt}
                         </button>
                       ))}
@@ -276,14 +276,14 @@ const AccommodationsPage = () => {
                 </div>
 
                 {/* View toggle */}
-                <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
+                <div className="flex rounded-xl overflow-hidden border border-ink/10 bg-white">
                   {[
                     { mode: "grid", icon: <FiGrid size={14} /> },
                     { mode: "list", icon: <FiList size={14} /> },
                   ].map(({ mode, icon }) => (
                     <button key={mode} onClick={() => setViewMode(mode)}
-                      className={`px-2.5 md:px-3 py-2 transition-all ${viewMode === mode ? "text-white" : "text-gray-400 hover:text-gray-600"}`}
-                      style={viewMode === mode ? { background: "linear-gradient(135deg,#B42225,#FF8C00)" } : {}}>
+                      className={`px-2.5 md:px-3 py-2 transition-all ${viewMode === mode ? "text-white" : "text-ink/40 hover:text-ink"}`}
+                      style={viewMode === mode ? { background: "linear-gradient(135deg,#0E0E10,#B42225)" } : {}}>
                       {icon}
                     </button>
                   ))}
@@ -295,12 +295,12 @@ const AccommodationsPage = () => {
           {/* Results */}
           {filtered.length === 0 ? (
             <div className="text-center py-16 md:py-20">
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gray-200 flex items-center justify-center mx-auto mb-4 text-2xl md:text-3xl">🏠</div>
-              <p className="font-black text-gray-700 text-base md:text-lg">No accommodations found</p>
-              <p className="text-gray-400 text-xs md:text-sm mt-1">Try adjusting your filters or search term</p>
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-ink/10 flex items-center justify-center mx-auto mb-4 text-2xl md:text-3xl">🏠</div>
+              <p className="font-semibold text-ink/70 text-base md:text-lg">No accommodations found</p>
+              <p className="text-ink/40 text-xs md:text-sm mt-1">Try adjusting your filters or search term</p>
               <button onClick={() => { setSearch(""); setType("All"); }}
-                className="mt-4 px-5 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black text-white"
-                style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+                className="mt-4 px-5 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white"
+                style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}>
                 Clear Filters
               </button>
             </div>

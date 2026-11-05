@@ -23,7 +23,7 @@ const Stars = ({ rating, size = 14 }) => (
     {[1,2,3,4,5].map((s) => {
       if (rating >= s)       return <FaStar key={s} size={size} className="text-yellow-400" />;
       if (rating >= s - 0.5) return <FaStarHalfAlt key={s} size={size} className="text-yellow-400" />;
-      return <FaRegStar key={s} size={size} className="text-gray-300" />;
+      return <FaRegStar key={s} size={size} className="text-ink/25" />;
     })}
   </div>
 );
@@ -32,7 +32,7 @@ const Stars = ({ rating, size = 14 }) => (
 const amenityMap = {
   "Pool":            { icon: <FaSwimmingPool size={16} />, color: "bg-blue-50 text-blue-600" },
   "WiFi":            { icon: <FaWifi size={16} />,         color: "bg-purple-50 text-purple-600" },
-  "Parking":         { icon: <MdLocalParking size={16} />, color: "bg-gray-50 text-gray-600" },
+  "Parking":         { icon: <MdLocalParking size={16} />, color: "bg-sand text-ink/60" },
   "Security":        { icon: <FaShieldAlt size={16} />,    color: "bg-green-50 text-green-600" },
   "Generator":       { icon: <MdElectricBolt size={16} />, color: "bg-yellow-50 text-yellow-600" },
   "Air Conditioning":{ icon: <MdAir size={16} />,          color: "bg-cyan-50 text-cyan-600" },
@@ -63,10 +63,10 @@ const AccommodationDetails = () => {
   if (!place) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "#F7F8FC" }}>
-        <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-4xl">🏠</div>
-        <h2 className="text-xl font-bold text-gray-700">Accommodation not found</h2>
-        <Link href="/accommodations" className="px-6 py-2.5 rounded-xl text-sm font-black text-white"
-          style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+        <div className="w-20 h-20 rounded-full bg-sand flex items-center justify-center text-4xl">🏠</div>
+        <h2 className="text-xl font-bold text-ink/70">Accommodation not found</h2>
+        <Link href="/accommodations" className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
+          style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}>
           Browse Accommodations
         </Link>
       </div>
@@ -90,12 +90,12 @@ const AccommodationDetails = () => {
 
         {/* ── Breadcrumb ── */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-2">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link href="/" className="hover:text-[#B42225] transition-colors">Home</Link>
+          <div className="flex items-center gap-2 text-xs text-ink/40">
+            <Link href="/" className="hover:text-[#0E0E10] transition-colors">Home</Link>
             <FiChevronRight size={12} />
-            <Link href="/accommodations" className="hover:text-[#B42225] transition-colors">Accommodations</Link>
+            <Link href="/accommodations" className="hover:text-[#0E0E10] transition-colors">Accommodations</Link>
             <FiChevronRight size={12} />
-            <span className="text-gray-600 truncate max-w-37.5 md:max-w-xs">{place.name}</span>
+            <span className="text-ink/60 truncate max-w-37.5 md:max-w-xs">{place.name}</span>
           </div>
         </div>
 
@@ -118,28 +118,28 @@ const AccommodationDetails = () => {
                 {/* Actions */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
                   <button onClick={() => setWishlisted(!wishlisted)}
-                    className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-110 transition-transform">
-                    <FiHeart size={16} className={wishlisted ? "fill-red-500 text-red-500" : "text-gray-400"} />
+                    className="w-10 h-10 rounded-full bg-white shadow-soft flex items-center justify-center hover:scale-110 transition-transform">
+                    <FiHeart size={16} className={wishlisted ? "fill-red-500 text-red-500" : "text-ink/40"} />
                   </button>
                   <div className="relative">
                     <button onClick={() => setShareOpen(!shareOpen)}
-                      className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-110 transition-transform">
-                      <FiShare2 size={16} className="text-gray-500" />
+                      className="w-10 h-10 rounded-full bg-white shadow-soft flex items-center justify-center hover:scale-110 transition-transform">
+                      <FiShare2 size={16} className="text-ink/50" />
                     </button>
                     {shareOpen && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setShareOpen(false)} />
-                        <div className="absolute top-10 right-0 bg-white rounded-2xl border border-gray-100 p-3 flex flex-col gap-1 w-44 z-30"
+                        <div className="absolute top-10 right-0 bg-white rounded-2xl border border-ink/10 p-3 flex flex-col gap-1 w-44 z-30"
                           style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.15)" }}>
-                          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold px-1 mb-1">Share via</p>
+                          <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold px-1 mb-1">Share via</p>
                           {[
                             { icon: <FaWhatsapp className="text-green-500" size={15} />, label: "WhatsApp" },
                             { icon: <FaFacebook className="text-blue-600" size={15} />, label: "Facebook" },
                             { icon: <FaTwitter className="text-sky-500" size={15} />,   label: "Twitter" },
-                            { icon: <FaCopy className="text-gray-500" size={15} />,     label: "Copy Link" },
+                            { icon: <FaCopy className="text-ink/50" size={15} />,     label: "Copy Link" },
                           ].map(({ icon, label }) => (
                             <button key={label} onClick={() => setShareOpen(false)}
-                              className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                              className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-ink/5 text-sm text-ink/70 transition-colors">
                               {icon} {label}
                             </button>
                           ))}
@@ -156,12 +156,12 @@ const AccommodationDetails = () => {
                     <span className="text-white font-bold text-sm">{place.rating}</span>
                     <span className="text-white/60 text-xs">({place.reviews} reviews)</span>
                   </div>
-                  <h1 className="text-xl md:text-2xl font-black text-white leading-tight"
-                    style={{ fontFamily: "'Georgia',serif" }}>
+                  <h1 className="text-xl md:text-2xl font-semibold text-white leading-tight"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                     {place.name}
                   </h1>
                   <p className="flex items-center gap-1.5 text-white/70 text-sm mt-1">
-                    <FiMapPin size={13} className="text-[#FF8C00] shrink-0" /> {place.location}
+                    <FiMapPin size={13} className="text-[#B42225] shrink-0" /> {place.location}
                   </p>
                 </div>
               </div>
@@ -172,19 +172,19 @@ const AccommodationDetails = () => {
                 {/* Price + type */}
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs text-gray-400 mb-1 font-semibold uppercase tracking-wide">Annual Rate</p>
+                    <p className="text-xs text-ink/40 mb-1 font-semibold uppercase tracking-wide">Annual Rate</p>
                     <div className="flex items-end gap-2">
-                      <span className="text-3xl md:text-4xl font-black text-gray-900">
+                      <span className="text-3xl md:text-4xl font-semibold text-ink">
                         ₦{place.price.toLocaleString()}
                       </span>
-                      <span className="text-sm text-gray-400 mb-1">/year</span>
+                      <span className="text-sm text-ink/40 mb-1">/year</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-ink/50 mt-0.5">
                       ≈ ₦{Math.round(place.price / 12).toLocaleString()}/month
                     </p>
                   </div>
-                  <span className="px-3 py-1.5 rounded-xl text-xs font-black text-white shrink-0"
-                    style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+                  <span className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white shrink-0"
+                    style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}>
                     {place.type}
                   </span>
                 </div>
@@ -196,22 +196,22 @@ const AccommodationDetails = () => {
                     { icon: <FaBath size={18} />, label: "Bathrooms",  value: place.baths },
                     { icon: <FaStar size={18} />, label: "Rating",     value: place.rating },
                   ].map(({ icon, label, value }) => (
-                    <div key={label} className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gray-50 text-center">
-                      <span className="text-[#B42225]">{icon}</span>
-                      <span className="text-lg font-black text-gray-900">{value}</span>
-                      <span className="text-[10px] text-gray-400 font-semibold">{label}</span>
+                    <div key={label} className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-sand text-center">
+                      <span className="text-[#0E0E10]">{icon}</span>
+                      <span className="text-lg font-semibold text-ink">{value}</span>
+                      <span className="text-[10px] text-ink/40 font-semibold">{label}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 p-1 rounded-2xl bg-gray-100">
+                <div className="flex gap-1 p-1 rounded-2xl bg-sand">
                   {["overview", "amenities", "reviews"].map((tab) => (
                     <button key={tab} onClick={() => setActiveTab(tab)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-black capitalize transition-all ${
-                        activeTab === tab ? "text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${
+                        activeTab === tab ? "text-white shadow-soft" : "text-ink/50 hover:text-ink"
                       }`}
-                      style={activeTab === tab ? { background: "linear-gradient(135deg,#B42225,#FF8C00)" } : {}}>
+                      style={activeTab === tab ? { background: "linear-gradient(135deg,#0E0E10,#B42225)" } : {}}>
                       {tab}
                     </button>
                   ))}
@@ -223,7 +223,7 @@ const AccommodationDetails = () => {
                   {/* Overview */}
                   {activeTab === "overview" && (
                     <div className="space-y-3">
-                      <p className="text-sm text-gray-600 leading-relaxed">{place.description}</p>
+                      <p className="text-sm text-ink/60 leading-relaxed">{place.description}</p>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { label: "Property Type", value: place.type },
@@ -233,9 +233,9 @@ const AccommodationDetails = () => {
                           { label: "Availability",  value: "Available Now" },
                           { label: "Lease Term",    value: "12 Months" },
                         ].map(({ label, value }) => (
-                          <div key={label} className="bg-gray-50 rounded-xl p-3">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">{label}</p>
-                            <p className="text-xs font-bold text-gray-800 mt-0.5">{value}</p>
+                          <div key={label} className="bg-sand rounded-xl p-3">
+                            <p className="text-[10px] text-ink/40 uppercase tracking-wide font-bold">{label}</p>
+                            <p className="text-xs font-bold text-ink mt-0.5">{value}</p>
                           </div>
                         ))}
                       </div>
@@ -246,7 +246,7 @@ const AccommodationDetails = () => {
                   {activeTab === "amenities" && (
                     <div className="grid grid-cols-2 gap-2">
                       {place.amenities.map((a) => {
-                        const meta = amenityMap[a] || { icon: <FiCheck size={16} />, color: "bg-gray-50 text-gray-600" };
+                        const meta = amenityMap[a] || { icon: <FiCheck size={16} />, color: "bg-sand text-ink/60" };
                         return (
                           <div key={a} className={`flex items-center gap-2.5 p-3 rounded-xl ${meta.color}`}>
                             {meta.icon}
@@ -261,21 +261,21 @@ const AccommodationDetails = () => {
                   {activeTab === "reviews" && (
                     <div className="space-y-3">
                       {mockReviews.map((r) => (
-                        <div key={r.id} className="border border-gray-100 rounded-xl p-3">
+                        <div key={r.id} className="border border-ink/10 rounded-xl p-3">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0"
-                              style={{ background: "linear-gradient(135deg,#B42225,#FF8C00)" }}>
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
+                              style={{ background: "linear-gradient(135deg,#0E0E10,#B42225)" }}>
                               {r.name[0]}
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-gray-800">{r.name}</p>
+                              <p className="text-xs font-bold text-ink">{r.name}</p>
                               <div className="flex items-center gap-1">
                                 <Stars rating={r.rating} size={9} />
-                                <span className="text-[10px] text-gray-400">{r.date}</span>
+                                <span className="text-[10px] text-ink/40">{r.date}</span>
                               </div>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-600 leading-relaxed">{r.comment}</p>
+                          <p className="text-xs text-ink/60 leading-relaxed">{r.comment}</p>
                         </div>
                       ))}
                     </div>
@@ -283,16 +283,16 @@ const AccommodationDetails = () => {
                 </div>
 
                 {/* CTA buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 mt-auto pt-2 border-t border-gray-100">
+                <div className="flex flex-col sm:flex-row gap-3 mt-auto pt-2 border-t border-ink/10">
                   <button onClick={handleBook}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm text-white transition-all duration-300 ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all duration-300 ${
                       booked ? "bg-green-500 scale-95" : "hover:opacity-90 hover:scale-[1.01] active:scale-95"
                     }`}
-                    style={!booked ? { background: "linear-gradient(135deg,#B42225,#FF8C00)", boxShadow: "0 6px 20px rgba(180,34,37,0.3)" } : {}}>
+                    style={!booked ? { background: "linear-gradient(135deg,#0E0E10,#B42225)", boxShadow: "0 6px 20px rgba(180,34,37,0.3)" } : {}}>
                     {booked ? <><FiCheck size={15} /> Booking Request Sent!</> : "Book Now"}
                   </button>
                   <a href="https://wa.me/2348000000000" target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:opacity-90 shrink-0"
+                    className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:opacity-90 shrink-0"
                     style={{ background: "#25D366" }}>
                     <FaWhatsapp size={16} /> WhatsApp
                   </a>
@@ -311,12 +311,12 @@ const AccommodationDetails = () => {
               { icon: "", label: "24/7 Support",      sub: "Always available" },
               { icon: "", label: "Easy Cancellation", sub: "Flexible terms" },
             ].map(({ icon, label, sub }) => (
-              <div key={label} className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-gray-100"
+              <div key={label} className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-ink/10"
                 style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
                 <span className="text-2xl shrink-0">{icon}</span>
                 <div>
-                  <p className="text-xs font-black text-gray-800">{label}</p>
-                  <p className="text-[10px] text-gray-400">{sub}</p>
+                  <p className="text-xs font-semibold text-ink">{label}</p>
+                  <p className="text-[10px] text-ink/40">{sub}</p>
                 </div>
               </div>
             ))}
@@ -327,8 +327,8 @@ const AccommodationDetails = () => {
         {suggested.length > 0 && (
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-10">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(180deg,#FF8C00,#B42225)" }} />
-              <h2 className="text-lg md:text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia',serif" }}>
+              <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(180deg,#B42225,#0E0E10)" }} />
+              <h2 className="text-lg md:text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 Similar Accommodations
               </h2>
             </div>
@@ -343,18 +343,18 @@ const AccommodationDetails = () => {
                     <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
                       {item.type}
                     </div>
-                    <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-white/90 text-gray-900 text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                    <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-white/90 text-ink text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
                       <FaStar size={8} className="text-yellow-500" /> {item.rating}
                     </div>
                   </div>
                   <div className="p-3">
-                    <p className="text-xs font-black text-gray-900 line-clamp-1 group-hover:text-[#B42225] transition-colors">
+                    <p className="text-xs font-semibold text-ink line-clamp-1 group-hover:text-[#0E0E10] transition-colors">
                       {item.name}
                     </p>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-0.5">
-                      <FiMapPin size={9} className="text-[#B42225]" /> {item.location.split(",")[0]}
+                    <p className="text-[10px] text-ink/40 flex items-center gap-0.5 mt-0.5">
+                      <FiMapPin size={9} className="text-[#0E0E10]" /> {item.location.split(",")[0]}
                     </p>
-                    <p className="text-sm font-black text-[#B42225] mt-1.5">₦{item.price.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-[#0E0E10] mt-1.5">₦{item.price.toLocaleString()}</p>
                   </div>
                 </div>
               ))}

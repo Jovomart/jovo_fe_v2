@@ -58,7 +58,7 @@ const categories = [
     key: "all",
     label: "All Places",
     icon: <FiMapPin size={14} />,
-    color: "#B42225",
+    color: "#0E0E10",
   },
   {
     key: "academic",
@@ -157,7 +157,7 @@ const locations = [
       "Computer Lab",
       "Seminar Rooms",
     ],
-    tips: "The Computer Science department is at the back of the main SCES block — follow the signboards.",
+    tips: "The Computer Science department is at the back of the main SCES block - follow the signboards.",
     walkTime: "10 min from main gate",
   },
   {
@@ -184,7 +184,7 @@ const locations = [
       "Printing Services",
       "Jovo Pickup Station",
     ],
-    tips: "The ICT Centre has the fastest internet on campus. Bring your laptop — sockets are available. Jovo orders can be collected at the ICT desk between 9am–6pm.",
+    tips: "The ICT Centre has the fastest internet on campus. Bring your laptop - sockets are available. Jovo orders can be collected at the ICT desk between 9am–6pm.",
     phone: "+234 803 000 0001",
     walkTime: "5 min from main gate",
     badge: "🛍️ Jovo Pickup Here",
@@ -239,7 +239,7 @@ const locations = [
       "Model Workshop",
       "Project Rooms",
     ],
-    tips: "Architecture studio sessions often run late — food vendors park outside the building from 6pm onwards.",
+    tips: "Architecture studio sessions often run late - food vendors park outside the building from 6pm onwards.",
     walkTime: "12 min from main gate",
   },
 
@@ -294,7 +294,7 @@ const locations = [
       "Accommodation Office",
       "Bursary Liaison",
     ],
-    tips: "Go early — queues form quickly. Bring photocopies of ALL documents because the photocopy centre nearby closes early.",
+    tips: "Go early - queues form quickly. Bring photocopies of ALL documents because the photocopy centre nearby closes early.",
     walkTime: "6 min from main gate",
   },
   {
@@ -349,7 +349,7 @@ const locations = [
       "Emergency Bay",
       "Dental Clinic",
     ],
-    tips: "Bring your student ID and Health Insurance booklet. Most treatments are free or subsidised. Emergency services run 24/7 — call ahead for serious cases.",
+    tips: "Bring your student ID and Health Insurance booklet. Most treatments are free or subsidised. Emergency services run 24/7 - call ahead for serious cases.",
     phone: "+234 803 000 0020",
     walkTime: "10 min from main gate",
     badge: "🏥 24/7 Emergency",
@@ -379,7 +379,7 @@ const locations = [
       "ICU",
       "Pharmacy",
     ],
-    tips: "The hospital is off campus — take a campus shuttle or bike. Keep your insurance card with you always. Students get discounted rates at the outpatient clinic.",
+    tips: "The hospital is off campus - take a campus shuttle or bike. Keep your insurance card with you always. Students get discounted rates at the outpatient clinic.",
     phone: "+234 803 000 0021",
     walkTime: "15 min by bus from main gate",
   },
@@ -435,7 +435,7 @@ const locations = [
       "Cold Drinks",
       "Snacks",
     ],
-    tips: "Gets very crowded between 12pm and 2pm. The shawarma stand is one of the best on campus — get there early.",
+    tips: "Gets very crowded between 12pm and 2pm. The shawarma stand is one of the best on campus - get there early.",
     walkTime: "9 min from main gate",
   },
   {
@@ -455,7 +455,7 @@ const locations = [
     rating: 4.0,
     reviews: 287,
     facilities: ["Night Eateries", "Pepper Soup Spot", "Grills", "Cold Store"],
-    tips: "The night food spots here run until midnight during exams. The pepper soup spot is popular with both students and staff — worth the wait.",
+    tips: "The night food spots here run until midnight during exams. The pepper soup spot is popular with both students and staff - worth the wait.",
     walkTime: "9 min from main gate",
   },
 
@@ -482,7 +482,7 @@ const locations = [
       "Choir Room",
       "Counselling Room",
     ],
-    tips: "Sunday service starts at 8am. Fellowship meetings for various groups run throughout the week — check the notice board at the entrance.",
+    tips: "Sunday service starts at 8am. Fellowship meetings for various groups run throughout the week - check the notice board at the entrance.",
     walkTime: "12 min from main gate",
   },
   {
@@ -507,7 +507,7 @@ const locations = [
       "Islamic Library",
       "Women's Section",
     ],
-    tips: "Arrive 20 minutes early for Friday Jumu'ah — it gets very full. Bring your own prayer mat on busy days.",
+    tips: "Arrive 20 minutes early for Friday Jumu'ah - it gets very full. Bring your own prayer mat on busy days.",
     walkTime: "11 min from main gate",
   },
 
@@ -523,7 +523,7 @@ const locations = [
     image:
       "https://images.unsplash.com/photo-1568205631234-eb01038b53be?w=700&q=80",
     direction:
-      "From SEET, continue east along the main road. The Sports Complex is clearly visible from the road — you'll see the floodlights and track.",
+      "From SEET, continue east along the main road. The Sports Complex is clearly visible from the road - you'll see the floodlights and track.",
     landmark: "East of SEET, near the back gate",
     openHours: "Mon–Sat: 6am – 8pm",
     rating: 4.5,
@@ -536,7 +536,7 @@ const locations = [
       "Tennis Courts",
       "Gym Room",
     ],
-    tips: "The gym opens at 6am — great for early morning workouts. Bring your student ID. Interschool matches are open to spectators, check the SUG noticeboard.",
+    tips: "The gym opens at 6am - great for early morning workouts. Bring your student ID. Interschool matches are open to spectators, check the SUG noticeboard.",
     walkTime: "14 min from main gate",
   },
   {
@@ -550,7 +550,7 @@ const locations = [
     image:
       "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=700&q=80",
     direction:
-      "Located within the Sports Complex area. Enter through the main sports gate and follow signs to the pool — it's behind the multipurpose hall.",
+      "Located within the Sports Complex area. Enter through the main sports gate and follow signs to the pool - it's behind the multipurpose hall.",
     landmark: "Behind Sports Multipurpose Hall",
     openHours: "Tue, Thu, Sat: 9am – 5pm",
     rating: 4.2,
@@ -561,7 +561,7 @@ const locations = [
       "Lockers",
       "Lifeguard Station",
     ],
-    tips: "The pool is only open 3 days a week — plan accordingly. Swimwear is mandatory. Lessons can be arranged with the sports department.",
+    tips: "The pool is only open 3 days a week - plan accordingly. Swimwear is mandatory. Lessons can be arranged with the sports department.",
     walkTime: "15 min from main gate",
   },
 
@@ -573,7 +573,7 @@ const locations = [
     shortName: "ATMs",
     zone: "Near Senate Building",
     description:
-      "A cluster of ATMs from multiple Nigerian banks including GTBank, First Bank, UBA, and Access Bank — the most accessible banking point on campus.",
+      "A cluster of ATMs from multiple Nigerian banks including GTBank, First Bank, UBA, and Access Bank - the most accessible banking point on campus.",
     image:
       "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=700&q=80",
     direction:
@@ -635,7 +635,7 @@ const locations = [
       "Emergency Contact",
       "Parking Control",
     ],
-    tips: "Always carry your student ID — security checks are routine. Report lost items immediately as they're logged and kept for collection.",
+    tips: "Always carry your student ID - security checks are routine. Report lost items immediately as they're logged and kept for collection.",
     phone: "+234 803 000 0030",
     walkTime: "At main gate",
   },
@@ -652,7 +652,7 @@ const locations = [
     image:
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80",
     direction:
-      "From the main gate, take the road to the left past the medical centre. Follow the signs for 'Female Hostel' — it's the large compound in the south campus.",
+      "From the main gate, take the road to the left past the medical centre. Follow the signs for 'Female Hostel' - it's the large compound in the south campus.",
     landmark: "South of Medical Centre",
     openHours: "Gates close at 10pm",
     rating: 3.9,
@@ -664,7 +664,7 @@ const locations = [
       "Security",
       "Water Supply",
     ],
-    tips: "Hostel allocation is through the accommodation office in Student Affairs. Apply early — spaces fill fast. Gates close at 10pm sharp.",
+    tips: "Hostel allocation is through the accommodation office in Student Affairs. Apply early - spaces fill fast. Gates close at 10pm sharp.",
     walkTime: "12 min from main gate",
   },
   {
@@ -690,7 +690,7 @@ const locations = [
       "Security",
       "Water Supply",
     ],
-    tips: "Power cuts are common — bring a rechargeable lamp and power bank. Many students fix their own inverters. Security is present but lock your room always.",
+    tips: "Power cuts are common - bring a rechargeable lamp and power bank. Many students fix their own inverters. Security is present but lock your room always.",
     walkTime: "16 min from main gate",
   },
 ];
@@ -799,7 +799,7 @@ const getCatColor = (cat) => {
     services: "#9333EA",
     hostel: "#B45309",
   };
-  return map[cat] || "#B42225";
+  return map[cat] || "#0E0E10";
 };
 
 const getCatIcon = (cat) => {
@@ -836,7 +836,7 @@ const LocationCard = ({ loc, onBookmark, bookmarked, onSelect }) => {
 
         {/* Category badge */}
         <div
-          className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-black px-2.5 py-1.5 rounded-full"
+          className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[10px] font-semibold px-2.5 py-1.5 rounded-full"
           style={{ background: color }}
         >
           {getCatIcon(loc.category)}
@@ -845,7 +845,7 @@ const LocationCard = ({ loc, onBookmark, bookmarked, onSelect }) => {
 
         {/* Jovo badge */}
         {loc.badge && (
-          <div className="absolute top-3 right-10 bg-[#B42225] text-white text-[9px] font-black px-2 py-1 rounded-full">
+          <div className="absolute top-3 right-10 bg-[#0E0E10] text-white text-[9px] font-semibold px-2 py-1 rounded-full">
             {loc.badge}
           </div>
         )}
@@ -875,24 +875,24 @@ const LocationCard = ({ loc, onBookmark, bookmarked, onSelect }) => {
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <h3
-            className="font-black text-gray-900 text-sm md:text-base leading-snug group-hover:text-[#B42225] transition-colors"
-            style={{ fontFamily: "'Georgia', serif" }}
+            className="font-semibold text-ink text-sm md:text-base leading-snug group-hover:text-[#0E0E10] transition-colors"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}
           >
             {loc.name}
           </h3>
           {loc.popular && (
-            <span className="shrink-0 text-[9px] font-black bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full border border-orange-100">
+            <span className="shrink-0 text-[9px] font-semibold bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full border border-orange-100">
               🔥 POPULAR
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-1.5 mb-2">
-          <FiMapPin size={10} className="text-gray-400 shrink-0" />
-          <span className="text-[11px] text-gray-400 truncate">{loc.zone}</span>
+          <FiMapPin size={10} className="text-ink/40 shrink-0" />
+          <span className="text-[11px] text-ink/40 truncate">{loc.zone}</span>
         </div>
 
-        <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+        <p className="text-xs text-ink/50 line-clamp-2 mb-3">
           {loc.description}
         </p>
 
@@ -908,12 +908,12 @@ const LocationCard = ({ loc, onBookmark, bookmarked, onSelect }) => {
                 }}
               />
             ))}
-            <span className="text-[11px] text-gray-600 font-bold ml-1">
+            <span className="text-[11px] text-ink/60 font-bold ml-1">
               {loc.rating}
             </span>
-            <span className="text-[11px] text-gray-400">({loc.reviews})</span>
+            <span className="text-[11px] text-ink/40">({loc.reviews})</span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+          <div className="flex items-center gap-1 text-[10px] text-ink/40">
             <FiClock size={9} />
             <span className="truncate max-w-30">
               {loc.openHours.split("|")[0]}
@@ -970,20 +970,20 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-center gap-2 mb-2">
               <span
-                className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full text-white"
+                className="text-[10px] font-semibold uppercase px-2.5 py-1 rounded-full text-white"
                 style={{ background: color }}
               >
                 {loc.category}
               </span>
               {loc.badge && (
-                <span className="text-[10px] font-black bg-[#B42225] text-white px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold bg-[#0E0E10] text-white px-2 py-0.5 rounded-full">
                   {loc.badge}
                 </span>
               )}
             </div>
             <h2
-              className="text-xl font-black text-white leading-tight"
-              style={{ fontFamily: "'Georgia', serif" }}
+              className="text-xl font-semibold text-white leading-tight"
+              style={{ fontFamily: "'Instrument Sans',sans-serif" }}
             >
               {loc.name}
             </h2>
@@ -997,7 +997,7 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-gray-50 rounded-2xl p-3 text-center">
+            <div className="bg-sand rounded-2xl p-3 text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <FaStar
@@ -1010,38 +1010,38 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
                   />
                 ))}
               </div>
-              <p className="text-sm font-black text-gray-900">{loc.rating}</p>
-              <p className="text-[10px] text-gray-400">{loc.reviews} reviews</p>
+              <p className="text-sm font-semibold text-ink">{loc.rating}</p>
+              <p className="text-[10px] text-ink/40">{loc.reviews} reviews</p>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-3 text-center">
-              <FiClock size={16} className="mx-auto mb-1 text-gray-500" />
-              <p className="text-[11px] font-bold text-gray-700 leading-tight">
+            <div className="bg-sand rounded-2xl p-3 text-center">
+              <FiClock size={16} className="mx-auto mb-1 text-ink/50" />
+              <p className="text-[11px] font-bold text-ink/70 leading-tight">
                 {loc.openHours.split("|")[0].trim()}
               </p>
-              <p className="text-[10px] text-gray-400">Hours</p>
+              <p className="text-[10px] text-ink/40">Hours</p>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-3 text-center">
-              <FiNavigation size={16} className="mx-auto mb-1 text-gray-500" />
-              <p className="text-[11px] font-bold text-gray-700">
+            <div className="bg-sand rounded-2xl p-3 text-center">
+              <FiNavigation size={16} className="mx-auto mb-1 text-ink/50" />
+              <p className="text-[11px] font-bold text-ink/70">
                 {loc.walkTime}
               </p>
-              <p className="text-[10px] text-gray-400">Walk time</p>
+              <p className="text-[10px] text-ink/40">Walk time</p>
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-ink/40 mb-2">
               About
             </h4>
-            <p className="text-sm text-gray-600 leading-relaxed">
+            <p className="text-sm text-ink/60 leading-relaxed">
               {loc.description}
             </p>
           </div>
 
           {/* Facilities */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-ink/40 mb-3">
               Facilities
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -1058,7 +1058,7 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
           </div>
 
           {/* Directions */}
-          <div className="rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="rounded-2xl border border-ink/10 overflow-hidden">
             <button
               className="w-full flex items-center justify-between p-4"
               onClick={() => setDirOpen(!dirOpen)}
@@ -1070,19 +1070,19 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
                 >
                   <FiNavigation size={14} />
                 </div>
-                <h4 className="text-sm font-black text-gray-900">
+                <h4 className="text-sm font-semibold text-ink">
                   How to Get There
                 </h4>
               </div>
               {dirOpen ? (
-                <FiChevronUp size={16} className="text-gray-400" />
+                <FiChevronUp size={16} className="text-ink/40" />
               ) : (
-                <FiChevronDown size={16} className="text-gray-400" />
+                <FiChevronDown size={16} className="text-ink/40" />
               )}
             </button>
             {dirOpen && (
-              <div className="px-4 pb-4 space-y-2 border-t border-gray-100">
-                <p className="text-xs text-gray-500 pt-3 leading-relaxed">
+              <div className="px-4 pb-4 space-y-2 border-t border-ink/10">
+                <p className="text-xs text-ink/50 pt-3 leading-relaxed">
                   {loc.direction}
                 </p>
                 {loc.landmark && (
@@ -1102,7 +1102,7 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
             <div className="flex gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4">
               <span className="text-lg shrink-0">💡</span>
               <div>
-                <p className="text-xs font-black text-amber-800 mb-1">
+                <p className="text-xs font-semibold text-amber-800 mb-1">
                   Pro Tip
                 </p>
                 <p className="text-xs text-amber-700 leading-relaxed">
@@ -1127,7 +1127,7 @@ const LocationModal = ({ loc, onClose, onBookmark, bookmarked }) => {
             href={`https://maps.google.com/?q=FUTO+${encodeURIComponent(loc.name)}+Owerri`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm border-2 text-gray-700 hover:border-gray-400 transition"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm border-2 text-ink/70 hover:border-gray-400 transition"
             style={{ borderColor: "#E5E7EB" }}
           >
             <FiExternalLink size={15} /> Open in Google Maps
@@ -1226,7 +1226,7 @@ const CampusGuidePage = () => {
           <div
             className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full opacity-15 pointer-events-none"
             style={{
-              background: "radial-gradient(circle,#B42225,transparent 70%)",
+              background: "radial-gradient(circle,#0E0E10,transparent 70%)",
             }}
           />
 
@@ -1257,9 +1257,9 @@ const CampusGuidePage = () => {
             </div>
 
             <h1
-              className="text-4xl md:text-6xl font-black text-white leading-tight mb-4"
+              className="text-4xl md:text-6xl font-semibold text-white leading-tight mb-4"
               style={{
-                fontFamily: "'Georgia', serif",
+                fontFamily: "'Instrument Sans',sans-serif",
                 textShadow: "0 4px 30px rgba(124,58,237,0.4)",
               }}
             >
@@ -1277,7 +1277,7 @@ const CampusGuidePage = () => {
             </h1>
             <p className="text-white/50 text-sm md:text-base max-w-md mb-8">
               Every building, office, eatery, and facility at Federal University
-              of Technology, Owerri — with directions, tips, and more.
+              of Technology, Owerri - with directions, tips, and more.
             </p>
 
             {/* Quick facts */}
@@ -1314,7 +1314,7 @@ const CampusGuidePage = () => {
 
         {/* ══════════ STICKY SEARCH + FILTERS ══════════ */}
         <div
-          className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100"
+          className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-ink/10"
           style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
@@ -1325,19 +1325,19 @@ const CampusGuidePage = () => {
                   className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 transition-all duration-200 ${
                     searchFocused
                       ? "border-purple-500 shadow-[0_0_0_3px_rgba(124,58,237,0.1)] bg-white"
-                      : "border-gray-200 bg-gray-50"
+                      : "border-ink/10 bg-sand"
                   }`}
                 >
                   <FiSearch
                     size={15}
                     className={
-                      searchFocused ? "text-purple-500" : "text-gray-400"
+                      searchFocused ? "text-purple-500" : "text-ink/40"
                     }
                   />
                   <input
                     type="text"
                     placeholder="Search locations, buildings, services..."
-                    className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400 text-gray-700"
+                    className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400 text-ink/70"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setSearchFocused(true)}
@@ -1345,7 +1345,7 @@ const CampusGuidePage = () => {
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="text-gray-400 hover:text-gray-600 transition"
+                      className="text-ink/40 hover:text-ink transition"
                     >
                       <FiX size={14} />
                     </button>
@@ -1355,12 +1355,12 @@ const CampusGuidePage = () => {
                 {/* Search dropdown */}
                 {searchFocused && searchQuery.trim().length > 0 && (
                   <div
-                    className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-gray-100 overflow-hidden z-50"
+                    className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-ink/10 overflow-hidden z-50"
                     style={{ boxShadow: "0 20px 50px rgba(0,0,0,0.15)" }}
                   >
                     {searchResults.length > 0 ? (
                       <>
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold px-4 pt-3 pb-1">
+                        <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold px-4 pt-3 pb-1">
                           {searchResults.length} location
                           {searchResults.length > 1 ? "s" : ""} found
                         </p>
@@ -1372,7 +1372,7 @@ const CampusGuidePage = () => {
                               setSearchQuery("");
                               setSearchFocused(false);
                             }}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-ink/5 cursor-pointer transition-colors"
                           >
                             <img
                               src={l.image}
@@ -1380,7 +1380,7 @@ const CampusGuidePage = () => {
                               className="w-10 h-10 rounded-xl object-cover shrink-0"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-gray-800">
+                              <p className="text-xs font-bold text-ink">
                                 {l.name}
                               </p>
                               <div className="flex items-center gap-2 mt-0.5">
@@ -1390,7 +1390,7 @@ const CampusGuidePage = () => {
                                 >
                                   {l.category}
                                 </span>
-                                <span className="text-[9px] text-gray-400 flex items-center gap-0.5">
+                                <span className="text-[9px] text-ink/40 flex items-center gap-0.5">
                                   <FiClock size={8} />
                                   {l.walkTime}
                                 </span>
@@ -1398,7 +1398,7 @@ const CampusGuidePage = () => {
                             </div>
                             <FiChevronRight
                               size={13}
-                              className="text-gray-300 shrink-0"
+                              className="text-ink/25 shrink-0"
                             />
                           </div>
                         ))}
@@ -1407,12 +1407,12 @@ const CampusGuidePage = () => {
                       <div className="px-4 py-6 text-center">
                         <FiSearch
                           size={24}
-                          className="text-gray-300 mx-auto mb-2"
+                          className="text-ink/25 mx-auto mb-2"
                         />
-                        <p className="text-sm font-bold text-gray-500">
+                        <p className="text-sm font-bold text-ink/50">
                           No results for "{searchQuery}"
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-ink/40 mt-1">
                           Try "Library", "Cafeteria", or "Medical"
                         </p>
                       </div>
@@ -1436,8 +1436,8 @@ const CampusGuidePage = () => {
                     }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                       activeCategory === key && !showBookmarks
-                        ? "text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        ? "text-white shadow-soft"
+                        : "bg-sand text-ink/60 hover:bg-ink/10"
                     }`}
                     style={
                       activeCategory === key && !showBookmarks
@@ -1457,7 +1457,7 @@ const CampusGuidePage = () => {
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                     showBookmarks
                       ? "bg-yellow-400 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-sand text-ink/60 hover:bg-ink/10"
                   }`}
                 >
                   <FaBookmark size={11} /> Saved ({bookmarks.length})
@@ -1474,12 +1474,12 @@ const CampusGuidePage = () => {
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-1 h-7 rounded-full bg-purple-500" />
                 <h2
-                  className="text-xl font-black text-gray-900"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-xl font-semibold text-ink"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   Results for "{searchQuery}"
                 </h2>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-ink/40">
                   ({searchResults.length} found)
                 </span>
               </div>
@@ -1498,11 +1498,11 @@ const CampusGuidePage = () => {
                 </div>
               ) : (
                 <div className="text-center py-20">
-                  <FiMapPin size={48} className="text-gray-300 mx-auto mb-4" />
-                  <p className="text-lg font-bold text-gray-500">
+                  <FiMapPin size={48} className="text-ink/25 mx-auto mb-4" />
+                  <p className="text-lg font-bold text-ink/50">
                     No locations found
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-ink/40 mt-1">
                     Try "ICT", "Library", "Cafeteria", or "Medical"
                   </p>
                 </div>
@@ -1514,8 +1514,8 @@ const CampusGuidePage = () => {
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-1 h-7 rounded-full bg-yellow-400" />
                 <h2
-                  className="text-xl font-black text-gray-900"
-                  style={{ fontFamily: "'Georgia', serif" }}
+                  className="text-xl font-semibold text-ink"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                 >
                   Saved Locations
                 </h2>
@@ -1538,12 +1538,12 @@ const CampusGuidePage = () => {
                 <div className="text-center py-20">
                   <FaRegBookmark
                     size={48}
-                    className="text-gray-300 mx-auto mb-4"
+                    className="text-ink/25 mx-auto mb-4"
                   />
-                  <p className="text-lg font-bold text-gray-500">
+                  <p className="text-lg font-bold text-ink/50">
                     No saved locations
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-ink/40 mt-1">
                     Bookmark locations to find them quickly
                   </p>
                 </div>
@@ -1558,11 +1558,11 @@ const CampusGuidePage = () => {
                   <div className="flex items-center gap-3 mb-5">
                     <div
                       className="w-1 h-7 rounded-full"
-                      style={{ background: "linear-gradient(#B42225,#7C3AED)" }}
+                      style={{ background: "linear-gradient(#0E0E10,#7C3AED)" }}
                     />
                     <h2
-                      className="text-xl font-black text-gray-900"
-                      style={{ fontFamily: "'Georgia', serif" }}
+                      className="text-xl font-semibold text-ink"
+                      style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                     >
                       Must-Know Locations
                     </h2>
@@ -1587,15 +1587,15 @@ const CampusGuidePage = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-1 h-7 rounded-full bg-gray-300" />
                     <h2
-                      className="text-xl font-black text-gray-900"
-                      style={{ fontFamily: "'Georgia', serif" }}
+                      className="text-xl font-semibold text-ink"
+                      style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                     >
                       {activeCategory === "all"
                         ? "All Locations"
                         : categories.find((c) => c.key === activeCategory)
                             ?.label}
                     </h2>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-ink/40">
                       ({displayLocations.length})
                     </span>
                   </div>
@@ -1632,8 +1632,8 @@ const CampusGuidePage = () => {
                         <FiNavigation size={16} className="text-white" />
                       </div>
                       <h2
-                        className="text-xl font-black text-gray-900"
-                        style={{ fontFamily: "'Georgia', serif" }}
+                        className="text-xl font-semibold text-ink"
+                        style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                       >
                         Popular Routes
                       </h2>
@@ -1653,26 +1653,26 @@ const CampusGuidePage = () => {
                     ).map((route, i) => (
                       <div
                         key={i}
-                        className="bg-gray-50 rounded-2xl p-4 hover:bg-blue-50 transition-colors"
+                        className="bg-sand rounded-2xl p-4 hover:bg-blue-50 transition-colors"
                       >
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-7 h-7 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
                             <FiNavigation size={12} className="text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] text-gray-400">From</p>
-                            <p className="text-xs font-black text-gray-800 truncate">
+                            <p className="text-[10px] text-ink/40">From</p>
+                            <p className="text-xs font-semibold text-ink truncate">
                               {route.from}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-7 h-7 rounded-xl bg-[#B42225] flex items-center justify-center shrink-0">
+                          <div className="w-7 h-7 rounded-xl bg-[#0E0E10] flex items-center justify-center shrink-0">
                             <FiMapPin size={12} className="text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] text-gray-400">To</p>
-                            <p className="text-xs font-black text-gray-800 truncate">
+                            <p className="text-[10px] text-ink/40">To</p>
+                            <p className="text-xs font-semibold text-ink truncate">
                               {route.to}
                             </p>
                           </div>
@@ -1686,10 +1686,10 @@ const CampusGuidePage = () => {
                         <div className="space-y-1">
                           {route.steps.map((step, si) => (
                             <div key={si} className="flex items-start gap-2">
-                              <span className="w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                              <span className="w-4 h-4 rounded-full bg-ink/10 text-ink/50 text-[9px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
                                 {si + 1}
                               </span>
-                              <p className="text-[10px] text-gray-600 leading-snug">
+                              <p className="text-[10px] text-ink/60 leading-snug">
                                 {step}
                               </p>
                             </div>
@@ -1713,8 +1713,8 @@ const CampusGuidePage = () => {
                       <FiInfo size={16} className="text-white" />
                     </div>
                     <h2
-                      className="text-xl font-black text-gray-900"
-                      style={{ fontFamily: "'Georgia', serif" }}
+                      className="text-xl font-semibold text-ink"
+                      style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                     >
                       Survival Tips for FUTO
                     </h2>
@@ -1723,14 +1723,14 @@ const CampusGuidePage = () => {
                     {campusTips.map((tip, i) => (
                       <div
                         key={i}
-                        className="bg-white rounded-2xl p-5 hover:shadow-lg transition-shadow"
+                        className="bg-white rounded-2xl p-5 hover:shadow-lift transition-shadow"
                         style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}
                       >
                         <span className="text-2xl mb-3 block">{tip.icon}</span>
-                        <h4 className="text-sm font-black text-gray-900 mb-2">
+                        <h4 className="text-sm font-semibold text-ink mb-2">
                           {tip.title}
                         </h4>
-                        <p className="text-xs text-gray-500 leading-relaxed">
+                        <p className="text-xs text-ink/50 leading-relaxed">
                           {tip.tip}
                         </p>
                       </div>
@@ -1745,7 +1745,7 @@ const CampusGuidePage = () => {
                   className="rounded-3xl p-6 md:p-8 text-white relative overflow-hidden"
                   style={{
                     background:
-                      "linear-gradient(135deg,#0a0a0a 0%,#1a0a2e 50%,#B42225 100%)",
+                      "linear-gradient(135deg,#0a0a0a 0%,#1a0a2e 50%,#0E0E10 100%)",
                   }}
                 >
                   <div
@@ -1760,8 +1760,8 @@ const CampusGuidePage = () => {
                     <div className="flex items-center gap-3 mb-5">
                       <FiAlertCircle size={22} className="text-red-300" />
                       <h2
-                        className="text-lg font-black"
-                        style={{ fontFamily: "'Georgia', serif" }}
+                        className="text-lg font-semibold"
+                        style={{ fontFamily: "'Instrument Sans',sans-serif" }}
                       >
                         Emergency Contacts
                       </h2>
@@ -1799,7 +1799,7 @@ const CampusGuidePage = () => {
                           className={`flex flex-col gap-2 p-4 rounded-2xl border backdrop-blur-sm hover:scale-105 transition-transform ${color}`}
                         >
                           <span className="text-white/70">{icon}</span>
-                          <p className="text-white font-black text-sm">
+                          <p className="text-white font-semibold text-sm">
                             {label}
                           </p>
                           <p className="text-white/60 text-xs">{phone}</p>

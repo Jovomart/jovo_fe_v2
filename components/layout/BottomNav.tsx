@@ -30,17 +30,17 @@ const NavItem = ({ icon: Icon, label, path, active, onClick, badge }: {
     <div className="relative">
       <Icon
         size={22}
-        className={`transition-all duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
+        className={`transition-all duration-200 ${active ? "text-[#0E0E10]" : "text-ink/50"}`}
       />
       {badge && (
-        <span className="absolute -top-2 -right-2.5 bg-[#B42225] text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-4 text-center leading-none">
+        <span className="absolute -top-2 -right-2.5 bg-[#0E0E10] text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-4 text-center leading-none">
           {badge}
         </span>
       )}
     </div>
 
     <span
-      className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${active ? "text-[#B42225]" : "text-gray-500"}`}
+      className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${active ? "text-[#0E0E10]" : "text-ink/50"}`}
     >
       {label}
     </span>
@@ -49,7 +49,7 @@ const NavItem = ({ icon: Icon, label, path, active, onClick, badge }: {
     {active && (
       <motion.div
         layoutId="activeIndicator"
-        className="absolute -top-1 w-6 h-0.5 bg-gradient-to-r from-[#B42225] to-[#FF8C00] rounded-full"
+        className="absolute -top-1 w-6 h-0.5 bg-gradient-to-r from-[#0E0E10] to-[#B42225] rounded-full"
         initial={{ opacity: 0, width: 0 }}
         animate={{ opacity: 1, width: 24 }}
         exit={{ opacity: 0, width: 0 }}
@@ -152,9 +152,9 @@ export default function BottomNavbar() {
                   }}
                   onClick={() => router.push("/cart")}
                   aria-label="Shopping Cart"
-                  className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg origin-center"
+                  className="w-14 h-14 rounded-full flex items-center justify-center shadow-lift origin-center"
                   style={{
-                    background: "linear-gradient(135deg, #B42225 0%, #c4391c 45%, #FF8C00 100%)",
+                    background: "linear-gradient(135deg, #0E0E10 0%, #B42225 45%, #B42225 100%)",
                     boxShadow: "0 4px 15px rgba(180,34,37,0.4), 0 2px 5px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -173,7 +173,7 @@ export default function BottomNavbar() {
                 </motion.button>
                 
                 {/* Small label below FAB */}
-                <div className="absolute left-1/2 -translate-x-1/2 text-[8px] font-bold tracking-wider text-[#B42225] whitespace-nowrap mt-1">
+                <div className="absolute left-1/2 -translate-x-1/2 text-[8px] font-bold tracking-wider text-[#0E0E10] whitespace-nowrap mt-1">
                   CART
                 </div>
               </div>

@@ -71,7 +71,7 @@ const SuppliesSection = () => {
               <div
                 key={category.id}
                 onClick={() => navigate(category.route)}
-                className="relative group rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.03] transition duration-500 cursor-pointer"
+                className="relative group rounded-2xl overflow-hidden shadow-lift hover:scale-[1.03] transition duration-500 cursor-pointer"
               >
                 {/* IMAGE */}
                 <img
@@ -88,7 +88,7 @@ const SuppliesSection = () => {
                   <h3 className="text-sm md:text-lg font-bold text-white">
                     {category.name}
                   </h3>
-                  <p className="text-xs md:text-sm text-gray-300 mt-1">
+                  <p className="text-xs md:text-sm text-ink/25 mt-1">
                     Explore top deals →
                   </p>
                 </div>

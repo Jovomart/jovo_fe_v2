@@ -11,7 +11,7 @@ import Footer from "@/components/layout/Footer";
 // ─── Sponsored Star Icon ──────────────────────────────────────────────────
 const SponsoredBadge = () => (
   <div
-    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black"
+    className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-semibold"
     style={{
       background: "linear-gradient(135deg, #854d0e, #ca8a04, #fde68a)",
       color: "#1c0a00",
@@ -58,7 +58,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
         {discount && (
           <div
-            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-black text-white"
+            className="absolute bottom-3 left-3 flex items-center gap-0.5 px-2 py-1 rounded-full text-[10px] font-semibold text-white"
             style={{ background: "linear-gradient(135deg,#111,#333)" }}
           >
             <FiZap size={9} /> -{discount}%
@@ -68,17 +68,17 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
         {/* Wishlist */}
         <button
           onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-soft transition-transform duration-200 hover:scale-110"
         >
           {wishlisted
             ? <FaHeart className="text-red-500" size={13} />
-            : <FiHeart className="text-gray-400" size={13} />}
+            : <FiHeart className="text-ink/40" size={13} />}
         </button>
 
         {/* Slide-up CTA */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-colors duration-200"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold shadow-lift transition-colors duration-200"
             style={{ background: "linear-gradient(135deg,#ca8a04,#854d0e)", color: "white" }}
           >
             <FiShoppingBag size={13} /> Add to Cart
@@ -88,15 +88,15 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
 
       {/* Info */}
       <div className="p-3.5">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2 leading-snug">
           {product.name}
         </h3>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-sm md:text-base font-black text-gray-900">
+          <span className="text-sm md:text-base font-semibold text-ink">
             ₦{product.price.toLocaleString()}
           </span>
           {product.oldPrice && (
-            <span className="text-[11px] text-gray-400 line-through">
+            <span className="text-[11px] text-ink/40 line-through">
               ₦{product.oldPrice.toLocaleString()}
             </span>
           )}
@@ -112,7 +112,7 @@ const ProductCard = ({ product, wishlisted, onWishlist }) => {
               style={s <= 4 ? { fill: "#facc15" } : {}}
             />
           ))}
-          <span className="text-[10px] text-gray-400 ml-1">4.0 (200+)</span>
+          <span className="text-[10px] text-ink/40 ml-1">4.0 (200+)</span>
         </div>
       </div>
     </div>
@@ -138,8 +138,8 @@ const SuggestedCard = ({ product }) => {
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       <div className="p-3">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
-        <p className="text-gray-900 font-black mt-1.5 text-sm md:text-base">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2">{product.name}</h3>
+        <p className="text-ink font-semibold mt-1.5 text-sm md:text-base">
           ₦{product.price.toLocaleString()}
         </p>
       </div>
@@ -208,15 +208,15 @@ const SponsoredProductsPage = () => {
                 </div>
                 <div>
                   <h1
-                    className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(202,138,4,0.3)" }}
+                    className="text-4xl md:text-6xl font-semibold text-white leading-none tracking-tight"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(202,138,4,0.3)" }}
                   >
                     FEATURED
                   </h1>
                   <h1
-                    className="text-4xl md:text-6xl font-black leading-none tracking-tight"
+                    className="text-4xl md:text-6xl font-semibold leading-none tracking-tight"
                     style={{
-                      fontFamily: "'Georgia', serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       background: "linear-gradient(90deg,#ca8a04,#fde68a,#ca8a04)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
@@ -250,7 +250,7 @@ const SponsoredProductsPage = () => {
                 >
                   <span className="text-yellow-400">{icon}</span>
                   <div>
-                    <p className="text-white font-black text-sm leading-none">{val}</p>
+                    <p className="text-white font-semibold text-sm leading-none">{val}</p>
                     <p className="text-white/40 text-[10px] mt-0.5">{label}</p>
                   </div>
                 </div>
@@ -270,8 +270,8 @@ const SponsoredProductsPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full"
             style={{ background: "linear-gradient(180deg,#fde68a,#ca8a04)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">Sponsored Products</h2>
-          <span className="hidden md:inline text-sm text-gray-400 font-medium">({sponsored.length} items)</span>
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">Sponsored Products</h2>
+          <span className="hidden md:inline text-sm text-ink/40 font-medium">({sponsored.length} items)</span>
         </div>
 
         {sponsored.length > 0 ? (
@@ -286,7 +286,7 @@ const SponsoredProductsPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-400">
+          <div className="text-center py-20 text-ink/40">
             <FaGem size={48} className="mx-auto mb-4 opacity-20" />
             <p className="font-semibold">No sponsored products right now.</p>
           </div>
@@ -311,13 +311,13 @@ const SponsoredProductsPage = () => {
             <p className="text-yellow-400/70 text-xs font-semibold tracking-widest uppercase mb-1">
               Grow your brand
             </p>
-            <h3 className="text-white text-xl md:text-2xl font-black">Advertise on Jovo</h3>
+            <h3 className="text-white text-xl md:text-2xl font-semibold">Advertise on Jovo</h3>
             <p className="text-white/45 text-sm mt-1">
               Put your products in front of millions. Premium placement available.
             </p>
           </div>
           <Link href="/advertise"
-            className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-lg hover:scale-105"
+            className="relative z-10 shrink-0 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-lift hover:scale-105"
             style={{ background: "linear-gradient(135deg,#ca8a04,#854d0e)", color: "white" }}
           >
             Get Featured →
@@ -330,7 +330,7 @@ const SponsoredProductsPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full"
             style={{ background: "linear-gradient(180deg,#fde68a,#ca8a04)" }} />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">You May Also Like</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">You May Also Like</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {suggestedProducts.map((product) => (

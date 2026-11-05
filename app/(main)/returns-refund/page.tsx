@@ -24,7 +24,7 @@ import Footer from "@/components/layout/Footer";
 ───────────────────────────────────────────────────────────── */
 const returnSteps = [
   {
-    number: "01", color: "#B42225", icon: <FaBoxOpen size={20} />,
+    number: "01", color: "#0E0E10", icon: <FaBoxOpen size={20} />,
     title: "Request a Return",
     subtitle: "Within 7 days of delivery",
     desc: "Go to Profile → My Orders, select the item, and click 'Request Return'. Fill in your reason and upload a photo if the item is damaged or incorrect.",
@@ -48,7 +48,7 @@ const returnSteps = [
     number: "04", color: "#059669", icon: <MdPayment size={20} />,
     title: "Receive Your Refund",
     subtitle: "3–5 business days",
-    desc: "Approved refunds are credited back to your original payment method — card, bank transfer, or Jovo Wallet. Wallet refunds are instant once approved.",
+    desc: "Approved refunds are credited back to your original payment method - card, bank transfer, or Jovo Wallet. Wallet refunds are instant once approved.",
     details: ["Original payment method credited", "Jovo Wallet refunds: instant", "Bank/card: 3–5 business days", "Email confirmation with receipt"],
   },
 ];
@@ -77,7 +77,7 @@ const faqData = [
   },
   {
     q: "Do I have to pay for return shipping?",
-    a: "No. For all approved returns — whether due to defects, wrong items, or seller error — Jovo provides a free pickup from your location. Simply schedule the pickup through your order page and our logistics partner will collect the item.",
+    a: "No. For all approved returns - whether due to defects, wrong items, or seller error - Jovo provides a free pickup from your location. Simply schedule the pickup through your order page and our logistics partner will collect the item.",
   },
   {
     q: "How will I know when my refund is processed?",
@@ -85,7 +85,7 @@ const faqData = [
   },
   {
     q: "Can I exchange an item instead of getting a refund?",
-    a: "Jovo doesn't currently offer direct exchanges. To swap a product, return the original and place a new order. Once your refund is processed, the funds will be available to use immediately — or we can credit your Jovo Wallet for instant access.",
+    a: "Jovo doesn't currently offer direct exchanges. To swap a product, return the original and place a new order. Once your refund is processed, the funds will be available to use immediately - or we can credit your Jovo Wallet for instant access.",
   },
   {
     q: "What if I received a damaged or wrong item?",
@@ -113,7 +113,7 @@ const StepCard = ({ step, isLast }) => (
       <div className="absolute left-6.5 top-14 w-0.5 h-[calc(100%+4px)] bg-linear-to-b from-gray-200 to-transparent z-0" />
     )}
     <div className="relative z-10 shrink-0">
-      <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg"
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-semibold text-lg shadow-lift"
         style={{ background: `linear-gradient(135deg,${step.color},${step.color}bb)`, boxShadow: `0 8px 24px ${step.color}33` }}>
         {step.number}
       </div>
@@ -123,16 +123,16 @@ const StepCard = ({ step, isLast }) => (
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
+            <span className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
               style={{ background: step.color }}>
               Step {step.number}
             </span>
-            <span className="text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="text-[10px] text-ink/40 flex items-center gap-1">
               <FiClock size={9} /> {step.subtitle}
             </span>
           </div>
-          <h3 className="text-base md:text-lg font-black text-gray-900 leading-snug"
-            style={{ fontFamily: "'Georgia', serif" }}>
+          <h3 className="text-base md:text-lg font-semibold text-ink leading-snug"
+            style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
             {step.title}
           </h3>
         </div>
@@ -141,10 +141,10 @@ const StepCard = ({ step, isLast }) => (
           {step.icon}
         </div>
       </div>
-      <p className="text-sm text-gray-500 leading-relaxed mb-4">{step.desc}</p>
+      <p className="text-sm text-ink/50 leading-relaxed mb-4">{step.desc}</p>
       <div className="grid sm:grid-cols-2 gap-2">
         {step.details.map((d) => (
-          <div key={d} className="flex items-center gap-2 text-xs text-gray-600">
+          <div key={d} className="flex items-center gap-2 text-xs text-ink/60">
             <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
               style={{ background: step.color + "18" }}>
               <FiCheck size={9} style={{ color: step.color }} />
@@ -199,20 +199,20 @@ const ReturnsRefund = () => {
               </div>
               <div>
                 <div className="flex items-center gap-3 flex-wrap mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300/70 px-3 py-1.5 rounded-full"
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-emerald-300/70 px-3 py-1.5 rounded-full"
                     style={{ background: "rgba(5,150,105,0.2)", border: "1px solid rgba(52,211,153,0.2)" }}>
                     Customer Promise
                   </span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight"
-                  style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(5,150,105,0.4)" }}>
+                <h1 className="text-4xl md:text-5xl font-semibold text-white mb-4 leading-tight"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(5,150,105,0.4)" }}>
                   Returns &<br />
                   <span style={{ background: "linear-gradient(90deg,#6ee7b7,#34d399,#6ee7b7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     Refund Policy
                   </span>
                 </h1>
                 <p className="text-white/45 text-sm leading-relaxed max-w-lg">
-                  Your satisfaction is guaranteed. If something isn't right, we make it easy to return products and get your money back — fast, fair, and hassle-free.
+                  Your satisfaction is guaranteed. If something isn't right, we make it easy to return products and get your money back - fast, fair, and hassle-free.
                 </p>
 
                 {/* Promise pills */}
@@ -243,12 +243,12 @@ const ReturnsRefund = () => {
           {/* ══════════ RETURN PROCESS ══════════ */}
           <div>
             <div className="flex items-center gap-3 mb-7">
-              <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(#B42225,#FF6B00)" }} />
+              <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(#0E0E10,#FF6B00)" }} />
               <div>
-                <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <h2 className="text-2xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   How the Return Process Works
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">Simple, transparent, and fully tracked</p>
+                <p className="text-xs text-ink/40 mt-0.5">Simple, transparent, and fully tracked</p>
               </div>
             </div>
             <div>
@@ -267,8 +267,8 @@ const ReturnsRefund = () => {
                   <FaRegCheckCircle size={18} className="text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900">Eligible for Return</h3>
-                  <p className="text-[11px] text-gray-400">Items we'll accept back</p>
+                  <h3 className="text-base font-semibold text-ink">Eligible for Return</h3>
+                  <p className="text-[11px] text-ink/40">Items we'll accept back</p>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -277,7 +277,7 @@ const ReturnsRefund = () => {
                     <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
                       <FiCheck size={10} className="text-green-600" />
                     </div>
-                    <p className="text-sm text-gray-600">{item}</p>
+                    <p className="text-sm text-ink/60">{item}</p>
                   </div>
                 ))}
               </div>
@@ -290,8 +290,8 @@ const ReturnsRefund = () => {
                   <FaRegTimesCircle size={18} className="text-red-500" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900">Not Eligible for Return</h3>
-                  <p className="text-[11px] text-gray-400">Items we cannot accept</p>
+                  <h3 className="text-base font-semibold text-ink">Not Eligible for Return</h3>
+                  <p className="text-[11px] text-ink/40">Items we cannot accept</p>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -300,7 +300,7 @@ const ReturnsRefund = () => {
                     <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
                       <FiX size={10} className="text-red-500" />
                     </div>
-                    <p className="text-sm text-gray-600">{item}</p>
+                    <p className="text-sm text-ink/60">{item}</p>
                   </div>
                 ))}
               </div>
@@ -311,27 +311,27 @@ const ReturnsRefund = () => {
           <div className="bg-white rounded-3xl p-6 md:p-8" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-1 h-6 rounded-full bg-[#059669]" />
-              <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+              <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 Refund Timeline
               </h2>
             </div>
             <div className="grid sm:grid-cols-4 gap-4">
               {[
-                { day: "Day 1", label: "Return Approved", color: "#B42225", icon: <FiCheck size={14} /> },
+                { day: "Day 1", label: "Return Approved", color: "#0E0E10", icon: <FiCheck size={14} /> },
                 { day: "Day 2", label: "Item Picked Up", color: "#FF6B00", icon: <FiTruck size={14} /> },
                 { day: "Day 3", label: "Inspected & Passed", color: "#D97706", icon: <FiShield size={14} /> },
                 { day: "Day 5–8", label: "Refund Issued", color: "#059669", icon: <FiDollarSign size={14} /> },
               ].map(({ day, label, color, icon }, i) => (
                 <div key={day} className="relative flex flex-col items-center text-center">
                   {i < 3 && (
-                    <div className="hidden sm:block absolute left-[calc(50%+28px)] top-5 w-[calc(100%-56px)] h-0.5 bg-gray-100" />
+                    <div className="hidden sm:block absolute left-[calc(50%+28px)] top-5 w-[calc(100%-56px)] h-0.5 bg-sand" />
                   )}
                   <div className="w-11 h-11 rounded-full flex items-center justify-center text-white mb-3 z-10"
                     style={{ background: color, boxShadow: `0 4px 16px ${color}40` }}>
                     {icon}
                   </div>
-                  <p className="text-xs font-black text-gray-900">{day}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">{label}</p>
+                  <p className="text-xs font-semibold text-ink">{day}</p>
+                  <p className="text-[11px] text-ink/40 mt-0.5">{label}</p>
                 </div>
               ))}
             </div>
@@ -347,7 +347,7 @@ const ReturnsRefund = () => {
           <div>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-1 h-6 rounded-full bg-amber-400" />
-              <h2 className="text-xl font-black text-gray-900 flex items-center gap-2" style={{ fontFamily: "'Georgia', serif" }}>
+              <h2 className="text-xl font-semibold text-ink flex items-center gap-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 <FaRegLightbulb size={18} /> Tips for Smooth Returns
               </h2>
             </div>
@@ -355,9 +355,9 @@ const ReturnsRefund = () => {
               {tips.map(({ icon, title, tip }) => (
                 <div key={title} className="bg-white rounded-2xl p-5 hover:-translate-y-1 transition-all duration-200"
                   style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                  <span className="text-2xl block mb-3 text-[#B42225]">{icon}</span>
-                  <h4 className="text-sm font-black text-gray-900 mb-2">{title}</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">{tip}</p>
+                  <span className="text-2xl block mb-3 text-[#0E0E10]">{icon}</span>
+                  <h4 className="text-sm font-semibold text-ink mb-2">{title}</h4>
+                  <p className="text-xs text-ink/50 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
@@ -365,10 +365,10 @@ const ReturnsRefund = () => {
 
           {/* ══════════ FAQs ══════════ */}
           <div className="bg-white rounded-3xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
-            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+            <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
               <div className="flex items-center gap-3">
                 <div className="w-1 h-7 rounded-full bg-[#059669]" />
-                <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Frequently Asked Questions
                 </h2>
               </div>
@@ -377,15 +377,15 @@ const ReturnsRefund = () => {
               {faqData.map(({ q, a }, i) => (
                 <div key={i}
                   className={`rounded-2xl border overflow-hidden transition-all ${
-                    openFaq === i ? "border-[#059669]/25 shadow-sm" : "border-gray-100 hover:border-gray-200"
+                    openFaq === i ? "border-[#059669]/25 shadow-soft" : "border-ink/10 hover:border-ink/10"
                   }`}>
                   <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     className={`w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors ${
-                      openFaq === i ? "bg-[#059669]/3" : "bg-white hover:bg-gray-50"
+                      openFaq === i ? "bg-[#059669]/3" : "bg-white hover:bg-ink/5"
                     }`}>
-                    <p className={`text-sm font-bold ${openFaq === i ? "text-[#059669]" : "text-gray-800"}`}>{q}</p>
+                    <p className={`text-sm font-bold ${openFaq === i ? "text-[#059669]" : "text-ink"}`}>{q}</p>
                     <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                      openFaq === i ? "bg-[#059669] text-white" : "bg-gray-100 text-gray-400"
+                      openFaq === i ? "bg-[#059669] text-white" : "bg-sand text-ink/40"
                     }`}>
                       {openFaq === i ? <FiChevronUp size={13} /> : <FiChevronDown size={13} />}
                     </div>
@@ -393,7 +393,7 @@ const ReturnsRefund = () => {
                   {openFaq === i && (
                     <div className="px-5 pb-5 bg-white border-t border-gray-50">
                       <div className="w-8 h-0.5 rounded-full bg-[#059669] mt-3 mb-3" />
-                      <p className="text-sm text-gray-600 leading-relaxed">{a}</p>
+                      <p className="text-sm text-ink/60 leading-relaxed">{a}</p>
                     </div>
                   )}
                 </div>
@@ -414,7 +414,7 @@ const ReturnsRefund = () => {
                   <MdOutlineSupportAgent size={18} className="text-emerald-400" />
                   <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Need help with a return?</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-black mb-2" style={{ fontFamily: "'Georgia', serif" }}>
+                <h3 className="text-xl md:text-2xl font-semibold mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Our team is ready to assist
                 </h3>
                 <p className="text-white/40 text-sm max-w-md">
@@ -436,7 +436,7 @@ const ReturnsRefund = () => {
           </div>
 
           {/* bottom note */}
-          <div className="flex flex-wrap items-center justify-center gap-4 py-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 py-2 text-xs text-ink/40">
             <span className="flex items-center gap-1.5"><FiRefreshCw size={11} /> Policy effective: January 2025</span>
             <span className="hidden sm:block w-1 h-1 rounded-full bg-gray-300" />
             <span className="flex items-center gap-1.5"><MdVerified size={12} className="text-green-400" /> Jovo Buyer Protection</span>

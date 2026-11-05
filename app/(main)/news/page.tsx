@@ -29,7 +29,7 @@ const allNews = [
   },
   {
     id: 2, category: "jovo", tag: "Sellers",
-    title: "Over 5,000 Vendors Now Active on Jovo — Platform Hits Record GMV",
+    title: "Over 5,000 Vendors Now Active on Jovo - Platform Hits Record GMV",
     excerpt: "The Jovo marketplace celebrated a new milestone this week as its vendor count surpassed 5,000 active sellers, with gross merchandise value hitting an all-time high.",
     image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
     author: "Jovo Business", time: "5 hours ago", views: "8.1K",
@@ -190,7 +190,7 @@ const allNews = [
 const videoNews = [
   {
     id: "v1",
-    title: "Jovo Mega Flash Sale — Behind the Scenes",
+    title: "Jovo Mega Flash Sale - Behind the Scenes",
     thumbnail: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80",
     duration: "4:32", views: "14.2K", category: "jovo",
   },
@@ -224,7 +224,7 @@ const breakingTicker = [
 ];
 
 const CATEGORIES = [
-  { key: "all",           label: "All News",     icon: <FaNewspaper size={14} />,  color: "#B42225" },
+  { key: "all",           label: "All News",     icon: <FaNewspaper size={14} />,  color: "#0E0E10" },
   { key: "jovo",          label: "Jovo News",    icon: <FaFire size={14} />,       color: "#FF6B00" },
   { key: "futo",          label: "FUTO News",    icon: <FaUniversity size={14} />, color: "#7C3AED" },
   { key: "national",      label: "National",     icon: <FaFlag size={14} />,       color: "#059669" },
@@ -247,7 +247,7 @@ const BreakingTicker = () => {
 
   return (
     <div className="flex items-center gap-0 overflow-hidden">
-      <div className="shrink-0 flex items-center gap-2 bg-[#B42225] text-white text-xs font-black px-4 py-2.5 z-10">
+      <div className="shrink-0 flex items-center gap-2 bg-[#0E0E10] text-white text-xs font-semibold px-4 py-2.5 z-10">
         <FiRadio size={13} className="animate-pulse" />
         LIVE
       </div>
@@ -267,7 +267,7 @@ const BreakingTicker = () => {
 // Category accent color
 const getCategoryColor = (cat) => {
   const map = { jovo: "#FF6B00", futo: "#7C3AED", national: "#059669", international: "#0EA5E9" };
-  return map[cat] || "#B42225";
+  return map[cat] || "#0E0E10";
 };
 
 // Featured hero card
@@ -282,20 +282,20 @@ const HeroCard = ({ article, onBookmark, bookmarked }) => (
     <div className="absolute inset-0 bg-linear-to-r from-black/30 to-transparent" />
 
     {article.breaking && (
-      <div className="absolute top-5 left-5 flex items-center gap-1.5 bg-[#B42225] text-white text-[10px] font-black px-3 py-1.5 rounded-full">
+      <div className="absolute top-5 left-5 flex items-center gap-1.5 bg-[#0E0E10] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full">
         <FiZap size={10} className="animate-pulse" /> BREAKING
       </div>
     )}
 
     <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
+        <span className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
           style={{ background: getCategoryColor(article.category) }}>
           {article.tag}
         </span>
       </div>
-      <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-white leading-tight mb-3"
-        style={{ fontFamily: "'Georgia', serif", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+      <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white leading-tight mb-3"
+        style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
         {article.title}
       </h2>
       <p className="text-white/70 text-sm line-clamp-2 mb-4 max-w-2xl">{article.excerpt}</p>
@@ -323,13 +323,13 @@ const NewsCard = ({ article, onBookmark, bookmarked, compact = false }) => (
       <img src={article.image} alt={article.title}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
       {article.breaking && !compact && (
-        <div className="absolute top-2 left-2 flex items-center gap-1 bg-[#B42225] text-white text-[9px] font-black px-2 py-1 rounded-full">
+        <div className="absolute top-2 left-2 flex items-center gap-1 bg-[#0E0E10] text-white text-[9px] font-semibold px-2 py-1 rounded-full">
           <FiZap size={8} /> BREAKING
         </div>
       )}
       {!compact && (
         <div className="absolute top-2 right-2">
-          <span className="text-[9px] font-black uppercase px-2 py-1 rounded-full text-white"
+          <span className="text-[9px] font-semibold uppercase px-2 py-1 rounded-full text-white"
             style={{ background: getCategoryColor(article.category) }}>
             {article.tag}
           </span>
@@ -338,26 +338,26 @@ const NewsCard = ({ article, onBookmark, bookmarked, compact = false }) => (
     </div>
     <div className={`flex flex-col gap-2 ${compact ? "p-3 justify-center" : "p-4"}`}>
       {compact && (
-        <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: getCategoryColor(article.category) }}>
+        <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: getCategoryColor(article.category) }}>
           {article.tag}
         </span>
       )}
-      <h3 className={`font-black text-gray-900 leading-snug group-hover:text-[#B42225] transition-colors ${compact ? "text-xs line-clamp-3" : "text-sm md:text-base line-clamp-2"}`}
-        style={{ fontFamily: "'Georgia', serif" }}>
+      <h3 className={`font-semibold text-ink leading-snug group-hover:text-[#0E0E10] transition-colors ${compact ? "text-xs line-clamp-3" : "text-sm md:text-base line-clamp-2"}`}
+        style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
         {article.title}
       </h3>
       {!compact && (
-        <p className="text-xs text-gray-500 line-clamp-2">{article.excerpt}</p>
+        <p className="text-xs text-ink/50 line-clamp-2">{article.excerpt}</p>
       )}
       <div className="flex items-center justify-between mt-auto pt-1">
-        <div className="flex items-center gap-3 text-[10px] text-gray-400">
+        <div className="flex items-center gap-3 text-[10px] text-ink/40">
           <span className="flex items-center gap-1"><FiClock size={9} /> {article.time}</span>
           {!compact && <span className="flex items-center gap-1"><FiEye size={9} /> {article.views}</span>}
         </div>
         {!compact && (
           <button onClick={(e) => { e.stopPropagation(); onBookmark(article.id); }}
             className="opacity-0 group-hover:opacity-100 transition-opacity">
-            {bookmarked ? <FaBookmark size={12} className="text-yellow-400" /> : <FaRegBookmark size={12} className="text-gray-400 hover:text-yellow-400" />}
+            {bookmarked ? <FaBookmark size={12} className="text-yellow-400" /> : <FaRegBookmark size={12} className="text-ink/40 hover:text-yellow-400" />}
           </button>
         )}
       </div>
@@ -375,24 +375,24 @@ const VideoCard = ({ video }) => (
       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl">
-          <FaPlay size={16} className="text-[#B42225] ml-1" />
+          <FaPlay size={16} className="text-[#0E0E10] ml-1" />
         </div>
       </div>
       <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded">
         {video.duration}
       </div>
       <div className="absolute top-2 left-2">
-        <span className="text-[9px] font-black uppercase px-2 py-1 rounded-full text-white"
+        <span className="text-[9px] font-semibold uppercase px-2 py-1 rounded-full text-white"
           style={{ background: getCategoryColor(video.category) }}>
           {video.category}
         </span>
       </div>
     </div>
     <div className="p-3 bg-white">
-      <p className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#B42225] transition-colors">
+      <p className="text-xs font-bold text-ink line-clamp-2 leading-snug group-hover:text-[#0E0E10] transition-colors">
         {video.title}
       </p>
-      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-400">
+      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-ink/40">
         <FiEye size={10} /> {video.views}
         <FiVideo size={10} /> Video
       </div>
@@ -410,10 +410,10 @@ const SectionHeader = ({ icon, title, color, count, onViewAll }) => (
         {icon}
       </div>
       <div>
-        <h2 className="text-lg md:text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+        <h2 className="text-lg md:text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
           {title}
         </h2>
-        {count && <p className="text-[10px] text-gray-400">{count} stories</p>}
+        {count && <p className="text-[10px] text-ink/40">{count} stories</p>}
       </div>
     </div>
     <button onClick={onViewAll} className="flex items-center gap-1 text-xs font-bold transition-colors hover:gap-2"
@@ -488,29 +488,29 @@ const NewsPage = () => {
       <div className="min-h-screen" style={{ background: "#F4F5F9" }}>
 
         {/* ══════════ MASTHEAD ══════════ */}
-        <div className="bg-white border-b border-gray-100">
+        <div className="bg-white border-b border-ink/10">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
 
             {/* Top bar */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center justify-between py-3 border-b border-ink/10">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-black"
-                  style={{ background: "linear-gradient(135deg,#B42225,#FF6B00)" }}>J</div>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-semibold"
+                  style={{ background: "linear-gradient(135deg,#0E0E10,#FF6B00)" }}>J</div>
                 <div>
-                  <span className="text-sm font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
-                    Jovo<span className="text-[#B42225]">News</span>
+                  <span className="text-sm font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
+                    Jovo<span className="text-[#0E0E10]">News</span>
                   </span>
-                  <span className="hidden md:inline text-[10px] text-gray-400 ml-2">Your campus & world in one feed</span>
+                  <span className="hidden md:inline text-[10px] text-ink/40 ml-2">Your campus & world in one feed</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => { setShowBookmarks(!showBookmarks); setActiveCategory("all"); }}
-                  className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${showBookmarks ? "bg-yellow-50 text-yellow-600" : "text-gray-500 hover:text-gray-700"}`}>
+                  className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${showBookmarks ? "bg-yellow-50 text-yellow-600" : "text-ink/50 hover:text-ink"}`}>
                   <FaBookmark size={11} />
                   <span className="hidden sm:inline">Saved ({bookmarks.length})</span>
                 </button>
-                <div className="text-[10px] text-gray-400 hidden md:block">
+                <div className="text-[10px] text-ink/40 hidden md:block">
                   {new Date().toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                 </div>
               </div>
@@ -524,7 +524,7 @@ const NewsPage = () => {
         </div>
 
         {/* ══════════ SEARCH + CATEGORY NAV ══════════ */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100"
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-ink/10"
           style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -532,19 +532,19 @@ const NewsPage = () => {
               {/* Search */}
               <div className="relative flex-1 max-w-sm" ref={searchRef}>
                 <div className={`flex items-center gap-2 rounded-2xl border transition-all duration-200 px-3 py-2.5 ${
-                  searchFocused ? "border-[#B42225] shadow-[0_0_0_3px_rgba(180,34,37,0.1)] bg-white" : "border-gray-200 bg-gray-50"
+                  searchFocused ? "border-[#0E0E10] shadow-[0_0_0_3px_rgba(180,34,37,0.1)] bg-white" : "border-ink/10 bg-sand"
                 }`}>
-                  <FiSearch size={15} className={searchFocused ? "text-[#B42225]" : "text-gray-400"} />
+                  <FiSearch size={15} className={searchFocused ? "text-[#0E0E10]" : "text-ink/40"} />
                   <input
                     type="text"
                     placeholder="Search news, topics, categories..."
-                    className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400 text-gray-700"
+                    className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400 text-ink/70"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setSearchFocused(true)}
                   />
                   {searchQuery && (
-                    <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 transition">
+                    <button onClick={() => setSearchQuery("")} className="text-ink/40 hover:text-ink transition">
                       <FiX size={14} />
                     </button>
                   )}
@@ -552,22 +552,22 @@ const NewsPage = () => {
 
                 {/* Search dropdown */}
                 {searchFocused && searchQuery.trim().length > 0 && (
-                  <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-gray-100 overflow-hidden z-50"
+                  <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl border border-ink/10 overflow-hidden z-50"
                     style={{ boxShadow: "0 20px 50px rgba(0,0,0,0.15)" }}>
                     {searchResults.length > 0 ? (
                       <>
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold px-4 pt-3 pb-1">
+                        <p className="text-[10px] uppercase tracking-widest text-ink/40 font-semibold px-4 pt-3 pb-1">
                           {searchResults.length} result{searchResults.length > 1 ? "s" : ""}
                         </p>
                         {searchResults.slice(0, 5).map((a) => (
                           <div key={a.id} onMouseDown={() => { setSearchQuery(""); setSearchFocused(false); }}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-ink/5 cursor-pointer transition-colors">
                             <img src={a.image} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-gray-800 line-clamp-2">{a.title}</p>
+                              <p className="text-xs font-bold text-ink line-clamp-2">{a.title}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-[9px] font-bold uppercase" style={{ color: getCategoryColor(a.category) }}>{a.tag}</span>
-                                <span className="text-[9px] text-gray-400">{a.time}</span>
+                                <span className="text-[9px] text-ink/40">{a.time}</span>
                               </div>
                             </div>
                           </div>
@@ -575,9 +575,9 @@ const NewsPage = () => {
                       </>
                     ) : (
                       <div className="px-4 py-6 text-center">
-                        <FiSearch size={24} className="text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm font-bold text-gray-500">No results for "{searchQuery}"</p>
-                        <p className="text-xs text-gray-400 mt-1">Try different keywords</p>
+                        <FiSearch size={24} className="text-ink/25 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-ink/50">No results for "{searchQuery}"</p>
+                        <p className="text-xs text-ink/40 mt-1">Try different keywords</p>
                       </div>
                     )}
                   </div>
@@ -592,8 +592,8 @@ const NewsPage = () => {
                     onClick={() => { setActiveCategory(key); setShowBookmarks(false); setSearchQuery(""); }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                       activeCategory === key && !showBookmarks
-                        ? "text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        ? "text-white shadow-soft"
+                        : "bg-sand text-ink/60 hover:bg-ink/10"
                     }`}
                     style={activeCategory === key && !showBookmarks ? { background: color } : {}}
                   >
@@ -611,11 +611,11 @@ const NewsPage = () => {
           {isSearching ? (
             <div>
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-1 h-7 rounded-full bg-[#B42225]" />
-                <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
+                <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Search results for "{searchQuery}"
                 </h2>
-                <span className="text-sm text-gray-400">({searchResults.length} found)</span>
+                <span className="text-sm text-ink/40">({searchResults.length} found)</span>
               </div>
               {searchResults.length > 0 ? (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -627,9 +627,9 @@ const NewsPage = () => {
                 </div>
               ) : (
                 <div className="text-center py-20">
-                  <FiSearch size={48} className="text-gray-300 mx-auto mb-4" />
-                  <p className="text-lg font-bold text-gray-500">No results found</p>
-                  <p className="text-sm text-gray-400 mt-1">Try searching for different keywords</p>
+                  <FiSearch size={48} className="text-ink/25 mx-auto mb-4" />
+                  <p className="text-lg font-bold text-ink/50">No results found</p>
+                  <p className="text-sm text-ink/40 mt-1">Try searching for different keywords</p>
                 </div>
               )}
             </div>
@@ -639,10 +639,10 @@ const NewsPage = () => {
             <div>
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-1 h-7 rounded-full bg-yellow-400" />
-                <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Saved Articles
                 </h2>
-                <span className="text-sm text-gray-400">({bookmarks.length})</span>
+                <span className="text-sm text-ink/40">({bookmarks.length})</span>
               </div>
               {bookmarks.length > 0 ? (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -652,9 +652,9 @@ const NewsPage = () => {
                 </div>
               ) : (
                 <div className="text-center py-20">
-                  <FaRegBookmark size={48} className="text-gray-300 mx-auto mb-4" />
-                  <p className="text-lg font-bold text-gray-500">No saved articles yet</p>
-                  <p className="text-sm text-gray-400 mt-1">Bookmark articles to read them later</p>
+                  <FaRegBookmark size={48} className="text-ink/25 mx-auto mb-4" />
+                  <p className="text-lg font-bold text-ink/50">No saved articles yet</p>
+                  <p className="text-sm text-ink/40 mt-1">Bookmark articles to read them later</p>
                 </div>
               )}
             </div>
@@ -690,7 +690,7 @@ const NewsPage = () => {
             </div>
 
           ) : (
-            // ══════════ ALL NEWS — FULL LAYOUT ══════════
+            // ══════════ ALL NEWS - FULL LAYOUT ══════════
             <>
               {/* ── HERO: Top Featured ── */}
               <div>
@@ -712,10 +712,10 @@ const NewsPage = () => {
               {breakingNews.length > 0 && (
                 <div className="bg-white rounded-3xl p-5" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center gap-2 bg-[#B42225] text-white text-xs font-black px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-2 bg-[#0E0E10] text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                       <FiZap size={11} className="animate-pulse" /> BREAKING
                     </div>
-                    <div className="h-px flex-1 bg-gray-100" />
+                    <div className="h-px flex-1 bg-sand" />
                   </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {breakingNews.map((a) => (
@@ -740,16 +740,16 @@ const NewsPage = () => {
               <div className="bg-gray-900 rounded-3xl p-6 md:p-8" style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.2)" }}>
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-1 h-8 rounded-full bg-[#B42225]" />
-                    <div className="w-9 h-9 rounded-2xl bg-[#B42225] flex items-center justify-center">
+                    <div className="w-1 h-8 rounded-full bg-[#0E0E10]" />
+                    <div className="w-9 h-9 rounded-2xl bg-[#0E0E10] flex items-center justify-center">
                       <FiVideo size={16} className="text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black text-white" style={{ fontFamily: "'Georgia', serif" }}>Video News</h2>
-                      <p className="text-[10px] text-gray-400">Watch the latest stories</p>
+                      <h2 className="text-lg font-semibold text-white" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>Video News</h2>
+                      <p className="text-[10px] text-ink/40">Watch the latest stories</p>
                     </div>
                   </div>
-                  <button className="text-xs font-bold text-gray-400 hover:text-white transition flex items-center gap-1">
+                  <button className="text-xs font-bold text-ink/40 hover:text-white transition flex items-center gap-1">
                     See all <FiArrowRight size={13} />
                   </button>
                 </div>
@@ -807,11 +807,11 @@ const NewsPage = () => {
               {/* ── TRENDING SIDEBAR ROW ── */}
               <div className="bg-white rounded-3xl p-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(#B42225,#FF6B00)" }} />
-                  <div className="w-8 h-8 rounded-2xl bg-linear-to-br from-[#B42225] to-[#FF6B00] flex items-center justify-center">
+                  <div className="w-1 h-7 rounded-full" style={{ background: "linear-gradient(#0E0E10,#FF6B00)" }} />
+                  <div className="w-8 h-8 rounded-2xl bg-linear-to-br from-[#0E0E10] to-[#FF6B00] flex items-center justify-center">
                     <MdTrendingUp size={16} className="text-white" />
                   </div>
-                  <h2 className="text-lg font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                  <h2 className="text-lg font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                     Trending Now
                   </h2>
                 </div>
@@ -822,16 +822,16 @@ const NewsPage = () => {
                         <img src={a.image} alt={a.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-2 left-2 text-3xl font-black text-white/30"
-                          style={{ fontFamily: "'Georgia', serif" }}>
+                        <div className="absolute bottom-2 left-2 text-3xl font-semibold text-white/30"
+                          style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                           {String(i + 1).padStart(2, "0")}
                         </div>
                       </div>
-                      <p className="text-xs font-bold text-gray-800 line-clamp-2 group-hover:text-[#B42225] transition-colors"
-                        style={{ fontFamily: "'Georgia', serif" }}>
+                      <p className="text-xs font-bold text-ink line-clamp-2 group-hover:text-[#0E0E10] transition-colors"
+                        style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                         {a.title}
                       </p>
-                      <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                      <span className="text-[10px] text-ink/40 flex items-center gap-1">
                         <FiEye size={9} /> {a.views}
                       </span>
                     </div>

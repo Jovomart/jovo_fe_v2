@@ -83,10 +83,10 @@ const InputField = ({ label, required, error, hint, children }: {
   children: React.ReactNode 
 }) => (
   <div className="flex flex-col gap-1">
-    <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-      {label} {required && <span className="text-[#B42225]">*</span>}
+    <label className="text-xs font-bold text-ink/70 flex items-center gap-1">
+      {label} {required && <span className="text-[#0E0E10]">*</span>}
     </label>
-    {hint && <p className="text-[11px] text-gray-400 -mt-0.5">{hint}</p>}
+    {hint && <p className="text-[11px] text-ink/40 -mt-0.5">{hint}</p>}
     {children}
     <FieldError msg={error} />
   </div>
@@ -96,7 +96,7 @@ const inputCls = (error?: string) =>
   `w-full px-4 py-3 rounded-2xl text-sm border outline-none transition-all bg-white ${
     error
       ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-      : "border-gray-200 focus:border-[#B42225] focus:ring-2 focus:ring-[#B42225]/10"
+      : "border-ink/10 focus:border-[#0E0E10] focus:ring-2 focus:ring-[#0E0E10]/10"
   }`;
 
 /* ── Status Screen ─────────────────────────────────────────── */
@@ -147,29 +147,29 @@ const StatusScreen = ({ status, rejectionReason, onReapply }: {
       style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.08)" }}
     >
       <div
-        className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-5 shadow-md"
+        className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-5 shadow-soft"
         style={{ border: `3px solid ${c.accentColor}30` }}
       >
         {c.icon}
       </div>
       <span
-        className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${c.badge}`}
+        className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full ${c.badge}`}
       >
         {c.badgeText}
       </span>
       <h2
-        className="text-2xl font-black text-gray-900 mt-5 mb-2"
-        style={{ fontFamily: "'Georgia',serif" }}
+        className="text-2xl font-semibold text-ink mt-5 mb-2"
+        style={{ fontFamily: "'Instrument Sans',sans-serif" }}
       >
         {c.title}
       </h2>
-      <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto mb-3">
+      <p className="text-sm text-ink/50 leading-relaxed max-w-sm mx-auto mb-3">
         {c.desc}
       </p>
 
       {rejectionReason && (
         <div className="bg-red-100 border border-red-200 rounded-2xl px-4 py-3 mb-5 text-left max-w-sm mx-auto">
-          <p className="text-xs font-black text-red-700 mb-1">Reason:</p>
+          <p className="text-xs font-semibold text-red-700 mb-1">Reason:</p>
           <p className="text-xs text-red-600 leading-relaxed">
             {rejectionReason}
           </p>
@@ -180,7 +180,7 @@ const StatusScreen = ({ status, rejectionReason, onReapply }: {
         {status === "approved" && (
           <button
             onClick={() => router.push("/seller/dashboard")}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105"
             style={{
               background: "linear-gradient(135deg,#059669,#10B981)",
               boxShadow: "0 8px 24px rgba(16,185,129,0.3)",
@@ -192,9 +192,9 @@ const StatusScreen = ({ status, rejectionReason, onReapply }: {
         {status === "rejected" && onReapply && (
           <button
             onClick={onReapply}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm text-white transition-all hover:scale-105"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105"
             style={{
-              background: "linear-gradient(135deg,#B42225,#FF6B00)",
+              background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
               boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
             }}
           >
@@ -203,12 +203,12 @@ const StatusScreen = ({ status, rejectionReason, onReapply }: {
         )}
         <button
           onClick={() => router.push("/seller/application-status")}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all"
         >
           Check Status
         </button>
         <Link href="/"
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all"
         >
           Back to Home
         </Link>
@@ -422,7 +422,7 @@ const SellerApplication = () => {
         <div
           className="sticky top-0 z-30 border-b border-white/10"
           style={{
-            background: "linear-gradient(135deg,#0a0a0a,#1a0505,#B42225)",
+            background: "linear-gradient(135deg,#0a0a0a,#1a0505,#0E0E10)",
           }}
         >
           <div className="max-w-3xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
@@ -438,7 +438,7 @@ const SellerApplication = () => {
               >
                 <FaStore size={12} className="text-orange-300" />
               </div>
-              <span className="text-white text-xs font-black tracking-wide">
+              <span className="text-white text-xs font-semibold tracking-wide">
                 Seller Application
               </span>
             </div>
@@ -459,12 +459,12 @@ const SellerApplication = () => {
               <FaRocket size={10} /> Free to Apply
             </div>
             <h1
-              className="text-2xl md:text-3xl font-black text-gray-900 leading-tight"
-              style={{ fontFamily: "'Georgia',serif" }}
+              className="text-2xl md:text-3xl font-semibold text-ink leading-tight"
+              style={{ fontFamily: "'Instrument Sans',sans-serif" }}
             >
               Become a Seller on Jovo
             </h1>
-            <p className="text-sm text-gray-400 mt-1.5">
+            <p className="text-sm text-ink/40 mt-1.5">
               Fill in your business details and we'll review your application
               within 24–48 hours.
             </p>
@@ -486,11 +486,11 @@ const SellerApplication = () => {
                 style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
               >
                 <div className="flex items-center justify-between relative">
-                  <div className="absolute left-0 right-0 top-5 h-0.5 bg-gray-100 z-0 mx-10" />
+                  <div className="absolute left-0 right-0 top-5 h-0.5 bg-sand z-0 mx-10" />
                   <div
                     className="absolute left-10 top-5 h-0.5 z-0 transition-all duration-500"
                     style={{
-                      background: "linear-gradient(90deg,#B42225,#FF6B00)",
+                      background: "linear-gradient(90deg,#0E0E10,#FF6B00)",
                       right: step === 3 ? "40px" : step === 2 ? "50%" : "75%",
                     }}
                   />
@@ -500,7 +500,7 @@ const SellerApplication = () => {
                       className="relative z-10 flex flex-col items-center gap-1.5"
                     >
                       <div
-                        className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all duration-300"
+                        className="w-10 h-10 rounded-2xl flex items-center justify-center font-semibold text-sm transition-all duration-300"
                         style={
                           step > s.id
                             ? {
@@ -511,12 +511,12 @@ const SellerApplication = () => {
                             : step === s.id
                               ? {
                                   background:
-                                    "linear-gradient(135deg,#B42225,#FF6B00)",
+                                    "linear-gradient(135deg,#0E0E10,#FF6B00)",
                                   color: "#fff",
                                   boxShadow:
                                     "0 4px 16px rgba(180,34,37,0.35)",
                                 }
-                              : { background: "#F3F4F6", color: "#9CA3AF" }
+                              : { background: "#F7F3EC", color: "#9CA3AF" }
                         }
                       >
                         {step > s.id ? <FiCheck size={16} /> : s.icon}
@@ -526,7 +526,7 @@ const SellerApplication = () => {
                         style={{
                           color:
                             step === s.id
-                              ? "#B42225"
+                              ? "#0E0E10"
                               : step > s.id
                                 ? "#059669"
                                 : "#9CA3AF",
@@ -550,16 +550,16 @@ const SellerApplication = () => {
                       <div
                         className="w-10 h-10 rounded-2xl flex items-center justify-center text-white"
                         style={{
-                          background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                          background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                         }}
                       >
                         <MdStorefront size={18} />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-gray-900">
+                        <h2 className="text-base font-semibold text-ink">
                           Business Information
                         </h2>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-ink/40">
                           Tell us about your business
                         </p>
                       </div>
@@ -600,7 +600,7 @@ const SellerApplication = () => {
                           }
                           maxLength={300}
                         />
-                        <p className="text-[10px] text-gray-300 text-right -mt-1">
+                        <p className="text-[10px] text-ink/25 text-right -mt-1">
                           {form.short_business_description.length}/300
                         </p>
                       </InputField>
@@ -613,17 +613,17 @@ const SellerApplication = () => {
                       >
                         {loadingCategories ? (
                           <div className="flex items-center justify-center py-8">
-                            <svg className="animate-spin h-5 w-5 text-[#B42225]" viewBox="0 0 24 24" fill="none">
+                            <svg className="animate-spin h-5 w-5 text-[#0E0E10]" viewBox="0 0 24 24" fill="none">
                               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70" />
                             </svg>
-                            <span className="ml-2 text-sm text-gray-400">Loading categories...</span>
+                            <span className="ml-2 text-sm text-ink/40">Loading categories...</span>
                           </div>
                         ) : categoriesError ? (
                           <div className="text-center py-4 text-red-500 text-sm">
                             {categoriesError}
                           </div>
                         ) : categories.length === 0 ? (
-                          <div className="text-center py-4 text-gray-500 text-sm">
+                          <div className="text-center py-4 text-ink/50 text-sm">
                             No categories available. Please contact support.
                           </div>
                         ) : (
@@ -638,13 +638,13 @@ const SellerApplication = () => {
                                   className={`cat-chip text-xs font-semibold px-3 py-2 rounded-xl border transition-all ${
                                     selected
                                       ? "text-white border-transparent"
-                                      : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#B42225]/30 hover:text-[#B42225]"
+                                      : "bg-sand text-ink/60 border-ink/10 hover:border-[#0E0E10]/30 hover:text-[#0E0E10]"
                                   }`}
                                   style={
                                     selected
                                       ? {
                                           background:
-                                            "linear-gradient(135deg,#B42225,#FF6B00)",
+                                            "linear-gradient(135deg,#0E0E10,#FF6B00)",
                                           boxShadow:
                                             "0 3px 10px rgba(180,34,37,0.25)",
                                         }
@@ -661,7 +661,7 @@ const SellerApplication = () => {
                           </div>
                         )}
                         {form.business_category.length > 0 && (
-                          <p className="text-[11px] text-[#B42225] font-semibold mt-2">
+                          <p className="text-[11px] text-[#0E0E10] font-semibold mt-2">
                             {form.business_category.length} selected
                           </p>
                         )}
@@ -688,9 +688,9 @@ const SellerApplication = () => {
                   <div className="flex justify-end mb-8">
                     <button
                       onClick={nextStep}
-                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95"
+                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
                       style={{
-                        background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                        background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                         boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
                       }}
                     >
@@ -717,10 +717,10 @@ const SellerApplication = () => {
                         <FiShield size={18} />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-gray-900">
+                        <h2 className="text-base font-semibold text-ink">
                           Identity Verification
                         </h2>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-ink/40">
                           We need to verify your identity to protect all users
                         </p>
                       </div>
@@ -756,28 +756,28 @@ const SellerApplication = () => {
                                 }
                                 className={`flex items-center justify-between gap-2 p-4 rounded-2xl border-2 text-left transition-all ${
                                   selected
-                                    ? "border-[#B42225] bg-[#B42225]/4"
-                                    : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                                    ? "border-[#0E0E10] bg-[#0E0E10]/4"
+                                    : "border-ink/10 bg-sand hover:border-ink/20"
                                 }`}
                               >
                                 <div className="flex items-center gap-3">
                                   <FiFileText
                                     size={20}
                                     style={{
-                                      color: selected ? "#B42225" : "#9CA3AF",
+                                      color: selected ? "#0E0E10" : "#9CA3AF",
                                     }}
                                   />
                                   <span
                                     className="text-sm font-bold"
                                     style={{
-                                      color: selected ? "#B42225" : "#6B7280",
+                                      color: selected ? "#0E0E10" : "#6B7280",
                                     }}
                                   >
                                     {label}
                                   </span>
                                 </div>
                                 {selected && (
-                                  <div className="w-5 h-5 rounded-full bg-[#B42225] flex items-center justify-center">
+                                  <div className="w-5 h-5 rounded-full bg-[#0E0E10] flex items-center justify-center">
                                     <FiCheck size={11} className="text-white" />
                                   </div>
                                 )}
@@ -795,12 +795,12 @@ const SellerApplication = () => {
                       >
                         <div
                           onClick={() => fileInputRef.current?.click()}
-                          className={`relative mt-1 border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-[#B42225]/40 hover:bg-[#B42225]/2 ${
+                          className={`relative mt-1 border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-[#0E0E10]/40 hover:bg-[#0E0E10]/2 ${
                             errors.seller_document_file
                               ? "border-red-300 bg-red-50"
                               : form.seller_document_file
                                 ? "border-green-300 bg-green-50"
-                                : "border-gray-200 bg-gray-50"
+                                : "border-ink/10 bg-sand"
                           }`}
                         >
                           <input
@@ -829,7 +829,7 @@ const SellerApplication = () => {
                               <p className="text-sm font-bold text-green-700 flex items-center justify-center gap-1.5">
                                 <FiCheck size={14} /> File uploaded
                               </p>
-                              <p className="text-[11px] text-gray-400 truncate max-w-xs mx-auto">
+                              <p className="text-[11px] text-ink/40 truncate max-w-xs mx-auto">
                                 {form.seller_document_name}
                               </p>
                               <button
@@ -840,20 +840,20 @@ const SellerApplication = () => {
                                   setFormField("seller_document_preview", "");
                                   setFormField("seller_document_name", "");
                                 }}
-                                className="text-xs text-gray-400 hover:text-red-500 underline transition-colors"
+                                className="text-xs text-ink/40 hover:text-red-500 underline transition-colors"
                               >
                                 Remove & re-upload
                               </button>
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              <div className="w-12 h-12 rounded-2xl bg-gray-200 flex items-center justify-center mx-auto">
-                                <FiUpload size={20} className="text-gray-400" />
+                              <div className="w-12 h-12 rounded-2xl bg-ink/10 flex items-center justify-center mx-auto">
+                                <FiUpload size={20} className="text-ink/40" />
                               </div>
-                              <p className="text-sm font-bold text-gray-600">
+                              <p className="text-sm font-bold text-ink/60">
                                 Click to upload document
                               </p>
-                              <p className="text-[11px] text-gray-400">
+                              <p className="text-[11px] text-ink/40">
                                 or drag and drop here
                               </p>
                             </div>
@@ -865,15 +865,15 @@ const SellerApplication = () => {
                   <div className="flex items-center justify-between mb-8">
                     <button
                       onClick={prevStep}
-                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all"
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all"
                     >
                       <FiArrowLeft size={14} /> Back
                     </button>
                     <button
                       onClick={nextStep}
-                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95"
+                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
                       style={{
-                        background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                        background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                         boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
                       }}
                     >
@@ -900,54 +900,54 @@ const SellerApplication = () => {
                         <FiCheck size={18} />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-gray-900">
+                        <h2 className="text-base font-semibold text-ink">
                           Review Your Application
                         </h2>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-ink/40">
                           Check everything before submitting
                         </p>
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div className="rounded-2xl bg-gray-50 p-5 space-y-3">
+                      <div className="rounded-2xl bg-sand p-5 space-y-3">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                          <p className="text-xs font-semibold text-ink/50 uppercase tracking-widest">
                             Business Info
                           </p>
                           <button
                             onClick={() => setStep(1)}
-                            className="text-[11px] text-[#B42225] font-bold hover:underline"
+                            className="text-[11px] text-[#0E0E10] font-bold hover:underline"
                           >
                             Edit
                           </button>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-3 text-sm">
                           <div>
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
+                            <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-0.5">
                               Business Name
                             </p>
-                            <p className="font-bold text-gray-800">
+                            <p className="font-bold text-ink">
                               {form.business_name}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
+                            <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-0.5">
                               Address
                             </p>
-                            <p className="font-bold text-gray-800">
+                            <p className="font-bold text-ink">
                               {form.business_address}
                             </p>
                           </div>
                           <div className="sm:col-span-2">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">
+                            <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-0.5">
                               Description
                             </p>
-                            <p className="text-gray-700 text-xs leading-relaxed">
+                            <p className="text-ink/70 text-xs leading-relaxed">
                               {form.short_business_description}
                             </p>
                           </div>
                           <div className="sm:col-span-2">
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1.5">
+                            <p className="text-[10px] text-ink/40 uppercase tracking-widest mb-1.5">
                               Categories
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -957,7 +957,7 @@ const SellerApplication = () => {
                                   className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white"
                                   style={{
                                     background:
-                                      "linear-gradient(135deg,#B42225,#FF6B00)",
+                                      "linear-gradient(135deg,#0E0E10,#FF6B00)",
                                   }}
                                 >
                                   {getCategoryName(catId)}
@@ -967,14 +967,14 @@ const SellerApplication = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="rounded-2xl bg-gray-50 p-5">
+                      <div className="rounded-2xl bg-sand p-5">
                         <div className="flex items-center justify-between mb-3">
-                          <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                          <p className="text-xs font-semibold text-ink/50 uppercase tracking-widest">
                             Verification
                           </p>
                           <button
                             onClick={() => setStep(2)}
-                            className="text-[11px] text-[#B42225] font-bold hover:underline"
+                            className="text-[11px] text-[#0E0E10] font-bold hover:underline"
                           >
                             Edit
                           </button>
@@ -984,7 +984,7 @@ const SellerApplication = () => {
                             <img
                               src={form.seller_document_preview}
                               alt="doc"
-                              className="w-14 h-14 object-cover rounded-xl border-2 border-white shadow-sm"
+                              className="w-14 h-14 object-cover rounded-xl border-2 border-white shadow-soft"
                             />
                           ) : (
                             <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -992,10 +992,10 @@ const SellerApplication = () => {
                             </div>
                           )}
                           <div>
-                            <p className="text-sm font-bold text-gray-800">
+                            <p className="text-sm font-bold text-ink">
                               International Passport
                             </p>
-                            <p className="text-[11px] text-gray-400 mt-0.5 truncate max-w-xs">
+                            <p className="text-[11px] text-ink/40 mt-0.5 truncate max-w-xs">
                               {form.seller_document_name}
                             </p>
                             <p className="flex items-center gap-1 text-[11px] text-green-600 font-semibold mt-0.5">
@@ -1033,16 +1033,16 @@ const SellerApplication = () => {
                     <button
                       onClick={prevStep}
                       disabled={submitting}
-                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 border border-gray-200 hover:border-gray-300 bg-white transition-all disabled:opacity-50"
+                      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 border border-ink/10 hover:border-ink/20 bg-white transition-all disabled:opacity-50"
                     >
                       <FiArrowLeft size={14} /> Back
                     </button>
                     <button
                       onClick={handleSubmit}
                       disabled={submitting}
-                      className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-70 disabled:scale-100"
+                      className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-70 disabled:scale-100"
                       style={{
-                        background: "linear-gradient(135deg,#B42225,#FF6B00)",
+                        background: "linear-gradient(135deg,#0E0E10,#FF6B00)",
                         boxShadow: "0 8px 24px rgba(180,34,37,0.3)",
                       }}
                     >

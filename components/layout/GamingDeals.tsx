@@ -42,7 +42,7 @@ const GamingDeals = () => {
   }, []);
 
   return (
-    <div className="w-full mt-5 bg-[#F5F6F7]">
+    <div className="w-full mt-5 bg-[#FBEFE3]">
       {/* HEADER */}
       <div
         className="flex items-center justify-between px-4 md:px-6 py-4 mb-6 relative overflow-hidden"
@@ -83,7 +83,7 @@ const GamingDeals = () => {
             <FiMonitor size={16} className="text-green-400" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Gaming Deals
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -96,7 +96,7 @@ const GamingDeals = () => {
 
         <button
           onClick={() => router.push("/gaming-deals")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -111,7 +111,7 @@ const GamingDeals = () => {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-44 md:min-w-64 h-80 bg-gray-100 rounded-xl animate-pulse"
+                className="min-w-44 md:min-w-64 h-80 bg-sand rounded-xl animate-pulse"
               />
             ))
           : gaming.map((product) => {
@@ -123,7 +123,7 @@ const GamingDeals = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-44 md:min-w-64 snap-start bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                  className="min-w-44 md:min-w-64 snap-start bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 group cursor-pointer"
                 >
                   <div className="relative h-44 md:h-56 overflow-hidden rounded-t-xl">
                     <img
@@ -137,14 +137,14 @@ const GamingDeals = () => {
                   </div>
 
                   <div className="p-4">
-                    <p className="font-semibold truncate text-gray-800">
+                    <p className="font-semibold truncate text-ink">
                       {product.name}
                     </p>
                     <div className="mt-2">
                       <span className="font-bold text-lg text-green-600">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>

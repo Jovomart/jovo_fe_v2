@@ -54,7 +54,7 @@ const BeautyAndCosmeticsDeals = () => {
             <FiHeart size={16} className="text-pink-300" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Beauty & Cosmetics
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -66,7 +66,7 @@ const BeautyAndCosmeticsDeals = () => {
         </div>
 
         <Link href="/beauty-deals"
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </Link>
@@ -86,7 +86,7 @@ const BeautyAndCosmeticsDeals = () => {
               return (
                 <Link href={`/product/${product.id}`}
                   key={product.id}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden"
+                  className="bg-white rounded-xl shadow-soft hover:shadow-lift transition-all duration-300 group overflow-hidden"
                 >
                   {/* IMAGE */}
                   <div className="relative h-36 md:h-48 overflow-hidden">
@@ -103,7 +103,7 @@ const BeautyAndCosmeticsDeals = () => {
 
                   {/* DETAILS */}
                   <div className="p-3 md:p-4">
-                    <p className="font-semibold text-sm md:text-base truncate text-gray-800">
+                    <p className="font-semibold text-sm md:text-base truncate text-ink">
                       {product.name}
                     </p>
 
@@ -111,7 +111,7 @@ const BeautyAndCosmeticsDeals = () => {
                       <span className="text-pink-700 font-bold text-base md:text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-xs md:text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-xs md:text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>

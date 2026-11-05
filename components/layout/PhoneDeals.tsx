@@ -59,7 +59,7 @@ const PhoneDeals = () => {
             <FiPhone size={16} className="text-cyan-300" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">
+            <h2 className="text-base md:text-lg font-semibold text-white tracking-tight leading-none">
               Phone Deals
             </h2>
             <div className="flex items-center gap-1.5 mt-1">
@@ -72,7 +72,7 @@ const PhoneDeals = () => {
 
         <button
           onClick={() => router.push("/phone-deals")}
-          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
+          className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/20 transition-all active:scale-95"
         >
           See All <FiArrowRight size={12} />
         </button>
@@ -82,7 +82,7 @@ const PhoneDeals = () => {
       <div className="px-4 md:px-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-72 bg-gray-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-72 bg-sand rounded-xl animate-pulse" />
             ))
           : phones.map((product) => {
               const discount = Math.round(
@@ -93,7 +93,7 @@ const PhoneDeals = () => {
                 <div
                   key={product.id}
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 group overflow-hidden cursor-pointer border border-gray-100 hover:border-cyan-200"
+                  className="bg-white rounded-xl shadow-soft hover:shadow-lift hover:shadow-cyan-500/10 transition-all duration-300 group overflow-hidden cursor-pointer border border-ink/10 hover:border-cyan-200"
                 >
                   <div className="relative h-36 md:h-48 overflow-hidden">
                     <img
@@ -110,19 +110,19 @@ const PhoneDeals = () => {
                   </div>
 
                   <div className="p-3 md:p-4">
-                    <p className="font-semibold truncate text-gray-800">{product.name}</p>
+                    <p className="font-semibold truncate text-ink">{product.name}</p>
                     <div className="mt-2">
                       <span className="font-bold text-cyan-600 text-lg">
                         ₦{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-400 line-through ml-2 text-sm">
+                      <span className="text-ink/40 line-through ml-2 text-sm">
                         ₦{product.oldPrice.toLocaleString()}
                       </span>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <span className="text-[10px] text-cyan-500">⚡ Free Shipping</span>
-                      <span className="text-[10px] text-gray-300">•</span>
-                      <span className="text-[10px] text-gray-400">In Stock</span>
+                      <span className="text-[10px] text-ink/25">•</span>
+                      <span className="text-[10px] text-ink/40">In Stock</span>
                     </div>
                   </div>
                 </div>

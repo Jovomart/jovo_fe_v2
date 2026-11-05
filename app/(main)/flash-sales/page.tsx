@@ -36,7 +36,7 @@ const TimeCell = ({ value, label }) => (
     >
       {/* Shine streak */}
       <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10 rounded-t-2xl" />
-      <span className="relative text-2xl md:text-3xl font-black text-white tracking-tight tabular-nums">
+      <span className="relative text-2xl md:text-3xl font-semibold text-white tracking-tight tabular-nums">
         {value}
       </span>
     </div>
@@ -48,7 +48,7 @@ const TimeCell = ({ value, label }) => (
 
 /* ── Separator ───────────────────────────────────────────────────────────── */
 const Sep = () => (
-  <span className="text-2xl md:text-3xl font-black text-white/40 mb-5 select-none">:</span>
+  <span className="text-2xl md:text-3xl font-semibold text-white/40 mb-5 select-none">:</span>
 );
 
 /* ── Product card ────────────────────────────────────────────────────────── */
@@ -85,8 +85,8 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
         {/* Discount badge */}
         {discount && (
           <div
-            className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black text-white"
-            style={{ background: "linear-gradient(135deg, #B42225, #ff4444)" }}
+            className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold text-white"
+            style={{ background: "linear-gradient(135deg, #0E0E10, #ff4444)" }}
           >
             <FiZap size={10} />
             -{discount}%
@@ -96,18 +96,18 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
         {/* Wishlist */}
         <button
           onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-transform duration-200 hover:scale-110"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-soft transition-transform duration-200 hover:scale-110"
         >
           {wishlisted ? (
             <FaHeart className="text-red-500" size={14} />
           ) : (
-            <FiHeart className="text-gray-400" size={14} />
+            <FiHeart className="text-ink/40" size={14} />
           )}
         </button>
 
-        {/* Quick add — slides up on hover */}
+        {/* Quick add - slides up on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-[#B42225] hover:text-white transition-colors duration-200">
+          <button className="w-full flex items-center justify-center gap-2 bg-white text-ink py-2.5 rounded-xl text-xs font-bold shadow-lift hover:bg-[#0E0E10] hover:text-white transition-colors duration-200">
             <FiShoppingBag size={13} /> Add to Cart
           </button>
         </div>
@@ -115,15 +115,15 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
 
       {/* Info */}
       <div className="p-3.5">
-        <h3 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+        <h3 className="text-xs md:text-sm font-semibold text-ink line-clamp-2 leading-snug">
           {product.name}
         </h3>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-sm md:text-base font-black text-[#B42225]">
+          <span className="text-sm md:text-base font-semibold text-[#0E0E10]">
             ₦{product.price.toLocaleString()}
           </span>
           {product.oldPrice && (
-            <span className="text-[11px] text-gray-400 line-through">
+            <span className="text-[11px] text-ink/40 line-through">
               ₦{product.oldPrice.toLocaleString()}
             </span>
           )}
@@ -131,16 +131,16 @@ const ProductCard = ({ product, wishlisted, onWishlist, index }) => {
 
         {/* Stock bar */}
         <div className="mt-2.5">
-          <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-            <span className="text-[#B42225] font-semibold">🔥 Selling fast</span>
+          <div className="flex justify-between text-[10px] text-ink/40 mb-1">
+            <span className="text-[#0E0E10] font-semibold">🔥 Selling fast</span>
             <span>72% sold</span>
           </div>
-          <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1 w-full bg-sand rounded-full overflow-hidden">
             <div
               className="h-full rounded-full"
               style={{
                 width: "72%",
-                background: "linear-gradient(90deg, #FF8C00, #B42225)",
+                background: "linear-gradient(90deg, #B42225, #0E0E10)",
               }}
             />
           </div>
@@ -175,22 +175,22 @@ const FlashSalesPage = () => {
       <div
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #0f0f0f 0%, #1a0505 40%, #2d0a0a 70%, #B42225 100%)",
+          background: "linear-gradient(135deg, #0f0f0f 0%, #1a0505 40%, #2d0a0a 70%, #0E0E10 100%)",
           minHeight: "340px",
         }}
       >
         {/* Animated background orbs */}
         <div
           className="absolute -top-20 -left-20 w-96 h-96 rounded-full opacity-20 animate-pulse"
-          style={{ background: "radial-gradient(circle, #FF8C00, transparent 70%)" }}
-        />
-        <div
-          className="absolute -bottom-10 right-0 w-80 h-80 rounded-full opacity-15"
           style={{ background: "radial-gradient(circle, #B42225, transparent 70%)" }}
         />
         <div
+          className="absolute -bottom-10 right-0 w-80 h-80 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, #0E0E10, transparent 70%)" }}
+        />
+        <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full opacity-5"
-          style={{ background: "radial-gradient(circle, #FF8C00, transparent 60%)" }}
+          style={{ background: "radial-gradient(circle, #B42225, transparent 60%)" }}
         />
 
         {/* Diagonal slash decoration */}
@@ -219,7 +219,7 @@ const FlashSalesPage = () => {
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
 
-            {/* Left — Title */}
+            {/* Left - Title */}
             <div>
               {/* Live badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1.5 mb-4">
@@ -228,19 +228,19 @@ const FlashSalesPage = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <FaFire className="text-[#FF8C00] text-4xl md:text-5xl drop-shadow-lg" />
+                <FaFire className="text-[#B42225] text-4xl md:text-5xl drop-shadow-lift" />
                 <div>
                   <h1
-                    className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight"
-                    style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(180,34,37,0.5)" }}
+                    className="text-4xl md:text-6xl font-semibold text-white leading-none tracking-tight"
+                    style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(180,34,37,0.5)" }}
                   >
                     FLASH
                   </h1>
                   <h1
-                    className="text-4xl md:text-6xl font-black leading-none tracking-tight"
+                    className="text-4xl md:text-6xl font-semibold leading-none tracking-tight"
                     style={{
-                      fontFamily: "'Georgia', serif",
-                      background: "linear-gradient(90deg, #FF8C00, #ffcc00)",
+                      fontFamily: "'Instrument Sans',sans-serif",
+                      background: "linear-gradient(90deg, #B42225, #ffcc00)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -255,7 +255,7 @@ const FlashSalesPage = () => {
               </p>
             </div>
 
-            {/* Right — Countdown */}
+            {/* Right - Countdown */}
             <div className="flex flex-col items-start lg:items-end gap-3">
               <p className="text-white/50 text-xs font-semibold tracking-widest uppercase">
                 Ends in
@@ -292,12 +292,12 @@ const FlashSalesPage = () => {
           <div className="flex items-center gap-3">
             <div
               className="w-1 h-7 rounded-full"
-              style={{ background: "linear-gradient(180deg, #FF8C00, #B42225)" }}
+              style={{ background: "linear-gradient(180deg, #B42225, #0E0E10)" }}
             />
-            <h2 className="text-xl md:text-2xl font-black text-gray-900">
+            <h2 className="text-xl md:text-2xl font-semibold text-ink">
               Today's Deals
             </h2>
-            <span className="hidden md:inline text-sm text-gray-400 font-medium">
+            <span className="hidden md:inline text-sm text-ink/40 font-medium">
               ({flashProducts.length} items)
             </span>
           </div>
@@ -318,7 +318,7 @@ const FlashSalesPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-400">
+          <div className="text-center py-20 text-ink/40">
             <FaFire size={48} className="mx-auto mb-4 opacity-20" />
             <p className="font-semibold">No flash sales right now.</p>
             <p className="text-sm mt-1">Check back soon!</p>
@@ -331,7 +331,7 @@ const FlashSalesPage = () => {
         <div
           className="relative overflow-hidden rounded-3xl px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-4"
           style={{
-            background: "linear-gradient(120deg, #0f0f0f 0%, #B42225 60%, #FF8C00 100%)",
+            background: "linear-gradient(120deg, #0f0f0f 0%, #0E0E10 60%, #B42225 100%)",
           }}
         >
           <div
@@ -344,7 +344,7 @@ const FlashSalesPage = () => {
           />
           <div className="relative z-10">
             <p className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-1">Limited time</p>
-            <h3 className="text-white text-xl md:text-2xl font-black">
+            <h3 className="text-white text-xl md:text-2xl font-semibold">
               Become a Seller on Jovo
             </h3>
             <p className="text-white/60 text-sm mt-1">
@@ -352,7 +352,7 @@ const FlashSalesPage = () => {
             </p>
           </div>
           <Link href="/become-seller"
-            className="relative z-10 shrink-0 bg-white text-gray-900 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-[#FF8C00] hover:text-white transition-colors duration-200 shadow-lg"
+            className="relative z-10 shrink-0 bg-white text-ink px-6 py-3 rounded-2xl font-bold text-sm hover:bg-[#B42225] hover:text-white transition-colors duration-200 shadow-lift"
           >
             Start Selling →
           </Link>
@@ -364,9 +364,9 @@ const FlashSalesPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-1 h-7 rounded-full"
-            style={{ background: "linear-gradient(180deg, #FF8C00, #B42225)" }}
+            style={{ background: "linear-gradient(180deg, #B42225, #0E0E10)" }}
           />
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">
+          <h2 className="text-xl md:text-2xl font-semibold text-ink">
             You Might Also Like
           </h2>
         </div>

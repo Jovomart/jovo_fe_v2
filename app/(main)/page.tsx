@@ -24,7 +24,7 @@ import Footer from "@/components/layout/Footer";
 const Home = () => {
   return (
     <>
-      <div className="bg-[#F5F6F7]">
+      <div className="bg-cream">
         <HeroSection />
         <FlashSales />
         <AccommodationDeals />

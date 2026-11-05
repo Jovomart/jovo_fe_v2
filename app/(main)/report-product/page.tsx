@@ -27,7 +27,7 @@ interface Errors {
    DATA - Using ONLY guaranteed-to-exist icons
 ───────────────────────────────────────────────────────────── */
 const reportReasons = [
-  { id: "counterfeit",  label: "Counterfeit / Fake Product",       icon: <FaBan size={16} />, color: "#B42225" },
+  { id: "counterfeit",  label: "Counterfeit / Fake Product",       icon: <FaBan size={16} />, color: "#0E0E10" },
   { id: "dangerous",    label: "Dangerous or Unsafe Item",          icon: <FiAlertCircle size={18} />, color: "#D97706" },
   { id: "prohibited",   label: "Prohibited / Illegal Product",      icon: <FaBan size={16} />, color: "#7C3AED" },
   { id: "misleading",   label: "Misleading Description or Images",  icon: <FaRegImage size={18} />, color: "#0891B2" },
@@ -40,12 +40,12 @@ const reportReasons = [
 const tips = [
   { icon: <FaLink size={16} />, title: "Include the Product URL",      tip: "Paste the exact product link from your browser's address bar. This helps our team locate the listing immediately." },
   { icon: <FiImage size={16} />, title: "Attach Evidence",              tip: "Screenshots, photos, or videos showing the violation significantly speed up our investigation process." },
-  { icon: <FiInfo size={16} />, title: "Be Specific",                  tip: "Describe exactly what you saw — a clear, detailed report is resolved faster than a vague one." },
+  { icon: <FiInfo size={16} />, title: "Be Specific",                  tip: "Describe exactly what you saw - a clear, detailed report is resolved faster than a vague one." },
   { icon: <FiLock size={16} />, title: "Your Report is Confidential",  tip: "All reports are anonymous. The seller will never know who filed the report." },
 ];
 
 const processSteps = [
-  { icon: <FiFileText size={16} />, color: "#B42225", label: "Report Submitted",   sub: "Immediately" },
+  { icon: <FiFileText size={16} />, color: "#0E0E10", label: "Report Submitted",   sub: "Immediately" },
   { icon: <FiShield size={16} />,   color: "#D97706", label: "Under Review",       sub: "Within 24 hrs" },
   { icon: <FaShieldAlt size={16} />, color: "#7C3AED", label: "Action Taken",       sub: "If violation found" },
   { icon: <FiCheck size={16} />,    color: "#059669", label: "You're Notified",    sub: "Via email" },
@@ -103,7 +103,7 @@ const ReportProduct = () => {
 
         {/* ══════════ HERO ══════════ */}
         <div className="relative overflow-hidden" style={{
-          background: "linear-gradient(135deg,#0a0a0a 0%,#1a0505 35%,#2d0808 65%,#B42225 100%)",
+          background: "linear-gradient(135deg,#0a0a0a 0%,#1a0505 35%,#2d0808 65%,#0E0E10 100%)",
         }}>
           <div className="absolute -top-16 right-1/3 w-72 h-72 rounded-full opacity-20 pointer-events-none"
             style={{ background: "radial-gradient(circle,#DC2626,transparent 70%)" }} />
@@ -125,12 +125,12 @@ const ReportProduct = () => {
                 <FiFlag size={26} className="text-red-300" />
               </div>
               <div>
-                <span className="inline-block text-[10px] font-black uppercase tracking-widest text-red-300/70 px-3 py-1.5 rounded-full mb-3"
+                <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-red-300/70 px-3 py-1.5 rounded-full mb-3"
                   style={{ background: "rgba(180,34,37,0.2)", border: "1px solid rgba(252,165,165,0.2)" }}>
                   Community Safety
                 </span>
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight"
-                  style={{ fontFamily: "'Georgia', serif", textShadow: "0 4px 30px rgba(180,34,37,0.5)" }}>
+                <h1 className="text-4xl md:text-5xl font-semibold text-white mb-4 leading-tight"
+                  style={{ fontFamily: "'Instrument Sans',sans-serif", textShadow: "0 4px 30px rgba(180,34,37,0.5)" }}>
                   Report a<br />
                   <span style={{ background: "linear-gradient(90deg,#fca5a5,#f87171,#fca5a5)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     Product
@@ -166,21 +166,21 @@ const ReportProduct = () => {
           {/* ══════════ WHAT HAPPENS NEXT ══════════ */}
           <div className="bg-white rounded-3xl p-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-1 h-6 rounded-full bg-[#B42225]" />
-              <h2 className="text-base font-black text-gray-900">What happens after you report?</h2>
+              <div className="w-1 h-6 rounded-full bg-[#0E0E10]" />
+              <h2 className="text-base font-semibold text-ink">What happens after you report?</h2>
             </div>
             <div className="grid sm:grid-cols-4 gap-4">
               {processSteps.map(({ icon, color, label, sub }, i) => (
                 <div key={label} className="relative flex flex-col items-center text-center">
                   {i < 3 && (
-                    <div className="hidden sm:block absolute left-[calc(50%+28px)] top-5 w-[calc(100%-56px)] h-0.5 bg-gray-100 z-0" />
+                    <div className="hidden sm:block absolute left-[calc(50%+28px)] top-5 w-[calc(100%-56px)] h-0.5 bg-sand z-0" />
                   )}
                   <div className="w-11 h-11 rounded-full flex items-center justify-center text-white mb-3 z-10"
                     style={{ background: color, boxShadow: `0 4px 16px ${color}40` }}>
                     {icon}
                   </div>
-                  <p className="text-xs font-black text-gray-800">{label}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+                  <p className="text-xs font-semibold text-ink">{label}</p>
+                  <p className="text-[10px] text-ink/40 mt-0.5">{sub}</p>
                 </div>
               ))}
             </div>
@@ -194,25 +194,25 @@ const ReportProduct = () => {
               <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5">
                 <FaRegCheckCircle size={40} className="text-green-500" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 mb-2" style={{ fontFamily: "'Georgia', serif" }}>
+              <h2 className="text-2xl font-semibold text-ink mb-2" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 Report Submitted
               </h2>
-              <p className="text-sm text-gray-500 max-w-sm mx-auto mb-2">
+              <p className="text-sm text-ink/50 max-w-sm mx-auto mb-2">
                 Thank you for helping keep Jovo safe. Our team will review your report within 24 hours.
               </p>
               {reporterEmail && (
-                <p className="text-xs text-gray-400 mb-6">
+                <p className="text-xs text-ink/40 mb-6">
                   Updates will be sent to <strong>{reporterEmail}</strong>
                 </p>
               )}
               <div className="flex flex-wrap justify-center gap-3">
                 <button onClick={handleReset}
                   className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white transition-all hover:scale-105"
-                  style={{ background: "linear-gradient(135deg,#B42225,#DC2626)", boxShadow: "0 4px 20px rgba(180,34,37,0.3)" }}>
+                  style={{ background: "linear-gradient(135deg,#0E0E10,#DC2626)", boxShadow: "0 4px 20px rgba(180,34,37,0.3)" }}>
                   Submit Another Report
                 </button>
                 <Link href="/"
-                  className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">
+                  className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-ink/60 bg-sand hover:bg-ink/10 transition-all">
                   Back to Home <FiArrowRight size={13} />
                 </Link>
               </div>
@@ -221,33 +221,33 @@ const ReportProduct = () => {
             /* ── REPORT FORM ── */
             <div className="bg-white rounded-3xl overflow-hidden fade-up"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-              <div className="px-6 md:px-8 pt-7 pb-5 border-b border-gray-100">
+              <div className="px-6 md:px-8 pt-7 pb-5 border-b border-ink/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-7 rounded-full bg-[#B42225]" />
-                  <h2 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+                  <div className="w-1 h-7 rounded-full bg-[#0E0E10]" />
+                  <h2 className="text-xl font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                     Submit a Report
                   </h2>
                 </div>
-                <p className="text-xs text-gray-400 mt-1 ml-4">All fields marked * are required</p>
+                <p className="text-xs text-ink/40 mt-1 ml-4">All fields marked * are required</p>
               </div>
 
               <div className="p-6 md:p-8 space-y-6">
 
                 {/* Product URL */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                    Product URL <span className="text-[#B42225]">*</span>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                    Product URL <span className="text-[#0E0E10]">*</span>
                   </label>
                   <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all ${
-                    errors.url ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                    errors.url ? "border-red-400 bg-red-50" : "border-ink/10 bg-sand focus-within:border-[#0E0E10] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
                   }`}>
-                    <FiLink size={15} className={errors.url ? "text-red-400" : "text-gray-400"} />
+                    <FiLink size={15} className={errors.url ? "text-red-400" : "text-ink/40"} />
                     <input
                       type="url"
                       placeholder="https://jovo.ng/product/..."
                       value={productUrl}
                       onChange={(e) => { setProductUrl(e.target.value); setErrors((p) => ({ ...p, url: "" })); }}
-                      className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400"
+                      className="flex-1 text-sm text-ink/70 outline-none bg-transparent placeholder-gray-400"
                     />
                   </div>
                   {errors.url && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1"><FiAlertTriangle size={11} /> {errors.url}</p>}
@@ -255,8 +255,8 @@ const ReportProduct = () => {
 
                 {/* Reason grid */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-3">
-                    Reason for Report <span className="text-[#B42225]">*</span>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-3">
+                    Reason for Report <span className="text-[#0E0E10]">*</span>
                   </label>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {reportReasons.map(({ id, label, icon, color }) => (
@@ -264,13 +264,13 @@ const ReportProduct = () => {
                         onClick={() => { setReason(id); setErrors((p) => ({ ...p, reason: "" })); }}
                         className={`flex items-center gap-2.5 p-3.5 rounded-2xl border text-left transition-all ${
                           selectedReason === id
-                            ? "border-[#B42225]/40 shadow-sm"
-                            : "border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white"
+                            ? "border-[#0E0E10]/40 shadow-soft"
+                            : "border-ink/10 bg-sand hover:border-ink/10 hover:bg-white"
                         }`}
                         style={selectedReason === id ? { background: color + "0d", borderColor: color + "60" } : {}}>
-                        <span className="text-gray-700 shrink-0">{icon}</span>
+                        <span className="text-ink/70 shrink-0">{icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-bold leading-snug ${selectedReason === id ? "text-gray-900" : "text-gray-700"}`}>
+                          <p className={`text-xs font-bold leading-snug ${selectedReason === id ? "text-ink" : "text-ink/70"}`}>
                             {label}
                           </p>
                         </div>
@@ -288,18 +288,18 @@ const ReportProduct = () => {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                    Describe the Issue <span className="text-[#B42225]">*</span>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                    Describe the Issue <span className="text-[#0E0E10]">*</span>
                   </label>
                   <textarea
                     rows={5}
-                    placeholder="Be specific — describe exactly what is wrong with this listing, what you saw, and why it violates Jovo's policies..."
+                    placeholder="Be specific - describe exactly what is wrong with this listing, what you saw, and why it violates Jovo's policies..."
                     value={reportText}
                     onChange={(e) => { setReportText(e.target.value); setErrors((p) => ({ ...p, text: "" })); }}
-                    className={`w-full rounded-2xl border px-4 py-3 text-sm text-gray-700 outline-none resize-none placeholder-gray-400 transition-all ${
+                    className={`w-full rounded-2xl border px-4 py-3 text-sm text-ink/70 outline-none resize-none placeholder-gray-400 transition-all ${
                       errors.text
                         ? "border-red-400 bg-red-50"
-                        : "border-gray-200 bg-gray-50 focus:border-[#B42225] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                        : "border-ink/10 bg-sand focus:border-[#0E0E10] focus:bg-white focus:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
                     }`}
                   />
                   <div className="flex items-center justify-between mt-1">
@@ -307,29 +307,29 @@ const ReportProduct = () => {
                       ? <p className="text-xs text-red-500 flex items-center gap-1"><FiAlertTriangle size={11} /> {errors.text}</p>
                       : <span />
                     }
-                    <p className="text-[10px] text-gray-400 ml-auto">{reportText.length} characters</p>
+                    <p className="text-[10px] text-ink/40 ml-auto">{reportText.length} characters</p>
                   </div>
                 </div>
 
                 {/* File upload */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                    Attach Evidence <span className="text-gray-400 font-normal normal-case">(optional — max 3 files)</span>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                    Attach Evidence <span className="text-ink/40 font-normal normal-case">(optional - max 3 files)</span>
                   </label>
-                  <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 cursor-pointer hover:border-[#B42225]/40 hover:bg-red-50/30 transition-all">
-                    <FiUpload size={22} className="text-gray-400" />
-                    <p className="text-sm font-bold text-gray-500">Click to upload screenshots or photos</p>
-                    <p className="text-[11px] text-gray-400">PNG, JPG, PDF — up to 5MB each</p>
+                  <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-ink/10 bg-sand cursor-pointer hover:border-[#0E0E10]/40 hover:bg-red-50/30 transition-all">
+                    <FiUpload size={22} className="text-ink/40" />
+                    <p className="text-sm font-bold text-ink/50">Click to upload screenshots or photos</p>
+                    <p className="text-[11px] text-ink/40">PNG, JPG, PDF - up to 5MB each</p>
                     <input type="file" multiple accept="image/*,.pdf" className="hidden" onChange={handleFileChange} />
                   </label>
                   {files.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2.5 border border-gray-100">
-                          <FiPaperclip size={14} className="text-gray-400 shrink-0" />
-                          <span className="text-xs text-gray-700 flex-1 truncate">{f.name}</span>
-                          <span className="text-[10px] text-gray-400">{(f.size / 1024).toFixed(0)} KB</span>
-                          <button onClick={() => removeFile(i)} className="text-gray-400 hover:text-red-500 transition-colors">
+                        <div key={i} className="flex items-center gap-3 bg-sand rounded-xl px-4 py-2.5 border border-ink/10">
+                          <FiPaperclip size={14} className="text-ink/40 shrink-0" />
+                          <span className="text-xs text-ink/70 flex-1 truncate">{f.name}</span>
+                          <span className="text-[10px] text-ink/40">{(f.size / 1024).toFixed(0)} KB</span>
+                          <button onClick={() => removeFile(i)} className="text-ink/40 hover:text-red-500 transition-colors">
                             <FiX size={13} />
                           </button>
                         </div>
@@ -340,23 +340,23 @@ const ReportProduct = () => {
 
                 {/* Email (optional) */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                    Your Email <span className="text-gray-400 font-normal normal-case">(optional — for follow-up updates)</span>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-ink/50 mb-2">
+                    Your Email <span className="text-ink/40 font-normal normal-case">(optional - for follow-up updates)</span>
                   </label>
                   <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all ${
-                    errors.email ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus-within:border-[#B42225] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
+                    errors.email ? "border-red-400 bg-red-50" : "border-ink/10 bg-sand focus-within:border-[#0E0E10] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(180,34,37,0.08)]"
                   }`}>
-                    <FiMail size={15} className="text-gray-400" />
+                    <FiMail size={15} className="text-ink/40" />
                     <input
                       type="email"
                       placeholder="your@email.com"
                       value={reporterEmail}
                       onChange={(e) => { setReporterEmail(e.target.value); setErrors((p) => ({ ...p, email: "" })); }}
-                      className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder-gray-400"
+                      className="flex-1 text-sm text-ink/70 outline-none bg-transparent placeholder-gray-400"
                     />
                   </div>
                   {errors.email && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1"><FiAlertTriangle size={11} /> {errors.email}</p>}
-                  <p className="text-[11px] text-gray-400 mt-1.5 flex items-center gap-1">
+                  <p className="text-[11px] text-ink/40 mt-1.5 flex items-center gap-1">
                     <FiLock size={10} /> Your identity is kept anonymous from the seller.
                   </p>
                 </div>
@@ -364,8 +364,8 @@ const ReportProduct = () => {
                 {/* Submit */}
                 <button
                   onClick={handleSubmit}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99]"
-                  style={{ background: "linear-gradient(135deg,#B42225,#DC2626)", boxShadow: "0 6px 24px rgba(180,34,37,0.35)" }}>
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-[1.01] active:scale-[0.99]"
+                  style={{ background: "linear-gradient(135deg,#0E0E10,#DC2626)", boxShadow: "0 6px 24px rgba(180,34,37,0.35)" }}>
                   <FiFlag size={17} /> Submit Report
                 </button>
               </div>
@@ -376,7 +376,7 @@ const ReportProduct = () => {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-1 h-6 rounded-full bg-amber-400" />
-              <h2 className="text-lg font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>
+              <h2 className="text-lg font-semibold text-ink" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                 Tips for a Better Report
               </h2>
             </div>
@@ -384,9 +384,9 @@ const ReportProduct = () => {
               {tips.map(({ icon, title, tip }) => (
                 <div key={title} className="bg-white rounded-2xl p-5 hover:-translate-y-0.5 transition-all"
                   style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                  <span className="text-2xl block mb-3 text-[#B42225]">{icon}</span>
-                  <h4 className="text-sm font-black text-gray-800 mb-1.5">{title}</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">{tip}</p>
+                  <span className="text-2xl block mb-3 text-[#0E0E10]">{icon}</span>
+                  <h4 className="text-sm font-semibold text-ink mb-1.5">{title}</h4>
+                  <p className="text-xs text-ink/50 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
@@ -394,7 +394,7 @@ const ReportProduct = () => {
 
           {/* ══════════ SUPPORT FOOTER ══════════ */}
           <div className="relative rounded-3xl overflow-hidden p-7 md:p-8 text-white"
-            style={{ background: "linear-gradient(135deg,#0a0a0a 0%,#1a0505 50%,#B42225 100%)" }}>
+            style={{ background: "linear-gradient(135deg,#0a0a0a 0%,#1a0505 50%,#0E0E10 100%)" }}>
             <div className="absolute inset-0 opacity-[0.04]" style={{
               backgroundImage: "radial-gradient(circle,rgba(255,255,255,0.9) 1px,transparent 1px)",
               backgroundSize: "24px 24px",
@@ -405,7 +405,7 @@ const ReportProduct = () => {
                   <FaHandshake size={18} className="text-red-300" />
                   <span className="text-xs font-bold text-red-300 uppercase tracking-widest">Need direct help?</span>
                 </div>
-                <h3 className="text-lg font-black mb-1.5" style={{ fontFamily: "'Georgia', serif" }}>
+                <h3 className="text-lg font-semibold mb-1.5" style={{ fontFamily: "'Instrument Sans',sans-serif" }}>
                   Contact our Safety Team
                 </h3>
                 <p className="text-white/40 text-sm max-w-sm">
