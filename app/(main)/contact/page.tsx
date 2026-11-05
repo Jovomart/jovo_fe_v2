@@ -21,10 +21,10 @@ import {
 const Contact = () => {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
-    const e = {};
+    const e: Record<string, string> = {};
     if (!formData.name.trim()) e.name = "Name is required";
     if (!formData.email.trim()) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Enter a valid email address";
