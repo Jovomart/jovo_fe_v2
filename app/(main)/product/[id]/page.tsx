@@ -153,7 +153,9 @@ const ProductDetails = () => {
   const [deliveryLoading, setDeliveryLoading] = useState(true);
   const [deliveryError, setDeliveryError] = useState(null);
 
-  const product = products.find((p) => p.id === Number(id));
+  const product = products.find((p) => p.id === Number(id)) as
+    | ((typeof products)[number] & { weight?: number; warranty?: string })
+    | undefined;
 
   // Product weight (default 1kg if not specified)
   const productWeight = product?.weight || 1;
