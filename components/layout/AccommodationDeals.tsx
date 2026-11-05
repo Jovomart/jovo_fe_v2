@@ -1,81 +1,73 @@
 'use client'
-import { useRouter } from 'next/navigation'
-// src/components/home/AccommodationDeals.jsx
-import { useState, useEffect } from "react";
-import { accommodations } from "@/data/accommodation";
+import Link from 'next/link'
+import { ArrowRight, MapPin, Star } from 'lucide-react'
+import { accommodations } from '@/data/accommodation'
 
 const AccommodationDeals = () => {
-  const [loading, setLoading] = useState(true);
-  const router = useRouter()
-  const navigate = (p: string) => router.push(p)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+  const places = (accommodations as any[]).slice(0, 4)
+  if (!places.length) return null
 
   return (
-    <div className="w-full mt-5 py-10 bg-linear-to-br from-gray-900 via-black to-gray-800">
-      {/* HEADER */}
-      <div className="flex justify-between items-center px-4 md:px-8 mb-10">
-        <h2 className="text-xl md:text-4xl font-bold text-white">
-          Accommodation Deals
-        </h2>
-        <button
-          onClick={() => router.push("/accommodations")}
-          className="text-xl md:text-3xl font-light text-[#B42225] hover:underline"
-        >
-          See All
-        </button>
-      </div>
+    <section className="pt-11 sm:pt-14" aria-label="Accommodation deals">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-peach px-2.5 py-1 text-[9.5px] font-semibold uppercase tracking-[.16em] text-ink/55">
+              <span className="h-1 w-1 rounded-full bg-ink/30" aria-hidden="true" />
+              Near campus
+            </span>
+            <h2 className="mt-2.5 font-display text-[24px] font-medium leading-[1.1] tracking-[-0.03em] sm:text-[30px]">
+              Accommodation deals
+            </h2>
+            <p className="mt-1.5 max-w-[420px] text-[12px] leading-[1.65] text-ink/45 sm:text-[12.5px]">
+              Verified hostels, apartments and short lets within walking distance of lectures.
+            </p>
+          </div>
+          <Link
+            href="/accommodations"
+            className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11.5px] font-semibold text-ink/65 ring-1 ring-ink/[.07] transition-colors duration-200 hover:bg-white/70 hover:text-ink"
+          >
+            See all
+            <ArrowRight size={11} />
+          </Link>
+        </div>
 
-      {/* GRID */}
-      <div className="px-0 md:px-8 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-8">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-72 md:h-96 bg-gray-700 rounded-2xl animate-pulse" />
-            ))
-          : accommodations.slice(0, 4).map((place) => (
-              <div
-                key={place.id}
-                className="relative group rounded-2xl overflow-hidden shadow-lift hover:scale-[1.02] transition duration-500 cursor-pointer"
-                onClick={() => navigate(`/accommodation/${place.id}`)}
-              >
-                {/* IMAGE */}
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3.5 lg:grid-cols-4">
+          {places.map((place) => (
+            <Link
+              key={place.id}
+              href={`/accommodation/${place.id}`}
+              className="group flex flex-col overflow-hidden rounded-[22px] bg-white ring-1 ring-ink/[.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-sand">
                 <img
                   src={place.image}
                   alt={place.name}
-                  className="w-full h-72 md:h-96 object-cover group-hover:scale-110 transition duration-700"
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
-
-                {/* OVERLAY */}
-                <div className="absolute inset-0 bg-linear-to-t from-black via-black/60 to-transparent" />
-
-                {/* CONTENT */}
-                <div className="absolute bottom-0 p-4 md:p-6 text-white w-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-white text-black text-xs px-2 py-1 rounded-full font-bold">
-                      ⭐ {place.rating}
-                    </span>
-                    <span className="text-xs text-ink/25">({place.reviews} reviews)</span>
-                  </div>
-                  <h3 className="text-sm md:text-xl font-bold">{place.name}</h3>
-                  <p className="text-xs md:text-sm text-ink/25 mt-1">📍 {place.location}</p>
-                  <div className="mt-3 md:mt-4 flex justify-between items-center">
-                    <div>
-                      <span className="text-lg md:text-2xl font-bold">₦{place.price.toLocaleString()}</span>
-                      <span className="text-xs md:text-sm text-ink/25"> /year</span>
-                    </div>
-                    <button className="bg-yellow-400 text-black text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full font-semibold hover:bg-yellow-300 transition">
-                      Book
-                    </button>
-                  </div>
-                </div>
+                <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-2 py-[3px] text-[9.5px] font-semibold text-ink backdrop-blur">
+                  <Star size={8} className="fill-brand-orange text-brand-orange" />
+                  {place.rating}
+                </span>
               </div>
-            ))}
+              <div className="flex flex-1 flex-col p-3">
+                <h3 className="line-clamp-1 text-[12.5px] font-semibold tracking-tight text-ink">{place.name}</h3>
+                <p className="mt-1 flex items-center gap-1 text-[10.5px] text-ink/40">
+                  <MapPin size={9} />
+                  {place.location}
+                </p>
+                <p className="mt-2 text-[13px] font-semibold text-ink">
+                  ₦{place.price.toLocaleString()}
+                  <span className="ml-1 text-[10px] font-normal text-ink/40">/year</span>
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    </section>
+  )
+}
 
-export default AccommodationDeals;
+export default AccommodationDeals

@@ -1,52 +1,39 @@
-'use client'
-import { useRouter } from 'next/navigation'
-import AnnouncementBar from "@/components/home/AnnouncementBar";
-import HeroSection from "@/components/home/HeroSection";
-import FlashSales from "@/components/layout/FlashSales";
-import TopSellers from "@/components/layout/TopSellers";
-import SponsoredProducts from "@/components/layout/SponsoredProducts";
-import LimitedStockDeals from "@/components/layout/LimitedStockDeals";
-import AccommodationDeals from "@/components/layout/AccommodationDeals";
-import AppliancesDeals from "@/components/layout/AppliancesDeal";
-import Tv_Audio_Deals from "@/components/layout/TvAudioDeals";
-import SuppliesSection from "@/components/layout/SuppliesSection";
-import PhoneDeals from "@/components/layout/PhoneDeals";
-import BeautyAndCosmeticsDeals from "@/components/layout/BeautyDeals";
-import FashionDeals from "@/components/layout/FashionDeals";
-import GamingDeals from "@/components/layout/GamingDeals";
-import HomeDeals from "@/components/layout/HomeDeals";
-import ElectronicDeals from "@/components/layout/ElectronicDeals";
-import DrinkDeals from "@/components/layout/DrinkDeals";
-import ComputingDeals from "@/components/layout/ComputingDeals";
-import ServicesSection from "@/components/layout/Service";
-import Footer from "@/components/layout/Footer";
+import TickerBar from '@/components/ui/TickerBar'
+import Footer from '@/components/layout/Footer'
+import LandingHero from '@/components/landing/Hero'
+import TrustStrip from '@/components/landing/TrustStrip'
+import HowItWorks from '@/components/landing/HowItWorks'
+import FlashDeals from '@/components/landing/FlashDeals'
+import FeaturedProducts from '@/components/landing/FeaturedProducts'
+import CategoriesRail from '@/components/landing/CategoriesRail'
+import SellerBanner from '@/components/landing/SellerBanner'
+import Testimonials from '@/components/landing/Testimonials'
+import ServicesGrid from '@/components/landing/ServicesGrid'
+import AppPromo from '@/components/landing/AppPromo'
 
-const Home = () => {
+export default function Home() {
   return (
     <>
-      <div className="bg-cream">
-        <HeroSection />
-        <FlashSales />
-        <AccommodationDeals />
-        <ServicesSection />
-        <TopSellers />
-        <SponsoredProducts />
-        <LimitedStockDeals />
-        <AppliancesDeals />
-        <Tv_Audio_Deals />
-        <SuppliesSection />
-        <PhoneDeals />
-        <BeautyAndCosmeticsDeals />
-        <FashionDeals />
-        <GamingDeals />
-        <HomeDeals />
-        <ElectronicDeals />
-        <DrinkDeals />
-        <ComputingDeals />
-        <Footer />
-      </div>
+      <TickerBar />
+      <a
+        href="#main-content"
+        className="absolute -top-28 left-4 z-[9999] rounded-full bg-ink px-5 py-2.5 text-[13px] font-semibold text-white transition-[top] focus:top-4"
+      >
+        Skip to main content
+      </a>
+      <main id="main-content">
+        <LandingHero />
+        <TrustStrip />
+        <HowItWorks />
+        <FlashDeals />
+        <FeaturedProducts />
+        <CategoriesRail />
+        <SellerBanner />
+        <Testimonials />
+        <ServicesGrid />
+        <AppPromo />
+      </main>
+      <Footer />
     </>
-  );
-};
-
-export default Home;
+  )
+}

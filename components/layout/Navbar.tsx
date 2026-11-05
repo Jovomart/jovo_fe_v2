@@ -6,7 +6,7 @@ import {
   FiMenu, FiSearch, FiShoppingCart, FiUser, FiHeart, FiBox,
   FiLogIn, FiLogOut, FiX, FiChevronRight, FiCpu, FiSmartphone,
   FiMonitor, FiHome, FiSettings, FiTag, FiArrowRight, FiClock,
-  FiTruck, FiChevronDown,
+  FiTruck, FiChevronDown, FiZap,
 } from 'react-icons/fi'
 import {
   MdStorefront, MdCleaningServices, MdOutlineDeliveryDining,
@@ -219,10 +219,39 @@ export default function Navbar() {
             <FiMenu size={22} />
           </button>
           <img src="/images/Jovo_official_logo.png" alt="Jovo" onClick={() => router.push('/')}
-            className="md:h-12 md:w-[200px] w-36 h-10 object-cover cursor-pointer shrink-0" />
+            className="md:h-11 md:w-[180px] w-36 h-10 object-cover cursor-pointer shrink-0" />
+
+          {/* Centre - floating pill nav */}
+          <nav
+            aria-label="Main navigation"
+            className="mx-auto hidden items-center gap-0.5 rounded-full bg-white/60 p-1 ring-1 ring-ink/[.05] backdrop-blur xl:flex"
+          >
+            {[
+              { href: '/shop', label: 'Shop all' },
+              { href: '/deals', label: 'Deals' },
+              { href: '/services', label: 'Services' },
+              { href: '/logistics', label: 'Delivery' },
+              { href: '/become-seller', label: 'Sell on JOVO' },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="whitespace-nowrap rounded-full px-3 py-[7px] text-[12px] font-medium text-ink/60 transition-colors duration-200 hover:bg-white hover:text-ink"
+              >
+                {label}
+              </Link>
+            ))}
+            <Link
+              href="/flash-sales"
+              className="ml-0.5 flex items-center gap-1.5 rounded-full bg-ink px-3 py-[7px] text-[11px] font-medium text-white transition-colors duration-200 hover:bg-ink/85"
+            >
+              <FiZap size={9} />
+              Flash sales
+            </Link>
+          </nav>
 
           {/* Desktop search */}
-          <div className="hidden md:flex flex-1 max-w-3xl mx-4 relative" ref={desktopSearchRef}>
+          <div className="relative mx-3 hidden max-w-md flex-1 md:flex xl:mx-4" ref={desktopSearchRef}>
             <div className={`flex w-full overflow-hidden rounded-full transition-all duration-200 ${desktopOpen ? 'bg-white shadow-[0_0_0_4px_rgba(14,14,16,0.05)] ring-1 ring-ink/20' : 'bg-white ring-1 ring-ink/[.06] hover:ring-ink/15'}`}>
               <input type="text" placeholder="Search products, brands and categories..."
                 className="flex-1 bg-transparent px-5 py-2.5 text-sm text-ink/80 placeholder-ink/35"
@@ -342,7 +371,7 @@ export default function Navbar() {
         {/* Mobile search */}
         <div className="md:hidden px-4 pb-3">
           <div className="relative" ref={mobileSearchRef}>
-            <div className={`flex rounded-xl overflow-hidden border transition-all duration-200 ${mobileDropOpen ? 'border-[#0E0E10] shadow-[0_0_0_3px_rgba(180,34,37,0.1)]' : 'border-ink/10'}`}>
+            <div className={`flex overflow-hidden rounded-full border transition-all duration-200 ${mobileDropOpen ? 'border-ink/40 shadow-[0_0_0_3px_rgba(14,14,16,0.06)]' : 'border-ink/10'}`}>
               <input type="text" placeholder="Search products, categories..."
                 className="flex-1 px-3 py-2.5 text-sm outline-none bg-white placeholder-gray-400"
                 value={mobileQuery}
@@ -353,7 +382,7 @@ export default function Navbar() {
               {mobileQuery && (
                 <button onClick={() => { setMobileQuery(''); setMobileDropOpen(false) }} className="px-2 bg-white text-ink/40"><FiX size={15} /></button>
               )}
-              <button onClick={() => commitSearch(mobileQuery)} className="bg-[#B42225] px-4 text-white flex items-center">
+              <button onClick={() => commitSearch(mobileQuery)} className="flex items-center bg-ink px-4 text-white">
                 <FiSearch size={17} />
               </button>
             </div>

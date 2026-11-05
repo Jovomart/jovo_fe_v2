@@ -1,5 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+
+interface TimeLeft {
+  hours: string
+  mins: string
+  secs: string
+}
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
@@ -12,14 +18,18 @@ function getTarget() {
   return t
 }
 
+/** Counts down to the end of the day - flash-sale timer. */
 export function useCountdown() {
-  const [time, setTime] = useState({ hours: '00', mins: '00', secs: '00' })
+  const targetRef = useRef<Date>(getTarget())
+  const [time, setTime] = useState<TimeLeft>({ hours: '00', mins: '00', secs: '00' })
 
   useEffect(() => {
-    const target = getTarget()
     const update = () => {
-      const diff = target.getTime() - Date.now()
-      if (diff <= 0) { setTime({ hours: '00', mins: '00', secs: '00' }); return }
+      const diff = targetRef.current.getTime() - Date.now()
+      if (diff <= 0) {
+        targetRef.current = getTarget()
+        return
+      }
       setTime({
         hours: pad(Math.floor(diff / 3600000)),
         mins: pad(Math.floor((diff % 3600000) / 60000)),
@@ -33,3 +43,5 @@ export function useCountdown() {
 
   return time
 }
+
+export default useCountdown
