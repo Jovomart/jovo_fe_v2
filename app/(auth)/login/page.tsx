@@ -77,7 +77,7 @@ const Login = () => {
         <div className="relative z-10 mx-auto w-full max-w-md">
           <Link href="/" className="inline-flex items-center rounded-[18px] bg-white/80 p-3 ring-1 ring-ink/[.05]">
             <img
-              src="/images/Jovo_off_icon.png"
+              src="/images/Jovo_logo.png"
               alt="Jovo"
               className="h-9 w-auto object-contain"
             />
@@ -131,7 +131,7 @@ const Login = () => {
           <div className="w-full max-w-[400px]">
             <Link href="/" className="mb-8 inline-flex lg:hidden">
               <img
-                src="/images/Jovo_off_icon.png"
+                src="/images/Jovo_logo.png"
                 alt="Jovo"
                 className="h-10 w-auto object-contain"
               />

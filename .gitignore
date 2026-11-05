@@ -164,3 +164,7 @@ Desktop.ini
 # Linux files
 .directory
 *~
+# Ship the storefront logo and other static images
+!public/
+!public/images/
+!public/images/**

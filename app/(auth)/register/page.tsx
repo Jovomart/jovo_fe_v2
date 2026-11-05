@@ -292,7 +292,7 @@ const Register = () => {
 
         <div className="relative z-10 mx-auto w-full max-w-sm">
           <img
-            src="/images/Jovo_off_logo2.png"
+            src="/images/Jovo_logo.png"
             alt="Jovo"
             className="h-10 w-auto object-contain"
           />
@@ -347,9 +347,9 @@ const Register = () => {
         <div className="flex-1 flex items-center justify-center px-6 py-15 md:px-12 lg:px-16">
           <div className="w-full max-w-115">
             <img
-              src="/images/Jovo_off_icon.png"
+              src="/images/Jovo_logo.png"
               alt="Jovo"
-              className="md:w-75 w-auto object-cover cursor-pointer"
+              className="h-10 md:h-12 w-auto object-contain cursor-pointer"
             />
 
             <div className="mb-7">

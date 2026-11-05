@@ -176,7 +176,7 @@ function CompleteProfileContent() {
     <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ background: '#F4F5F9' }}>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img src="/images/Jovo_off_icon.png" alt="Jovo" className="h-16 object-cover" />
+          <img src="/images/Jovo_logo.png" alt="Jovo" className="h-12 w-auto object-contain" />
         </div>
 
         <div className="bg-white rounded-3xl p-8 shadow-lift">
