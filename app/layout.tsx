@@ -1,6 +1,10 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
+
+export const viewport: Viewport = {
+  themeColor: '#FBEFE3',
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://jovo.ng'),
@@ -12,6 +16,10 @@ export const metadata: Metadata = {
     "JOVO is Nigeria's premier campus e-commerce marketplace. Shop phones, electronics, fashion, groceries, services and more. Fast campus delivery, verified sellers, exclusive flash sales.",
   keywords: ['jovo', 'campus marketplace', 'nigeria ecommerce', 'student market'],
   authors: [{ name: 'JOVO Technologies' }],
+  icons: {
+    icon: '/images/Jovo_official_logo.png',
+    apple: '/images/Jovo_official_logo.png',
+  },
   openGraph: {
     type: 'website',
     url: 'https://jovo.ng/',
@@ -25,7 +33,6 @@ export const metadata: Metadata = {
     site: '@jovong',
     title: "JOVO - Nigeria's #1 Campus Marketplace",
   },
-  themeColor: '#FBEFE3',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
