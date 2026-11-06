@@ -45,6 +45,7 @@ const columns = [
     links: [
       { href: '/help', label: 'Help centre' },
       { href: '/contact', label: 'Contact us' },
+      { href: '/verify', label: 'Company Verification' },
       { href: '/terms', label: 'Terms of service' },
       { href: '/privacy', label: 'Privacy policy' },
       { href: '/cookie', label: 'Cookie notice' },
