@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useRef, useEffect, useContext } from "react";
+import { useState, useRef, useEffect, useContext, Suspense } from "react";
 import {
   FiMail,
   FiAlertCircle,
@@ -278,4 +278,10 @@ const VerifyEmail = () => {
   );
 };
 
-export default VerifyEmail;
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-sand" />}>
+      <VerifyEmail />
+    </Suspense>
+  );
+}

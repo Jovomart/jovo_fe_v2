@@ -1,6 +1,6 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import Footer from "@/components/layout/Footer";
 import {
   FiSearch, FiX, FiPhone, FiStar, FiMapPin,
@@ -452,4 +452,10 @@ const ServicesPage = () => {
   );
 };
 
-export default ServicesPage;
+export default function ServicesPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F4F5F9]" />}>
+      <ServicesPage />
+    </Suspense>
+  );
+}

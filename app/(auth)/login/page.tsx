@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useContext } from "react";
+import { useState, useContext, Suspense } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { FiMail, FiLock, FiAlertCircle, FiArrowRight, FiArrowLeft } from "react-icons/fi";
 import { AuthContext } from "@/context/AuthContext";
@@ -276,4 +276,10 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-cream" />}>
+      <Login />
+    </Suspense>
+  );
+}

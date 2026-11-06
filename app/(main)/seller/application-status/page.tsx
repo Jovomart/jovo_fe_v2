@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import apiService from "@/services/apiService";
 import Footer from "@/components/layout/Footer";
 import {
@@ -676,4 +676,10 @@ const ApplicationStatus = () => {
   );
 };
 
-export default ApplicationStatus;
+export default function ApplicationStatusPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F4F5F9]" />}>
+      <ApplicationStatus />
+    </Suspense>
+  );
+}
