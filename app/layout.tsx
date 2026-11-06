@@ -33,41 +33,34 @@ const jetbrains = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://jovo.ng"),
+  metadataBase: new URL('https://jovomart.store'),
   title: {
     default: "JOVO — Nigeria's #1 Campus Marketplace | Buy, Sell & Discover",
     template: "%s | JOVO",
   },
   description:
-    "JOVO is Nigeria's premier campus e-commerce marketplace. Shop phones, electronics, fashion, groceries, services and more. Fast campus delivery, verified sellers, exclusive flash sales. Join 50,000+ students today.",
-  keywords: [
-    "jovo", "campus marketplace", "nigeria ecommerce", "student market",
-    "futo marketplace", "buy and sell campus", "phone deals nigeria",
-    "electronics nigeria", "campus delivery", "flash sales nigeria",
-  ],
-  authors: [{ name: "JOVO Technologies" }],
-  robots: {
-    index: true, follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+    "JOVO is Nigeria's premier campus e-commerce marketplace. Shop phones, electronics, fashion, groceries, services and more. Fast campus delivery, verified sellers, exclusive flash sales.",
+  keywords: ['jovo', 'campus marketplace', 'nigeria ecommerce', 'student market'],
+  authors: [{ name: 'JOVO Technologies' }],
+  icons: {
+    icon: '/images/Jovo_official_logo.png',
+    apple: '/images/Jovo_official_logo.png',
   },
   openGraph: {
-    type: "website",
-    url: "https://jovo.ng/",
-    title: "JOVO — Nigeria's #1 Campus Marketplace",
-    description:
-      "Shop phones, electronics, fashion & more. Fast campus delivery. 50,000+ products from verified sellers. Flash sales daily.",
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
-    siteName: "JOVO",
-    locale: "en_NG",
+    type: 'website',
+    url: 'https://jovomart.store/',
+    title: "JOVO - Nigeria's #1 Campus Marketplace",
+    description: 'Shop phones, electronics, fashion & more. Fast campus delivery. Flash sales daily.',
+    siteName: 'JOVO',
+    locale: 'en_NG',
   },
   twitter: {
     card: "summary_large_image",
     site: "@jovong",
     title: "JOVO — Nigeria's #1 Campus Marketplace",
     description: "Shop phones, electronics, fashion & more. Fast campus delivery. Flash sales daily.",
-    images: ['/og-image.jpg'],
   },
-  alternates: { canonical: 'https://jovo.ng/' },
+  alternates: { canonical: 'https://jovomart.store/' },
 };
 
 export const viewport: Viewport = {
@@ -98,10 +91,10 @@ export default function RootLayout({
               '@graph': [
                 {
                   '@type': 'Organization',
-                  '@id': 'https://jovo.ng/#organization',
+                  '@id': 'https://jovomart.store/#organization',
                   name: 'JOVO',
-                  url: 'https://jovo.ng',
-                  logo: 'https://jovo.ng/logo.png',
+                  url: 'https://jovomart.store',
+                  logo: 'https://jovomart.store/images/Jovo_official_logo.png',
                   description: "Nigeria's premier campus e-commerce marketplace",
                   sameAs: [
                     'https://twitter.com/jovong',
@@ -111,22 +104,22 @@ export default function RootLayout({
                 },
                 {
                   '@type': 'WebSite',
-                  '@id': 'https://jovo.ng/#website',
-                  url: 'https://jovo.ng',
+                  '@id': 'https://jovomart.store/#website',
+                  url: 'https://jovomart.store',
                   name: 'JOVO',
-                  publisher: { '@id': 'https://jovo.ng/#organization' },
+                  publisher: { '@id': 'https://jovomart.store/#organization' },
                   potentialAction: {
                     '@type': 'SearchAction',
-                    target: 'https://jovo.ng/shop?search={search_term_string}',
+                    target: 'https://jovomart.store/shop?search={search_term_string}',
                     'query-input': 'required name=search_term_string',
                   },
                 },
                 {
                   '@type': 'WebPage',
-                  '@id': 'https://jovo.ng/#webpage',
-                  url: 'https://jovo.ng',
+                  '@id': 'https://jovomart.store/#webpage',
+                  url: 'https://jovomart.store',
                   name: "JOVO — Nigeria's #1 Campus Marketplace",
-                  isPartOf: { '@id': 'https://jovo.ng/#website' },
+                  isPartOf: { '@id': 'https://jovomart.store/#website' },
                 },
               ],
             }),
