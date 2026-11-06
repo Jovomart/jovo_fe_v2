@@ -7,7 +7,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://jovo.ng'),
+  metadataBase: new URL('https://jovomart.store'),
   title: {
     default: "JOVO - Nigeria's #1 Campus Marketplace",
     template: '%s | JOVO',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: 'https://jovo.ng/',
+    url: 'https://jovomart.store/',
     title: "JOVO - Nigeria's #1 Campus Marketplace",
     description: 'Shop phones, electronics, fashion & more. Fast campus delivery. Flash sales daily.',
     siteName: 'JOVO',
