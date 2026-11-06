@@ -4,12 +4,9 @@ class ApiService {
   baseURL: string;
 
   constructor() {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_BASE_URL) {
-      console.warn("NEXT_PUBLIC_API_URL is not defined");
-      this.baseURL = "";
-      return;
-    }
+    const API_BASE_URL =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://dev-api-jovomart.onrender.com/api/v1";
     this.baseURL = API_BASE_URL.endsWith("/")
       ? API_BASE_URL.slice(0, -1)
       : API_BASE_URL;
